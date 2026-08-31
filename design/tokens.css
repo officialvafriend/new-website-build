@@ -1,0 +1,214 @@
+/* ---------------------------------------------------------------------------
+ * 리디자인 디자인 토큰 — v0
+ *
+ * 확정: 타입 스케일, 간격, 터치 타깃, 브레이크포인트, 한글 폰트 스택
+ * 미정: 브랜드 색상 (--brand-* 는 자리표시자. 브랜드 확정 후 교체)
+ *
+ * 전제: 한국어 콘텐츠, 모바일 우선.
+ * 작성 순서는 항상 모바일이 기본값이고 min-width 로만 확장합니다.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* --- 폰트 스택 ------------------------------------------------------------
+   * Pretendard 를 1순위로 두되 Google Fonts 에 없으므로 자체 호스팅이 필요합니다.
+   * 자체 호스팅 전까지는 Noto Sans KR 로 내려갑니다. 시스템 한글 폰트를
+   * 뒤에 두어 폰트 로드 실패 시에도 한글이 깨지지 않게 합니다. */
+  --font-sans:
+    Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- 타입 스케일 ----------------------------------------------------------
+   * 모바일 기준값 → 데스크톱까지 clamp 로 유연하게. 비율 약 1.25 (major third).
+   * 본문 16px 미만은 쓰지 않습니다 (iOS 에서 입력 시 자동 확대 유발). */
+  --text-xs:   0.8125rem;                          /* 13px  캡션/라벨 */
+  --text-sm:   0.875rem;                           /* 14px  보조 텍스트 */
+  --text-base: 1rem;                               /* 16px  본문 최소치 */
+  --text-lg:   clamp(1.0625rem, 0.98rem + 0.4vw,  1.1875rem);
+  --text-xl:   clamp(1.25rem,   1.14rem + 0.55vw, 1.5rem);
+  --text-2xl:  clamp(1.5rem,    1.32rem + 0.9vw,  2rem);
+  --text-3xl:  clamp(1.875rem,  1.55rem + 1.6vw,  2.75rem);
+  --text-4xl:  clamp(2.25rem,   1.7rem + 2.7vw,   3.75rem);
+
+  /* 한글은 라틴 문자보다 글자 폭이 크고 조밀해서 행간을 넉넉히 잡습니다.
+   * 본문 1.7 은 한국어 웹에서 검증된 하한선입니다. */
+  --leading-tight: 1.3;   /* 큰 제목 */
+  --leading-snug:  1.45;  /* 작은 제목 */
+  --leading-body:  1.7;   /* 본문 */
+
+  /* 한글에는 음수 자간을 주지 않습니다 (자모가 뭉쳐 보임).
+   * 대문자 라틴 라벨에만 양수 자간을 씁니다. */
+  --tracking-label: 0.06em;
+
+  --measure: 65ch;        /* 본문 최대 측정폭 */
+
+  /* --- 간격 (4px 기반) ------------------------------------------------------ */
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-24: 6rem;      /* 96px */
+
+  /* 화면 좌우 여백. 모바일에서 16px, 넓어지면 늘어납니다. */
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+
+  /* --- 터치 타깃 ------------------------------------------------------------
+   * 44px 는 최소치이지 목표치가 아닙니다. 주요 CTA 는 48px 이상.
+   * 인접한 타깃 사이는 최소 8px 띄웁니다. */
+  --tap-min: 44px;
+  --tap-cta: 48px;
+  --tap-gap: var(--space-2);
+
+  /* --- 반경 / 테두리 -------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+  --border: 1px;
+
+  /* --- 브레이크포인트 (참고용. @media 에는 직접 못 씀) -----------------------
+   *   기본      0     모바일 세로
+   *   sm      480px   모바일 가로 / 큰 폰
+   *   md      768px   태블릿
+   *   lg     1024px   노트북
+   *   xl     1280px   데스크톱
+   * 컨테이너 최대폭 */
+  --container: 1200px;
+
+  /* --- 모션 ---------------------------------------------------------------- */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+
+  /* --- 색상: 중립 ----------------------------------------------------------
+   * 순회색이 아니라 미세하게 푸른 기가 도는 회색입니다. */
+  --ground:     #FBFBFC;
+  --surface:    #F2F3F6;
+  --surface-2:  #E8EAEF;
+  --line:       #DDE0E7;
+  --line-strong:#C3C8D4;
+  --ink:        #14161C;
+  --ink-2:      #444A5A;
+  --ink-3:      #6E7488;
+
+  /* --- 색상: 브랜드 (미정 — 브랜드 확정 후 이 3줄만 교체) -------------------- */
+  --brand:      #3D4B8C;
+  --brand-ink:  #FFFFFF;  /* --brand 위에 올라가는 글자색 */
+  --brand-soft: #E7E9F5;
+
+  /* --- 색상: 의미 ---------------------------------------------------------- */
+  --ok:   #1F5F46;
+  --warn: #8A5A12;
+  --err:  #A32B2B;
+
+  --focus-ring: 2px solid var(--brand);
+  --focus-offset: 2px;
+}
+
+/* 다크 테마. 토큰만 재정의하고 컴포넌트 규칙은 건드리지 않습니다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:     #101116;
+    --surface:    #181A21;
+    --surface-2:  #21242D;
+    --line:       #2A2E38;
+    --line-strong:#3C4150;
+    --ink:        #E8EAF0;
+    --ink-2:      #B0B6C4;
+    --ink-3:      #808799;
+
+    --brand:      #96A3E8;
+    --brand-ink:  #14161C;
+    --brand-soft: #23273D;
+
+    --ok:   #6FC49E;
+    --warn: #D9A94E;
+    --err:  #E08585;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:     #101116;
+  --surface:    #181A21;
+  --surface-2:  #21242D;
+  --line:       #2A2E38;
+  --line-strong:#3C4150;
+  --ink:        #E8EAF0;
+  --ink-2:      #B0B6C4;
+  --ink-3:      #808799;
+
+  --brand:      #96A3E8;
+  --brand-ink:  #14161C;
+  --brand-soft: #23273D;
+
+  --ok:   #6FC49E;
+  --warn: #D9A94E;
+  --err:  #E08585;
+}
+
+/* --- 기반 규칙 -------------------------------------------------------------
+ * 아래는 토큰을 실제로 적용하는 최소한의 규칙입니다. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  /* 한글 본문에서 word-break: break-all 은 쓰지 않습니다. 어절이 끊깁니다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 모바일 브라우저의 주소창 때문에 100vh 는 실제 화면보다 큽니다. dvh 를 씁니다. */
+.u-screen { min-height: 100dvh; }
+
+h1, h2, h3, h4 {
+  line-height: var(--leading-snug);
+  text-wrap: balance;
+  margin: 0;
+}
+h1 { font-size: var(--text-4xl); line-height: var(--leading-tight); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+
+p { margin: 0; max-width: var(--measure); }
+
+/* 터치 타깃. 시각적 크기가 작아도 실제 클릭 영역은 44px 를 채웁니다. */
+button, [role="button"], a.btn, input[type="submit"] {
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  font-family: inherit;
+  font-size: var(--text-base);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* 숫자가 세로로 정렬되는 곳(가격, 표, 통계)에는 고정폭 숫자를 씁니다. */
+.u-nums { font-variant-numeric: tabular-nums; }
+
+/* 표는 절대 페이지를 가로로 밀지 않게 자기 컨테이너 안에서 스크롤합니다. */
+.u-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+img, video { max-width: 100%; height: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

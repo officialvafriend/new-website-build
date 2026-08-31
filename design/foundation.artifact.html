@@ -1,0 +1,369 @@
+<title>리디자인 기반 스펙 v0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#FBFBFC; --surface:#F2F3F6; --surface-2:#E8EAEF;
+  --line:#DDE0E7; --line-strong:#C3C8D4;
+  --ink:#14161C; --ink-2:#444A5A; --ink-3:#6E7488;
+  --accent:#3D4B8C; --accent-ink:#FFFFFF; --accent-soft:#E7E9F5;
+  --warn:#8A5A12; --warn-soft:#F7EEDD; --warn-line:#E3CFA6;
+  --ok:#1F5F46; --ok-soft:#E2F0EA; --ok-line:#B4D8C6;
+  --font:"IBM Plex Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --noto:"Noto Sans KR",var(--font);
+  --gutter:clamp(1.125rem,0.7rem + 2vw,3rem);
+  --measure:65ch;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101116; --surface:#181A21; --surface-2:#21242D;
+    --line:#2A2E38; --line-strong:#3C4150;
+    --ink:#E8EAF0; --ink-2:#B0B6C4; --ink-3:#808799;
+    --accent:#96A3E8; --accent-ink:#14161C; --accent-soft:#23273D;
+    --warn:#D9A94E; --warn-soft:#2E2717; --warn-line:#4A3D1F;
+    --ok:#6FC49E; --ok-soft:#172A22; --ok-line:#2A4A3A;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101116; --surface:#181A21; --surface-2:#21242D;
+  --line:#2A2E38; --line-strong:#3C4150;
+  --ink:#E8EAF0; --ink-2:#B0B6C4; --ink-3:#808799;
+  --accent:#96A3E8; --accent-ink:#14161C; --accent-soft:#23273D;
+  --warn:#D9A94E; --warn-soft:#2E2717; --warn-line:#4A3D1F;
+  --ok:#6FC49E; --ok-soft:#172A22; --ok-line:#2A4A3A;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--font); font-size:16px; line-height:1.7;
+  word-break:keep-all; overflow-wrap:break-word;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 var(--gutter);}
+p{margin:0; max-width:var(--measure); color:var(--ink-2);}
+h1,h2,h3{margin:0; line-height:1.35; text-wrap:balance; color:var(--ink); font-weight:600;}
+code,.mono{font-family:var(--mono); font-size:0.86em; font-variant-numeric:tabular-nums;}
+
+/* ---- header ---- */
+.head{padding:clamp(3rem,8vw,6rem) 0 clamp(2rem,5vw,3.5rem); border-bottom:1px solid var(--line);}
+.eyebrow{
+  font-family:var(--mono); font-size:12px; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 1rem;
+}
+.head h1{font-size:clamp(2rem,1.4rem + 3vw,3.25rem); font-weight:600; letter-spacing:-0.01em;}
+.head .lede{margin-top:1.25rem; font-size:clamp(1.0625rem,1rem + 0.3vw,1.1875rem);}
+.meta{
+  display:flex; flex-wrap:wrap; gap:0.5rem 1.5rem; margin-top:2rem;
+  font-family:var(--mono); font-size:12.5px; color:var(--ink-3);
+}
+.meta b{font-weight:500; color:var(--ink-2);}
+
+/* ---- sections ---- */
+section{padding:clamp(2.75rem,7vw,4.5rem) 0; border-bottom:1px solid var(--line);}
+section:last-of-type{border-bottom:0;}
+.sec-head{display:flex; flex-direction:column; gap:0.75rem; margin-bottom:2rem;}
+.sec-head h2{font-size:clamp(1.375rem,1.2rem + 0.8vw,1.75rem); letter-spacing:-0.005em;}
+.tag{
+  align-self:flex-start; font-family:var(--mono); font-size:11px;
+  letter-spacing:0.08em; text-transform:uppercase; padding:0.25rem 0.55rem;
+  border-radius:3px; border:1px solid;
+}
+.tag.fixed{color:var(--ok); background:var(--ok-soft); border-color:var(--ok-line);}
+.tag.open{color:var(--warn); background:var(--warn-soft); border-color:var(--warn-line);}
+
+/* ---- status table ---- */
+.status{width:100%; border-collapse:collapse; font-size:15px;}
+.status th,.status td{text-align:left; padding:0.85rem 1rem; border-bottom:1px solid var(--line); vertical-align:top;}
+.status th{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500;
+  border-bottom:1px solid var(--line-strong);
+}
+.status td:first-child{font-weight:500; color:var(--ink); white-space:nowrap;}
+.status td:last-child{color:var(--ink-2);}
+.dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:0.5rem; vertical-align:0.08em;}
+.dot.ok{background:var(--ok);} .dot.open{background:var(--warn);}
+
+/* ---- specimen ---- */
+.specimens{display:grid; gap:1rem; grid-template-columns:1fr;}
+@media(min-width:720px){.specimens{grid-template-columns:repeat(3,1fr);}}
+.spec{border:1px solid var(--line); border-radius:10px; padding:1.5rem; background:var(--surface); display:flex; flex-direction:column; gap:0.9rem;}
+.spec.pick{border-color:var(--accent); background:var(--accent-soft);}
+.spec-name{font-family:var(--mono); font-size:12px; letter-spacing:0.06em; color:var(--ink-3); display:flex; justify-content:space-between; gap:0.5rem;}
+.spec.pick .spec-name b{color:var(--accent); font-weight:500;}
+.spec-sample{font-size:26px; line-height:1.4; color:var(--ink); font-weight:600;}
+.spec-sample small{display:block; font-size:14px; font-weight:400; line-height:1.7; color:var(--ink-2); margin-top:0.5rem;}
+.spec-note{font-size:13.5px; line-height:1.65; color:var(--ink-2); margin:0;}
+.f-noto{font-family:var(--noto);}
+.f-plex{font-family:var(--font);}
+
+/* ---- type scale ---- */
+.scale{display:flex; flex-direction:column;}
+.scale-row{display:flex; align-items:baseline; gap:1rem; padding:0.9rem 0; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+.scale-row:last-child{border-bottom:0;}
+.scale-key{font-family:var(--mono); font-size:12px; color:var(--ink-3); min-width:11rem; flex-shrink:0;}
+.scale-key b{color:var(--ink-2); font-weight:500;}
+.scale-demo{color:var(--ink); font-weight:500; line-height:1.3;}
+
+/* ---- device frame ---- */
+.frame-wrap{overflow-x:auto; padding-bottom:0.5rem;}
+.frame{
+  width:375px; flex-shrink:0; border:1px solid var(--line-strong); border-radius:20px;
+  background:var(--ground); padding:1rem; margin:0;
+}
+.frame-label{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:0.06em; margin:0 0 0.75rem; text-transform:uppercase;}
+.tap-row{display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;}
+.btn{
+  font-family:inherit; font-size:16px; border-radius:8px; border:1px solid transparent;
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  transition:background 150ms cubic-bezier(.2,0,.2,1);
+}
+.btn-cta{min-height:48px; flex:1; background:var(--accent); color:var(--accent-ink); font-weight:500;}
+.btn-cta:hover{filter:brightness(1.08);}
+.btn-sec{min-height:44px; padding:0 1rem; background:transparent; color:var(--ink); border-color:var(--line-strong);}
+.btn-bad{min-height:28px; padding:0 0.6rem; font-size:13px; background:transparent; color:var(--ink-3); border-color:var(--line-strong); border-style:dashed;}
+.tap-caption{font-family:var(--mono); font-size:11px; color:var(--ink-3); flex-shrink:0;}
+.frame-note{font-size:13px; color:var(--ink-2); margin:0.75rem 0 0; line-height:1.6;}
+:where(button,a,[tabindex]):focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* ---- swatches ---- */
+.swatches{display:grid; gap:0.75rem; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));}
+.sw{border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--surface);}
+.sw-chip{height:56px; border-bottom:1px solid var(--line);}
+.sw-body{padding:0.6rem 0.7rem;}
+.sw-name{font-family:var(--mono); font-size:11.5px; color:var(--ink); display:block;}
+.sw-role{font-size:12px; color:var(--ink-3); display:block; margin-top:0.15rem;}
+.sw-tbd .sw-chip{
+  background:repeating-linear-gradient(45deg,var(--warn-soft) 0 8px,var(--surface-2) 8px 16px);
+}
+.sw-tbd{border-color:var(--warn-line);}
+
+/* ---- checklist ---- */
+.checks{list-style:none; margin:0; padding:0; display:grid; gap:0.5rem;}
+@media(min-width:800px){.checks{grid-template-columns:1fr 1fr; gap:0.5rem 1.5rem;}}
+.checks li{
+  display:grid; grid-template-columns:auto 1fr; gap:0.75rem; align-items:start;
+  padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:8px;
+  background:var(--surface); font-size:14.5px; line-height:1.6; color:var(--ink-2);
+}
+.checks b{color:var(--ink); font-weight:500;}
+.checks .mk{font-family:var(--mono); font-size:12px; color:var(--ok); line-height:1.9;}
+
+/* ---- next ---- */
+.next{display:grid; gap:0.9rem; margin-top:1.75rem;}
+.next-item{
+  display:grid; grid-template-columns:auto 1fr; gap:1rem; align-items:start;
+  padding:1.1rem 1.25rem; border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0; background:var(--surface);
+}
+.next-item.blocked{border-left-color:var(--warn);}
+.next-who{
+  font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase;
+  color:var(--accent-ink); background:var(--accent); padding:0.2rem 0.5rem; border-radius:3px;
+  white-space:nowrap; line-height:1.6;
+}
+.next-item.blocked .next-who{background:var(--warn); color:var(--ground);}
+.next-item p{max-width:none; font-size:14.5px;}
+.next-item strong{color:var(--ink); font-weight:500; display:block; margin-bottom:0.15rem;}
+
+.foot{padding:2.5rem 0 4rem; color:var(--ink-3); font-size:13px; font-family:var(--mono);}
+@media (prefers-reduced-motion:reduce){*{transition-duration:0.01ms !important; animation-duration:0.01ms !important;}}
+</style>
+
+<div class="wrap">
+
+<header class="head">
+  <p class="eyebrow">디자인 기반 · 브랜드 확정 전</p>
+  <h1>리디자인 기반 스펙</h1>
+  <p class="lede">
+    한국어 콘텐츠와 모바일 우선이라는 두 가지 결정에서 곧바로 따라 나오는 것들을 먼저 고정했습니다.
+    브랜드 색상과 실제 콘텐츠는 아직 정해지지 않았고, 이 문서에서 그 부분은 명시적으로 비워 두었습니다.
+  </p>
+  <div class="meta">
+    <span><b>버전</b> v0</span>
+    <span><b>대상</b> 한국어 · 국내</span>
+    <span><b>기준</b> 모바일 우선</span>
+    <span><b>코드</b> design/tokens.css</span>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <h2>지금 확정된 것과 비어 있는 것</h2>
+  </div>
+  <p style="margin-bottom:1.75rem;">
+    비어 있는 항목은 추측으로 채우지 않았습니다. 브랜드와 콘텐츠를 알기 전에 정한 색은
+    나중에 전부 다시 뜯어야 하기 때문입니다.
+  </p>
+  <div class="u-scroll-x" style="overflow-x:auto;">
+  <table class="status">
+    <thead>
+      <tr><th>항목</th><th>상태</th><th>내용</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>폰트 스택</td><td><span class="dot ok"></span>확정</td><td>Pretendard → Noto Sans KR → 시스템 한글 폰트 순 폴백</td></tr>
+      <tr><td>타입 스케일</td><td><span class="dot ok"></span>확정</td><td>본문 16px 고정, 제목은 <code>clamp()</code> 로 유연하게. 비율 1.25</td></tr>
+      <tr><td>행간 · 자간</td><td><span class="dot ok"></span>확정</td><td>본문 1.7. 한글에 음수 자간 미사용</td></tr>
+      <tr><td>간격 스케일</td><td><span class="dot ok"></span>확정</td><td>4px 기반 9단계</td></tr>
+      <tr><td>터치 타깃</td><td><span class="dot ok"></span>확정</td><td>최소 44px, 주요 CTA 48px, 인접 간격 8px</td></tr>
+      <tr><td>브레이크포인트</td><td><span class="dot ok"></span>확정</td><td>480 / 768 / 1024 / 1280, min-width 만 사용</td></tr>
+      <tr><td>중립 색</td><td><span class="dot ok"></span>확정</td><td>푸른 기가 약간 도는 회색 계열. 라이트 · 다크 양쪽</td></tr>
+      <tr><td>브랜드 색</td><td><span class="dot open"></span>미정</td><td>브랜드 정보 필요. 토큰 3개만 교체하면 전체 반영</td></tr>
+      <tr><td>레이아웃 · 섹션 구성</td><td><span class="dot open"></span>미정</td><td>현재 사이트 구조를 못 봄 (네트워크 차단)</td></tr>
+      <tr><td>콘텐츠 · 카피</td><td><span class="dot open"></span>미정</td><td>업종 · 타깃 · 주요 페이지 정보 필요</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="tag fixed">확정</span>
+    <h2>한글 폰트</h2>
+  </div>
+  <p style="margin-bottom:1.75rem;">
+    후보 셋을 실제 서체로 놓고 비교했습니다. Pretendard 를 1순위로 두되,
+    Google Fonts 에 없어 자체 호스팅이 필요하다는 점이 유일한 비용입니다.
+  </p>
+  <div class="specimens">
+    <div class="spec pick">
+      <span class="spec-name"><b>1순위</b><span>Pretendard</span></span>
+      <div class="spec-sample f-plex">가나다라 AaBb 123<small>국내 웹에서 사실상 표준으로 자리 잡은 서체입니다. 화면에서의 가독성이 가장 좋습니다.</small></div>
+      <p class="spec-note">자체 호스팅 필요 (Google Fonts 미제공). 이 문서에서는 대체 서체로 보입니다.</p>
+    </div>
+    <div class="spec">
+      <span class="spec-name"><b>폴백</b><span>Noto Sans KR</span></span>
+      <div class="spec-sample f-noto">가나다라 AaBb 123<small>Google Fonts 에서 바로 불러올 수 있고 글자 지원 범위가 가장 넓습니다.</small></div>
+      <p class="spec-note">무난하지만 특징이 약합니다. 자체 호스팅 전까지의 폴백으로 씁니다.</p>
+    </div>
+    <div class="spec">
+      <span class="spec-name"><b>대안</b><span>IBM Plex Sans KR</span></span>
+      <div class="spec-sample f-plex">가나다라 AaBb 123<small>기하학적이고 기술적인 인상. 이 문서가 쓰고 있는 서체입니다.</small></div>
+      <p class="spec-note">Google Fonts 제공. 브랜드 성격이 기술 · 전문 쪽이면 후보로 올릴 만합니다.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="tag fixed">확정</span>
+    <h2>타입 스케일</h2>
+  </div>
+  <p style="margin-bottom:1.5rem;">
+    본문은 <code>16px</code> 아래로 내려가지 않습니다. iOS 사파리에서 16px 미만 입력 필드는
+    탭할 때 화면이 자동 확대되기 때문입니다. 제목만 화면 폭에 따라 늘어납니다.
+  </p>
+  <div class="scale">
+    <div class="scale-row"><span class="scale-key"><b>--text-4xl</b> 36 → 60px</span><span class="scale-demo" style="font-size:clamp(2.25rem,1.7rem + 2.7vw,3.75rem);">페이지 제목</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-3xl</b> 30 → 44px</span><span class="scale-demo" style="font-size:clamp(1.875rem,1.55rem + 1.6vw,2.75rem);">섹션 제목</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-2xl</b> 24 → 32px</span><span class="scale-demo" style="font-size:clamp(1.5rem,1.32rem + 0.9vw,2rem);">소제목</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-xl</b> 20 → 24px</span><span class="scale-demo" style="font-size:clamp(1.25rem,1.14rem + 0.55vw,1.5rem);">리드 문장</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-lg</b> 17 → 19px</span><span class="scale-demo" style="font-size:clamp(1.0625rem,0.98rem + 0.4vw,1.1875rem);">강조 본문</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-base</b> 16px 고정</span><span class="scale-demo" style="font-size:16px; font-weight:400;">기본 본문. 이 아래로는 내려가지 않습니다.</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-sm</b> 14px</span><span class="scale-demo" style="font-size:14px; font-weight:400; color:var(--ink-2);">보조 설명</span></div>
+    <div class="scale-row"><span class="scale-key"><b>--text-xs</b> 13px</span><span class="scale-demo" style="font-size:13px; font-weight:400; color:var(--ink-3);">캡션 · 라벨</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="tag fixed">확정</span>
+    <h2>터치 타깃</h2>
+  </div>
+  <p style="margin-bottom:1.5rem;">
+    아래는 <code>375px</code> — 아이폰 SE 기준 실제 폭입니다. 화면에서 보이는 크기가 곧 손가락이 닿는 크기입니다.
+  </p>
+  <div class="frame-wrap">
+    <div class="frame">
+      <p class="frame-label">375 × 실제 크기</p>
+      <div class="tap-row">
+        <button class="btn btn-cta" type="button">문의하기</button>
+        <span class="tap-caption">48px · CTA</span>
+      </div>
+      <div class="tap-row">
+        <button class="btn btn-sec" type="button">더 보기</button>
+        <span class="tap-caption">44px · 최소</span>
+      </div>
+      <div class="tap-row">
+        <button class="btn btn-bad" type="button">더 보기</button>
+        <span class="tap-caption">28px · 미달</span>
+      </div>
+      <p class="frame-note">
+        세 번째 버튼이 데스크톱 기준으로 만든 흔한 크기입니다. 모바일에서 오탭이 나는 지점입니다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="tag open">미정</span>
+    <h2>색상 토큰</h2>
+  </div>
+  <p style="margin-bottom:1.75rem;">
+    중립 색은 순회색이 아니라 푸른 기가 미세하게 도는 계열로 잡았습니다. 브랜드 색이 정해지면
+    <code>--brand</code>, <code>--brand-ink</code>, <code>--brand-soft</code> 세 줄만 바꾸면 전체에 반영됩니다.
+  </p>
+  <div class="swatches">
+    <div class="sw"><div class="sw-chip" style="background:var(--ground);"></div><div class="sw-body"><span class="sw-name">--ground</span><span class="sw-role">페이지 바탕</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--surface);"></div><div class="sw-body"><span class="sw-name">--surface</span><span class="sw-role">카드 · 패널</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--line-strong);"></div><div class="sw-body"><span class="sw-name">--line-strong</span><span class="sw-role">테두리 강조</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--ink-3);"></div><div class="sw-body"><span class="sw-name">--ink-3</span><span class="sw-role">보조 텍스트</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--ink);"></div><div class="sw-body"><span class="sw-name">--ink</span><span class="sw-role">본문 텍스트</span></div></div>
+    <div class="sw sw-tbd"><div class="sw-chip"></div><div class="sw-body"><span class="sw-name">--brand</span><span class="sw-role">브랜드 확정 후</span></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="tag fixed">확정</span>
+    <h2>모바일에서 실제로 깨지는 것들</h2>
+  </div>
+  <p style="margin-bottom:1.75rem;">
+    기반 CSS 에 이미 반영해 둔 규칙입니다. 전부 국내 모바일 환경에서 반복적으로 문제가 되는 항목입니다.
+  </p>
+  <ul class="checks">
+    <li><span class="mk">✓</span><span><b>100vh 대신 100dvh</b> — 모바일 브라우저 주소창 때문에 100vh 는 화면보다 큽니다.</span></li>
+    <li><span class="mk">✓</span><span><b>word-break: keep-all</b> — 한글에서 break-all 을 쓰면 어절 중간이 끊깁니다.</span></li>
+    <li><span class="mk">✓</span><span><b>viewport 메타 태그</b> — <code>width=device-width, initial-scale=1</code>.</span></li>
+    <li><span class="mk">✓</span><span><b>표는 자기 안에서 스크롤</b> — 페이지 전체가 가로로 밀리지 않게 합니다.</span></li>
+    <li><span class="mk">✓</span><span><b>고정폭 숫자</b> — 가격 · 통계처럼 세로로 정렬되는 숫자에 적용합니다.</span></li>
+    <li><span class="mk">✓</span><span><b>키보드 포커스 표시</b> — <code>:focus-visible</code> 에 항상 보이는 외곽선.</span></li>
+    <li><span class="mk">✓</span><span><b>모션 최소화 존중</b> — <code>prefers-reduced-motion</code> 에서 애니메이션을 끕니다.</span></li>
+    <li><span class="mk">✓</span><span><b>다크 모드</b> — 토큰만 재정의. 시스템 설정과 명시적 선택 양쪽 대응.</span></li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>다음 단계</h2>
+  </div>
+  <p>여기서부터는 제가 혼자 진행할 수 없는 것들입니다.</p>
+  <div class="next">
+    <div class="next-item blocked">
+      <span class="next-who">확인 필요</span>
+      <p><strong>네트워크 정책에 staging 도메인 허용</strong>
+      현재 환경이 <code>staging-fe60-tothemoone-huwyp.wpcomstaging.com</code> 접속을 403 으로 막고 있습니다.
+      열리면 현재 사이트를 직접 읽고 스크린샷까지 떠서 구조를 분석할 수 있습니다.</p>
+    </div>
+    <div class="next-item blocked">
+      <span class="next-who">확인 필요</span>
+      <p><strong>브랜드 · 업종 정보</strong>
+      무엇을 파는 사이트인지, 타깃이 누구인지, 로고와 기존 브랜드 색이 있는지.
+      이게 있어야 색과 레이아웃을 근거를 갖고 정할 수 있습니다.</p>
+    </div>
+    <div class="next-item">
+      <span class="next-who">그 다음</span>
+      <p><strong>홈 화면 시안 2안</strong>
+      위 두 가지가 채워지면 모바일 기준 홈 시안을 서로 다른 방향으로 두 개 만들어 비교합니다.
+      이 기반 위에 올리므로 방향만 고르면 됩니다.</p>
+    </div>
+  </div>
+</section>
+
+<p class="foot">design/tokens.css · v0 · 브랜드 확정 시 토큰 3개 교체</p>
+
+</div>
