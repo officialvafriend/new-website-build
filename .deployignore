@@ -1,0 +1,20 @@
+# WordPress.com GitHub Deployments 제외 목록 (.gitignore 와 같은 문법)
+# 여기 있는 것들은 사이트로 복사되지 않습니다.
+
+# Claude Code 스킬 — 개발 도구일 뿐 사이트 코드가 아닙니다 (약 11MB)
+.claude/
+
+# 디자인 시안과 문서 — 참고용. 사이트에서 로드되지 않습니다.
+design/
+
+# 저장소 메타
+.git/
+.gitignore
+.deployignore
+README.md
+
+# 개발 부산물
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

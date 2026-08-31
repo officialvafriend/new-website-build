@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------------
+ * 액상덕후 — 디자인 토큰
+ *
+ * 이 파일은 CSS 커스텀 속성만 정의합니다. 어떤 요소에도 스타일을 적용하지
+ * 않으므로, 로드해도 현재 사이트의 겉모습은 전혀 바뀌지 않습니다.
+ * 배포 경로가 제대로 동작하는지 확인하는 것이 지금의 목적입니다.
+ *
+ * 실제 스타일은 방향이 확정된 뒤 별도 파일로 추가합니다.
+ * 전체 기반 규칙(요소 스타일 포함)은 design/tokens.css 에 있습니다.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* 폰트 — Pretendard 자체 호스팅 전까지 Noto Sans KR 로 폴백 */
+  --dh-font-sans:
+    Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+
+  /* 타입 스케일 — 본문 16px 고정 (iOS 입력 시 자동 확대 방지) */
+  --dh-text-xs: 0.8125rem;
+  --dh-text-sm: 0.875rem;
+  --dh-text-base: 1rem;
+  --dh-text-lg: clamp(1.0625rem, 0.98rem + 0.4vw, 1.1875rem);
+  --dh-text-xl: clamp(1.25rem, 1.14rem + 0.55vw, 1.5rem);
+  --dh-text-2xl: clamp(1.5rem, 1.32rem + 0.9vw, 2rem);
+  --dh-text-3xl: clamp(1.875rem, 1.55rem + 1.6vw, 2.75rem);
+  --dh-text-4xl: clamp(2.25rem, 1.7rem + 2.7vw, 3.75rem);
+
+  --dh-leading-body: 1.7;
+  --dh-measure: 65ch;
+
+  /* 간격 — 4px 기반 */
+  --dh-space-1: 0.25rem;
+  --dh-space-2: 0.5rem;
+  --dh-space-3: 0.75rem;
+  --dh-space-4: 1rem;
+  --dh-space-6: 1.5rem;
+  --dh-space-8: 2rem;
+  --dh-space-12: 3rem;
+  --dh-space-16: 4rem;
+  --dh-gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+
+  /* 터치 타깃 — 44px 최소, 주요 CTA 48px */
+  --dh-tap-min: 44px;
+  --dh-tap-cta: 48px;
+
+  --dh-radius-sm: 4px;
+  --dh-radius-md: 8px;
+  --dh-radius-lg: 14px;
+  --dh-container: 1200px;
+
+  --dh-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --dh-dur-fast: 150ms;
+  --dh-dur-base: 250ms;
+
+  /* 중립색 — 푸른 기가 약간 도는 회색 */
+  --dh-ground: #FBFBFC;
+  --dh-surface: #F2F3F6;
+  --dh-line: #DDE0E7;
+  --dh-ink: #14161C;
+  --dh-ink-2: #444A5A;
+  --dh-ink-3: #6E7488;
+
+  /* 브랜드색 — 미정. 확정되면 이 3줄만 교체하면 전체 반영됩니다. */
+  --dh-brand: #3D4B8C;
+  --dh-brand-ink: #FFFFFF;
+  --dh-brand-soft: #E7E9F5;
+}
