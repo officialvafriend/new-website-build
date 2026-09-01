@@ -18,3 +18,7 @@ node_modules/
 __pycache__/
 *.pyc
 .DS_Store
+
+# 참고용 원본 소스 — 사이트에 이미 별도 플러그인으로 설치돼 있습니다.
+# 배포하면 안 됩니다.
+reference/

@@ -1,0 +1,57 @@
+/* ============================================================
+   장바구니 · 결제 화면 현대화 (codex 개선안 재구현)
+   구조는 건드리지 않고 스타일만 정돈한다.
+   ============================================================ */
+:root{
+  --dhp-ink:#16212B;--dhp-line:#E6EBEF;--dhp-line2:#D6DEE5;
+  --dhp-brand:#1B2733;--dhp-r:12px;
+  --dhp-ease:cubic-bezier(.22,1,.36,1);
+}
+
+/* 입력창 */
+.woocommerce-cart input.input-text,
+.woocommerce-checkout input.input-text,
+.woocommerce-checkout select,
+.woocommerce-checkout textarea{
+  border:1px solid var(--dhp-line2) !important;
+  border-radius:10px !important;
+  padding:11px 13px !important;
+  background:#fff !important;
+  transition:border-color 160ms var(--dhp-ease), box-shadow 160ms var(--dhp-ease);
+}
+.woocommerce-cart input.input-text:focus,
+.woocommerce-checkout input.input-text:focus,
+.woocommerce-checkout select:focus,
+.woocommerce-checkout textarea:focus{
+  border-color:var(--dhp-ink) !important;
+  box-shadow:0 0 0 3px rgba(27,39,51,.08) !important;
+  outline:none !important;
+}
+
+/* 주요 버튼 */
+.woocommerce-cart .checkout-button,
+.woocommerce-checkout #place_order{
+  background:var(--dhp-brand) !important;color:#fff !important;
+  border:0 !important;border-radius:999px !important;
+  padding:15px 22px !important;font-weight:700 !important;
+  transition:transform 160ms var(--dhp-ease), opacity 160ms var(--dhp-ease);
+}
+.woocommerce-cart .checkout-button:active,
+.woocommerce-checkout #place_order:active{transform:scale(.98)}
+
+/* 합계 박스 */
+.woocommerce-cart .cart_totals,
+.woocommerce-checkout #order_review{
+  background:#fff;border:1px solid var(--dhp-line);
+  border-radius:16px;padding:18px !important;
+}
+
+/* 수량 입력 */
+.woocommerce-cart .quantity .qty{
+  border:1px solid var(--dhp-line2) !important;border-radius:9px !important;
+  height:38px !important;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .woocommerce-cart *,.woocommerce-checkout *{transition:none !important}
+}

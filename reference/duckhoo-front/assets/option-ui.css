@@ -1,0 +1,456 @@
+/* 로드 즉시 적용 — JS 를 기다리지 않는다.
+   이 CSS 는 상품 상세에서만 로드되므로 무조건 숨겨도 안전하다.
+   (예전 분홍 '맛 선택/구매하기' 바가 로딩 중 번쩍이던 문제) */
+#vf-sticky-trigger-bar{display:none !important}
+#dh-ov{display:none !important}
+.vf-drawer-header{display:none !important}
+
+/* ============================================================
+   액상덕후 · 상품 옵션 UI  v2
+   레퍼런스: 왼쪽 큰 이미지 / 오른쪽 짧은 칼럼(접이식 카드 + 칩)
+   모든 규칙은 .dhx 안 또는 body.dhx-on 스코프에서만 동작한다.
+   ============================================================ */
+
+:root{
+  --dhx-ink:#16212B;
+  --dhx-ink-2:#5C6B78;
+  --dhx-ink-3:#94A3AE;
+  --dhx-line:#E6EBEF;
+  --dhx-line-2:#D6DEE5;
+  --dhx-bg:#FFFFFF;
+  --dhx-ground:#F2F5F7;
+  --dhx-brand:#1B2733;      /* 레퍼런스의 검정 버튼 톤 */
+  --dhx-accent:#2E7D72;     /* 선택 상태 강조 */
+  --dhx-accent-soft:#E8F3F1;
+  --dhx-warn:#C2410C;
+  --dhx-r:14px;
+  /* codex 개선안: 사이트 공통 모션 규칙 */
+  --dhx-fast:160ms;   /* 빠른 피드백 */
+  --dhx-med:280ms;    /* 일반 전환 */
+  --dhx-slow:600ms;   /* 스크롤 등장 */
+  --dhx-ease:cubic-bezier(.22, 1, .36, 1);
+}
+
+/* 원본 PPOM 필드는 감추되 값은 살려둔다 */
+.dhx-src{
+  position:absolute !important;width:1px !important;height:1px !important;
+  padding:0 !important;margin:-1px !important;overflow:hidden !important;
+  clip:rect(0 0 0 0) !important;white-space:nowrap !important;border:0 !important;
+}
+
+.dhx{
+  display:flex;flex-direction:column;gap:10px;
+  font-size:14px;color:var(--dhx-ink);line-height:1.45;
+}
+.dhx *{box-sizing:border-box}
+
+/* ---------- 접이식 카드 ---------- */
+.dhx-card{
+  background:var(--dhx-bg);
+  border:1px solid var(--dhx-line);
+  border-radius:var(--dhx-r);
+  overflow:hidden;
+}
+.dhx-card__head{
+  display:flex !important;align-items:center !important;gap:8px !important;
+  width:100% !important;max-width:none !important;
+  padding:13px 14px !important;margin:0 !important;
+  border:0 !important;border-radius:0 !important;
+  background:transparent !important;color:var(--dhx-ink) !important;
+  font-size:13.5px !important;font-weight:700 !important;
+  line-height:1.4 !important;text-align:left !important;
+  letter-spacing:normal !important;text-transform:none !important;
+  height:auto !important;min-height:0 !important;box-shadow:none !important;
+  cursor:pointer;
+}
+.dhx-card__no{
+  flex:0 0 20px;width:20px;height:20px;border-radius:6px;
+  background:var(--dhx-ink);color:#fff;
+  font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.dhx-card.is-done .dhx-card__no{background:var(--dhx-accent)}
+.dhx-card.is-locked .dhx-card__no{background:var(--dhx-ink-3)}
+.dhx-card__title{flex:1 1 auto !important;min-width:0 !important;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dhx-card__state{
+  flex:0 0 auto;font-size:11.5px;font-weight:500;color:var(--dhx-ink-3);
+}
+.dhx-card.is-done .dhx-card__state{color:var(--dhx-accent);font-weight:600}
+.dhx-card__chev{
+  flex:0 0 auto;font-size:13px;color:var(--dhx-ink-3);
+  transform:rotate(180deg);transition:transform .16s ease;
+}
+.dhx-card.is-open .dhx-card__chev{transform:rotate(0deg)}
+.dhx-card__body{
+  display:g
+rid;grid-template-rows:0fr;
+  transition:grid-template-rows var(--dhx-med) var(--dhx-ease);
+}
+.dhx-card__inner{
+  overflow:hidden;min-height:0;padding:0 14px;
+  opacity:0;transition:opacity var(--dhx-med) var(--dhx-ease);
+}
+.dhx-card.is-open .dhx-card__body{grid-template-rows:1fr}
+.dhx-card.is-open .dhx-card__inner{opacity:1;padding-bottom:14px}
+.dhx-card.is-locked{background:var(--dhx-ground)}
+
+.dhx .dhx-lock{
+  text-align:center;color:var(--dhx-ink-3);font-size:12.5px;padding:14px 8px;
+}
+
+/* ---------- STEP 1 묶음 ---------- */
+.dhx .dhx-bundles{display:flex;flex-direction:column;gap:8px}
+.dhx .dhx-bundle{
+  display:flex !important;align-items:center !important;
+  padding:11px 12px !important;
+  border:1px solid var(--dhx-line) !important;
+  border-radius:11px !important;background:#fff !important;
+}
+.dhx .dhx-bundle.is-on{
+  border-color:var(--dhx-accent) !important;background:var(--dhx-accent-soft) !important;
+}
+.dhx .dhx-bundle__pick{
+  display:flex !important;align-items:center !important;gap:10px !important;
+  flex:1 1 auto !important;min-width:0 !important;
+  padding:0 !important;margin:0 !important;border:0 !important;
+  background:transparent !important;color:inherit !important;font:inherit !important;
+  text-align:left !important;box-shadow:none !important;
+  height:auto !important;min-height:0 !important;max-width:none !important;
+  letter-spacing:normal !important;text-transform:none !important;cursor:pointer;
+}
+.dhx .dhx-bundle__mark{
+  flex:0 0 16px;width:16px;height:16px;border-radius:50%;
+  border:1.5px solid var(--dhx-line-2);background:#fff;position:relative;
+}
+.dhx .dhx-bundle.is-on .dhx-bundle__mark{border-color:var(--dhx-accent)}
+.dhx .dhx-bundle.is-on .dhx-bundle__mark::after{
+  content:"";position:absolute;inset:3px;border-radius:50%;background:var(--dhx-accent);
+}
+.dhx .dhx-bundle__name{flex:1 1 auto;min-width:0;font-size:13px;font-weight:600}
+.dhx .dhx-bundle__sub{
+  display:block;font-size:11px;color:var(--dhx-ink-2);font-weight:500;margin-top:2px;
+}
+
+/* ---------- STEP 2 맛 칩 ---------- */
+.dhx .dhx-chips{display:flex;flex-wrap:wrap;gap:7px}
+.dhx .dhx-chip{
+  display:flex;align-items:center;
+  border:1px solid var(--dhx-line-2);
+  border-radius:999px;background:#fff;
+  overflow:hidden;
+}
+.dhx .dhx-chip__pick{
+  padding:7px 13px !important;margin:0 !important;border:0 !important;
+  border-radius:0 !important;background:transparent !important;
+  color:var(--dhx-ink-2) !important;
+  font-size:12.5px !important;font-weight:500 !important;line-height:1.3 !important;
+  letter-spacing:normal !important;text-transform:none !important;
+  height:auto !important;min-height:0 !important;max-width:none !important;
+  box-shadow:none !important;white-space:nowrap;cursor:pointer;
+}
+.dhx .dhx-chip.is-on{
+  border-color:var(--dhx-accent);background:var(--dhx-accent-soft);
+}
+.dhx .dhx-chip.is-on .dhx-chip__pick{
+  color:var(--dhx-accent) !important;font-weight:700 !important;
+  padding-right:6px !important;
+}
+.dhx .dhx-chip .dhx-qty--mini{d
+isplay:none !important}
+.dhx .dhx-chip.is-on .dhx-qty--mini{display:flex !important}
+
+/* ---------- 목록 행 (STEP 3·4) ---------- */
+.dhx .dhx-rows{display:flex;flex-direction:column}
+.dhx .dhx-row{
+  display:flex !important;align-items:center !important;gap:10px !important;
+  padding:8px 2px !important;border-top:1px solid var(--dhx-line);
+}
+.dhx .dhx-row:first-child{border-top:0}
+.dhx .dhx-row__name{
+  flex:1 1 auto !important;min-width:0 !important;font-size:12.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dhx .dhx-row.is-on .dhx-row__name{font-weight:700;color:var(--dhx-accent)}
+.dhx .dhx-row__price{flex:0 0 auto;font-size:11.5px;color:var(--dhx-ink-2);white-space:nowrap}
+
+/* ---------- 스테퍼 ---------- */
+.dhx .dhx-qty{display:flex !important;align-items:center !important;flex:0 0 auto !important}
+.dhx .dhx-qty button{
+  flex:0 0 38px !important;width:38px !important;
+  height:36px !important;min-height:0 !important;max-width:none !important;
+  padding:0 !important;margin:0 !important;
+  border:1px solid var(--dhx-line-2) !important;border-radius:0 !important;
+  background:#fff !important;color:var(--dhx-ink) !important;
+  font-size:17px !important;line-height:1 !important;font-weight:600 !important;
+  letter-spacing:normal !important;text-transform:none !important;
+  box-shadow:none !important;cursor:pointer;
+  display:flex !important;align-items:center !important;justify-content:center !important;
+}
+.dhx .dhx-qty button:first-child{border-radius:9px 0 0 9px !important}
+.dhx .dhx-qty button:last-child{border-radius:0 9px 9px 0 !important}
+.dhx .dhx-qty__n{
+  flex:0 0 38px !important;width:38px !important;height:36px !important;
+  border-top:1px solid var(--dhx-line-2);border-bottom:1px solid var(--dhx-line-2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;
+  background:#fff;
+}
+/* 칩 안의 작은 스테퍼 */
+.dhx .dhx-qty--mini button{
+  flex:0 0 26px !important;width:26px !important;height:28px !important;
+  border:0 !important;background:transparent !important;
+  color:var(--dhx-accent) !important;font-size:15px !important;
+  border-radius:0 !important;
+}
+.dhx .dhx-qty--mini .dhx-qty__n{
+  flex:0 0 20px !important;width:20px !important;height:28px !important;
+  border:0 !important;background:transparent !important;
+  font-size:12.5px;color:var(--dhx-accent);
+}
+
+/* ---------- 요약 ---------- */
+.dhx .dhx-sum{
+  background:var(--dhx-bg);border:1px solid var(--dhx-line);
+  border-radius:var(--dhx-r);padding:14px;
+}
+.dhx .dhx-sum__row{display:flex;align-items:baseline;justify-content:space-between}
+.dhx .dhx-sum__label{font-size:12.5px;color:var(--dhx-ink-2)}
+.dhx .dhx-sum__total{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
+.dhx .dhx-gauge{margin-top:12px;padding-top:12px;border-top:1px solid var(--dhx-line)}
+.dhx .dhx-gauge__row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dhx .dhx-gauge__n{font-size:13
+px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--dhx-accent)}
+.dhx .dhx-gauge.is-off .dhx-gauge__n{color:var(--dhx-warn)}
+.dhx .dhx-gauge__track{height:5px;border-radius:99px;background:var(--dhx-line);overflow:hidden}
+.dhx .dhx-gauge__fill{height:100%;background:var(--dhx-accent);border-radius:99px;transition:width .18s ease}
+.dhx .dhx-gauge.is-off .dhx-gauge__fill{background:var(--dhx-warn)}
+.dhx .dhx-picked{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.dhx .dhx-picked__row{display:flex;align-items:center;justify-content:space-between;
+  font-size:12.5px;color:var(--dhx-ink-2)}
+.dhx .dhx-picked__row b{color:var(--dhx-ink);font-weight:600}
+.dhx .dhx-picked__empty{font-size:12.5px;color:var(--dhx-ink-3);text-align:center;padding:8px 0}
+
+/* ---------- 구매 버튼 (테마 버튼을 그대로 옮겨와 다시 칠함) ---------- */
+.dhx .vf-drawer-actions{
+  display:flex !important;gap:8px !important;position:static !important;
+  width:auto !important;padding:2px 0 0 0 !important;
+  background:transparent !important;box-shadow:none !important;
+  border-top:0 !important;backdrop-filter:none !important;z-index:auto !important;
+}
+.dhx .vf-drawer-actions button{
+  height:52px !important;min-height:52px !important;max-width:none !important;
+  border-radius:999px !important;
+  font-size:14px !important;font-weight:700 !important;
+  padding:0 14px !important;box-shadow:none !important;cursor:pointer;
+}
+.dhx .vf-drawer-actions button.single_add_to_cart_button{
+  flex:1 1 0 !important;
+  background:#fff !important;color:var(--dhx-ink) !important;
+  border:1px solid var(--dhx-line-2) !important;
+}
+.dhx .vf-drawer-actions button.wd-direct-checkout-btn{
+  flex:1 1 0 !important;
+  background:var(--dhx-brand) !important;color:#fff !important;border:0 !important;
+}
+.dhx .vf-drawer-actions button.vf-btn-disabled,
+.dhx .vf-drawer-actions button[disabled]{
+  opacity:.42 !important;cursor:not-allowed !important;filter:grayscale(.4) !important;
+}
+
+/* ============================================================
+   레이아웃
+   - 테마가 상품 그리드를 446px 480px 고정으로 잡아 창이 좁아지면
+     오른쪽 칼럼이 화면 밖으로 밀리고 왼쪽에 빈 공간만 남았다.
+     -> 비율 기반으로 바꾸고, 좁아지면 1단으로 접는다.
+   - 스티키 박스는 스크롤을 방해하고 구매 버튼이 안 보이게 만든다.
+     -> 칼럼은 일반 흐름으로 두고, 구매 바만 화면 하단에 고정한다.
+   ============================================================ */
+@media (min-width:981px){
+  body.dhx-on .single-product div.product{
+    grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) !important;
+    align-items:start !important;
+  }
+}
+@media (max-width:980px){
+  body.dhx-on .single-product div.product{
+    display:block !important;
+  }
+  body.dhx-on .single-product div.product > *{
+    width:100% !important;max-width:100% !important;
+  }
+  body.dhx-on .woocommerce-product-gallery{margin-bottom:18px !important}
+}
+
+/* 스티키 해제 — 페이지와 함께 자연스럽게 흐르게 */
+body.dhx-on .summary.entry-summary{
+  position:static !important;top:auto !important;
+  max-height:none !important;overflow:visible !important;
+  align-self:start !important;padding-right:0 !important;
+}
+
+@med
+ia (min-width:721px){
+  body.dhx-on #vf-sticky-trigger-bar{display:none !important}
+  body.dhx-on #dh-ov{display:none !important}
+}
+
+/* ---------- 구매 바: 항상 화면 하단에 고정 ---------- */
+.dhx .vf-drawer-actions{
+  position:fixed !important;left:0 !important;right:0 !important;bottom:0 !important;
+  width:100% !important;z-index:9990 !important;
+  display:flex !important;gap:10px !important;
+  justify-content:center !important;align-items:center !important;
+  margin:0 !important;
+  padding:11px 20px calc(11px + env(safe-area-inset-bottom)) !important;
+  background:rgba(255,255,255,.95) !important;
+  backdrop-filter:blur(10px) !important;
+  border-top:1px solid var(--dhx-line) !important;
+  box-shadow:0 -2px 14px rgba(20,30,40,.06) !important;
+}
+.dhx .vf-drawer-actions button.single_add_to_cart_button{
+  flex:0 1 200px !important;
+}
+.dhx .vf-drawer-actions button.wd-direct-checkout-btn{
+  flex:0 1 340px !important;
+}
+body.dhx-on #page{padding-bottom:96px !important}
+
+/* 테마가 button 에 flex:1 1 0 을 걸어 헤더 폭이 줄어드는 문제.
+   부모를 세로 flex 로 만들고 stretch 로 폭을 확정한다. */
+.dhx-card{
+  display:flex !important;flex-direction:column !important;
+  align-items:stretch !important;
+}
+.dhx-card__head{
+  flex:0 0 auto !important;align-self:stretch !important;width:auto !important;
+}
+.dhx-card__body{flex:0 0 auto !important;align-self:stretch !important}
+.dhx-card__state{flex:0 0 auto !important;margin-left:auto !important}
+
+/* 그리드 밖으로 꺼낸 하단 섹션들: 전체 폭에서 카드가 거대해지지 않게 */
+@media (min-width:981px){
+  body.dhx-on .dhx-below ul.products,
+  body.dhx-on .dhx-below .wc-prl-products,
+  body.dhx-on .dhx-below .products{
+    display:grid !important;
+    grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)) !important;
+    gap:18px !important;
+  }
+  body.dhx-on .dhx-below ul.products li.product,
+  body.dhx-on .dhx-below .products > *{
+    width:auto !important;max-width:none !important;margin:0 !important;
+  }
+}
+
+/* ============================================================
+   레퍼런스(향수 상세) 룩:
+   회색 바닥 + 흰 라운드 카드 + 가운데 정렬
+   ============================================================ */
+@media (min-width:721px){
+  body.dhx-on.single-product #page,
+  body.dhx-on .site-main.wd-woocommerce{
+    background:#F3F4F6 !important;
+  }
+  /* 상품 이미지: 흰 카드 안에 */
+  body.dhx-on .woocommerce-product-gallery{
+    background:#fff !important;
+    border:1px solid var(--dhx-line) !important;
+    border-radius:18px !important;
+    padding:18px !important;
+    box-shadow:0 1px 2px rgba(20,30,40,.04) !important;
+  }
+  body.dhx-on .woocommerce-product-gallery img{
+    border-radius:12px !important;
+  }
+  /* 제목·가격 타이포 — 레퍼런스처럼 크게 */
+  body.dhx-on .summary.entry-summary .product_title{
+    font-size:26px !important;font-weight:800 !important;
+    letter-spacing:-.2px !important;
+  }
+  body.dhx-on .summary.entry-summary > p.price{
+    font-size:22px !important;font-weight:800 !important;
+  }
+}
+
+/* 설명 카드: 안의 테마 탭 UI는 숨기고 내용만 */
+.dhx-desc .woocommerce-tabs ul.tabs,
+.dhx-desc .woocommerce-tabs .wc-tab > h2:first-chil
+d{display:none !important}
+.dhx-desc .woocommerce-tabs{margin:0 !important;padding:0 !important;width:auto !important}
+.dhx-desc .woocommerce-tabs .wc-tab{padding:0 !important}
+.dhx-desc .dhx-card__body{font-size:13px;color:var(--dhx-ink-2);line-height:1.6}
+.dhx-desc{margin:12px 0 !important}
+
+/* 배송·혜택 카드 안 요소들 여백 정리 */
+.dhx-ship .wd-today-dispatch{margin:0 0 10px 0 !important}
+.dhx-ship .wd-free-shipping-gauge{margin:0 !important;border:0 !important;padding:0 !important;box-shadow:none !important}
+.dhx-ship{margin-top:12px !important}
+
+
+/* ============================================================
+   codex 개선안 재구현: 모션 · Buy Box
+   ============================================================ */
+.dhx .dhx-chip,.dhx .dhx-bundle,.dhx-card,.dhx .dhx-toggle{
+  transition:background-color var(--dhx-fast) var(--dhx-ease),
+             border-color var(--dhx-fast) var(--dhx-ease),
+             transform var(--dhx-fast) var(--dhx-ease);
+}
+.dhx .dhx-qty button,.dhx .vf-drawer-actions button,.dhx .dhx-chip__pick{
+  transition:background-color var(--dhx-fast) var(--dhx-ease),
+             transform var(--dhx-fast) var(--dhx-ease),
+             opacity var(--dhx-fast) var(--dhx-ease);
+}
+@media (hover:hover){
+  .dhx .dhx-chip:not(.is-on):hover{border-color:var(--dhx-ink-3)}
+  .dhx .dhx-bundle:not(.is-on):hover{border-color:var(--dhx-ink-3)}
+  .dhx .dhx-qty button:hover{background:var(--dhx-ground) !important}
+}
+.dhx .dhx-qty button:active,
+.dhx .vf-drawer-actions button:not([disabled]):not(.vf-btn-disabled):active,
+.dhx .dhx-chip__pick:active{transform:scale(.96)}
+.dhx .dhx-gauge__fill{transition:width var(--dhx-med) var(--dhx-ease)}
+
+/* 스크롤 등장 */
+.dhx-pre{opacity:0;transform:translateY(12px);
+  transition:opacity var(--dhx-slow) var(--dhx-ease),
+             transform var(--dhx-slow) var(--dhx-ease)}
+.dhx-in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  .dhx *,.dhx-pre,.dhx-in,.dhx-card__body,.dhx-card__inner{
+    transition:none !important;transform:none !important;opacity:1 !important;
+  }
+}
+
+/* ---------- Buy Box: 합계 카드는 흐름 안, 버튼 줄만 하단 sticky ---------- */
+@media (min-width:721px){
+  .dhx .dhx-buybox{
+    position:static;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  /* 얇은 버튼 줄만 따라옴 — 카드를 가리지 않음 */
+  .dhx .vf-drawer-actions{
+    position:sticky !important;left:auto !important;right:auto !important;
+    bottom:12px !important;width:auto !important;z-index:60;
+    padding:10px !important;background:rgba(255,255,255,.94) !important;
+    backdrop-filter:blur(8px) !important;
+    border:1px solid #edf0f3 !important;border-radius:16px !important;
+    box-shadow:0 8px 24px rgba(20,30,40,.12) !important;
+    justify-content:stretch !important;
+  }
+  .dhx .vf-drawer-actions button.single_add_to_cart_button{flex:0 0 38% !important}
+  .dhx .vf-drawer-actions button.wd-direct-checkout-btn{flex:1 1 auto !important}
+  body.dhx-on #page{padding-bottom:40px !important}
+}
+
+/* ---------- 상세페이지(설명): 그리드 아래 전체 폭, 항상 표시 ---------- */
+.dhx-below.woocommerce-tabs{
+  background:#fff;border:1px solid #edf0f3;border-radius:18px;
+  padding:26px 28px !important;box-sizing:border-box;
+}
+.dhx-below.woocommerce-tabs ul.tabs{display:none !important}
+.dhx-below.woocommerce-tabs .wc-tab > h2:first-child{display:none !important}
+.dhx-below.woocommerce-tabs .wc-tab{padding:0 !important}
+.dhx-below.woocommerce-tabs .wc-tab img{max-width:100%;height:auto;display:block;margin:0 auto}
+
