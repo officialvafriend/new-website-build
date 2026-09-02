@@ -80,6 +80,26 @@ function enqueue_editor_tokens(): void {
 add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\\enqueue_editor_tokens' );
 
 /**
+ * 목록 · 상세 · 장바구니 · 결제 · 계정 화면에 테마 CSS 를 얹습니다.
+ *
+ * 홈은 플러그인이 통째로 그리므로 빼고, 나머지 화면은 테마와 WooCommerce 템플릿
+ * 위에 assets/duckhoo-theme.css 를 얹습니다. 관리자 화면에 손으로 붙여넣을 필요가
+ * 없고, 플러그인을 끄면 그대로 돌아갑니다.
+ */
+function enqueue_theme_css(): void {
+	if ( is_admin() || is_front_page() ) {
+		return;
+	}
+	$relative = 'assets/duckhoo-theme.css';
+	$path     = plugin_dir_path( __FILE__ ) . $relative;
+	if ( ! file_exists( $path ) ) {
+		return;
+	}
+	wp_enqueue_style( 'duckhoo-theme', plugin_dir_url( __FILE__ ) . $relative, array( 'duckhoo-tokens' ), (string) filemtime( $path ) );
+}
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_theme_css', 30 );
+
+/**
  * 회원탈퇴 화면 스타일을 불러옵니다.
  *
  * 그 화면에서만 씁니다. 상품 목록처럼 카드가 수십 개 깔리는 곳에 쓸데없는

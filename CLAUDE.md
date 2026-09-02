@@ -125,11 +125,51 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
 토큰은 `assets/tokens.css`. 요소 규칙까지 포함한 전체 기반은 `design/tokens.css`
 (참고용, 배포 안 됨).
 
+## 실제 사이트 연동 (플러그인이 홈을 그린다)
+
+`includes/front.php` + `templates/home.php` + `assets/front.css` + `assets/front.js`.
+
+- `template_include` 로 **첫 화면만** 우리 템플릿으로 바꾼다. `wp_head`/`wp_footer` 는
+  그대로 불러 GTM · WooCommerce · PPOM 스크립트가 다 산다. 홈에서만 테마 스타일
+  핸들 `welcome-drink-style` 을 뺀다 (테마의 `.dh-*` 인라인 CSS 는 테마 템플릿이
+  찍는 거라 우리 템플릿에선 애초에 안 나온다)
+- 목록 · 상세 · 장바구니 · 결제 · 계정은 테마와 WooCommerce 템플릿이 그대로 그리고,
+  그 위에 `assets/duckhoo-theme.css` 를 플러그인이 자동으로 얹는다. **폼 필드와
+  데이터 경로에 손대지 않기 위해서다**
+- 데이터: 카테고리는 이름 일부("특가" · "무니코틴" · "랭킹")로 찾는다 — "8월 특가 할인"
+  처럼 달이 바뀌는 이름을 따라가기 위해서. 브랜드 분류(taxonomy)가 없어 상품명 앞
+  `[브랜드]` 로 센다. 병당 가격은 이름의 "N병" 으로 나눈다. 평점·판매수는 실제 값이
+  있을 때만 붙인다. 상품 조회는 10분 transient 캐시 (`dhr_*`), 상품 저장 시 비움
+- 실제 상품 173종 (2026-09-02 기준): 카테고리 = 입호흡 액상 69 · 무니코틴 68 ·
+  폐호흡 액상 22 · 8,800 적립금 상품 18 · 8월 특가 할인 15 · 액상 랭킹 14 ·
+  기기/팟/코일 9 · 노보 액상 9. 리뷰·평점은 0 이다. 브랜드는 이름 앞 [..] 로
+  얼려먹구싶오 24 · 액상덕후 18 · 제로닉 무무 13 · 맥스쿨 11 · 심쿵 11 …
+- 상품 상세의 옵션은 PPOM `select` 4개 (구성 · 맛 · 팟/코일 추가 · 기기 추가)에
+  `wd-option-builder` 가 덧씌워져 있다. **건드리지 않는다**
+
+### 스테이징 배포가 자동으로 안 돈다
+
+GitHub Deployments 는 첫 연결 때 한 번만 배포됐다 (activity log 의
+`plugin__installed_filesystem` 0.1.0 하나뿐). 이후 push 는 반영되지 않았다.
+WP.com 대시보드 → 배포 에서 **자동 배포를 켜거나 "배포" 를 눌러야** 새 코드가 올라간다.
+확인: `curl -o /dev/null -w '%{http_code}' <스테이징>/wp-content/plugins/new-website-build/assets/front.css`
+— 200 이면 최신.
+
+### 이 환경에서 사이트 보기
+
+네트워크는 열려 있다 (curl 200). **크로미움만 `ERR_CONNECTION_RESET`** 이 난다 —
+프록시 상태(`recentRelayFailures`)를 보면 CONNECT 뒤 TLS 단계에서 터널이 6초 만에
+닫힌다. curl · Node(undici) 는 된다. 스크린샷은 Playwright `route` 에서 모든 요청을
+undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식으로 찍는다
+(`scratchpad/live/probe-b.mjs` 패턴). 크로미움이 직접 소켓을 열게 두지 않는다.
+
 ## 저장소 구조
 
 ```
 duckhoo-redesign.php     플러그인 본체 — 배포됨
-assets/tokens.css        디자인 토큰 — 배포됨
+includes/                front.php(홈) · membership-cancel.php(회원탈퇴) — 배포됨
+templates/home.php       홈 템플릿 — 배포됨
+assets/                  tokens · front.css/js(홈) · duckhoo-theme.css(나머지 화면) — 배포됨
 .deployignore            아래 것들을 배포에서 제외
 design/                  시안·기반 문서 (참고)
 reference/duckhoo-front/ 기존 프론트 플러그인 소스 (참고)
