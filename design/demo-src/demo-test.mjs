@@ -63,6 +63,7 @@ for (const w of [390, 768, 1280]) {
     });
     if (m.sw > m.cw + 1 || m.x > 0 || m.dsw > m.dcw + 1) errs.push(`[${w}] 가로 넘침 @${r}: sw=${m.sw} cw=${m.cw} scrollX=${m.x} doc=${m.dsw}/${m.dcw}`);
     if (m.len < 80) errs.push(`[${w}] 빈 화면 @${r}`);
+    if (!(await p.locator('#view footer.foot').count())) errs.push(`[${w}] 푸터 없음 @${r}`);
     // 문서 자체는 스크롤하지 않는다 (스크롤은 #view 안에서만). 그래야 탭바가 안 움직인다.
     if (m.docH > m.cliH + 1) errs.push(`[${w}] 문서가 스크롤됨 @${r}: docH=${m.docH} cliH=${m.cliH}`);
     if (w < 880 && Math.abs(m.tabBottom - m.cliH) > 1) errs.push(`[${w}] 탭바가 화면 아래에 안 붙음 @${r}: ${m.tabBottom} vs ${m.cliH}`);

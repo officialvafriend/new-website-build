@@ -135,10 +135,10 @@ V.home=()=>{
  <section class="banner"><div><h2>9월엔 병당 가격으로 고르세요</h2>
   <p>한 병만 사도 되고, 5+5로 묶으면 병당 ${won(Math.round(sale.p*5/10))}원까지 내려갑니다. 입금자명만 주문자명과 같게 넣어주세요.</p>
   <a class="btn btn-w2" href="#/shop?n=0mg">9월 특가 보기 ${I.arrow}</a></div></section>
- </div>
- ${footer()}`;
+ </div>`;
 };
 
+/* 푸터는 모든 화면 아래에 붙는다 — route() 가 붙인다 */
 const footer=()=>`<footer class="foot"><div class="wrap">
  <div class="fgrid">
   <div class="fabout"><a class="lg lg-w" href="#/"><span class="g"></span>액상덕후</a>
@@ -469,7 +469,7 @@ function route(){
  else if(seg[0]==='search'){if(q.has('q'))S.q=q.get('q');html=V.search()}
  else if(seg[0]==='my')html=V.my();
  else html=V.e404();
- $('#view').innerHTML=html;
+ $('#view').innerHTML=html+footer();
  $('#view').scrollTo(0,0);
  clearInterval(tick); tick=null;
  if(!seg.length){tick=setInterval(()=>{const el=$('#left'); if(el)el.textContent=leftText(); else clearInterval(tick)},1000)}

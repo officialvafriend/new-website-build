@@ -46,13 +46,14 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .gnb-in{display:flex;align-items:center;gap:.6rem;height:var(--gnb);position:relative}
 .lg{display:flex;align-items:center;gap:.4rem;font-weight:900;font-size:17px;letter-spacing:-.05em;min-height:44px}
 .lg .g{width:20px;height:20px;border-radius:50% 50% 50% 4px;background:var(--ink)}
-/* 긴 상품명이 오른쪽 아이콘을 덮지 않게 폭을 자른다 */
-.ttl{position:absolute;left:50%;top:50%;transform:translate(-50%,-40%);font-size:16px;font-weight:800;letter-spacing:-.02em;
+/* 모바일: 작은 제목이 로고 자리를 대신 쓴다. 가운데 정렬로는 390px 에서 오른쪽 아이콘과 겹친다. */
+.ttl{position:absolute;left:0;right:140px;top:50%;transform:translateY(-40%);font-size:16px;font-weight:800;letter-spacing:-.02em;
  opacity:0;pointer-events:none;transition:opacity 180ms var(--ez),transform 220ms var(--ez);white-space:nowrap;
- max-width:min(44vw,300px);overflow:hidden;text-overflow:ellipsis}
+ overflow:hidden;text-overflow:ellipsis}
+.gnb.small .lg{opacity:0;pointer-events:none;transition:opacity 120ms var(--ez)}
 /* 데스크톱은 그 자리에 검색창이 있다. 작은 제목은 모바일 것이다. */
 @media(min-width:880px){.ttl{display:none}}
-.gnb.small .ttl{opacity:1;transform:translate(-50%,-50%)}
+.gnb.small .ttl{opacity:1;transform:translateY(-50%)}
 .gnb nav{display:none;gap:.2rem;margin-left:.6rem}
 @media(min-width:880px){.gnb nav{display:flex}}
 .gnb nav a{font-size:14px;color:var(--ink2);font-weight:600;padding:.5rem .7rem;border-radius:10px;min-height:44px;display:flex;align-items:center}
@@ -739,10 +740,10 @@ V.home=()=>{
  <section class="banner"><div><h2>9월엔 병당 가격으로 고르세요</h2>
   <p>한 병만 사도 되고, 5+5로 묶으면 병당 ${won(Math.round(sale.p*5/10))}원까지 내려갑니다. 입금자명만 주문자명과 같게 넣어주세요.</p>
   <a class="btn btn-w2" href="#/shop?n=0mg">9월 특가 보기 ${I.arrow}</a></div></section>
- </div>
- ${footer()}`;
+ </div>`;
 };
 
+/* 푸터는 모든 화면 아래에 붙는다 — route() 가 붙인다 */
 const footer=()=>`<footer class="foot"><div class="wrap">
  <div class="fgrid">
   <div class="fabout"><a class="lg lg-w" href="#/"><span class="g"></span>액상덕후</a>
@@ -1102,7 +1103,7 @@ function route(){
  else if(seg[0]==='search'){if(q.has('q'))S.q=q.get('q');html=V.search()}
  else if(seg[0]==='my')html=V.my();
  else html=V.e404();
- $('#view').innerHTML=html;
+ $('#view').innerHTML=html+footer();
  $('#view').scrollTo(0,0);
  clearInterval(tick); tick=null;
  if(!seg.length){tick=setInterval(()=>{const el=$('#left'); if(el)el.textContent=leftText(); else clearInterval(tick)},1000)}
