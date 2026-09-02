@@ -174,6 +174,8 @@ body.dhr{margin:0;background:var(--dh-ground,#F5F5F7);color:#111;font-family:Pre
 .dhr .fcol b{color:#fff;font-size:15px;margin-bottom:.3rem}
 .dhr .fcol a{font-size:14.5px;color:#C7CBD1;min-height:32px;display:flex;align-items:center}
 .dhr .fcol a:hover{color:#fff}
+.dhr .fmuted{font-size:13.5px;color:#9A9FA6;line-height:1.6}
+.dhr .flegal a{color:#C7CBD1;text-decoration:underline}
 .dhr .flegal{border-top:1px solid #2A2A2E;margin-top:2rem;padding-top:1.3rem;font-size:13px;line-height:1.8;color:#9A9FA6}
 .dhr .flegal b{color:#fff}
 @media(prefers-reduced-motion:reduce){.dhr *{transition:none!important}}

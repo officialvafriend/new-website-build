@@ -326,14 +326,16 @@ function footer_html(): void {
 				<a href="<?php echo esc_url( home_url( '/register/' ) ); ?>">회원가입</a>
 				<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">주문조회</a>
 				<a href="<?php echo esc_url( home_url( '/membership-cancel/' ) ); ?>">회원탈퇴</a></div>
-			<div class="fcol"><b>고객지원</b>
+			<div class="fcol"><b>고객센터</b>
+				<a href="tel:010-5133-5852" class="n">010-5133-5852</a>
+				<span class="fmuted">평일 10:00–19:00 · 점심 12:00–13:00<br>주말 · 법정 공휴일 휴무</span>
 				<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
 				<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
-				<a href="<?php echo esc_url( home_url( '/point/' ) ); ?>">적립금 안내</a>
-				<a href="<?php echo esc_url( get_privacy_policy_url() ?: home_url( '/' ) ); ?>">개인정보처리방침</a></div>
+				<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회 (1588-1300)</a></div>
 		</div>
 		<div class="flegal"><b>19세 미만 청소년에게 판매하지 않습니다.</b> 구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
-			<?php echo esc_html( get_bloginfo( 'name' ) ); ?> · <?php echo esc_html( get_bloginfo( 'description' ) ); ?></div>
+			상호 투더문 · 대표 백시문 · 대구광역시 중구 경상감영길 21, 3층(동문동) · 사업자등록번호 642-08-02808 · 통신판매업 신고 제 2025-대구중구-0487 호<br>
+			<a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>">이용약관</a> · <a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>">개인정보처리방침</a> · © 액상덕후</div>
 	</div></footer>
 	<?php
 }
