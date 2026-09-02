@@ -1,0 +1,349 @@
+<title>액상덕후 홈 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --font:Pretendard,"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --bg:#FFFFFF; --bg-2:#F5F5F7; --line:#E6E8EA; --line-2:#D2D6DA;
+  --ink:#111111; --ink-2:#4E565F; --ink-3:#616870;
+  --accent:#2DD4BF; --accent-ink:#111111; --accent-soft:#E6FBF7; --accent-deep:#0F766E;
+  --ez:cubic-bezier(.2,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-size:16px; line-height:1.6; word-break:keep-all; -webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0; line-height:1.22; letter-spacing:-.035em; font-weight:700}
+p{margin:0}
+button{font-family:inherit; cursor:pointer; border:0; background:none; color:inherit}
+a{color:inherit; text-decoration:none}
+:focus-visible{outline:2px solid var(--accent-deep); outline-offset:3px}
+.wrap{max-width:1120px; margin:0 auto; padding:0 clamp(1rem,.5rem+2vw,2.5rem)}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+
+/* ── 상단 ── */
+.gnb{position:sticky; top:0; z-index:30; background:rgba(255,255,255,.98); border-bottom:1px solid var(--line)}
+.gnb-in{display:flex; align-items:center; gap:1.1rem; height:52px}
+.lg{display:flex; align-items:center; gap:.35rem; font-weight:900; font-size:16px; letter-spacing:-.05em}
+.lg .g{width:18px; height:18px; border-radius:50% 50% 50% 4px; background:var(--ink)}
+.gnb nav{display:none; gap:1.1rem; margin-left:.6rem}
+@media(min-width:800px){.gnb nav{display:flex}}
+.gnb nav a{font-size:12.5px; color:var(--ink-2); font-weight:500}
+.gnb nav a:hover{color:var(--ink)}
+.gnb .sp{margin-left:auto; display:flex; gap:.15rem}
+.gi{width:40px; height:40px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-size:15px; position:relative}
+.gi:hover{background:var(--bg-2)}
+.gi .n{position:absolute; top:4px; right:4px; min-width:15px; height:15px; padding:0 3px; border-radius:999px;
+  background:var(--accent); color:var(--accent-ink); font-size:9.5px; font-weight:800; display:flex;
+  align-items:center; justify-content:center; font-family:var(--mono)}
+
+/* ── 히어로 ── */
+.hero{padding:clamp(2.5rem,6vw,5rem) 0 clamp(1.5rem,3vw,2.5rem); text-align:center}
+.hero h1{font-size:clamp(2rem,1.2rem + 3.6vw,3.75rem); font-weight:300}
+.hero h1 b{font-weight:900}
+.hero h1 em{font-style:normal; color:var(--accent-deep); font-weight:900}
+.hero p{margin-top:.9rem; font-size:clamp(.95rem,.9rem + .25vw,1.125rem); color:var(--ink-2)}
+.hero .links{margin-top:1.2rem; display:flex; gap:1.2rem; justify-content:center; flex-wrap:wrap}
+.lk{font-size:14px; color:var(--accent-deep); font-weight:500; display:inline-flex; align-items:center; gap:.25rem}
+.lk:hover{text-decoration:underline}
+
+/* ── 섹션 (Apple: 살펴보기 / 쇼핑하기) ── */
+.sec{padding:clamp(1.75rem,3.5vw,3rem) 0 0}
+.sec-h{display:flex; align-items:baseline; gap:.9rem; flex-wrap:wrap; margin-bottom:1rem}
+.sec-h h2{font-size:clamp(1.35rem,1.1rem + 1.1vw,2rem); font-weight:900}
+.sec-h .links{display:flex; gap:1rem; margin-left:auto}
+
+/* 가로 스크롤 카드 줄 */
+.scroller{display:flex; gap:.85rem; overflow-x:auto; scroll-snap-type:x mandatory;
+  padding:.25rem .25rem 1rem; margin:0 -.25rem; -webkit-overflow-scrolling:touch}
+.scroller::-webkit-scrollbar{height:6px}
+.scroller::-webkit-scrollbar-thumb{background:var(--line-2); border-radius:99px}
+.card{flex:0 0 auto; width:min(72vw,232px); scroll-snap-align:start; background:var(--bg-2);
+  border-radius:18px; overflow:hidden; display:flex; flex-direction:column; position:relative;
+  transition:transform 200ms var(--ez)}
+.card:hover{transform:translateY(-4px)}
+.card .fig{aspect-ratio:1/1; position:relative; display:flex; align-items:center; justify-content:center}
+.pill{position:absolute; top:.6rem; left:.6rem; font-family:var(--mono); font-size:10.5px;
+  padding:.22rem .45rem; border-radius:6px; background:rgba(255,255,255,.92); color:var(--ink)}
+.pill.hot{background:var(--accent); color:var(--accent-ink); font-family:var(--font); font-weight:800}
+.btl{width:62px; height:104px; border-radius:10px 10px 14px 14px; position:relative;
+  box-shadow:0 10px 22px -12px rgba(0,0,0,.45)}
+.btl::before{content:""; position:absolute; left:50%; top:-14px; transform:translateX(-50%);
+  width:22px; height:16px; border-radius:4px 4px 0 0; background:inherit; filter:brightness(.78)}
+.btl::after{content:""; position:absolute; left:9px; right:9px; bottom:16px; height:30px;
+  border-radius:5px; background:rgba(255,255,255,.6)}
+.card .bd{padding:.75rem .8rem 1rem; display:flex; flex-direction:column; gap:.15rem; flex:1 1 auto}
+.brand{font-size:11px; color:var(--ink-3); font-weight:700}
+.nm{font-size:13.5px; font-weight:700; line-height:1.4; letter-spacing:-.02em;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.row{margin-top:auto; padding-top:.7rem; display:flex; align-items:flex-end; gap:.5rem}
+.pr{flex:1 1 auto; min-width:0}
+.pr b{font-size:15.5px; font-weight:900; letter-spacing:-.02em}
+.pr small{display:block; font-size:10.5px; color:var(--ink-3); margin-top:.05rem}
+.add{flex:0 0 auto; width:36px; height:36px; border-radius:999px; background:var(--accent); color:var(--accent-ink);
+  display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1;
+  transition:transform 160ms var(--ez)}
+.add:hover{transform:scale(1.08)} .add:active{transform:scale(.94)}
+
+/* 브랜드 줄 */
+.brands{display:flex; gap:.5rem; overflow-x:auto; padding-bottom:.5rem}
+.bchip{flex:0 0 auto; padding:.6rem 1rem; border:1px solid var(--line-2); border-radius:999px;
+  font-size:13.5px; font-weight:700; min-height:44px; display:flex; align-items:center}
+.bchip:hover{border-color:var(--ink)}
+.bchip.own{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+/* 안내 스트립 */
+.info{margin-top:clamp(2rem,4vw,3rem); background:var(--bg-2); border-radius:20px;
+  padding:clamp(1.1rem,2.5vw,1.75rem); display:grid; gap:1rem; grid-template-columns:1fr}
+@media(min-width:680px){.info{grid-template-columns:repeat(3,1fr)}}
+.ii{display:flex; gap:.7rem; align-items:flex-start}
+.ii .ic{flex:0 0 34px; width:34px; height:34px; border-radius:10px; background:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:15px}
+.ii b{display:block; font-size:13.5px; font-weight:700}
+.ii span{display:block; font-size:12px; color:var(--ink-3); line-height:1.55; margin-top:.15rem}
+
+.foot{margin-top:clamp(2.5rem,5vw,4rem); border-top:1px solid var(--line); padding:1.75rem 0 3rem;
+  font-size:12px; color:var(--ink-3); line-height:1.9}
+.foot b{color:var(--ink); font-weight:700}
+
+/* ── 드로어 (크런틴 방식) ── */
+.dim{position:fixed; inset:0; background:rgba(0,0,0,.4); opacity:0; pointer-events:none;
+  transition:opacity 260ms var(--ez); z-index:40}
+.dim.on{opacity:1; pointer-events:auto}
+.drawer{position:fixed; left:0; right:0; bottom:0; z-index:50; background:#fff;
+  border-radius:20px 20px 0 0; transform:translateY(100%); transition:transform 320ms var(--ez);
+  max-height:88dvh; display:flex; flex-direction:column; box-shadow:0 -8px 32px rgba(0,0,0,.16)}
+.drawer.on{transform:translateY(0)}
+@media(min-width:640px){.drawer{left:50%; right:auto; width:440px; transform:translate(-50%,100%)}
+  .drawer.on{transform:translate(-50%,0)}}
+.dr-grab{width:36px; height:4px; border-radius:99px; background:var(--line-2); margin:.6rem auto .2rem}
+.dr-h{padding:.5rem 1.1rem .8rem; display:flex; align-items:flex-start; gap:.7rem; border-bottom:1px solid var(--line)}
+.dr-h .t{flex:1 1 auto; min-width:0}
+.dr-h .bd{font-size:11px; color:var(--ink-3); font-weight:700}
+.dr-h .nm2{font-size:15px; font-weight:900; letter-spacing:-.02em; margin-top:.1rem}
+.dr-x{flex:0 0 36px; width:36px; height:36px; border-radius:999px; background:var(--bg-2);
+  display:flex; align-items:center; justify-content:center; font-size:15px}
+.dr-b{overflow-y:auto; padding:1rem 1.1rem 0}
+.grp{margin-bottom:1.1rem}
+.grp-t{font-size:12.5px; font-weight:700; color:var(--ink-2); margin-bottom:.5rem; display:flex; gap:.4rem; align-items:center}
+.grp-t i{font-style:normal; font-family:var(--mono); font-size:10px; color:#fff; background:var(--ink);
+  width:16px; height:16px; border-radius:5px; display:flex; align-items:center; justify-content:center}
+.opts{display:flex; flex-direction:column; gap:.4rem}
+.opt{display:flex; align-items:center; gap:.6rem; padding:.7rem .8rem; border:1.5px solid var(--line);
+  border-radius:12px; text-align:left; min-height:52px; transition:border-color 160ms var(--ez), background 160ms var(--ez)}
+.opt:hover{border-color:var(--line-2)}
+.opt.on{border-color:var(--accent); background:var(--accent-soft)}
+.opt .l{flex:1 1 auto; min-width:0}
+.opt .l b{display:block; font-size:13.5px; font-weight:700}
+.opt .l span{display:block; font-size:11px; color:var(--ink-3); margin-top:.1rem}
+.opt .d{flex:0 0 auto; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.opt.on .d{color:var(--accent-deep); font-weight:700}
+.chips{display:flex; gap:.4rem; flex-wrap:wrap}
+.chip{padding:.5rem .8rem; border:1.5px solid var(--line); border-radius:999px; font-size:13px;
+  font-weight:500; min-height:44px; display:flex; align-items:center}
+.chip.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-deep); font-weight:700}
+.sum{margin:0 -1.1rem; padding:.9rem 1.1rem; background:var(--bg-2); display:flex; align-items:flex-end; gap:.6rem}
+.sum .lab{flex:1 1 auto; font-size:12.5px; color:var(--ink-2); font-weight:500}
+.sum .tot b{font-size:22px; font-weight:900; letter-spacing:-.03em}
+.sum .tot small{font-size:11px; color:var(--ink-3); display:block; text-align:right; margin-top:.1rem}
+.dr-f{padding:.8rem 1.1rem calc(.8rem + env(safe-area-inset-bottom)); display:flex; gap:.5rem;
+  border-top:1px solid var(--line)}
+.bt{flex:1 1 0; min-height:52px; border-radius:12px; font-size:15px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; gap:.35rem; transition:filter 160ms var(--ez)}
+.bt-cart{background:var(--bg-2); color:var(--ink); border:1px solid var(--line-2)}
+.bt-buy{background:var(--accent); color:var(--accent-ink); flex:1.4 1 0; font-weight:800}
+.bt:active{filter:brightness(.94)}
+.toast{position:fixed; left:50%; bottom:1.2rem; transform:translate(-50%,140%); z-index:60;
+  background:var(--ink); color:#fff; font-size:13.5px; font-weight:500; padding:.75rem 1.1rem;
+  border-radius:999px; transition:transform 300ms var(--ez)}
+.toast.on{transform:translate(-50%,0)}
+</style>
+
+<header class="gnb">
+  <div class="wrap gnb-in">
+    <a class="lg" href="#"><span class="g"></span>액상덕후</a>
+    <nav>
+      <a href="#">전체</a><a href="#">무니코틴</a><a href="#">입호흡</a>
+      <a href="#">묶음 이벤트</a><a href="#">기기 · 부품</a><a href="#">공지</a>
+    </nav>
+    <span class="sp">
+      <button class="gi" type="button" aria-label="검색">⌕</button>
+      <button class="gi" type="button" aria-label="장바구니"><span id="cartIco">▤</span><span class="n num" id="cartN">0</span></button>
+      <button class="gi" type="button" aria-label="내 정보">◍</button>
+    </span>
+  </div>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <h1>액상, <b>병당 가격</b>으로<br>고르세요. <em>더 담을수록 싸게.</em></h1>
+    <p>9개 브랜드 173종 · 무니코틴부터 9.8mg까지</p>
+    <div class="links">
+      <a class="lk" href="#">묶음 이벤트 보기 ›</a>
+      <a class="lk" href="#">브랜드 전체 보기 ›</a>
+    </div>
+  </section>
+
+  <section class="wrap sec">
+    <div class="sec-h">
+      <h2>액상덕후 자체 제작</h2>
+      <span class="links"><a class="lk" href="#">살펴보기 ›</a><a class="lk" href="#">쇼핑하기 ›</a></span>
+    </div>
+    <div class="scroller" id="rowOwn"></div>
+  </section>
+
+  <section class="wrap sec">
+    <div class="sec-h">
+      <h2>무니코틴</h2>
+      <span class="links"><a class="lk" href="#">살펴보기 ›</a><a class="lk" href="#">쇼핑하기 ›</a></span>
+    </div>
+    <div class="scroller" id="rowZero"></div>
+  </section>
+
+  <section class="wrap sec">
+    <div class="sec-h">
+      <h2>입호흡 액상</h2>
+      <span class="links"><a class="lk" href="#">살펴보기 ›</a><a class="lk" href="#">쇼핑하기 ›</a></span>
+    </div>
+    <div class="scroller" id="rowMtl"></div>
+  </section>
+
+  <section class="wrap sec">
+    <div class="sec-h"><h2>브랜드</h2></div>
+    <div class="brands">
+      <button class="bchip own" type="button">액상덕후</button>
+      <button class="bchip" type="button">맥스쿨</button>
+      <button class="bchip" type="button">얼려먹구싶오</button>
+      <button class="bchip" type="button">심쿵</button>
+      <button class="bchip" type="button">깔끔</button>
+      <button class="bchip" type="button">리퀴드랩</button>
+      <button class="bchip" type="button">디오리퀴드</button>
+      <button class="bchip" type="button">펠릭스</button>
+      <button class="bchip" type="button">네스티</button>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="info">
+      <div class="ii"><span class="ic">₩</span><span><b>계좌이체 전용</b><span>카드결제는 받지 않습니다. 입금자명을 주문자명과 같게 넣어주세요.</span></span></div>
+      <div class="ii"><span class="ic">▤</span><span><b>당일 발송</b><span>평일 오후 3시 이전 결제분은 우체국택배로 당일 나갑니다.</span></span></div>
+      <div class="ii"><span class="ic">☏</span><span><b>카카오톡 문의</b><span>평일 10:00–18:00 · 점심 12:30–13:30</span></span></div>
+    </div>
+  </section>
+
+  <footer class="wrap foot">
+    <b>19세 미만 청소년에게 판매하지 않습니다.</b><br>
+    구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
+    액상덕후 · 전자담배 액상 전문몰
+  </footer>
+</main>
+
+<div class="dim" id="dim"></div>
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="구매 옵션">
+  <div class="dr-grab"></div>
+  <div class="dr-h">
+    <span class="t"><span class="bd" id="dBrand"></span><span class="nm2" id="dName"></span></span>
+    <button class="dr-x" id="dClose" type="button" aria-label="닫기">✕</button>
+  </div>
+  <div class="dr-b">
+    <div class="grp">
+      <div class="grp-t"><i>1</i>구성 선택</div>
+      <div class="opts" id="dBundles"></div>
+    </div>
+    <div class="grp">
+      <div class="grp-t"><i>2</i>니코틴 함량</div>
+      <div class="chips" id="dNic"></div>
+    </div>
+    <div class="sum">
+      <span class="lab">병당 <b class="num" id="dPer">–</b>원</span>
+      <span class="tot"><b class="num" id="dTot">0</b><small>총 금액 (원)</small></span>
+    </div>
+  </div>
+  <div class="dr-f">
+    <button class="bt bt-cart" id="dCart" type="button">장바구니</button>
+    <button class="bt bt-buy" id="dBuy" type="button">바로 구매</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const P = [
+  {r:'rowOwn', brand:'액상덕후', nm:'파이낫푸루 흑염룡 시리즈', base:14000, c:'#1F2937', tint:'#DDE3EA', tag:'자체', nic:['0.98mg']},
+  {r:'rowOwn', brand:'액상덕후', nm:'쟈쿠로 흑염룡 시리즈', base:14000, c:'#7B1E3A', tint:'#FBDCE8', tag:'자체', nic:['0.98mg']},
+  {r:'rowOwn', brand:'액상덕후', nm:'머스케또쨩 멘솔쨩 시리즈', base:14000, c:'#1E5F74', tint:'#D6EEF7', tag:'자체', nic:['0.98mg']},
+  {r:'rowOwn', brand:'액상덕후', nm:'스모모쨩 멘솔쨩 시리즈', base:14000, c:'#B23A6B', tint:'#FFD9EC', tag:'자체', nic:['0.98mg']},
+  {r:'rowZero', brand:'맥스쿨', nm:'샤인머스캣 무니코틴 액상', base:9000, c:'#7FA83C', tint:'#E4F7C4', nic:['0mg']},
+  {r:'rowZero', brand:'얼려먹구싶오', nm:'모드 청포도 무니코틴 액상', base:9000, c:'#9BBF3E', tint:'#E8FAC8', nic:['0mg']},
+  {r:'rowZero', brand:'심쿵', nm:'망고 무니코틴 액상', base:9000, c:'#E4A11B', tint:'#FFEFB8', nic:['0mg']},
+  {r:'rowZero', brand:'깔끔', nm:'깔끔 아이스 무니코틴 액상', base:9000, c:'#4FA8C7', tint:'#CFF0FB', nic:['0mg']},
+  {r:'rowZero', brand:'맥스쿨', nm:'포카리 무니코틴 액상', base:9000, c:'#5B9BD5', tint:'#D6EAFC', nic:['0mg']},
+  {r:'rowMtl', brand:'리퀴드랩', nm:'금실딸기', base:13000, c:'#C2334D', tint:'#FFDCE2', tag:'BEST', nic:['9.8mg']},
+  {r:'rowMtl', brand:'네스티', nm:'더블 슬로우블로우 파인애플', base:15000, c:'#E0B020', tint:'#FFF0B5', tag:'신상', nic:['9.8mg','0.98mg']},
+  {r:'rowMtl', brand:'펠릭스', nm:'더블 라임 + 라임 알로에', base:13000, c:'#6FA83C', tint:'#E2F7C6', nic:['9.8mg']},
+  {r:'rowMtl', brand:'디오리퀴드', nm:'화이트아웃 기획전', base:13000, c:'#4A5568', tint:'#DFE6F5', tag:'2+3', nic:['9.8mg','0.98mg']},
+];
+const BUNDLES=[
+  {k:'단품 1병', q:1, add:0, note:'맛 하나만'},
+  {k:'3+1 · 총 4병', q:4, add:0, mult:3, note:'1병 무료'},
+  {k:'5+5 · 총 10병', q:10, add:0, mult:5, note:'5병 무료 · 최저 병당가'},
+  {k:'2+3 · 총 5병', q:5, add:0, mult:2, note:'3병 무료 · 수량 한정'},
+];
+const won = n => n.toLocaleString('ko-KR');
+let cur=null, bi=1, ni=0, cart=0;
+
+function card(p,i){
+  return `<article class="card">
+    <div class="fig" style="background:${p.tint}">
+      ${p.tag?`<span class="pill ${p.tag==='BEST'||p.tag==='신상'?'hot':''}">${p.tag}</span>`:`<span class="pill">${p.nic[0]}</span>`}
+      <span class="btl" style="background:${p.c}"></span>
+    </div>
+    <div class="bd">
+      <span class="brand">${p.brand}</span>
+      <span class="nm">${p.nm}</span>
+      <span class="row">
+        <span class="pr"><b class="num">${won(p.base)}</b><small>30ml · 단품</small></span>
+        <button class="add" type="button" data-i="${i}" aria-label="${p.nm} 구매 옵션 열기">+</button>
+      </span>
+    </div>
+  </article>`;
+}
+P.forEach((p,i)=>{ const el=document.getElementById(p.r); if(el) el.insertAdjacentHTML('beforeend',card(p,i)); });
+
+const dim=document.getElementById('dim'), dw=document.getElementById('drawer'), toast=document.getElementById('toast');
+function render(){
+  const p=P[cur];
+  document.getElementById('dBrand').textContent=p.brand;
+  document.getElementById('dName').textContent=p.nm;
+  document.getElementById('dBundles').innerHTML=BUNDLES.map((b,i)=>{
+    const pay=(b.mult||b.q)*p.base, per=Math.round(pay/b.q);
+    return `<button class="opt ${i===bi?'on':''}" type="button" data-b="${i}">
+      <span class="l"><b>${b.k}</b><span>${b.note} · 병당 ${won(per)}원</span></span>
+      <span class="d">${i===0?won(pay):'+'+won(pay-p.base)}</span></button>`;
+  }).join('');
+  document.getElementById('dNic').innerHTML=p.nic.map((n,i)=>
+    `<button class="chip ${i===ni?'on':''}" type="button" data-n="${i}">${n}</button>`).join('');
+  const b=BUNDLES[bi], pay=(b.mult||b.q)*p.base;
+  document.getElementById('dTot').textContent=won(pay);
+  document.getElementById('dPer').textContent=won(Math.round(pay/b.q));
+}
+function open(i){ cur=i; bi=1; ni=0; render(); dim.classList.add('on'); dw.classList.add('on');
+  document.body.style.overflow='hidden'; }
+function close(){ dim.classList.remove('on'); dw.classList.remove('on'); document.body.style.overflow=''; }
+function say(t){ toast.textContent=t; toast.classList.add('on'); clearTimeout(say.t);
+  say.t=setTimeout(()=>toast.classList.remove('on'),2200); }
+
+document.addEventListener('click',e=>{
+  const a=e.target.closest('.add'); if(a){ open(+a.dataset.i); return; }
+  const o=e.target.closest('.opt'); if(o){ bi=+o.dataset.b; render(); return; }
+  const n=e.target.closest('.chip'); if(n){ ni=+n.dataset.n; render(); return; }
+});
+document.getElementById('dClose').onclick=close;
+dim.onclick=close;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+document.getElementById('dCart').onclick=()=>{ cart+=BUNDLES[bi].q;
+  document.getElementById('cartN').textContent=cart; close(); say('장바구니에 담았습니다'); };
+document.getElementById('dBuy').onclick=()=>{ close(); say('주문서로 이동합니다'); };
+</script>
