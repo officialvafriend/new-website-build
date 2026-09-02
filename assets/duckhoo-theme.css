@@ -1,0 +1,234 @@
+/* ===========================================================================
+   액상덕후 UI/UX 테마
+   ---------------------------------------------------------------------------
+   붙여넣는 곳: WP 관리자 → 사용자 지정하기 → 추가 CSS
+                (또는 Code Snippets 플러그인의 CSS 스니펫)
+
+   이 파일은 스타일만 얹는다. 다음은 절대 건드리지 않는다:
+     · 폼 필드의 name / id      — 입금 자동매칭이 이름으로 걸려 있다
+     · 성인인증(dreamsecurity) 단계
+     · 결제 · 장바구니의 데이터 경로
+     · keyple / kboard 플러그인의 동작
+
+   되돌리기: 이 CSS 를 지우면 원래대로 돌아온다. DB 는 손대지 않는다.
+   =========================================================================== */
+
+:root{
+  /* 폰트 — 테마가 이미 Pretendard 를 쓴다 */
+  --dh-font: Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+             "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  /* 면 */
+  --dh-bg: #FFFFFF;
+  --dh-bg-2: #F5F5F7;
+  --dh-line: #E6E8EA;
+  --dh-line-2: #D2D6DA;
+
+  /* 글자 — 흰 카드와 #F5F5F7 양쪽에서 WCAG AA 통과 */
+  --dh-ink: #111111;      /* 18.88:1 */
+  --dh-ink-2: #4E565F;    /*  7.45:1 */
+  --dh-ink-3: #616870;    /*  5.64:1 */
+
+  /* 포인트 — 밝은 색을 채우고 그 위에 검정을 얹는다.
+     흰 글자를 쓰려고 색을 어둡게 낮추면 화면이 칙칙해진다. */
+  --dh-accent: #38BDF8;       /* 채움 — 버튼, 배지, 선택 상태 */
+  --dh-accent-ink: #111111;   /* 그 채움 위 글자. 흰색 아님 (8.81:1) */
+  --dh-accent-deep: #1565C0;  /* 흰 배경 위 색 글자 · 포커스 링 (5.75:1) */
+  --dh-accent-soft: #E8F5FE;
+
+  /* 주문 상태 — 색은 보조 신호다. 항상 한글 라벨과 함께 쓴다 */
+  --dh-st-pending:  #8A5A12;  /* 입금전 */
+  --dh-st-check:    #B42318;  /* 확인필요 */
+  --dh-st-paid:     #1F5F46;  /* 입금확인 */
+  --dh-st-shipping: #5B21B6;  /* 배송중 */
+  --dh-st-done:     #616870;  /* 배송완료 */
+
+  --dh-r: 14px;
+  --dh-r-lg: 20px;
+  --dh-ez: cubic-bezier(.2, 0, .2, 1);
+
+  /* 터치 타깃 — 최소 44px, 주요 CTA 48px */
+  --dh-tap: 44px;
+  --dh-tap-cta: 48px;
+}
+
+/* --- 기본 ---------------------------------------------------------------- */
+
+body{
+  font-family: var(--dh-font);
+  color: var(--dh-ink);
+  /* 한글에 break-all 을 쓰면 어절 중간이 끊긴다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 키보드 이동이 보이게. 밝은 포인트색은 흰 배경에서 2.14:1 이라 링에 못 쓴다 */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible{
+  outline: 2px solid var(--dh-accent-deep);
+  outline-offset: 2px;
+}
+
+/* 가격 · 수량처럼 세로로 정렬되는 숫자 */
+.woocommerce-Price-amount,
+.quantity input,
+.order-total .amount{ font-variant-numeric: tabular-nums; }
+
+/* --- 버튼 ----------------------------------------------------------------
+   주요 액션은 밝은 하늘색 채움 + 검정 글자. 보조는 흰 바탕 + 테두리. */
+
+.woocommerce a.button.alt,
+.woocommerce button.button.alt,
+.woocommerce input.button.alt,
+.woocommerce .single_add_to_cart_button,
+.woocommerce-cart .checkout-button,
+.woocommerce-checkout #place_order{
+  background: var(--dh-accent) !important;
+  color: var(--dh-accent-ink) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  min-height: var(--dh-tap-cta);
+  padding: 0 1.4rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em;
+  transition: filter 160ms var(--dh-ez), transform 160ms var(--dh-ez);
+}
+.woocommerce a.button.alt:hover,
+.woocommerce button.button.alt:hover,
+.woocommerce .single_add_to_cart_button:hover,
+.woocommerce-cart .checkout-button:hover,
+.woocommerce-checkout #place_order:hover{ filter: brightness(1.06); }
+.woocommerce-cart .checkout-button:active,
+.woocommerce-checkout #place_order:active{ transform: scale(.985); }
+
+.woocommerce a.button,
+.woocommerce button.button,
+.woocommerce input.button{
+  border-radius: 999px !important;
+  min-height: var(--dh-tap);
+  font-weight: 700 !important;
+}
+
+/* --- 폼 ------------------------------------------------------------------
+   글자 크기를 16px 아래로 내리지 않는다. iOS 사파리가 탭할 때 화면을 확대한다. */
+
+.woocommerce form .form-row input.input-text,
+.woocommerce form .form-row textarea,
+.woocommerce form .form-row select,
+.woocommerce-checkout input.input-text,
+.woocommerce-checkout select,
+.woocommerce-checkout textarea{
+  font-size: 16px !important;
+  min-height: var(--dh-tap);
+  border: 1px solid var(--dh-line-2) !important;
+  border-radius: 10px !important;
+  padding: 11px 13px !important;
+  background: #fff !important;
+  transition: border-color 160ms var(--dh-ez), box-shadow 160ms var(--dh-ez);
+}
+.woocommerce form .form-row input.input-text:focus,
+.woocommerce-checkout input.input-text:focus,
+.woocommerce-checkout select:focus,
+.woocommerce-checkout textarea:focus{
+  border-color: var(--dh-accent-deep) !important;
+  box-shadow: 0 0 0 3px var(--dh-accent-soft) !important;
+  outline: none !important;
+}
+
+/* 입금자명 입력을 약하게 만들면 그대로 운영 비용이 된다.
+   이름이 다르면 자동확인이 실패해 사람이 손으로 처리해야 한다. */
+#depositor_name_field,
+.woocommerce-checkout .depositor-name{
+  background: var(--dh-accent-soft);
+  border: 1px solid var(--dh-accent);
+  border-radius: var(--dh-r);
+  padding: 1rem !important;
+  margin-block: .75rem;
+}
+
+/* --- 상품 카드 ------------------------------------------------------------ */
+
+.woocommerce ul.products li.product{
+  background: var(--dh-bg-2);
+  border-radius: var(--dh-r-lg);
+  overflow: hidden;
+  transition: transform 200ms var(--dh-ez);
+}
+.woocommerce ul.products li.product:hover{ transform: translateY(-4px); }
+.woocommerce ul.products li.product img{ border-radius: 0; }
+
+/* 병당 가격이 고객의 비교 지표다. 총액보다 크게 쓴다. */
+.woocommerce ul.products li.product .price{
+  color: var(--dh-ink) !important;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.woocommerce ul.products li.product .price del{
+  color: var(--dh-ink-3);
+  font-weight: 500;
+  font-size: .8em;
+}
+.woocommerce span.onsale{
+  background: var(--dh-accent) !important;
+  color: var(--dh-accent-ink) !important;
+  border-radius: 999px !important;
+  font-weight: 800;
+  min-height: 0;
+  line-height: 1.6;
+  padding: .2rem .6rem;
+}
+
+/* --- 장바구니 · 결제 ------------------------------------------------------ */
+
+.woocommerce-cart .cart_totals,
+.woocommerce-checkout #order_review{
+  background: #fff;
+  border: 1px solid var(--dh-line);
+  border-radius: var(--dh-r-lg);
+  padding: 18px !important;
+}
+.woocommerce-cart .quantity .qty{
+  border: 1px solid var(--dh-line-2) !important;
+  border-radius: 9px !important;
+  min-height: var(--dh-tap);
+}
+/* 표가 페이지를 가로로 밀지 않게 자기 안에서 스크롤한다 */
+.woocommerce-cart .shop_table,
+.woocommerce-orders-table{ display: block; overflow-x: auto; }
+
+/* --- 주문 상태 배지 -------------------------------------------------------
+   키플이 추가한 한국형 상태. 색만 입히고 라벨은 그대로 둔다. */
+
+.order-status, .woocommerce-orders-table__cell-order-status mark{
+  border-radius: 999px;
+  padding: .22rem .6rem;
+  font-weight: 700;
+  font-size: .86em;
+  background: transparent;
+}
+.status-wc-pending,   .order-status.pending   { color: var(--dh-st-pending); }
+.status-wc-need-check,.order-status.need-check{ color: var(--dh-st-check); }
+.status-wc-paid,      .order-status.paid      { color: var(--dh-st-paid); }
+.status-wc-shipping,  .order-status.shipping  { color: var(--dh-st-shipping); }
+.status-wc-completed, .order-status.completed { color: var(--dh-st-done); }
+
+/* --- 모바일 -------------------------------------------------------------- */
+
+@media (max-width: 640px){
+  /* 주소창 때문에 100vh 는 실제 화면보다 크다 */
+  .dh-fullscreen{ min-height: 100dvh; }
+
+  /* 하단 고정 구매 바가 있으면 홈 인디케이터에 가리지 않게 */
+  .dh-buybar{ padding-bottom: calc(.8rem + env(safe-area-inset-bottom)); }
+
+  .woocommerce ul.products{ gap: .7rem; }
+  .woocommerce-cart .checkout-button,
+  .woocommerce-checkout #place_order{ width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .woocommerce ul.products li.product,
+  .woocommerce-cart .checkout-button,
+  .woocommerce-checkout #place_order{ transition: none !important; }
+  .woocommerce ul.products li.product:hover{ transform: none; }
+}
