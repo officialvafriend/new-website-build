@@ -88,5 +88,11 @@ html body.dhr-wrap header.gnb{ background: #fff !important; }
 html body.dhr-wrap nav.tabs{ background: #fff !important; }
 
 /* 목록 제목·검색 결과 제목은 보인다 (테마가 숨겨 둔다) */
+/* 테마는 목록 h1 을 1px 로 숨기고 .woocommerce-products-header 를 아예 안 찍는다 — 제목은 shell.php archive_title 이 루프 앞에 그린다 */
+html body.dhr-wrap .dhr-arch{ display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .3rem 0 1rem; }
+html body.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1.4vw,2.1rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.2; margin: 0; word-break: keep-all; }
+html body.dhr-wrap .dhr-arch__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3); }
+html body.dhr-wrap .dhr-arch__d{ flex-basis: 100%; font-size: 15px; line-height: 1.55; color: var(--dh-ink-2, #3F464D); word-break: keep-all; }
+html body.dhr-wrap .dhr-arch__d p{ margin: 0; }
 html body.dhr-wrap .woocommerce-products-header, html body.dhr-wrap .woocommerce-products-header__title, html body.dhr-wrap h1.page-title{ display: block !important; }
 html body.dhr-wrap .woocommerce-notices-wrapper:empty{ display: none; }

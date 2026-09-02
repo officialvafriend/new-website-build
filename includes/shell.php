@@ -113,3 +113,28 @@ function loop_card( string $template, string $slug, string $name ): string {
 	return $template;
 }
 add_filter( 'wc_get_template_part', __NAMESPACE__ . '\\loop_card', 20, 3 );
+
+/**
+ * 목록 제목. 테마는 카테고리 이름을 h1 으로 찍되 1px 로 숨긴다 (접근성용). 그래서 목록만 있고
+ * 어느 분류를 보는지 알 수 없다. 루프 앞에 보이는 제목 · 건수 · 분류 설명을 넣는다. 테마 h1 은 그대로 둔다.
+ */
+function archive_title(): void {
+	if ( ! wraps() || ! function_exists( 'woocommerce_page_title' ) ) {
+		return;
+	}
+	if ( ! ( is_shop() || is_product_taxonomy() || is_search() ) ) {
+		return;
+	}
+	$title = is_search() ? '“' . get_search_query() . '” 검색 결과' : (string) woocommerce_page_title( false );
+	$total = function_exists( 'wc_get_loop_prop' ) ? (int) wc_get_loop_prop( 'total' ) : 0;
+	$desc  = is_product_taxonomy() ? (string) term_description() : '';
+	echo '<header class="dhr-arch"><h2 class="dhr-arch__t">' . esc_html( $title ) . '</h2>';
+	if ( $total > 0 ) {
+		echo '<span class="dhr-arch__n">' . esc_html( number_format_i18n( $total ) ) . '종</span>';
+	}
+	if ( '' !== trim( wp_strip_all_tags( $desc ) ) ) {
+		echo '<div class="dhr-arch__d">' . wp_kses_post( $desc ) . '</div>';
+	}
+	echo '</header>';
+}
+add_action( 'woocommerce_before_shop_loop', __NAMESPACE__ . '\\archive_title', 5 );
