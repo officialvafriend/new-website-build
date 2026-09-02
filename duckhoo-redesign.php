@@ -3,7 +3,7 @@
  * Plugin Name:       액상덕후 리디자인
  * Plugin URI:        https://github.com/officialvafriend/new-website-build
  * Description:       액상덕후 리디자인 — 홈 화면(실제 상품 연동), 입금 전 주문취소, 회원탈퇴. 테마와 keyple 플러그인은 건드리지 않습니다.
- * Version:           0.4.0
+ * Version:           0.5.0
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            officialvafriend
@@ -23,12 +23,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 
 // 회원탈퇴 — 원래 페이지가 비어 있어서 여기서 채웁니다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/membership-cancel.php';
 // 홈 — 첫 화면을 플러그인이 그립니다. 테마 파일은 건드리지 않습니다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/front.php';
+// 껍데기 — 홈 말고 모든 화면에 우리 헤더·푸터·탭바를 씌웁니다. 테마 템플릿은 그대로 돕니다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/shell.php';
 
 /**
  * 프론트엔드에 디자인 토큰을 불러옵니다.

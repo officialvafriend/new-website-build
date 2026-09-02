@@ -183,3 +183,12 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .flegal{border-top:1px solid #2A2A2E;margin-top:2rem;padding-top:1.3rem;font-size:13px;line-height:1.8;color:#9A9FA6}
 .dhr .flegal b{color:#fff}
 @media(prefers-reduced-motion:reduce){.dhr *{transition:none!important}}
+
+/* 스크롤러 화살표 (데스크톱) · 드래그 */
+.dhr .scw{position:relative}
+.dhr .scb{display:none;position:absolute;top:calc(50% - 40px);width:44px;height:44px;border-radius:999px;background:#fff;color:#111;box-shadow:0 8px 24px -10px rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:3;transition:opacity 160ms}
+.dhr .scb svg{width:22px;height:22px;stroke-width:2.4}
+.dhr .scb-prev{left:-14px}.dhr .scb-next{right:-14px}
+.dhr .scb.off{opacity:0;pointer-events:none}
+.dhr .scw-none .scb{display:none!important}
+@media(min-width:880px){.dhr .scb{display:flex}.dhr .scroller{cursor:grab;scroll-snap-type:none}.dhr .scroller.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}}
