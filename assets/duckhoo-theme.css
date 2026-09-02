@@ -94,6 +94,8 @@ body{
 .woocommerce button.button.alt,
 .woocommerce input.button.alt,
 .woocommerce .single_add_to_cart_button,
+.woocommerce-form-login__submit,
+.woocommerce-form-register__submit,
 .woocommerce-cart .checkout-button,
 .woocommerce-checkout #place_order{
   background: var(--dh-accent) !important;
@@ -110,7 +112,9 @@ body{
 .woocommerce button.button.alt:hover,
 .woocommerce .single_add_to_cart_button:hover,
 .woocommerce-cart .checkout-button:hover,
-.woocommerce-checkout #place_order:hover{ filter: brightness(1.06); }
+.woocommerce-checkout #place_order:hover,
+.woocommerce-form-login__submit:hover,
+.woocommerce-form-register__submit:hover{ filter: brightness(1.06); }
 .woocommerce-cart .checkout-button:active,
 .woocommerce-checkout #place_order:active{ transform: scale(.985); }
 
