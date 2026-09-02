@@ -130,7 +130,10 @@ function brands(): array {
 function per_bottle( \WC_Product $p ): array {
 	$price = (float) $p->get_price();
 	$qty   = 1;
-	if ( preg_match( '/(\d+)\s*병/u', $p->get_name(), $m ) ) {
+	$name  = $p->get_name();
+	if ( preg_match( '/(\d+)\s*\+\s*(\d+)/u', $name, $m ) ) {
+		$qty = (int) $m[1] + (int) $m[2]; // "5+5 묶음" = 10병, "3+1" = 4병
+	} elseif ( preg_match( '/(\d+)\s*병/u', $name, $m ) ) {
 		$qty = max( 1, (int) $m[1] );
 	}
 	return array( 'per' => $qty > 1 ? $price / $qty : $price, 'qty' => $qty );

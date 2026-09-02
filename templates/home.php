@@ -21,11 +21,20 @@ $shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink(
 
 $deals  = $sale_cat ? products( array( 'category' => array( $sale_cat->slug ), 'limit' => 10, 'orderby' => 'date', 'order' => 'DESC' ) ) : products( array( 'include' => wc_get_product_ids_on_sale(), 'limit' => 10 ) );
 $newest = products( array( 'limit' => 6, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) );
-$hero   = null;
-foreach ( $newest as $p ) {
-	if ( $p->get_image_id() ) {
+// 히어로는 "신상 입고" 다. 묶음 이벤트가 아니라 새로 들어온 단품이어야 말이 된다.
+$hero = null;
+foreach ( products( array( 'limit' => 20, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) ) as $p ) {
+	if ( $p->get_image_id() && ! preg_match( '/이벤트|묶음|세트|기획|할인|증정|\d\s*\+\s*\d/u', $p->get_name() ) ) {
 		$hero = $p;
 		break;
+	}
+}
+if ( ! $hero ) {
+	foreach ( $newest as $p ) {
+		if ( $p->get_image_id() ) {
+			$hero = $p;
+			break;
+		}
 	}
 }
 $grid   = $rank_cat ? products( array( 'category' => array( $rank_cat->slug ), 'limit' => 12 ) ) : array();
