@@ -195,6 +195,22 @@ function icon( string $name ): string {
 }
 
 /**
+ * 로고. 사이트에 올려 둔 로고 이미지가 있으면 그걸 쓰고, 없으면 글자로.
+ *
+ * @return string
+ */
+function logo_html(): string {
+	$id = (int) get_theme_mod( 'custom_logo' );
+	if ( $id ) {
+		$img = wp_get_attachment_image( $id, 'medium', false, array( 'alt' => get_bloginfo( 'name' ), 'loading' => 'eager' ) );
+		if ( $img ) {
+			return $img;
+		}
+	}
+	return '<span class="g"></span>' . esc_html( get_bloginfo( 'name' ) );
+}
+
+/**
  * 상품 카드. 데모의 .card 와 같은 구조다.
  *
  * @param \WC_Product $p 상품.
@@ -261,7 +277,7 @@ function header_html(): void {
 		<span class="r">만 19세 이상 · 휴대폰 본인확인 후 구매</span>
 	</div></div>
 	<header class="gnb"><div class="wrap gnb-in">
-		<a class="lg" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="g"></span>액상덕후</a>
+		<a class="lg" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo logo_html(); // phpcs:ignore ?></a>
 		<form class="hs" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<input type="search" name="s" placeholder="‘샤인머스캣’ 처럼 찾아보세요" aria-label="상품 검색" autocomplete="off" value="<?php echo esc_attr( get_search_query() ); ?>">
 			<input type="hidden" name="post_type" value="product">

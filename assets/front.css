@@ -14,6 +14,10 @@ body.dhr{margin:0;background:var(--dh-ground,#F5F5F7);color:#111;font-family:Pre
 .dhr .n{font-variant-numeric:tabular-nums}
 .dhr .center{text-align:center}
 
+/* 테마가 wp_body_open 으로 찍는 모바일 헤더·드로어는 홈에서 숨긴다. 우리 헤더가 그 자리다. */
+body.dhr .wd-mobile-header-custom,body.dhr .wd-mobile-drawer,body.dhr .wd-mobile-drawer-backdrop{display:none!important}
+body.dhr .lg img{height:28px;width:auto;display:block}
+
 /* 유틸 바 · 헤더 */
 .dhr .util{display:none;background:#fff;border-bottom:1px solid #E2E4E8;font-size:13px;font-weight:600;color:#4A525B}
 @media(min-width:880px){.dhr .util{display:block}}
