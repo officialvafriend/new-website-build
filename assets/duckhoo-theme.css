@@ -257,3 +257,63 @@ body{
   .woocommerce-checkout #place_order{ transition: none !important; }
   .woocommerce ul.products li.product:hover{ transform: none; }
 }
+
+/* --- 마이페이지 (WooCommerce 기본 템플릿을 정돈) -------------------------
+   테마가 my-account 를 안 꾸며서 목록이 맨 <ul> 로 나온다. 구조는 그대로, 겉만. */
+
+.woocommerce-MyAccount-navigation ul{
+  list-style: none; margin: 0 0 1.2rem; padding: 0;
+  display: flex; gap: .5rem; flex-wrap: wrap;
+}
+.woocommerce-MyAccount-navigation li{ margin: 0; }
+.woocommerce-MyAccount-navigation a{
+  display: inline-flex; align-items: center; min-height: var(--dh-tap);
+  padding: 0 1rem; border-radius: 999px; background: var(--dh-surface);
+  font-weight: 700; font-size: 15px; color: var(--dh-ink); text-decoration: none;
+  border: 1.5px solid transparent;
+}
+.woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-ink); color: #fff; }
+.woocommerce-MyAccount-navigation a:hover{ border-color: var(--dh-line-2); }
+
+/* 주문 목록 — 표를 카드 줄로 */
+.woocommerce-orders-table{ border: 0 !important; }
+.woocommerce-orders-table thead{ display: none; }
+.woocommerce-orders-table tr{
+  display: grid; grid-template-columns: 1fr auto; gap: .2rem .8rem;
+  background: var(--dh-surface); border-radius: var(--dh-r); padding: 1rem 1.1rem; margin-bottom: .7rem;
+  border: 0 !important;
+}
+.woocommerce-orders-table td{ border: 0 !important; padding: .15rem 0 !important; display: block; font-size: 15px; }
+.woocommerce-orders-table td::before{
+  content: attr(data-title); display: inline-block; min-width: 3.2em; margin-right: .5rem;
+  color: var(--dh-ink-3); font-size: 13.5px; font-weight: 600;
+}
+.woocommerce-orders-table__cell-order-number{ grid-column: 1; font-weight: 800; }
+.woocommerce-orders-table__cell-order-number::before{ display: none !important; }
+.woocommerce-orders-table__cell-order-status{ grid-column: 2; grid-row: 1; justify-self: end; font-weight: 800; font-size: 13.5px !important; }
+.woocommerce-orders-table__cell-order-status::before{ display: none !important; }
+.woocommerce-orders-table__cell-order-total{ font-weight: 800; }
+.woocommerce-orders-table__cell-order-actions{ grid-column: 1 / -1; display: flex !important; gap: .5rem; padding-top: .6rem !important; }
+.woocommerce-orders-table__cell-order-actions::before{ display: none !important; }
+.woocommerce-orders-table__cell-order-actions .button{
+  min-height: 42px; padding: 0 1rem !important; border-radius: 999px !important; font-weight: 700 !important;
+  background: var(--dh-surface) !important; color: var(--dh-ink) !important; border: 1.5px solid var(--dh-line-2) !important;
+}
+/* 취소 버튼은 빨간 테두리 — 되돌릴 수 없는 동작이라 다른 버튼과 달라 보여야 한다 */
+.woocommerce-orders-table__cell-order-actions .button.cancel{ color: var(--dh-st-check) !important; border-color: #E9B4AF !important; }
+
+/* 주문 상태 색 — 실제 슬러그 (on-hold = 입금 전) */
+.woocommerce-orders-table__cell-order-status{ color: var(--dh-ink-2); }
+tr.woocommerce-orders-table__row--status-on-hold .woocommerce-orders-table__cell-order-status{ color: var(--dh-st-pending); }
+tr.woocommerce-orders-table__row--status-payment-confirmed .woocommerce-orders-table__cell-order-status{ color: var(--dh-st-paid); }
+tr.woocommerce-orders-table__row--status-ready-to-ship .woocommerce-orders-table__cell-order-status,
+tr.woocommerce-orders-table__row--status-processing .woocommerce-orders-table__cell-order-status{ color: var(--dh-st-shipping); }
+tr.woocommerce-orders-table__row--status-delivered .woocommerce-orders-table__cell-order-status,
+tr.woocommerce-orders-table__row--status-completed .woocommerce-orders-table__cell-order-status{ color: var(--dh-st-done); }
+tr.woocommerce-orders-table__row--status-cancelled .woocommerce-orders-table__cell-order-status{ color: var(--dh-ink-3); }
+
+.woocommerce-info, .woocommerce-message{
+  background: var(--dh-surface); border-top: 0; border-left: 3px solid var(--dh-accent); border-radius: 0 12px 12px 0;
+  color: var(--dh-ink-2); font-size: 15px;
+}
+.woocommerce-info::before, .woocommerce-message::before{ color: var(--dh-accent-deep); }
