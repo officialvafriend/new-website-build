@@ -147,13 +147,17 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
 - 상품 상세의 옵션은 PPOM `select` 4개 (구성 · 맛 · 팟/코일 추가 · 기기 추가)에
   `wd-option-builder` 가 덧씌워져 있다. **건드리지 않는다**
 
-### 스테이징 배포가 자동으로 안 돈다
+### 스테이징 배포 확인법
 
-GitHub Deployments 는 첫 연결 때 한 번만 배포됐다 (activity log 의
-`plugin__installed_filesystem` 0.1.0 하나뿐). 이후 push 는 반영되지 않았다.
-WP.com 대시보드 → 배포 에서 **자동 배포를 켜거나 "배포" 를 눌러야** 새 코드가 올라간다.
-확인: `curl -o /dev/null -w '%{http_code}' <스테이징>/wp-content/plugins/new-website-build/assets/front.css`
-— 200 이면 최신.
+GitHub Deployments 는 처음엔 첫 연결 때 한 번만 돌았다 (사용자가 대시보드에서
+배포를 눌러 이후 반영됨). push 뒤 반영까지 몇 분 걸릴 수 있다. 최신인지 보는 법:
+파일이 아니라 **렌더 결과**로 본다 — 홈 HTML 의 `<h1>` 이나 카드 수처럼 그 커밋에서
+바뀐 것을 curl 로 확인한다 (`?nocache=<난수>` 를 붙여 캐시를 피한다). 새 파일이
+생긴 커밋이면 `assets/*.css` 의 200/404 로도 된다.
+
+로그인이 필요한 화면(주문취소 버튼 · `/membership-cancel/` 은 비로그인 시 302)은
+스테이징 테스트 계정이 있어야 본다. 스크린샷 브리지(`live/shoot-b.mjs`)는 Node 쪽
+쿠키 항아리를 두어 로그인 세션이 요청 사이에 살아남는다.
 
 ### 이 환경에서 사이트 보기
 
