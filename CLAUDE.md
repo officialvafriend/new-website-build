@@ -144,6 +144,9 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
   선택자를 전부 `html body.dhr-wrap …` 으로 한 단계 올려 뒀다 (같은 특이도면 진다)
 - 상품 목록 카드는 `wc_get_template_part` 필터로 `content-product.php` 만 우리 것
   (`templates/content-product.php` → `Front\card()`)으로 바꾼다. 링크 · 상품 ID 는 같다
+- 목록 제목은 테마가 h1 을 1px 로 숨기고 `.woocommerce-products-header` 도 안 찍는다.
+  `Shell\archive_title()` 이 `woocommerce_before_shop_loop` 앞(5)에 제목 · 건수 · 분류 설명을
+  `.dhr-arch` 로 그린다. 테마 h1 은 그대로 둔다 (접근성)
 - 가로 스크롤러는 데스크톱에서 휠이 세로로만 가므로 `front.js` 가 양쪽 화살표와
   마우스 드래그를 붙인다
 - 데이터: 카테고리는 이름 일부("특가" · "무니코틴" · "랭킹")로 찾는다 — "8월 특가 할인"
