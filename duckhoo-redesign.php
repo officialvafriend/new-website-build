@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       액상덕후 리디자인
  * Plugin URI:        https://github.com/officialvafriend/new-website-build
- * Description:       액상덕후 사이트 리디자인용 디자인 토큰과 프론트엔드 스타일. 현재 v0 — 토큰 변수만 정의하며 화면을 바꾸지 않습니다.
- * Version:           0.1.0
+ * Description:       액상덕후 사이트 리디자인용 디자인 토큰과 프론트엔드 스타일. 고객이 입금 전 주문을 직접 취소할 수 있게 하는 보정도 함께 들어 있습니다.
+ * Version:           0.2.0
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            officialvafriend
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 /**
  * 프론트엔드에 디자인 토큰을 불러옵니다.
@@ -73,3 +73,52 @@ function enqueue_editor_tokens(): void {
 	);
 }
 add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\\enqueue_editor_tokens' );
+
+/**
+ * 고객이 직접 취소할 수 있는 주문 상태를 넓힙니다.
+ *
+ * WooCommerce 는 기본적으로 pending·failed 주문에만 "취소" 링크를 내보냅니다.
+ * 이 사이트의 주문은 keyple-order-status 가 붙인 한국형 상태로 들어가므로
+ * 그 목록에 걸리지 않고, 그래서 마이페이지에 취소 버튼 자체가 그려지지 않습니다.
+ * 고객이 취소를 못 하는 원인이 여기입니다.
+ *
+ * 여는 것은 입금전 하나뿐입니다. 확인필요는 입금 문자가 이미 들어온 뒤의
+ * 상태라 고객이 스스로 취소하면 환불 처리가 남습니다. 그건 사람이 봐야 합니다.
+ */
+function customer_cancellable_statuses(): array {
+	static $slugs = null;
+
+	if ( null !== $slugs ) {
+		return $slugs;
+	}
+
+	$slugs = array();
+
+	if ( ! function_exists( 'wc_get_order_statuses' ) ) {
+		return $slugs;
+	}
+
+	// 슬러그는 keyple 이 정하는 값이라 하드코딩하지 않고 이름표로 찾습니다.
+	// 슬러그가 바뀌어도 이름표가 그대로면 계속 동작합니다.
+	foreach ( wc_get_order_statuses() as $slug => $label ) {
+		if ( '입금전' === trim( wp_strip_all_tags( (string) $label ) ) ) {
+			$slugs[] = (string) preg_replace( '/^wc-/', '', (string) $slug );
+		}
+	}
+
+	return $slugs;
+}
+
+/**
+ * 취소 가능 상태 목록에 입금전을 더합니다.
+ *
+ * 기존 목록은 지우지 않고 더하기만 합니다. WooCommerce 나 다른 플러그인이
+ * 넣어 둔 상태를 뺏지 않기 위해서입니다.
+ *
+ * @param array $statuses 취소 가능 상태 슬러그 목록.
+ * @return array
+ */
+function allow_cancel_before_deposit( $statuses ): array {
+	return array_values( array_unique( array_merge( (array) $statuses, customer_cancellable_statuses() ) ) );
+}
+add_filter( 'woocommerce_valid_order_statuses_for_cancel', __NAMESPACE__ . '\\allow_cancel_before_deposit' );

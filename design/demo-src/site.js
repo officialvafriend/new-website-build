@@ -242,8 +242,11 @@ V.orders=()=>{
 
 V.order=oid=>{
  const o=S.orders.find(x=>x.id===oid); if(!o)return V.e404();
- /* 취소는 입금 전까지만. 배송 시작 후에는 고객센터로 넘긴다. */
- const canCancel=o.st==='pend'||o.st==='chk';
+ /* 취소는 입금전 하나뿐이다. 확인필요부터는 돈이 이미 들어와 있어 사람이 봐야 한다. */
+ const canCancel=o.st==='pend';
+ const why=o.st==='chk'?'입금자명 확인 중이라 직접 취소할 수 없습니다.'
+  :o.st==='paid'?'입금이 확인된 주문은 직접 취소할 수 없습니다.'
+  :'배송이 시작된 주문은 직접 취소할 수 없습니다.';
  return `<div class="wrap"><div class="crumb"><a href="#/orders">주문내역</a> › #${o.id}</div>
  <h1 class="pagetitle">주문 상세</h1>
  <div class="panel"><div style="display:flex;align-items:center;gap:.6rem">
@@ -261,10 +264,10 @@ V.order=oid=>{
   <div class="big"><span>결제 금액</span><b class="n">${won(o.total)}원</b></div></div>
  <div style="margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap">
   ${canCancel?`<button class="btn btn-dg" style="flex:1" data-act="cancel" data-oid="${o.id}">주문 취소</button>`
-   :`<button class="btn btn-o" style="flex:1" disabled title="배송이 시작되어 직접 취소할 수 없습니다">주문 취소</button>`}
+   :`<button class="btn btn-o" style="flex:1" disabled title="${why}">주문 취소</button>`}
   <a class="btn btn-o" style="flex:1" href="#/orders">목록으로</a></div>
  ${canCancel?'':`<p style="font-size:12px;color:var(--ink3);margin-top:.6rem">
-  배송이 시작된 주문은 직접 취소할 수 없습니다. 카카오톡으로 문의해 주세요.</p>`}
+  ${why} 카카오톡으로 문의해 주세요.</p>`}
  <div style="height:2rem"></div></div>`;
 };
 
@@ -407,5 +410,7 @@ S.orders=[
   sum:39000,ship:0,total:39000,depositor:'홍길동'},
  {id:10480,st:'chk',date:'2026.08.28',items:[{pid:4,bundle:'단품 1병',nic:'0mg',q:1,per:1,unit:8100,pay:8100}],
   sum:8100,ship:3000,total:11100,depositor:'홍길순'},
+ {id:10479,st:'pend',date:'2026.08.27',items:[{pid:13,bundle:'단품 1병',nic:'9.8mg',q:1,per:1,unit:15000,pay:15000}],
+  sum:15000,ship:3000,total:18000,depositor:'홍길동'},
 ];
 route();

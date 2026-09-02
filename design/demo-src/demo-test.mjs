@@ -82,17 +82,22 @@ if (await p.evaluate(() => S.cart.length)) errs.push('흐름: 주문 후에도 �
 
 await step('주문내역', () => go(p, '#/orders'));
 const rows = await p.locator('#view a[href^="#/order/"]').count();
-if (rows < 3) errs.push(`흐름: 주문내역 ${rows}건 (3건이어야 함)`);
+if (rows < 4) errs.push(`흐름: 주문내역 ${rows}건 (4건이어야 함)`);
 else note(`주문내역 ${rows}건`);
 
-// 주문취소 — 확인필요 상태
-await step('주문상세', () => p.evaluate(() => { location.hash = '#/order/' + S.orders[0].id; }));
+// 확인필요 주문은 고객이 직접 못 지운다 (입금 문자가 이미 들어온 상태다)
+await step('확인필요 주문', () => p.evaluate(() => { location.hash = '#/order/' + S.orders[0].id; }));
+if (await p.locator('#view [data-act="cancel"]').count()) errs.push('흐름: 확인필요인데 취소 버튼이 살아 있음');
+else note('확인필요 주문은 취소 막힘');
+
+// 입금전 주문은 취소된다
+await step('입금전 주문', () => go(p, '#/order/10479'));
 const before = await p.evaluate(() => S.orders.length);
 await step('취소', () => p.locator('[data-act="cancel"]').first().click());
 await step('취소 확인', () => p.click('#mOk'));
 const after = await p.evaluate(() => S.orders.length);
-if (after !== before - 1) errs.push(`흐름: 주문취소 실패 ${before}→${after}`);
-else note('확인필요 주문 취소됨');
+if (after !== before - 1) errs.push(`흐름: 입금전 주문취소 실패 ${before}→${after}`);
+else note('입금전 주문 취소됨');
 
 // 배송중 주문은 취소 불가
 await step('배송중 주문', () => go(p, '#/order/10481'));
