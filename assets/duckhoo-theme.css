@@ -18,11 +18,12 @@
   --dh-font: Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont,
              "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
-  /* 면 */
-  --dh-bg: #FFFFFF;
-  --dh-bg-2: #F5F5F7;
-  --dh-line: #E6E8EA;
-  --dh-line-2: #D2D6DA;
+  /* 면 — 바탕은 옅은 회색, 카드는 흰색 (데모와 같다) */
+  --dh-bg: #F5F5F7;
+  --dh-surface: #FFFFFF;
+  --dh-bg-2: #ECEDF0;
+  --dh-line: #E2E4E8;
+  --dh-line-2: #CFD3D8;
 
   /* 글자 — 흰 카드와 #F5F5F7 양쪽에서 WCAG AA 통과 */
   --dh-ink: #111111;      /* 18.88:1 */
@@ -36,6 +37,12 @@
   --dh-accent-deep: #1565C0;  /* 흰 배경 위 색 글자 · 포커스 링 (5.75:1) */
   --dh-accent-soft: #E8F5FE;
 
+  /* 카드 아이브로 (신상 · 9월 특가 · 재구매 1위 · 품절) — 흰 카드 위 4.5:1 이상 */
+  --dh-eb-new:  #1565C0;
+  --dh-eb-sale: #B45309;
+  --dh-eb-best: #9F1239;
+  --dh-eb-out:  #616870;
+
   /* 주문 상태 — 색은 보조 신호다. 항상 한글 라벨과 함께 쓴다 */
   --dh-st-pending:  #8A5A12;  /* 입금전 */
   --dh-st-check:    #B42318;  /* 확인필요 */
@@ -43,8 +50,8 @@
   --dh-st-shipping: #5B21B6;  /* 배송중 */
   --dh-st-done:     #616870;  /* 배송완료 */
 
-  --dh-r: 14px;
-  --dh-r-lg: 20px;
+  --dh-r: 16px;
+  --dh-r-lg: 22px;
   --dh-ez: cubic-bezier(.2, 0, .2, 1);
 
   /* 터치 타깃 — 최소 44px, 주요 CTA 48px */
@@ -57,6 +64,7 @@
 body{
   font-family: var(--dh-font);
   color: var(--dh-ink);
+  background: var(--dh-bg);
   /* 한글에 break-all 을 쓰면 어절 중간이 끊긴다 */
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -68,10 +76,16 @@ body{
   outline-offset: 2px;
 }
 
-/* 가격 · 수량처럼 세로로 정렬되는 숫자 */
+/* 가격 · 수량처럼 세로로 정렬되는 숫자. 모노 폰트는 쓰지 않는다 — 같은 글꼴의 고정폭 숫자면 된다 */
 .woocommerce-Price-amount,
 .quantity input,
 .order-total .amount{ font-variant-numeric: tabular-nums; }
+
+/* 작은 글자 바닥. 11–12px 캡션은 안드로이드 기본 한글 폰트에서 얇고 흐리게 나온다 */
+.woocommerce small,
+.woocommerce .product_meta,
+.woocommerce-breadcrumb,
+.woocommerce ul.products li.product .woocommerce-loop-product__title + *{ font-size: max(13px, .85em); }
 
 /* --- 버튼 ----------------------------------------------------------------
    주요 액션은 밝은 하늘색 채움 + 검정 글자. 보조는 흰 바탕 + 테두리. */
@@ -148,13 +162,20 @@ body{
 /* --- 상품 카드 ------------------------------------------------------------ */
 
 .woocommerce ul.products li.product{
-  background: var(--dh-bg-2);
+  background: var(--dh-surface);
   border-radius: var(--dh-r-lg);
   overflow: hidden;
-  transition: transform 200ms var(--dh-ez);
+  padding: .6rem .6rem 1rem;
+  transition: transform 200ms var(--dh-ez), box-shadow 200ms var(--dh-ez);
 }
-.woocommerce ul.products li.product:hover{ transform: translateY(-4px); }
-.woocommerce ul.products li.product img{ border-radius: 0; }
+.woocommerce ul.products li.product:hover{ transform: translateY(-4px); box-shadow: 0 18px 40px -28px rgba(17,17,17,.35); }
+/* 이미지는 카드 안에서 한 번 더 둥글게 — 데모의 카드 구조 */
+.woocommerce ul.products li.product img{ border-radius: var(--dh-r); }
+.woocommerce ul.products li.product .woocommerce-loop-product__title{
+  font-size: 15.5px; font-weight: 700; letter-spacing: -.02em; line-height: 1.35; padding: .5rem .35rem 0;
+}
+/* 별점 색 — 데모와 같은 앰버 */
+.woocommerce .star-rating span::before, .woocommerce .star-rating::before{ color: #F59E0B; }
 
 /* 병당 가격이 고객의 비교 지표다. 총액보다 크게 쓴다. */
 .woocommerce ul.products li.product .price{
@@ -182,8 +203,8 @@ body{
 
 .woocommerce-cart .cart_totals,
 .woocommerce-checkout #order_review{
-  background: #fff;
-  border: 1px solid var(--dh-line);
+  background: var(--dh-surface);
+  border: 0;
   border-radius: var(--dh-r-lg);
   padding: 18px !important;
 }
