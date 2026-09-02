@@ -5,7 +5,16 @@ const HARD = setTimeout(() => { console.log('\n⏱ 하드 타임아웃'); proces
 /* 사용법: npm i playwright gsap 한 뒤
    SP=<gsap/playwright 가 설치된 폴더> node design/demo-src/demo-test.mjs */
 import path from 'path';
-const FILE = 'file://' + path.resolve('design/demo.html');
+import os from 'os';
+
+/* 아티팩트가 감싸는 것과 같은 뼈대(charset + viewport + 작은 리셋)를 씌워서 본다.
+   viewport 메타가 없으면 모바일 브라우저가 980px 로 잡아 버려 실제와 달라진다. */
+const WRAPPED = path.join(os.tmpdir(), 'duckhoo-demo-wrapped.html');
+fs.writeFileSync(WRAPPED, `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>${fs.readFileSync(path.resolve('design/demo.html'), 'utf8')}</body></html>`);
+const FILE = 'file://' + WRAPPED;
 const SP = process.env.SP || process.cwd();
 const GSAP = fs.readFileSync(SP + '/node_modules/gsap/dist/gsap.min.js', 'utf8');
 const STR = fs.readFileSync(SP + '/node_modules/gsap/dist/ScrollTrigger.min.js', 'utf8');
@@ -20,7 +29,7 @@ const b = await chromium.launch({
 });
 
 async function mk(width, height) {
-  const ctx = await b.newContext({ viewport: { width, height }, deviceScaleFactor: 1, hasTouch: width < 800 });
+  const ctx = await b.newContext({ viewport: { width, height }, deviceScaleFactor: 1, isMobile: width < 880, hasTouch: width < 880 });
   ctx.setDefaultTimeout(4000);
   await ctx.route('**/*', r => {
     const u = r.request().url();
@@ -38,7 +47,7 @@ async function mk(width, height) {
 }
 
 const go = async (p, h) => { await p.evaluate(x => { location.hash = x; }, h); await p.waitForTimeout(400); };
-const routes = ['#/', '#/shop', '#/shop?f=멘솔', '#/p/12', '#/p/4', '#/cart', '#/login', '#/join', '#/orders', '#/order/10481', '#/my', '#/zzz'];
+const routes = ['#/', '#/shop', '#/shop?f=멘솔', '#/p/12', '#/p/4', '#/cart', '#/search', '#/search?q=멘솔', '#/login', '#/join', '#/orders', '#/order/10481', '#/my', '#/zzz'];
 
 for (const w of [390, 768, 1280]) {
   const p = await mk(w, 900);
@@ -46,11 +55,17 @@ for (const w of [390, 768, 1280]) {
     await go(p, r);
     const m = await p.evaluate(() => {
       window.scrollTo(9999, 0); const x = window.scrollX; window.scrollTo(0, 0);
+      const tabs = document.querySelector('.tabs');
       return { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, x,
+               docH: document.documentElement.scrollHeight, cliH: document.documentElement.clientHeight,
+               tabBottom: tabs ? Math.round(tabs.getBoundingClientRect().bottom) : 0,
                len: document.querySelector('#view').innerHTML.trim().length };
     });
     if (m.sw > m.cw + 1 || m.x > 0) errs.push(`[${w}] 가로 넘침 @${r}: sw=${m.sw} cw=${m.cw} scrollX=${m.x}`);
     if (m.len < 80) errs.push(`[${w}] 빈 화면 @${r}`);
+    // 문서가 화면보다 짧아지면 라우트를 옮길 때 아래 탭바가 튄다
+    if (m.docH < m.cliH - 1) errs.push(`[${w}] 문서가 화면보다 짧음 @${r}: docH=${m.docH} cliH=${m.cliH}`);
+    if (w < 880 && Math.abs(m.tabBottom - m.cliH) > 1) errs.push(`[${w}] 탭바가 화면 아래에 안 붙음 @${r}: ${m.tabBottom} vs ${m.cliH}`);
   }
   note(`${w}px 라우트 ${routes.length}개 확인`);
   await p.close();
@@ -59,6 +74,32 @@ for (const w of [390, 768, 1280]) {
 // ── 구매 흐름 (390px) ──
 const p = await mk(390, 844);
 const step = async (label, fn) => { try { await fn(); await p.waitForTimeout(320); } catch (e) { errs.push(`흐름[${label}]: ${e.message.split('\n')[0]}`); } };
+
+// 검색
+await step('검색 화면', () => go(p, '#/search'));
+if (!(await p.evaluate(() => document.activeElement && document.activeElement.id === 'sq'))) errs.push('흐름: 검색 화면에서 입력칸에 포커스가 없음');
+else note('검색 입력에 포커스');
+await step('검색어 입력', () => p.fill('#sq', '멘솔'));
+const menthol = await p.locator('#sres .card').count();
+if (menthol < 3) errs.push(`흐름: "멘솔" 검색 결과 ${menthol}건`);
+else note(`"멘솔" 검색 ${menthol}건`);
+if (!/#\/search\?q=/.test(await p.evaluate(() => location.hash))) errs.push('흐름: 검색어가 주소에 안 남음');
+await step('브랜드 검색', () => p.fill('#sq', '맥스쿨'));
+const brand = await p.locator('#sres .card').count();
+if (brand !== 3) errs.push(`흐름: 브랜드 "맥스쿨" 검색 ${brand}건 (3건이어야 함)`);
+else note('브랜드로도 찾힘');
+await step('없는 검색어', () => p.fill('#sq', 'zzzz'));
+if (!/맞는 상품이 없습니다/.test(await p.textContent('#sres'))) errs.push('흐름: 결과 없음 안내가 안 나옴');
+else note('결과 없음 안내');
+await step('추천어 클릭', () => p.locator('#sres [data-kw]').first().click());
+if (!(await p.locator('#sres .card').count())) errs.push('흐름: 추천 검색어를 눌러도 결과가 없음');
+else note('추천 검색어 동작');
+await step('지우기', () => p.locator('#sform .x').click());
+if (await p.evaluate(() => S.q)) errs.push('흐름: 검색어 지우기가 안 됨');
+else note('검색어 지우기');
+await step('검색에서 상품으로', () => p.locator('#sres .card').first().click());
+if (!/#\/p\//.test(await p.evaluate(() => location.hash))) errs.push('흐름: 검색 결과에서 상품으로 못 감');
+else note('검색 결과 → 상품 상세');
 
 await step('로그인 화면', () => go(p, '#/login'));
 await step('로그인', () => p.locator('[data-act="login"]').first().click());

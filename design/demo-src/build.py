@@ -75,7 +75,7 @@ shell = """<header class="gnb"><div class="wrap gnb-in">
    <a href="#/orders" data-k="orders">주문내역</a>
   </nav>
   <div class="sp">
-   <a class="gi" href="#/shop" aria-label="상품 검색">⌕</a>
+   <a class="gi" href="#/search" aria-label="상품 검색">⌕</a>
    <a class="gi" href="#/cart" aria-label="장바구니">◫<span class="b n" id="cartN">0</span></a>
    <a class="gi who" id="who" href="#/login">로그인</a>
   </div>

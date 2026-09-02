@@ -208,5 +208,17 @@ add_filter( 'duckhoo_member_points', fn( $v, $id ) => (float) get_user_meta( $id
 - 회원가입은 **본인확인이 1단계**, 정보입력이 2단계다. 건너뛸 수 없다
 
 검증: `design/demo-src/demo-test.mjs` (Playwright). 390 / 768 / 1280px 에서
-12개 라우트의 가로 넘침·JS 오류를 보고, 로그인 → 담기 → 주문 → 취소,
+14개 라우트의 가로 넘침·JS 오류를 보고, 검색 · 로그인 → 담기 → 주문 → 취소,
 가입 → 탈퇴 흐름을 끝까지 눌러 본다.
+
+테스트는 데모 파일에 **아티팩트와 같은 뼈대(charset + viewport 메타 + 리셋)를
+씌워서** 880px 미만은 `isMobile` 로 본다. viewport 메타가 없으면 모바일
+브라우저가 레이아웃을 980px 로 잡아 버려 실제와 전혀 다른 화면을 검사하게 된다.
+
+### 아래 탭바는 fixed 가 아니라 sticky 다
+
+`position:fixed` 로 두면 라우트를 옮겨 문서 높이가 줄 때 모바일 브라우저
+주소창이 다시 펴지면서 탭바가 같이 튄다 (홈 → 주문내역에서 그랬다).
+`position:sticky; bottom:0` 으로 흐름 안에 놓고, `body` 를 `min-height:100dvh`
+세로 플렉스로 잡아 어느 화면에서도 문서가 뷰포트보다 짧아지지 않게 했다.
+테스트가 라우트마다 `docH >= cliH` 와 탭바 아래 모서리 위치를 확인한다.

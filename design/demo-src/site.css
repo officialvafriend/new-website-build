@@ -8,9 +8,12 @@
  --ez:cubic-bezier(.2,0,.2,1);--gut:clamp(1rem,.5rem + 2vw,2.5rem);--tab:60px;
 }
 *,*::before,*::after{box-sizing:border-box}
+/* 앱 껍데기: 세로 한 줄로 쌓고 화면 높이를 최소로 잡는다. 화면이 짧은 라우트에서도
+   문서가 뷰포트보다 짧아지지 않아, 아래 탭바가 라우트를 옮길 때 튀지 않는다. */
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;
- word-break:keep-all;-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--tab) + env(safe-area-inset-bottom))}
-@media(min-width:880px){body{padding-bottom:0}}
+ word-break:keep-all;-webkit-font-smoothing:antialiased;
+ min-height:100dvh;display:flex;flex-direction:column}
+#view{flex:1 1 auto}
 h1,h2,h3{margin:0;line-height:1.24;letter-spacing:-.03em;font-weight:900}
 p{margin:0}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -39,7 +42,10 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .gi .who{font-size:11.5px;font-weight:700;padding:0 .5rem;width:auto;min-width:44px}
 
 /* 하단 탭 (모바일) */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;background:#fff;border-top:1px solid var(--line2);
+/* fixed 가 아니라 sticky 다. fixed 는 모바일 브라우저 주소창이 접혔다 펴질 때,
+   그리고 문서 높이가 바뀔 때 같이 움직인다. sticky 는 흐름 안에 자리를 차지하므로
+   그런 일이 없다. */
+.tabs{position:sticky;bottom:0;z-index:35;display:flex;background:#fff;border-top:1px solid var(--line2);
  padding-bottom:env(safe-area-inset-bottom)}
 @media(min-width:880px){.tabs{display:none}}
 .tabs a{flex:1 1 0;height:var(--tab);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;
@@ -216,3 +222,16 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .empty{text-align:center;padding:3rem 1rem;color:var(--ink3)}
 .empty .ico{font-size:34px;margin-bottom:.7rem}
 .empty p{font-size:13.5px;margin-bottom:1.2rem}
+
+/* 검색 */
+.sfield{display:flex;align-items:center;gap:.5rem;background:var(--bg2);border-radius:999px;
+ padding:0 .35rem 0 1rem;min-height:52px;margin-bottom:1.1rem}
+.sfield input{flex:1 1 auto;min-width:0;border:0;background:none;font-size:16px;min-height:50px;color:inherit}
+.sfield input:focus{outline:none}
+.sfield:focus-within{box-shadow:inset 0 0 0 2px var(--acdeep)}
+.sfield input::-webkit-search-cancel-button{display:none}
+.sfield .x{width:44px;height:44px;border-radius:999px;display:flex;align-items:center;
+ justify-content:center;font-size:15px;color:var(--ink3);flex:0 0 auto}
+.sfield .x:hover{background:var(--line)}
+.skw{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.empty .skw{margin-top:1.2rem;margin-bottom:0}

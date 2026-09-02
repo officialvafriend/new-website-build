@@ -25,7 +25,7 @@ const FL=['전체','과일','멘솔','음료','디저트'];
 const BRANDS=['액상덕후','맥스쿨','얼려먹구싶오','심쿵','깔끔','리퀴드랩','디오리퀴드','펠릭스','네스티'];
 const ST={pend:['입금전','pend'],chk:['확인필요','chk'],paid:['입금확인','paid'],ship:['배송중','ship'],done:['배송완료','done']};
 
-let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400};
+let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400,q:''};
 
 /* 탈퇴를 막는 이유들. 비어 있으면 탈퇴할 수 있다. */
 const leaveBlockers=()=>{
@@ -301,6 +301,39 @@ V.my=()=>{
  <div style="height:2rem"></div></div>`;
 };
 
+/* 검색 — 이름·브랜드·맛·니코틴을 한 덩어리로 놓고 본다.
+   무니코틴처럼 사람이 쓰는 말이 데이터에 없을 때가 있어 그건 따로 붙여 준다. */
+const hay=p=>[p.n,p.b,p.f,p.nic.join(' '),p.nic[0]==='0mg'?'무니코틴 노니코틴':'',p.was?'특가 세일 9월':'',p.tag||'']
+ .join(' ').toLowerCase().replace(/\s+/g,'');
+const searchHits=q=>{
+ const k=q.trim().toLowerCase().replace(/\s+/g,'');
+ if(!k)return [];
+ return P.filter(p=>hay(p).includes(k));
+};
+const SKW=['무니코틴','멘솔','9.8mg','액상덕후','청포도','9월 특가'];
+
+const searchBody=q=>{
+ if(!q.trim())return `<div class="skw">${SKW.map(k=>`<button class="chip" data-kw="${k}">${k}</button>`).join('')}</div>
+  <div class="sec-h" style="margin-top:.4rem"><h2 style="font-size:1.05rem">많이 찾는 상품</h2></div>
+  <div class="grid">${P.filter(p=>p.tag).map(card).join('')}</div>`;
+ const hits=searchHits(q);
+ if(!hits.length)return `<div class="empty"><div class="ico">⌕</div>
+  <p><b>${esc(q)}</b> 에 맞는 상품이 없습니다.<br>브랜드나 맛으로 다시 찾아보세요.</p>
+  <div class="skw" style="justify-content:center">${SKW.map(k=>`<button class="chip" data-kw="${k}">${k}</button>`).join('')}</div></div>`;
+ return `<p style="font-size:12.5px;color:var(--ink3);margin-bottom:.8rem">${hits.length}종</p>
+  <div class="grid">${hits.map(card).join('')}</div>`;
+};
+
+V.search=()=>`<div class="wrap"><div class="crumb"><a href="#/">홈</a> › 검색</div>
+ <h1 class="pagetitle">검색</h1>
+ <form class="sfield" id="sform" role="search">
+  <span aria-hidden="true" style="color:var(--ink3)">⌕</span>
+  <input id="sq" type="search" enterkeyhint="search" autocomplete="off"
+   placeholder="상품명 · 브랜드 · 맛 · 니코틴" aria-label="상품 검색" value="${esc(S.q)}">
+  ${S.q?'<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>':''}
+ </form>
+ <div id="sres">${searchBody(S.q)}</div><div style="height:2rem"></div></div>`;
+
 V.e404=()=>`<div class="wrap"><div class="empty"><div class="ico">?</div>
  <p>페이지를 찾을 수 없습니다.</p><a class="btn btn-p" href="#/">홈으로</a></div></div>`;
 
@@ -322,11 +355,13 @@ function route(){
  else if(seg[0]==='join')html=V.join();
  else if(seg[0]==='orders')html=V.orders();
  else if(seg[0]==='order')html=V.order(+seg[1]);
+ else if(seg[0]==='search'){if(q.has('q'))S.q=q.get('q');html=V.search()}
  else if(seg[0]==='my')html=V.my();
  else html=V.e404();
  $('#view').innerHTML=html;
  window.scrollTo(0,0);
  syncChrome(seg[0]||'');
+ if(seg[0]==='search'){const i=$('#sq'); if(i){const v=i.value;i.focus();i.setSelectionRange(v.length,v.length)}}
  if(window.gsap&&!matchMedia('(prefers-reduced-motion: reduce)').matches)
   gsap.fromTo('#view > *',{opacity:0,y:10},{opacity:1,y:0,duration:.3,ease:'power2.out'});
 }
@@ -341,8 +376,29 @@ function syncChrome(k){
 const rerender=()=>route();
 
 /* ── 이벤트 ── */
+/* 결과만 갈아끼운다. 화면 전체를 다시 그리면 입력 포커스가 날아간다. */
+function paintSearch(){
+ const box=$('#sres'); if(box)box.innerHTML=searchBody(S.q);
+ const f=$('#sform'); if(f){
+  const x=f.querySelector('.x');
+  if(S.q&&!x){f.insertAdjacentHTML('beforeend','<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>')}
+  else if(!S.q&&x){x.remove()}
+ }
+ history.replaceState(null,'','#/search'+(S.q?'?q='+encodeURIComponent(S.q):''));
+}
+document.addEventListener('input',e=>{
+ if(!e.target.closest('#sq'))return;
+ S.q=e.target.value; paintSearch();
+});
+document.addEventListener('submit',e=>{
+ const f=e.target.closest('#sform'); if(!f)return;
+ e.preventDefault(); $('#sq')?.blur();
+});
+
 document.addEventListener('click',e=>{
  const t=e.target;
+ const kw=t.closest('[data-kw]');
+ if(kw){S.q=kw.dataset.kw;const i=$('#sq');if(i)i.value=S.q;paintSearch();if(!S.q&&i)i.focus();return}
  const flt=t.closest('[data-flt]'); if(flt){S.flt=flt.dataset.flt;rerender();return}
  const bi=t.closest('[data-bi]'); if(bi){state.bi=+bi.dataset.bi;rerender();return}
  const ni=t.closest('[data-ni]'); if(ni){state.ni=+ni.dataset.ni;rerender();return}

@@ -15,9 +15,12 @@
  --ez:cubic-bezier(.2,0,.2,1);--gut:clamp(1rem,.5rem + 2vw,2.5rem);--tab:60px;
 }
 *,*::before,*::after{box-sizing:border-box}
+/* 앱 껍데기: 세로 한 줄로 쌓고 화면 높이를 최소로 잡는다. 화면이 짧은 라우트에서도
+   문서가 뷰포트보다 짧아지지 않아, 아래 탭바가 라우트를 옮길 때 튀지 않는다. */
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;
- word-break:keep-all;-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--tab) + env(safe-area-inset-bottom))}
-@media(min-width:880px){body{padding-bottom:0}}
+ word-break:keep-all;-webkit-font-smoothing:antialiased;
+ min-height:100dvh;display:flex;flex-direction:column}
+#view{flex:1 1 auto}
 h1,h2,h3{margin:0;line-height:1.24;letter-spacing:-.03em;font-weight:900}
 p{margin:0}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -46,7 +49,10 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .gi .who{font-size:11.5px;font-weight:700;padding:0 .5rem;width:auto;min-width:44px}
 
 /* 하단 탭 (모바일) */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;background:#fff;border-top:1px solid var(--line2);
+/* fixed 가 아니라 sticky 다. fixed 는 모바일 브라우저 주소창이 접혔다 펴질 때,
+   그리고 문서 높이가 바뀔 때 같이 움직인다. sticky 는 흐름 안에 자리를 차지하므로
+   그런 일이 없다. */
+.tabs{position:sticky;bottom:0;z-index:35;display:flex;background:#fff;border-top:1px solid var(--line2);
  padding-bottom:env(safe-area-inset-bottom)}
 @media(min-width:880px){.tabs{display:none}}
 .tabs a{flex:1 1 0;height:var(--tab);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;
@@ -224,6 +230,19 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .empty .ico{font-size:34px;margin-bottom:.7rem}
 .empty p{font-size:13.5px;margin-bottom:1.2rem}
 
+/* 검색 */
+.sfield{display:flex;align-items:center;gap:.5rem;background:var(--bg2);border-radius:999px;
+ padding:0 .35rem 0 1rem;min-height:52px;margin-bottom:1.1rem}
+.sfield input{flex:1 1 auto;min-width:0;border:0;background:none;font-size:16px;min-height:50px;color:inherit}
+.sfield input:focus{outline:none}
+.sfield:focus-within{box-shadow:inset 0 0 0 2px var(--acdeep)}
+.sfield input::-webkit-search-cancel-button{display:none}
+.sfield .x{width:44px;height:44px;border-radius:999px;display:flex;align-items:center;
+ justify-content:center;font-size:15px;color:var(--ink3);flex:0 0 auto}
+.sfield .x:hover{background:var(--line)}
+.skw{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.empty .skw{margin-top:1.2rem;margin-bottom:0}
+
 .cf{--cf-card:clamp(160px,44vw,280px)}
 .cf-frame{cursor:grab;overflow:hidden;padding:2.5rem 0 1.5rem;outline:none;touch-action:pan-y}
 .cf-frame:active{cursor:grabbing}
@@ -264,7 +283,7 @@ input,select,textarea{font-family:inherit;font-size:16px}
    <a href="#/orders" data-k="orders">주문내역</a>
   </nav>
   <div class="sp">
-   <a class="gi" href="#/shop" aria-label="상품 검색">⌕</a>
+   <a class="gi" href="#/search" aria-label="상품 검색">⌕</a>
    <a class="gi" href="#/cart" aria-label="장바구니">◫<span class="b n" id="cartN">0</span></a>
    <a class="gi who" id="who" href="#/login">로그인</a>
   </div>
@@ -408,7 +427,7 @@ const FL=['전체','과일','멘솔','음료','디저트'];
 const BRANDS=['액상덕후','맥스쿨','얼려먹구싶오','심쿵','깔끔','리퀴드랩','디오리퀴드','펠릭스','네스티'];
 const ST={pend:['입금전','pend'],chk:['확인필요','chk'],paid:['입금확인','paid'],ship:['배송중','ship'],done:['배송완료','done']};
 
-let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400};
+let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400,q:''};
 
 /* 탈퇴를 막는 이유들. 비어 있으면 탈퇴할 수 있다. */
 const leaveBlockers=()=>{
@@ -685,6 +704,39 @@ V.my=()=>{
  <div style="height:2rem"></div></div>`;
 };
 
+/* 검색 — 이름·브랜드·맛·니코틴을 한 덩어리로 놓고 본다.
+   무니코틴처럼 사람이 쓰는 말이 데이터에 없을 때가 있어 그건 따로 붙여 준다. */
+const hay=p=>[p.n,p.b,p.f,p.nic.join(' '),p.nic[0]==='0mg'?'무니코틴 노니코틴':'',p.was?'특가 세일 9월':'',p.tag||'']
+ .join(' ').toLowerCase().replace(/\s+/g,'');
+const searchHits=q=>{
+ const k=q.trim().toLowerCase().replace(/\s+/g,'');
+ if(!k)return [];
+ return P.filter(p=>hay(p).includes(k));
+};
+const SKW=['무니코틴','멘솔','9.8mg','액상덕후','청포도','9월 특가'];
+
+const searchBody=q=>{
+ if(!q.trim())return `<div class="skw">${SKW.map(k=>`<button class="chip" data-kw="${k}">${k}</button>`).join('')}</div>
+  <div class="sec-h" style="margin-top:.4rem"><h2 style="font-size:1.05rem">많이 찾는 상품</h2></div>
+  <div class="grid">${P.filter(p=>p.tag).map(card).join('')}</div>`;
+ const hits=searchHits(q);
+ if(!hits.length)return `<div class="empty"><div class="ico">⌕</div>
+  <p><b>${esc(q)}</b> 에 맞는 상품이 없습니다.<br>브랜드나 맛으로 다시 찾아보세요.</p>
+  <div class="skw" style="justify-content:center">${SKW.map(k=>`<button class="chip" data-kw="${k}">${k}</button>`).join('')}</div></div>`;
+ return `<p style="font-size:12.5px;color:var(--ink3);margin-bottom:.8rem">${hits.length}종</p>
+  <div class="grid">${hits.map(card).join('')}</div>`;
+};
+
+V.search=()=>`<div class="wrap"><div class="crumb"><a href="#/">홈</a> › 검색</div>
+ <h1 class="pagetitle">검색</h1>
+ <form class="sfield" id="sform" role="search">
+  <span aria-hidden="true" style="color:var(--ink3)">⌕</span>
+  <input id="sq" type="search" enterkeyhint="search" autocomplete="off"
+   placeholder="상품명 · 브랜드 · 맛 · 니코틴" aria-label="상품 검색" value="${esc(S.q)}">
+  ${S.q?'<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>':''}
+ </form>
+ <div id="sres">${searchBody(S.q)}</div><div style="height:2rem"></div></div>`;
+
 V.e404=()=>`<div class="wrap"><div class="empty"><div class="ico">?</div>
  <p>페이지를 찾을 수 없습니다.</p><a class="btn btn-p" href="#/">홈으로</a></div></div>`;
 
@@ -731,6 +783,7 @@ function route(){
  else if(seg[0]==='join')html=V.join();
  else if(seg[0]==='orders')html=V.orders();
  else if(seg[0]==='order')html=V.order(+seg[1]);
+ else if(seg[0]==='search'){if(q.has('q'))S.q=q.get('q');html=V.search()}
  else if(seg[0]==='my')html=V.my();
  else html=V.e404();
  $('#view').innerHTML=html;
@@ -738,6 +791,7 @@ function route(){
  syncChrome(seg[0]||'');
  if(!seg.length)mountCF();
  mountReveal();
+ if(seg[0]==='search'){const i=$('#sq'); if(i){const v=i.value;i.focus();i.setSelectionRange(v.length,v.length)}}
  if(window.gsap&&!matchMedia('(prefers-reduced-motion: reduce)').matches)
   gsap.fromTo('#view > *',{opacity:0,y:10},{opacity:1,y:0,duration:.3,ease:'power2.out'});
 }
@@ -752,8 +806,29 @@ function syncChrome(k){
 const rerender=()=>route();
 
 /* ── 이벤트 ── */
+/* 결과만 갈아끼운다. 화면 전체를 다시 그리면 입력 포커스가 날아간다. */
+function paintSearch(){
+ const box=$('#sres'); if(box)box.innerHTML=searchBody(S.q);
+ const f=$('#sform'); if(f){
+  const x=f.querySelector('.x');
+  if(S.q&&!x){f.insertAdjacentHTML('beforeend','<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>')}
+  else if(!S.q&&x){x.remove()}
+ }
+ history.replaceState(null,'','#/search'+(S.q?'?q='+encodeURIComponent(S.q):''));
+}
+document.addEventListener('input',e=>{
+ if(!e.target.closest('#sq'))return;
+ S.q=e.target.value; paintSearch();
+});
+document.addEventListener('submit',e=>{
+ const f=e.target.closest('#sform'); if(!f)return;
+ e.preventDefault(); $('#sq')?.blur();
+});
+
 document.addEventListener('click',e=>{
  const t=e.target;
+ const kw=t.closest('[data-kw]');
+ if(kw){S.q=kw.dataset.kw;const i=$('#sq');if(i)i.value=S.q;paintSearch();if(!S.q&&i)i.focus();return}
  const flt=t.closest('[data-flt]'); if(flt){S.flt=flt.dataset.flt;rerender();return}
  const bi=t.closest('[data-bi]'); if(bi){state.bi=+bi.dataset.bi;rerender();return}
  const ni=t.closest('[data-ni]'); if(ni){state.ni=+ni.dataset.ni;rerender();return}
