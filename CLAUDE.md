@@ -133,9 +133,18 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
   그대로 불러 GTM · WooCommerce · PPOM 스크립트가 다 산다. 홈에서만 테마 스타일
   핸들 `welcome-drink-style` 을 뺀다 (테마의 `.dh-*` 인라인 CSS 는 테마 템플릿이
   찍는 거라 우리 템플릿에선 애초에 안 나온다)
-- 목록 · 상세 · 장바구니 · 결제 · 계정은 테마와 WooCommerce 템플릿이 그대로 그리고,
-  그 위에 `assets/duckhoo-theme.css` 를 플러그인이 자동으로 얹는다. **폼 필드와
-  데이터 경로에 손대지 않기 위해서다**
+- 목록 · 상세 · 장바구니 · 결제 · 계정 · kboard · keyple 마이페이지는 **테마 템플릿이
+  그대로 돌고**, `includes/shell.php` 가 `wp_body_open` 에 우리 헤더를, `wp_footer` 에
+  푸터·탭바를 넣는다. 테마의 216px 사이드 헤더(`#masthead.dh-side`) · 푸터(`#colophon`) ·
+  탭바(`.dh-tabbar`) · 빠른 메뉴(`.dh-quick`) · 모바일 헤더(`.wd-mobile-header-custom`) ·
+  마이페이지 상단(`.wd-custom-top-wrap`)은 `assets/shell.css` 가 숨기고, `#page.dh-shell`
+  그리드를 푼다. 그 위에 `assets/duckhoo-theme.css` 로 폼·버튼·계정을 정돈한다.
+  **폼 필드와 데이터 경로에 손대지 않기 위해서다** — 테마 규칙이 `!important` 라
+  shell.css 도 그렇게 쓴다
+- 상품 목록 카드는 `wc_get_template_part` 필터로 `content-product.php` 만 우리 것
+  (`templates/content-product.php` → `Front\card()`)으로 바꾼다. 링크 · 상품 ID 는 같다
+- 가로 스크롤러는 데스크톱에서 휠이 세로로만 가므로 `front.js` 가 양쪽 화살표와
+  마우스 드래그를 붙인다
 - 데이터: 카테고리는 이름 일부("특가" · "무니코틴" · "랭킹")로 찾는다 — "8월 특가 할인"
   처럼 달이 바뀌는 이름을 따라가기 위해서. 브랜드 분류(taxonomy)가 없어 상품명 앞
   `[브랜드]` 로 센다. 병당 가격은 이름의 "N병" 으로 나눈다. 평점·판매수는 실제 값이
@@ -177,9 +186,9 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 
 ```
 duckhoo-redesign.php     플러그인 본체 — 배포됨
-includes/                front.php(홈) · membership-cancel.php(회원탈퇴) — 배포됨
-templates/home.php       홈 템플릿 — 배포됨
-assets/                  tokens · front.css/js(홈) · duckhoo-theme.css(나머지 화면) — 배포됨
+includes/                front.php(홈·회원탈퇴 페이지) · shell.php(나머지 화면 껍데기) · membership-cancel.php — 배포됨
+templates/               home.php · page-membership-cancel.php · content-product.php(목록 카드) — 배포됨
+assets/                  tokens · front.css/js(공통) · shell.css(테마 껍데기 걷기) · duckhoo-theme.css(폼·계정) — 배포됨
 .deployignore            아래 것들을 배포에서 제외
 design/                  시안·기반 문서 (참고)
 reference/duckhoo-front/ 기존 프론트 플러그인 소스 (참고)
