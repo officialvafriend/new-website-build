@@ -240,8 +240,17 @@ sticky 도 아니다.
 
 ### 글자·아이콘
 
-- 폰트는 Pretendard(로컬) → **Noto Sans KR 400..900 (Google Fonts)**. 안드로이드
-  기본 한글 폰트는 중간 굵기가 없어 600 이 400 으로 그려진다 — 웹폰트를 꼭 싣는다
+- 폰트는 **Pretendard Variable 을 파일 안에 심는다** (`design/demo-src/pretendard.css`,
+  data URI). 아티팩트 CSP 가 외부 폰트를 fonts.gstatic.com 으로만 막아 Pretendard 를
+  링크로는 못 싣고, Noto Sans KR 은 사용자가 싫다고 했다. KS X 1001 2,350자 + 데모에서
+  쓰는 글자, wght 400–800 만 남긴 서브셋이라 310KB 다. 안드로이드 기본 한글 폰트는
+  중간 굵기가 없어 600 이 400 으로 그려지므로 웹폰트 없이는 안 된다
+- 다시 만들기: `npm i pretendard`, `pip install fonttools brotli` 한 뒤
+  `pyftsubset PretendardVariable.woff2 --text-file=<2350자+사용글자> --flavor=woff2 …`,
+  `fonttools varLib.instancer … wght=400:800`, base64 로 `pretendard.css` 에 넣는다.
+  데모에 새 한자·특수문자를 쓰면 서브셋에 없을 수 있다 — 그 글자만 시스템 폰트로 빠진다
+- 숫자에 모노 폰트를 쓰지 않는다. 가격에 IBM Plex Mono 를 썼더니 개발자 화면처럼
+  보였다. 같은 글꼴의 `tabular-nums` 로 맞춘다
 - 캡션 최소 13px, 본문 15–16px, 큰 제목 34px/900. 11–12px 은 쓰지 않는다
 - 아이콘은 유니코드 글리프가 아니라 `design/demo-src/icons.json` 의 인라인 SVG
   (24px, 2px 스트로크). 빌드가 JS 상수 `I` 와 껍데기 HTML 양쪽에 넣는다

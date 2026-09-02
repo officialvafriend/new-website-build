@@ -1,6 +1,7 @@
 :root{
- --font:Pretendard,"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
- --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+ --font:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+ /* 숫자는 모노 폰트가 아니라 같은 글꼴의 고정폭 숫자(tnum)로 맞춘다 */
+ --mono:var(--font);
  --bg:#F5F5F7;--sf:#FFFFFF;--sf2:#ECEDF0;--line:#E2E4E8;--line2:#CFD3D8;
  --ink:#111111;--ink2:#4A525B;--ink3:#5F6770;
  --ac:#38BDF8;--acink:#111111;--acsoft:#E4F4FD;--acdeep:#1565C0;
@@ -28,7 +29,7 @@ input,select,textarea{font-family:inherit;font-size:16px}
 :focus-visible{outline:2px solid var(--acdeep);outline-offset:2px}
 svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .wrap{max-width:1080px;margin:0 auto;padding:0 var(--gut)}
-.n{font-variant-numeric:tabular-nums}
+.n,.pill,.chip .c,.opt .d,.acct .v b,.gi .b,.tabs a .b{font-variant-numeric:tabular-nums}
 .hide{display:none!important}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
@@ -39,8 +40,10 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .gnb-in{display:flex;align-items:center;gap:.6rem;height:var(--gnb);position:relative}
 .lg{display:flex;align-items:center;gap:.4rem;font-weight:900;font-size:17px;letter-spacing:-.05em;min-height:44px}
 .lg .g{width:20px;height:20px;border-radius:50% 50% 50% 4px;background:var(--ink)}
+/* 긴 상품명이 오른쪽 아이콘을 덮지 않게 폭을 자른다 */
 .ttl{position:absolute;left:50%;top:50%;transform:translate(-50%,-40%);font-size:16px;font-weight:800;letter-spacing:-.02em;
- opacity:0;pointer-events:none;transition:opacity 180ms var(--ez),transform 220ms var(--ez);white-space:nowrap}
+ opacity:0;pointer-events:none;transition:opacity 180ms var(--ez),transform 220ms var(--ez);white-space:nowrap;
+ max-width:min(44vw,300px);overflow:hidden;text-overflow:ellipsis}
 .gnb.small .ttl{opacity:1;transform:translate(-50%,-50%)}
 .gnb nav{display:none;gap:.2rem;margin-left:.6rem}
 @media(min-width:880px){.gnb nav{display:flex}}
@@ -52,7 +55,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .gi:hover{background:var(--sf2)}
 .gi svg{width:23px;height:23px;stroke-width:2.1}
 .gi .b{position:absolute;top:5px;right:4px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--ac);
- color:var(--acink);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono);line-height:1}
+ color:var(--acink);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
 .who{width:36px;height:36px;border-radius:999px;background:var(--acsoft);color:var(--acdeep);font-size:13px;font-weight:800;
  display:flex;align-items:center;justify-content:center;letter-spacing:-.02em;margin-left:.25rem}
 .who.in{background:var(--ink);color:#fff}
@@ -67,7 +70,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .tabs a.on svg{fill:var(--acsoft);stroke-width:2.2}
 .tabs a:active svg{transform:scale(.9)}
 .tabs a .b{position:absolute;top:8px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 4px;border-radius:999px;
- background:var(--ac);color:var(--acink);font-size:11px;font-weight:800;font-family:var(--mono);display:flex;align-items:center;justify-content:center}
+ background:var(--ac);color:var(--acink);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
 
 /* ── 공통 ── */
 .sec{padding:clamp(1.6rem,3vw,2.6rem) 0 0}
@@ -141,7 +144,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
  transition:transform 200ms var(--ez);text-align:left}
 .card:hover{transform:translateY(-4px)}
 .card .fig{aspect-ratio:1/1;position:relative;display:flex;align-items:center;justify-content:center}
-.pill{position:absolute;top:.7rem;left:.7rem;font-family:var(--mono);font-size:12px;font-weight:600;padding:.3rem .55rem;border-radius:8px;
+.pill{position:absolute;top:.7rem;left:.7rem;font-size:12.5px;font-weight:700;letter-spacing:-.01em;padding:.3rem .55rem;border-radius:8px;
  background:rgba(255,255,255,.94);color:var(--ink)}
 .pill.hot{background:var(--ac);color:var(--acink);font-family:var(--font);font-weight:800}
 .btl{width:60px;height:100px;border-radius:10px 10px 14px 14px;position:relative;box-shadow:0 10px 22px -12px rgba(0,0,0,.45)}
@@ -164,7 +167,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .chip{min-height:46px;padding:0 1.05rem;border-radius:999px;border:1.5px solid transparent;background:var(--sf);font-size:15px;
  font-weight:700;display:inline-flex;align-items:center;gap:.4rem;letter-spacing:-.01em;transition:transform 150ms var(--ez)}
 .chip:active{transform:scale(.97)}
-.chip .c{font-family:var(--mono);font-size:12.5px;color:var(--ink3);font-weight:500}
+.chip .c{font-size:13px;color:var(--ink3);font-weight:600}
 .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .chip.on .c{color:rgba(255,255,255,.6)}
 .chips-x{display:flex;gap:.5rem;overflow-x:auto;padding:.2rem 0 1rem;margin:0 calc(-1 * var(--gut));padding-inline:var(--gut)}
@@ -241,7 +244,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .opt .l{flex:1 1 auto;min-width:0}
 .opt .l b{display:block;font-size:15px;font-weight:800}
 .opt .l span{display:block;font-size:13px;color:var(--ink3);margin-top:.1rem;font-weight:500}
-.opt .d{font-family:var(--mono);font-size:13.5px;color:var(--ink2)}
+.opt .d{font-size:15px;color:var(--ink2);font-weight:600;letter-spacing:-.01em}
 .opt.on .d{color:var(--ink);font-weight:700}
 .buybar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);
  padding:.8rem 0;display:flex;gap:.5rem;margin-top:1rem;z-index:20}
@@ -256,7 +259,7 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .steps div.on{color:var(--ink);border-top-color:var(--ink)}
 .acct{background:var(--sf2);border-radius:16px;padding:1rem;display:flex;align-items:center;gap:.7rem;margin-top:.7rem}
 .acct .v{flex:1 1 auto;min-width:0}
-.acct .v b{display:block;font-family:var(--mono);font-size:16px;font-weight:600}
+.acct .v b{display:block;font-size:16px;font-weight:700;letter-spacing:.01em}
 .acct .v span{font-size:13.5px;color:var(--ink3);font-weight:500}
 .big-ok{text-align:center;padding:2.5rem 0 1rem}
 .big-ok .ico{width:72px;height:72px;border-radius:999px;background:var(--ac);color:var(--acink);display:flex;
@@ -309,3 +312,41 @@ svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .info .panel p{font-size:14px;color:var(--ink2);line-height:1.6}
 footer.ft{padding:2.2rem 0 2.5rem;font-size:13.5px;color:var(--ink3);line-height:1.8;border-top:1px solid var(--line);margin-top:2.4rem;font-weight:500}
 footer.ft b{color:var(--ink);font-size:14.5px}
+
+/* ── 상품 상세 본문 ── */
+.pdx{margin-top:2rem}
+.pdx-nav{display:flex;gap:.3rem;border-bottom:1px solid var(--line);margin-bottom:1.2rem;overflow-x:auto}
+.pdx-nav::-webkit-scrollbar{display:none}
+.pdx-nav a{flex:0 0 auto;min-height:48px;display:flex;align-items:center;padding:0 .9rem;font-size:15px;font-weight:700;color:var(--ink3);
+ border-bottom:2.5px solid transparent;margin-bottom:-1px}
+.pdx-nav a.on{color:var(--ink);border-bottom-color:var(--ink)}
+.pdx section{padding:.4rem 0 1.6rem;scroll-margin-top:12px}
+.pdx h2{font-size:19px;margin-bottom:.8rem}
+.pdx .copy{font-size:16px;line-height:1.75;color:var(--ink2);max-width:36rem}
+.pdx .copy p+p{margin-top:.7rem}
+.pdx .copy b{color:var(--ink)}
+.pdx-hero{border-radius:var(--r);padding:2.2rem 1.4rem;margin:1rem 0 1.2rem;display:flex;align-items:center;justify-content:center;gap:1.4rem;color:#fff;
+ background:linear-gradient(135deg,var(--fc) 0,color-mix(in srgb,var(--fc) 55%,#000) 100%)}
+.pdx-hero .btl{width:64px;height:110px;box-shadow:0 22px 40px -20px rgba(0,0,0,.7)}
+.pdx-hero .btl::before{width:22px;height:16px;top:-14px}
+.pdx-hero .btl::after{left:10px;right:10px;bottom:16px;height:30px}
+.pdx-hero div b{display:block;font-size:22px;font-weight:900;letter-spacing:-.035em;line-height:1.2}
+.pdx-hero div span{display:block;font-size:15px;opacity:.85;margin-top:.3rem;font-weight:500}
+.spec{width:100%;border-collapse:collapse;font-size:15px}
+.spec th,.spec td{padding:.8rem .2rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.spec th{width:34%;color:var(--ink3);font-weight:600}
+.spec td{font-weight:600;color:var(--ink)}
+.spec tr:last-child th,.spec tr:last-child td{border-bottom:0}
+.rev{display:grid;gap:.7rem}
+.rev .panel{padding:1.05rem 1.1rem}
+.rev .who{width:auto;height:auto;background:none;color:var(--ink3);font-size:13.5px;font-weight:600;display:flex;gap:.5rem;align-items:center;margin:0 0 .4rem;justify-content:flex-start}
+.rev .who b{color:var(--ink);font-weight:800;font-size:14.5px}
+.rev .stars{color:#F59E0B;letter-spacing:.05em;font-size:13px}
+.rev p{font-size:15px;line-height:1.65;color:var(--ink2)}
+.faq{display:grid;gap:.5rem}
+.faq details{background:var(--sf);border-radius:var(--r2);padding:0 1.05rem}
+.faq summary{list-style:none;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;font-size:15.5px;font-weight:700;cursor:pointer}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary svg{width:20px;height:20px;transition:transform 200ms var(--ez);color:var(--ink3)}
+.faq details[open] summary svg{transform:rotate(90deg)}
+.faq details p{padding:0 0 1rem;font-size:15px;color:var(--ink2);line-height:1.65}

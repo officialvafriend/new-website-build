@@ -157,7 +157,54 @@ V.p=id=>{
     <div class="big"><span>총 금액</span><b class="n">${won(pay)}원</b></div></div>
    <div class="buybar"><button class="btn btn-o" data-act="cart">장바구니</button>
     <button class="btn btn-p main" data-act="buy">바로 구매</button></div>
-  </div></div><div style="height:2rem"></div></div>`;
+  </div></div>
+ ${detail(p)}
+ <div style="height:2rem"></div></div>`;
+};
+
+/* 상세 본문 — 실제 사이트에서는 워드프레스 상품 설명이 이 자리에 들어간다.
+   여기 글은 예시다. 표의 항목 이름은 액상 판매에 실제로 필요한 것들이다. */
+const detail=p=>{
+ const nic=p.nic.join(' / ');
+ const flav={과일:'과일',멘솔:'멘솔·쿨링',음료:'음료',디저트:'디저트'}[p.f]||p.f;
+ const tone=p.f==='멘솔'?'시원함이 먼저 오고 단맛이 뒤에 남습니다.':p.f==='디저트'?'단맛이 앞에 서고 향이 길게 남습니다.':'향이 먼저 오고 단맛은 뒤에서 받쳐 줍니다.';
+ return `<div class="pdx">
+  <nav class="pdx-nav" aria-label="상세 내용">
+   <a href="#/p/${p.id}" data-jump="d1" class="on">상품 설명</a><a href="#/p/${p.id}" data-jump="d2">제품 정보</a>
+   <a href="#/p/${p.id}" data-jump="d3">리뷰</a><a href="#/p/${p.id}" data-jump="d4">배송·교환</a></nav>
+  <section id="d1"><h2>상품 설명</h2>
+   <div class="copy"><p><b>${esc(p.n)}</b>. ${esc(p.d)} ${tone}</p>
+    <p>30ml 한 병으로 하루 3–4ml 기준 약 일주일 씁니다. 처음이면 단품 한 병으로 맛을 보고, 맞으면 3+1이나 5+5로 병당 가격을 낮추는 걸 권합니다.</p></div>
+   <div class="pdx-hero" style="--fc:${p.c}"><span class="btl" style="background:${p.c}"></span>
+    <div><b>${esc(p.n)}</b><span>${esc(p.b)} · ${flav} · ${nic}</span></div></div>
+   <div class="copy"><p>개봉 후에는 직사광선을 피해 서늘한 곳에 두세요. 니코틴 함량이 있는 제품은 <b>반드시 어린이 손이 닿지 않는 곳</b>에 보관해야 합니다.</p></div>
+  </section>
+  <section id="d2"><h2>제품 정보</h2>
+   <table class="spec"><tbody>
+    <tr><th>용량</th><td>30ml</td></tr>
+    <tr><th>니코틴</th><td>${nic}${p.nic[0]==='0mg'?' (무니코틴)':''}</td></tr>
+    <tr><th>베이스</th><td>PG 50 / VG 50</td></tr>
+    <tr><th>맛 계열</th><td>${flav}</td></tr>
+    <tr><th>제조·유통</th><td>${p.b==='액상덕후'?'액상덕후 자체 제작':esc(p.b)+' · 액상덕후'}</td></tr>
+    <tr><th>원산지</th><td>대한민국</td></tr>
+    <tr><th>구매 제한</th><td>만 19세 이상 · 휴대폰 본인확인 필요</td></tr>
+   </tbody></table></section>
+  <section id="d3"><h2>리뷰 <span style="color:var(--ink3);font-size:15px;font-weight:600">4.8 · 127개</span></h2>
+   <div class="rev">
+    <div class="panel"><div class="who"><b>김**</b><span class="stars">★★★★★</span><span>3+1 · ${p.nic[0]}</span></div>
+     <p>세 번째 재구매. 병당 가격 보고 4병 묶음으로 바꿨는데 같은 맛이라 부담 없습니다.</p></div>
+    <div class="panel"><div class="who"><b>박**</b><span class="stars">★★★★★</span><span>단품 · ${p.nic[0]}</span></div>
+     <p>입금자명 똑같이 넣었더니 20분 만에 입금확인 떴어요. 다음 날 도착.</p></div>
+    <div class="panel"><div class="who"><b>이**</b><span class="stars">★★★★☆</span><span>5+5 · ${p.nic[p.nic.length-1]}</span></div>
+     <p>맛은 설명 그대로. 10병은 좀 많았는데 병당 ${won(Math.round(BUNDLES[2].mult*p.p/BUNDLES[2].q))}원이라 그냥 샀습니다.</p></div>
+   </div></section>
+  <section id="d4"><h2>배송 · 교환 · 환불</h2>
+   <div class="faq">
+    <details open><summary>언제 출발하나요? ${I.chev}</summary><p>입금확인 당일 우체국택배로 발송합니다. 오후 2시 이후 확인분은 다음 날 출발합니다. 3만원 이상 무료배송, 미만은 3,000원.</p></details>
+    <details><summary>입금했는데 입금확인이 안 떠요 ${I.chev}</summary><p>입금자명이 주문자명과 다르면 자동으로 확인되지 않고 <b>확인필요</b>로 넘어갑니다. 카카오톡으로 입금자명을 알려주시면 바로 처리합니다.</p></details>
+    <details><summary>교환·환불은요? ${I.chev}</summary><p>개봉하지 않은 제품은 수령 후 7일 안에 교환·환불됩니다. 액상은 위생 문제로 개봉 후에는 불량이 아니면 어렵습니다. 불량은 사진과 함께 알려주시면 왕복 배송비 없이 바꿔 드립니다.</p></details>
+   </div></section>
+ </div>`;
 };
 
 V.cart=()=>{
@@ -260,7 +307,7 @@ V.orders=()=>{
  return `<div class="wrap"><h1 class="pagetitle">주문내역</h1>
  ${S.orders.map(o=>`<a class="panel" style="display:block;margin-bottom:.7rem" href="#/order/${o.id}">
   <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem">
-   <span style="font-family:var(--mono);font-size:14px;color:var(--ink3)">#${o.id}</span>
+   <span class="n" style="font-size:14px;color:var(--ink3);font-weight:600">#${o.id}</span>
    ${stBadge(o.st)}<span style="margin-left:auto;font-size:13.5px;color:var(--ink3)">${o.date}</span></div>
   ${o.items.slice(0,2).map(c=>{const p=find(c.pid);return `<div class="lrow" style="padding:.5rem 0;border:0">
    <span class="lthumb" style="background:${p.t};flex-basis:46px;width:46px;height:46px">
@@ -284,7 +331,7 @@ V.order=oid=>{
  return `<div class="wrap"><div class="crumb"><a href="#/orders">주문내역</a> › #${o.id}</div>
  <h1 class="pagetitle">주문 상세</h1>
  <div class="panel"><div style="display:flex;align-items:center;gap:.6rem">
-  ${stBadge(o.st)}<span style="margin-left:auto;font-size:13.5px;color:var(--ink3);font-family:var(--mono)">${o.date}</span></div>
+  ${stBadge(o.st)}<span style="margin-left:auto;font-size:13.5px;color:var(--ink3);font-weight:600">${o.date}</span></div>
   ${o.st==='pend'?`<div class="note" style="margin-top:.8rem">입금자명 <b>${esc(o.depositor)}</b> 으로
    <b>${won(o.total)}원</b> 입금해 주세요.</div>`:''}
   ${o.st==='chk'?`<div class="warnbox" style="margin-top:.8rem"><b>입금자명이 주문자명과 다릅니다.</b>
@@ -438,6 +485,10 @@ document.addEventListener('submit',e=>{
 
 document.addEventListener('click',e=>{
  const t=e.target;
+ const jump=t.closest('[data-jump]');
+ if(jump){e.preventDefault();const sec=document.getElementById(jump.dataset.jump);
+  if(sec){sec.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
+  document.querySelectorAll('.pdx-nav a').forEach(a=>a.classList.toggle('on',a===jump));return}
  const kw=t.closest('[data-kw]');
  if(kw){S.q=kw.dataset.kw;const i=$('#sq');if(i)i.value=S.q;paintSearch();if(!S.q&&i)i.focus();return}
  const flt=t.closest('[data-flt]'); if(flt){S.flt=flt.dataset.flt;rerender();return}

@@ -17,6 +17,7 @@ cfcss = (SRC / 'coverflow.css').read_text(encoding='utf-8')
 cfjs  = (ROOT / 'design' / 'coverflow.js').read_text(encoding='utf-8')
 js    = (SRC / 'site.js').read_text(encoding='utf-8')
 icons = json.loads((SRC / 'icons.json').read_text(encoding='utf-8'))
+font  = (SRC / 'pretendard.css').read_text(encoding='utf-8')
 
 extra = """
 /* 커버플로우 캡션 아래 CTA */
@@ -112,11 +113,8 @@ shell = f"""<header class="gnb"><div class="wrap gnb-in">
 
 html = f"""<title>액상덕후 스토어</title>
 <meta name="theme-color" content="#F5F5F7">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..900&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-@font-face{{font-family:Pretendard;font-display:swap;src:local("Pretendard Variable"),local("Pretendard")}}
+{font}
 {css}
 {cfcss}
 {extra}
