@@ -140,7 +140,8 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
   마이페이지 상단(`.wd-custom-top-wrap`)은 `assets/shell.css` 가 숨기고, `#page.dh-shell`
   그리드를 푼다. 그 위에 `assets/duckhoo-theme.css` 로 폼·버튼·계정을 정돈한다.
   **폼 필드와 데이터 경로에 손대지 않기 위해서다** — 테마 규칙이 `!important` 라
-  shell.css 도 그렇게 쓴다
+  shell.css 도 그렇게 쓰고, 테마의 인라인 `<style>` 이 우리 파일보다 뒤에 오므로
+  선택자를 전부 `html body.dhr-wrap …` 으로 한 단계 올려 뒀다 (같은 특이도면 진다)
 - 상품 목록 카드는 `wc_get_template_part` 필터로 `content-product.php` 만 우리 것
   (`templates/content-product.php` → `Front\card()`)으로 바꾼다. 링크 · 상품 ID 는 같다
 - 가로 스크롤러는 데스크톱에서 휠이 세로로만 가므로 `front.js` 가 양쪽 화살표와
