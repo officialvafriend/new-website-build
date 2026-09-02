@@ -58,6 +58,56 @@
 약하게 만드는 디자인은 곧 운영 비용이다. 이 안내는 결제 단계뿐 아니라 앞단에서도
 한 번 보여준다.
 
+## 세션 시작 전 환경 설정 (중요)
+
+이 프로젝트는 **Claude 가 사이트 화면을 직접 봐야** 제대로 굴러간다. 기본 환경은
+outbound 접속이 좁은 허용 목록으로 잠겨 있어서 사이트에 접속하지 못한다.
+curl 도 브라우저도 똑같이 막힌다 (`ERR_TUNNEL_CONNECTION_FAILED`).
+
+**환경(Environment) 설정에서 네트워크 접근을 열고, 새 세션을 시작한다.**
+정책은 세션 시작 시 한 번 읽히므로 기존 세션에서는 반영되지 않는다.
+최소한 아래 호스트가 열려야 한다.
+
+```
+*.wpcomstaging.com
+duck-hoo.com
+public-api.wordpress.com
+```
+
+문서: https://code.claude.com/docs/en/claude-code-on-the-web
+
+막혔는지 확인하는 법:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 https://duck-hoo.com
+# 000 이면 막힌 것. 프록시 사유는 아래로 확인
+curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 recentRelayFailures
+```
+
+열려 있는지 확인되면 Chromium 이 이미 설치돼 있으므로 바로 스크린샷을 찍을 수 있다
+(`/opt/pw-browsers/chromium`, `npm i playwright` 만 하면 됨).
+
+### 네트워크가 열렸을 때의 작업 루프
+
+1. 코드를 고쳐 `claude/ui-ux-design-refresh-p5czcx` 에 push
+2. GitHub Deployments 가 스테이징에 자동 반영 (**자동 배포를 켜 둘 것**)
+3. Claude 가 Playwright 로 여러 화면폭 스크린샷을 찍어 스스로 검증
+4. 사람은 스테이징 URL 을 새로고침해 같은 화면을 실시간으로 확인
+5. 문제 있으면 1번으로
+
+이 루프가 돌면 사람이 스크린샷을 찍어 옮겨줄 필요가 없다.
+
+### 네트워크가 막혀 있을 때 (차선)
+
+배포와 콘텐츠 수정은 그대로 된다. 막히는 것은 결과 확인뿐이다.
+
+- 배포: push → WordPress 가 GitHub 에서 당겨가므로 Claude 의 접속이 필요 없다
+- 사이트 읽기: WordPress MCP 는 `mcp-proxy.anthropic.com` 으로 붙어 egress 정책을
+  타지 않는다. 상품·테마 토큰·플러그인·미디어를 읽을 수 있다
+- 확인: 사람이 스크린샷을 찍어 대화창에 올려야 한다
+- 아티팩트 시안에는 외부 이미지를 넣을 수 없다 (CSP). 실제 상품 사진을 쓰려면
+  대화창에 파일로 올려서 data URI 로 심어야 한다
+
 ## 디자인
 
 - 한국어 · 국내 · **모바일 우선** (min-width 미디어쿼리만 사용)
