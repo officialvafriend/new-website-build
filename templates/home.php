@@ -29,7 +29,7 @@ if ( $liquid ) {
 	$hero_args['category'] = array_map( fn( $t ) => $t->slug, $liquid );
 }
 foreach ( products( $hero_args ) as $p ) {
-	if ( $p->get_image_id() && ! preg_match( '/이벤트|묶음|세트|기획|할인|증정|결제|드립팁|\d\s*\+\s*\d/u', $p->get_name() ) ) {
+	if ( $p->get_image_id() && ! preg_match( '/이벤트|묶음|세트|기획|할인|증정|결제|드립팁|첨가제|\d\s*\+\s*\d/u', $p->get_name() ) ) {
 		$hero = $p;
 		break;
 	}
