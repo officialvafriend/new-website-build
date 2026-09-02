@@ -118,11 +118,12 @@
 
 ## 라이브 버그 두 개 — 고쳐서 플러그인에 넣어 뒀다
 
-**주문취소** — WooCommerce 는 `pending`·`failed` 에만 취소 링크를 그린다. keyple 상태는 그 목록에 없어
-버튼이 렌더된 적이 없다. `woocommerce_valid_order_statuses_for_cancel` 에 **입금전만** 더했다
-(슬러그는 이름표 `입금전` 로 찾는다). 확인필요는 입금이 들어온 뒤라 일부러 안 열었다.
+**주문취소** — 이 사이트의 입금 전 주문은 `on-hold`("결제 확인 중", 293건)다. "입금전"·"확인필요" 상태는
+실제로 없다. WooCommerce 는 `pending`·`failed` 에만 취소 링크를 그려서 버튼이 없었다.
+`woocommerce_valid_order_statuses_for_cancel` 에 **`on-hold`** 를 더했다. 입금확인(`payment-confirmed`) 이후는 안 연다.
 
-**회원탈퇴** — 페이지 521 `/membership-cancel/` 이 `/` 한 글자짜리 빈 페이지였다. 만들어진 적이 없다.
+**회원탈퇴** — 테마 마이페이지의 "회원탈퇴 신청" 버튼이 부르는 `admin-ajax` 액션 `wd_membership_cancel` 이
+서버에 없다 (버튼만 있고 뒤가 없다). `/membership-cancel/` 을 플러그인이 통째로 그리고 자체 처리로 바꿨다.
 `includes/membership-cancel.php`: 계정은 남기고 로그인을 끊고 개인정보만 지운다(거래기록 5년 보존).
 비밀번호 재입력 + 동의 + 논스. 미배송 주문 · 남은 적립금이 있으면 막는다.
 **적립금 저장 키를 아직 모른다** — 메타 이름으로 찾고, 못 찾으면 그걸로는 안 막는다. 키를 알면:

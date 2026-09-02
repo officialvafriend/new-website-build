@@ -193,25 +193,37 @@ CSS 뿐이다. 새 파일을 저장소 루트에 추가할 때는 그것이 배�
 
 ### 주문취소 — 원인 확인, 고쳐서 넣어 뒀다
 
-WooCommerce 는 기본적으로 `pending`·`failed` 주문에만 취소 링크를 그린다.
-이 사이트 주문은 `keyple-order-status` 가 붙인 한국형 상태로 들어가므로 그 목록에
-걸리지 않고, 그래서 버튼 자체가 렌더되지 않는다. 플러그인 버그가 아니라 연결이
-빠진 것이다.
+**실제 상태 목록 (2026-09-02 스테이징 관리자 주문 화면, 1,652건):**
 
-`duckhoo-redesign.php` 의 `woocommerce_valid_order_statuses_for_cancel` 필터로
-**입금전만** 열었다. 슬러그는 keyple 이 정하는 값이라 하드코딩하지 않고
-`wc_get_order_statuses()` 의 이름표(`입금전`)로 찾는다.
+| 슬러그 | 이름표 | 건수 | 뜻 |
+|---|---|---|---|
+| `on-hold` | 결제 확인 중 | 293 | **입금 전** (무통장입금 주문이 여기로 들어온다) |
+| `payment-confirmed` | 입금확인 | 8 | 입금 매칭 완료 |
+| `ready-to-ship` | 배송준비중 | 112 | |
+| `delivered` | 배송완료 | 1,083 | |
+| `completed` · `cancelled` · `refunded` · `checkout-draft` | 완료됨 · 취소됨 · 환불됨 · 임시글 | | WooCommerce 기본 |
 
-확인필요를 열지 않은 이유: 그 상태는 입금 문자가 이미 들어온 뒤의 분기다.
-고객이 스스로 취소하면 환불이 남는다. 사람이 봐야 한다.
+플러그인 설명에 있는 "입금전"·"확인필요" 상태는 **실제로는 없다.** 입금 전 = `on-hold`.
 
-### 회원탈퇴 — 기능이 없었다. 만들어 넣었다
+WooCommerce 는 기본적으로 `pending`·`failed` 에만 취소 링크를 그리므로 `on-hold` 주문에
+버튼이 없었다. `duckhoo-redesign.php` 의 `woocommerce_valid_order_statuses_for_cancel`
+필터로 **`on-hold`** 를 열었다 (혹시 나중에 "입금전" 이름표가 생기면 그것도 잡는다).
+`payment-confirmed` 이후는 열지 않는다 — 환불이 남아 사람이 봐야 한다.
 
-`https://duck-hoo.com/membership-cancel/` (page 521, 제목 "회원탈퇴") 의 내용은
-`/` 한 글자뿐인 빈 페이지였다. 메뉴만 있고 뒤가 비어 있었다. 고장난 게 아니라
-만들어진 적이 없다.
+주의: `on-hold` 는 "입금 문자가 왔는데 이름이 안 맞는" 경우도 포함할 수 있다
+(확인필요 상태가 따로 없으므로). 그때 고객이 취소하면 환불이 남는다. 이건 운영 판단이다.
 
-`includes/membership-cancel.php` 가 그 뒤를 채운다.
+### 회원탈퇴 — 버튼만 있고 뒤가 없었다. 만들어 넣었다
+
+`/membership-cancel/` (page 521) 은 내용이 `/` 뿐이지만, 테마의 마이페이지 템플릿이
+자기 "회원탈퇴 신청" 상자를 그린다 (로그인 시 · 비로그인은 302). 그 버튼은
+`admin-ajax.php?action=wd_membership_cancel` 을 부르는데 **서버에 그 액션이 없다** —
+로그인 상태로 틀린 논스를 보내면 없는 액션과 똑같이 `400 "0"` 이 온다. 그래서 눌러도
+"오류가 발생했습니다" 만 떴다.
+
+`includes/front.php` 가 이 페이지도 `template_include` 로 우리 껍데기에 그리고
+(`templates/page-membership-cancel.php`), `includes/membership-cancel.php` 가 폼과
+처리를 맡는다. 테마의 상자와 JS 는 그 템플릿에 있어서 아예 안 나온다.
 
 - **계정을 지우지 않는다.** 로그인을 끊고(비밀번호 무효화 + `authenticate` 차단)
   이름·연락처·주소만 지운다. 주문은 그대로 남는다 — 전자상거래법상 거래기록 5년 보존
