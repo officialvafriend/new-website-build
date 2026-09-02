@@ -85,3 +85,7 @@ body.dhr-wrap footer.foot .lg-w .g{ background: #fff !important; }
 /* 헤더도 같은 이유로 */
 body.dhr-wrap header.gnb{ background: #fff !important; }
 body.dhr-wrap nav.tabs{ background: #fff !important; }
+
+/* 목록 제목·검색 결과 제목은 보인다 (테마가 숨겨 둔다) */
+body.dhr-wrap .woocommerce-products-header, body.dhr-wrap .woocommerce-products-header__title, body.dhr-wrap h1.page-title{ display: block !important; }
+body.dhr-wrap .woocommerce-notices-wrapper:empty{ display: none; }
