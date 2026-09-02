@@ -74,3 +74,14 @@ body.dhr-wrap .entry-title, body.dhr-wrap .page-title{ font-size: clamp(1.7rem,1
 
 /* 아래 탭바가 본문을 가리지 않게 */
 @media (max-width:879px){ body.dhr-wrap{ padding-bottom: calc(62px + env(safe-area-inset-bottom)) !important; } }
+
+/* 푸터 — 테마의 !important 규칙에 밀려 바탕이 흰색으로 풀렸다. 여기서 다시 못 박는다. */
+body.dhr-wrap footer.foot{ background: #111 !important; color: #C7CBD1 !important; margin-top: 2.4rem !important; padding: 2.6rem 0 2rem !important; }
+body.dhr-wrap footer.foot .fcol b, body.dhr-wrap footer.foot .lg-w, body.dhr-wrap footer.foot .fkakao b, body.dhr-wrap footer.foot .flegal b{ color: #fff !important; }
+body.dhr-wrap footer.foot a, body.dhr-wrap footer.foot p, body.dhr-wrap footer.foot .fmuted, body.dhr-wrap footer.foot .flegal{ color: #C7CBD1 !important; }
+body.dhr-wrap footer.foot .fkakao{ background: #1C1C1E !important; }
+body.dhr-wrap footer.foot .fkakao span, body.dhr-wrap footer.foot .fmuted{ color: #9A9FA6 !important; }
+body.dhr-wrap footer.foot .lg-w .g{ background: #fff !important; }
+/* 헤더도 같은 이유로 */
+body.dhr-wrap header.gnb{ background: #fff !important; }
+body.dhr-wrap nav.tabs{ background: #fff !important; }
