@@ -146,6 +146,12 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
   얼려먹구싶오 24 · 액상덕후 18 · 제로닉 무무 13 · 맥스쿨 11 · 심쿵 11 …
 - 상품 상세의 옵션은 PPOM `select` 4개 (구성 · 맛 · 팟/코일 추가 · 기기 추가)에
   `wd-option-builder` 가 덧씌워져 있다. **건드리지 않는다**
+- **비로그인 방문자에겐 모든 상품 썸네일이 "19" 이미지로 바뀐다** (`img.wd-prelogin-thumb`,
+  alt "상품 이미지 (로그인 후 확인 가능)"). 키플의 성인 인증 게이트다. 우회하지 않는다.
+  스크린샷에서 19 만 보이면 로그인 상태가 아닌 것이다
+- 홈 위에 겹치는 여름 세일 팝업(`#pop6`)과 `vf-redill-hero-js` 는 사장님 Code Snippets 다.
+  플러그인이 숨기지 않는다 — 끄는 건 스니펫 쪽에서 한다
+- 테마가 `wp_body_open` 으로 찍는 `.wd-mobile-header-custom`/드로어는 홈에서 CSS 로 숨긴다
 
 ### 스테이징 배포 확인법
 
