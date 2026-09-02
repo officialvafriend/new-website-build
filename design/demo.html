@@ -408,7 +408,16 @@ const FL=['전체','과일','멘솔','음료','디저트'];
 const BRANDS=['액상덕후','맥스쿨','얼려먹구싶오','심쿵','깔끔','리퀴드랩','디오리퀴드','펠릭스','네스티'];
 const ST={pend:['입금전','pend'],chk:['확인필요','chk'],paid:['입금확인','paid'],ship:['배송중','ship'],done:['배송완료','done']};
 
-let S={user:null,cart:[],orders:[],flt:'전체',seq:10482};
+let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400};
+
+/* 탈퇴를 막는 이유들. 비어 있으면 탈퇴할 수 있다. */
+const leaveBlockers=()=>{
+ const out=[];
+ const open=S.orders.filter(o=>o.st!=='done').length;
+ if(open)out.push(`아직 끝나지 않은 주문이 ${open}건 있습니다. 배송이 끝난 뒤에 탈퇴해 주세요.`);
+ if(S.points>0)out.push(`적립금이 ${won(S.points)}원 남아 있습니다. 다 쓰신 뒤에 탈퇴해 주세요.`);
+ return out;
+};
 const find=id=>P.find(p=>p.id===id);
 const cartQty=()=>S.cart.reduce((a,c)=>a+c.q,0);
 const cartSum=()=>S.cart.reduce((a,c)=>a+c.pay,0);
@@ -663,7 +672,7 @@ V.my=()=>{
    justify-content:center;font-size:20px">◍</span>
   <span><b style="font-size:15px">${esc(S.user.name)}</b>
    <span style="display:block;font-size:12px;color:var(--ink3)">${esc(S.user.id)} · 일반회원</span></span>
-  <span style="margin-left:auto;text-align:right"><b class="n" style="font-size:15px">2,400</b>
+  <span style="margin-left:auto;text-align:right"><b class="n" style="font-size:15px">${won(S.points)}</b>
    <span style="display:block;font-size:11.5px;color:var(--ink3)">적립금</span></span></div>
   <div class="note" style="margin-top:.9rem">본인확인 완료 · 만 19세 이상</div></div>
  <div class="mine">
@@ -800,13 +809,20 @@ document.addEventListener('click',e=>{
  }
  if(act==='logout'){S.user=null;location.hash='#/';rerender();toast('로그아웃했습니다');return}
  if(act==='leave'){
+  /* 실제 사이트와 같은 규칙: 끝나지 않은 주문이 있거나 적립금이 남아 있으면 막는다.
+     계정을 지우지는 않는다 — 로그인을 끊고 개인정보만 지운다. 주문 기록은 5년 보존이다. */
+  const stop=leaveBlockers();
+  if(stop.length){
+   modal('지금은 탈퇴할 수 없습니다',
+    '<ul style="margin:0;padding-left:1.1rem">'+stop.map(r=>`<li>${r}</li>`).join('')+'</ul>',
+    '알겠습니다',null);
+   return;
+  }
   modal('정말 탈퇴하시겠어요?',
-   '<p>탈퇴하면 주문내역과 적립금 <b>2,400원</b>이 모두 사라지고 복구할 수 없습니다.</p>'+
-   '<p style="margin-top:.6rem">배송 중인 주문이 있으면 탈퇴할 수 없습니다.</p>',
-   '탈퇴하기',()=>{const busy=S.orders.some(o=>o.st==='ship');
-    if(busy){toast('배송 중인 주문이 있어 탈퇴할 수 없습니다');return}
-    S={user:null,cart:[],orders:[],flt:'전체',seq:S.seq};location.hash='#/';rerender();
-    toast('탈퇴가 완료됐습니다')},true);
+   '<p>탈퇴하면 로그인할 수 없게 되고 이름·연락처·주소가 지워집니다. 되돌릴 수 없습니다.</p>'+
+   '<p style="margin-top:.6rem">주문 기록은 남습니다. 전자상거래법상 거래기록은 5년간 보관해야 합니다.</p>',
+   '탈퇴하기',()=>{S={user:null,cart:[],orders:[],flt:'전체',seq:S.seq,points:0};
+    location.hash='#/';rerender();toast('탈퇴가 완료됐습니다')},true);
   return;
  }
 });

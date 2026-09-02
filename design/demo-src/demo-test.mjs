@@ -125,18 +125,20 @@ await step('가입 완료', () => p.locator('[data-act="join"]').first().click()
 if (!(await p.evaluate(() => S.user && S.user.name))) errs.push('흐름: 가입 후 로그인 상태 아님');
 else note('가입 완료 → 로그인 상태');
 
-// 회원탈퇴 — 배송 중 주문이 있으면 막히고, 없으면 된다
+// 회원탈퇴 — 미배송 주문이나 적립금이 남아 있으면 막힌다
 await step('마이', () => go(p, '#/my'));
 await step('탈퇴 시도', () => p.locator('[data-act="leave"]').first().click());
-await step('탈퇴 확인', () => p.click('#mOk'));
-if (!(await p.evaluate(() => !!S.user))) errs.push('흐름: 배송 중 주문이 있는데 탈퇴가 됨');
-else note('배송 중 주문이 있어 탈퇴 막힘');
+const stopText = await p.textContent('#mBody');
+if (!/주문이 \d+건|적립금/.test(stopText || '')) errs.push(`흐름: 탈퇴 차단 사유가 안 보임 (${stopText})`);
+else note('탈퇴 차단 사유가 모달에 나옴');
+await step('닫기', () => p.click('#mCancel'));
+if (!(await p.evaluate(() => !!S.user))) errs.push('흐름: 차단 상태인데 탈퇴가 됨');
 
-await p.evaluate(() => { S.orders = S.orders.filter(o => o.st !== 'ship'); });
+await p.evaluate(() => { S.orders = []; S.points = 0; });
 await step('탈퇴 재시도', () => p.locator('[data-act="leave"]').first().click());
 await step('탈퇴 확인', () => p.click('#mOk'));
-if (await p.evaluate(() => !!S.user)) errs.push('흐름: 배송 주문이 없는데도 탈퇴 안 됨');
-else note('배송 주문 정리 후 탈퇴 완료');
+if (await p.evaluate(() => !!S.user)) errs.push('흐름: 조건을 다 지웠는데 탈퇴 안 됨');
+else note('조건 정리 후 탈퇴 완료');
 
 await go(p, '#/'); await p.waitForTimeout(800);
 await p.screenshot({ path: SP + '/shot-home-390.png', fullPage: true });

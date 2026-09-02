@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       액상덕후 리디자인
  * Plugin URI:        https://github.com/officialvafriend/new-website-build
- * Description:       액상덕후 사이트 리디자인용 디자인 토큰과 프론트엔드 스타일. 고객이 입금 전 주문을 직접 취소할 수 있게 하는 보정도 함께 들어 있습니다.
- * Version:           0.2.0
+ * Description:       액상덕후 사이트 리디자인용 디자인 토큰과 프론트엔드 스타일. 입금 전 주문취소와 회원탈퇴도 함께 들어 있습니다.
+ * Version:           0.3.0
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            officialvafriend
@@ -23,7 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
+
+// 회원탈퇴 — 원래 페이지가 비어 있어서 여기서 채웁니다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/membership-cancel.php';
 
 /**
  * 프론트엔드에 디자인 토큰을 불러옵니다.
@@ -73,6 +76,35 @@ function enqueue_editor_tokens(): void {
 	);
 }
 add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\\enqueue_editor_tokens' );
+
+/**
+ * 회원탈퇴 화면 스타일을 불러옵니다.
+ *
+ * 그 화면에서만 씁니다. 상품 목록처럼 카드가 수십 개 깔리는 곳에 쓸데없는
+ * CSS 를 얹지 않기 위해서입니다.
+ */
+function enqueue_membership_cancel_style(): void {
+	$post = get_post();
+
+	if ( ! $post || 'membership-cancel' !== $post->post_name ) {
+		return;
+	}
+
+	$relative = 'assets/membership-cancel.css';
+	$path     = plugin_dir_path( __FILE__ ) . $relative;
+
+	if ( ! file_exists( $path ) ) {
+		return;
+	}
+
+	wp_enqueue_style(
+		'duckhoo-membership-cancel',
+		plugin_dir_url( __FILE__ ) . $relative,
+		array( 'duckhoo-tokens' ),
+		(string) filemtime( $path )
+	);
+}
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_membership_cancel_style', 20 );
 
 /**
  * 고객이 직접 취소할 수 있는 주문 상태를 넓힙니다.
