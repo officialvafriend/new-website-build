@@ -19,13 +19,17 @@ const P=[
  {id:14,b:'펠릭스',n:'더블 라임 + 라임 알로에',p:13000,was:0,c:'#6FA83C',t:'#E2F7C6',f:'과일',nic:['9.8mg'],d:'라임 두 종을 섞은 묶음 구성.'},
  {id:15,b:'첨가제',n:'아이 차가워! 쿨링첨가제 30ml',p:6000,was:0,c:'#3AAFD9',t:'#CFF0FB',f:'멘솔',nic:['0mg'],d:'기존 액상에 섞어 쓰는 쿨링 첨가제.'},
 ];
+/* 평점·판매수는 예시다. id 로 정해지므로 새로고침해도 같은 값이 나온다. 실제로는 우커머스 리뷰·판매 집계가 들어간다. */
+P.forEach(p=>{p.r=((47+(p.id*7)%3)/10).toFixed(1);p.sold=120+(p.id*137)%900;p.out=p.id===6;});
+const eyebrow=p=>p.out?['품절','out']:p.tag==='신상'?['신상','new']:p.was?['9월 특가','sale']:p.tag==='BEST'?['재구매 1위','best']:p.tag==='자체'?['자체 제작','own']:null;
+
 const BUNDLES=[{k:'단품 1병',q:1,note:'맛 하나만'},{k:'3+1 · 총 4병',q:4,mult:3,note:'1병 무료'},
  {k:'5+5 · 총 10병',q:10,mult:5,note:'5병 무료 · 9월 최저 병당가'},{k:'2+3 · 총 5병',q:5,mult:2,note:'3병 무료 · 9월 한정'}];
 const FL=['전체','과일','멘솔','음료','디저트'];
 const BRANDS=['액상덕후','맥스쿨','얼려먹구싶오','심쿵','깔끔','리퀴드랩','디오리퀴드','펠릭스','네스티'];
 const ST={pend:['입금전','pend'],chk:['확인필요','chk'],paid:['입금확인','paid'],ship:['배송중','ship'],done:['배송완료','done']};
 
-let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400,q:''};
+let S={user:null,cart:[],orders:[],flt:'전체',seq:10482,points:2400,q:'',wish:new Set([12]),hf:{b:'',n:'',f:''}};
 
 /* 탈퇴를 막는 이유들. 비어 있으면 탈퇴할 수 있다. */
 const leaveBlockers=()=>{
@@ -51,18 +55,20 @@ function modal(title,body,okLabel,onOk,danger){
 const closeModal=()=>{$('#dim').classList.remove('on');$('#modal').classList.remove('on')};
 
 /* ── 컴포넌트 ── */
-const card=p=>`<a class="card" href="#/p/${p.id}">
- <div class="fig" style="background:${p.t}">${p.tag?`<span class="pill ${p.tag!=='자체'?'hot':''}">${p.tag}</span>`
-  :`<span class="pill">${p.nic[0]}</span>`}<span class="btl" style="background:${p.c}"></span></div>
- <div class="bd"><span class="brand">${esc(p.b)}</span><span class="nm">${esc(p.n)}</span>
- <span class="row"><span class="pr">${p.was?`<span class="was n">${won(p.was)}</span>`:''}<b class="n">${won(p.p)}</b>
- <small>30ml · 단품</small></span></span></div></a>`;
+const heart=p=>`<button type="button" class="wish ${S.wish.has(p.id)?'on':''}" data-wish="${p.id}"
+ aria-pressed="${S.wish.has(p.id)}" aria-label="${esc(p.n)} 찜">${I.heart}</button>`;
+const card=p=>{const eb=eyebrow(p);return `<article class="card ${p.out?'is-out':''}">
+ <a class="fig" href="#/p/${p.id}" style="background:${p.t}" aria-label="${esc(p.n)}">
+  ${eb?`<span class="eb ${eb[1]}">${eb[0]}</span>`:''}<span class="btl" style="background:${p.c}"></span></a>${heart(p)}
+ <div class="bd"><a class="nm" href="#/p/${p.id}">${esc(p.n)}</a>
+  <div class="meta"><span class="star">★</span><b>${p.r}</b><span>·</span><span>${won(p.sold)}개 판매</span></div>
+  <div class="pr"><span class="n">${p.was?`<s>${won(p.was)}</s>`:''}<b>${won(p.p)}</b></span><small>원 · 병당</small></div></div></article>`};
 const stBadge=k=>`<span class="st ${ST[k][1]}">${ST[k][0]}</span>`;
 
 /* ── 화면 ── */
 const V={};
 
-/* 홈 — 큰 제목 → 분류 타일 → 브랜드 → 이번 달 큰 카드(패럴랙스) → 9월 특가 → 무니코틴 → 안내 */
+/* 홈 — 레퍼런스(FootWear) 구성. 검색이 첫 CTA, 그 다음 특가, 그리드, 브랜드, 배너, 푸터. */
 const CATS=[
  {k:'무니코틴',s:'0mg',q:'n=0mg',c:['#7FA83C','#5B9BD5','#8E44AD']},
  {k:'저농도',s:'0.98mg',q:'n=0.98mg',c:['#1F2937','#7B1E3A','#1E5F74']},
@@ -71,49 +77,81 @@ const CATS=[
  {k:'첨가제',s:'섞어 쓰는',q:'b=첨가제',c:['#3AAFD9']},
  {k:'자체 제작',s:'액상덕후',q:'b=액상덕후',c:['#1F2937','#7B1E3A','#1E5F74']},
 ];
-const FEATS=[
- {id:13,tag:'신상',title:'더블 슬로우블로우 파인애플',sub:'네스티 대표작. 파인애플에 약한 민트.'},
- {id:12,tag:'재구매 1위',title:'금실딸기',sub:'딸기우유에 가까운 단맛. 질리지 않습니다.'},
- {id:4,tag:'9월 특가',title:'샤인머스캣 무니코틴',sub:'9,000원에서 8,100원. 9월 한 달만.'},
-];
-const feat=f=>{const p=find(f.id);return `<a class="feat" href="#/p/${p.id}" style="--fc:${p.c}">
- <div class="feat-art"><span class="glow"></span><span class="btl" style="background:${p.c}" data-px></span>
-  <span class="tag">${f.tag}</span></div>
- <div class="feat-body"><h3>${esc(f.title)}</h3><p>${esc(f.sub)}</p></div>
- <div class="feat-foot"><span class="pr">병당 <b class="n">${won(p.p)}원</b>${p.was?` <s style="color:#8E8E93;font-weight:500">${won(p.was)}</s>`:''}</span>
-  <span class="btn">구매 ${I.arrow}</span></div></a>`};
+const SALE_END=new Date('2026-09-30T23:59:59+09:00');
+const pad=n=>String(n).padStart(2,'0');
+const leftText=()=>{const ms=Math.max(0,SALE_END-Date.now()),d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,sec=Math.floor(ms/1e3)%60;
+ return `${d}일 ${pad(h)}:${pad(m)}:${pad(sec)}`};
+let tick=null;
+const homeList=()=>P.filter(p=>(!S.hf.b||p.b===S.hf.b)&&(!S.hf.n||p.nic.includes(S.hf.n))&&(!S.hf.f||p.f===S.hf.f));
+const sel=(k,label,opts)=>`<label class="fsel ${S.hf[k]?'on':''}"><span>${S.hf[k]||label}</span>${I.chev}
+ <select data-hf="${k}" aria-label="${label}"><option value="">${label} 전체</option>${opts.map(o=>`<option ${S.hf[k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`;
+const homeGrid=()=>{const l=homeList();return l.length?l.slice(0,12).map(card).join(''):`<div class="empty" style="grid-column:1/-1"><div class="ico">${I.search}</div><p>조건에 맞는 상품이 없습니다.</p><button class="btn btn-o" data-hf-reset>필터 지우기</button></div>`};
+const brandCard=b=>{const list=P.filter(p=>p.b===b),sold=list.reduce((a,p)=>a+p.sold,0);
+ return `<article class="bcard"><div class="bhead"><span class="blogo" style="background:${list[0].c}">${b.slice(0,1)}</span>
+  <div><b>${esc(b)} <span class="vf" title="공식 스토어">${I.check}</span></b>
+   <span class="bsub"><span class="star">★</span> ${list[0].r} · ${list.length}종 · ${won(sold)}개 판매</span></div>
+  <a class="lk" href="#/shop?b=${encodeURIComponent(b)}">보기 ${I.chev}</a></div>
+  <div class="bthumbs">${list.concat(list,list,list).slice(0,4).map(p=>`<a href="#/p/${p.id}" style="background:${p.t}" aria-label="${esc(p.n)}"><span class="btl" style="background:${p.c}"></span></a>`).join('')}</div></article>`};
 
-V.home=()=>`<div class="wrap">
- <section class="hero"><div><h1>액상덕후</h1>
-  <p class="lead">9개 브랜드 173종. 무니코틴부터 9.8mg까지, <b>병당 가격</b>으로 고르세요.</p></div></section>
- <div class="tiles">${CATS.map(c=>`<a class="tile" href="#/shop?${c.q}">
-  <span class="art">${c.c.map(col=>`<span class="btl" style="background:${col}"></span>`).join('')}</span>
-  <b>${c.k}</b><span>${c.s}</span></a>`).join('')}</div>
+V.home=()=>{
+ const hot=P.filter(p=>p.was||p.tag==='BEST'||p.tag==='신상');
+ const nw=find(13), sale=find(4);
+ return `<div class="wrap">
+ <a class="msearch" href="#/search">${I.search}<span>‘샤인머스캣’ 처럼 찾아보세요</span></a>
 
- <section class="sec" style="padding-top:.4rem"><div class="sec-h"><h2>브랜드</h2></div>
-  <div class="chips-x">${BRANDS.map(b=>`<a class="chip" href="#/shop?b=${encodeURIComponent(b)}">${b}</a>`).join('')}</div></section>
+ <section class="hero2">
+  <a class="hcard hcard-a" href="#/p/${nw.id}">
+   <div class="htxt"><span class="eb2">신상 입고</span><h1>${esc(nw.n)}</h1>
+    <p>${esc(nw.d)} 9.8mg 과 0.98mg 두 가지.</p><span class="btn btn-d">상품 보기 ${I.arrow}</span></div>
+   <div class="hart" style="--fc:${nw.c}"><span class="box" style="background:${nw.t}"><span class="btl" style="background:${nw.c}"></span></span></div></a>
+  <a class="hcard hcard-b" href="#/shop?n=0mg">
+   <div class="htxt"><h2>9월 특가<br>무니코틴 최대 <em>10%</em></h2>
+    <p>9월 30일까지. 5+5 묶음이면 병당 ${won(Math.round(sale.p*5/10))}원까지 내려갑니다.</p>
+    <span class="btn btn-w2">특가 보기 ${I.arrow}</span></div>
+   <span class="btl big" style="background:${sale.c}"></span></a>
+ </section>
 
- <section class="sec"><div class="sec-h"><h2>이번 달 볼 것</h2><span class="sub">3개</span></div>
-  ${FEATS.map(feat).join('')}</section>
+ <section class="deals"><div class="deals-h"><h2>오늘의 특가</h2>
+   <span class="ends">마감까지 <b id="left" class="n">${leftText()}</b></span></div>
+  <div class="scroller">${hot.map(card).join('')}</div></section>
 
- <section class="sec"><div class="sec-h"><h2>9월 특가</h2><span class="sub">4종 · 넘겨 보세요</span>
+ <section class="sec center"><h2 class="big2">지금 고르세요</h2>
+  <p class="lead" style="margin:.5rem auto 0">173종 중에 15종만 먼저 보여드립니다. 브랜드·니코틴·맛으로 좁혀 보세요.</p>
+  <div class="fbar">${sel('b','브랜드',BRANDS)}${sel('n','니코틴',['0mg','0.98mg','9.8mg'])}${sel('f','맛',FL.slice(1))}
+   ${(S.hf.b||S.hf.n||S.hf.f)?`<button class="chip" data-hf-reset>${I.x} 초기화</button>`:''}
+   <span class="fcount n" id="hcount">${homeList().length}종</span></div>
+  <div class="grid grid4" id="hgrid">${homeGrid()}</div>
+  <div class="center" style="margin-top:1.4rem"><a class="btn btn-d" href="#/shop">더 보기 ${I.arrow}</a></div></section>
+
+ <section class="sec center"><h2 class="big2">브랜드 공식 스토어</h2>
+  <p class="lead" style="margin:.5rem auto 0">직접 만들거나, 만든 곳에서 바로 받아 옵니다. 중간 유통이 없습니다.</p>
+  <div class="bgrid">${['액상덕후','맥스쿨','심쿵'].map(brandCard).join('')}</div></section>
+
+ <section class="sec"><div class="sec-h"><h2>이번 달 볼 것</h2><span class="sub">넘겨 보세요</span>
   <a class="lk" style="margin-left:auto" href="#/shop">전체 보기 ${I.chev}</a></div>
-  <div class="scroller">${P.filter(p=>p.was||p.tag==='BEST'||p.tag==='신상').map(card).join('')}</div></section>
+  <div class="cf" id="cf"></div>
+  <div class="cf-go"><a class="btn btn-d" id="cfGo" href="#/shop">이 상품 보기 ${I.arrow}</a></div></section>
 
- <section class="sec"><div class="sec-h"><h2>무니코틴</h2><span class="sub">가장 많이 찾는 분류</span>
-  <a class="lk" style="margin-left:auto" href="#/shop?n=0mg">전체 보기 ${I.chev}</a></div>
-  <div class="scroller">${P.filter(p=>p.nic[0]==='0mg').map(card).join('')}</div></section>
+ <section class="banner"><div><h2>9월엔 병당 가격으로 고르세요</h2>
+  <p>한 병만 사도 되고, 5+5로 묶으면 병당 ${won(Math.round(sale.p*5/10))}원까지 내려갑니다. 입금자명만 주문자명과 같게 넣어주세요.</p>
+  <a class="btn btn-w2" href="#/shop?n=0mg">9월 특가 보기 ${I.arrow}</a></div></section>
+ </div>
+ ${footer()}`;
+};
 
- <section class="sec"><div class="sec-h"><h2>이렇게 삽니다</h2></div>
-  <div class="info">
-   <div class="panel">${I.bank}<div><b>계좌이체 전용</b><p>카드결제는 받지 않습니다. 주문 후 안내되는 계좌로 보내주세요.</p></div></div>
-   <div class="panel">${I.check}<div><b>입금자명 = 주문자명</b><p>이름이 같으면 자동으로 입금확인됩니다. 다르면 사람이 찾느라 하루쯤 늦어집니다.</p></div></div>
-   <div class="panel">${I.truck}<div><b>3만원 이상 무료배송</b><p>입금확인 당일 발송. 우체국택배로 갑니다.</p></div></div>
-  </div></section>
-
- <footer class="ft"><b>19세 미만 청소년에게 판매하지 않습니다.</b><br>
-  구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>액상덕후 · 전자담배 액상 전문몰</footer>
-</div>`;
+const footer=()=>`<footer class="foot"><div class="wrap">
+ <div class="fgrid">
+  <div class="fabout"><a class="lg lg-w" href="#/"><span class="g"></span>액상덕후</a>
+   <p>전자담배 액상 전문몰. 9개 브랜드 173종을 병당 가격으로 팝니다. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
+   <div class="fkakao"><div><b>카카오톡 채널</b><span>입금 안내와 특가 소식을 받으세요</span></div><a class="btn btn-p btn-sm" href="#/">채널 추가</a></div></div>
+  <div class="fcol"><b>상품</b>${CATS.map(c=>`<a href="#/shop?${c.q}">${c.k}</a>`).join('')}</div>
+  <div class="fcol"><b>브랜드</b>${BRANDS.slice(0,6).map(b=>`<a href="#/shop?b=${encodeURIComponent(b)}">${b}</a>`).join('')}</div>
+  <div class="fcol"><b>안내</b><a href="#/p/1">배송 · 교환 · 환불</a><a href="#/p/1">입금 안내</a><a href="#/join">회원가입</a><a href="#/orders">주문조회</a><a href="#/my">회원탈퇴</a></div>
+  <div class="fcol"><b>고객지원</b><a href="#/">카카오톡 문의</a><a href="#/p/1">자주 묻는 질문</a><a href="#/">공지사항</a><a href="#/">이용약관</a><a href="#/">개인정보처리방침</a></div>
+ </div>
+ <div class="flegal"><b>19세 미만 청소년에게 판매하지 않습니다.</b> 구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
+  액상덕후 · 대표 홍길동 · 사업자등록번호 000-00-00000 · 통신판매업 신고 제0000-서울강남-0000호 (예시)</div>
+</div></footer>`;
 
 V.shop=q=>{
  const b=q.get('b'),n=q.get('n'); if(q.get('f'))S.flt=q.get('f');
@@ -155,8 +193,9 @@ V.p=id=>{
    <div class="totals"><div><span>구성</span><span>${b.k}</span></div>
     <div><span>병당 가격</span><span class="n">${won(per)}원</span></div>
     <div class="big"><span>총 금액</span><b class="n">${won(pay)}원</b></div></div>
-   <div class="buybar"><button class="btn btn-o" data-act="cart">장바구니</button>
-    <button class="btn btn-p main" data-act="buy">바로 구매</button></div>
+   ${p.out?`<div class="warnbox" style="margin-top:1rem"><b>지금은 품절입니다.</b> 재입고되면 카카오톡으로 알려드립니다.</div>`:''}
+   <div class="buybar"><button class="btn btn-o" data-act="cart" ${p.out?'disabled':''}>장바구니</button>
+    <button class="btn btn-p main" data-act="buy" ${p.out?'disabled':''}>${p.out?'품절':'바로 구매'}</button></div>
   </div></div>
  ${detail(p)}
  <div style="height:2rem"></div></div>`;
@@ -432,10 +471,12 @@ function route(){
  else html=V.e404();
  $('#view').innerHTML=html;
  $('#view').scrollTo(0,0);
+ clearInterval(tick); tick=null;
+ if(!seg.length){tick=setInterval(()=>{const el=$('#left'); if(el)el.textContent=leftText(); else clearInterval(tick)},1000)}
  /* 큰 제목이 올라가면 헤더 가운데에 작은 제목이 뜬다 */
  const big=$('#view h1');
  const bt=big?big.textContent.replace(/\s+/g,' ').trim().slice(0,18):'';
- $('#ttl').textContent=bt==='액상덕후'?'':bt; /* 홈은 로고가 이미 그 말이다 */
+ $('#ttl').textContent=(!seg.length||bt==='액상덕후')?'':bt; /* 홈은 로고가 이미 그 말이다 */
  $('.gnb').classList.remove('small');
  syncChrome(seg[0]||'');
  if(seg[0]==='search'){const i=$('#sq'); if(i){const v=i.value;i.focus();i.setSelectionRange(v.length,v.length)}}
@@ -445,6 +486,7 @@ function route(){
 function syncChrome(k){
  $('#cartN').textContent=cartQty();
  $('#cartN').style.display=cartQty()?'flex':'none';
+ const cl=$('#cartL'); if(cl)cl.textContent=cartQty()?cartQty()+'병':'장바구니';
  const who=$('#who');
  who.innerHTML=S.user?esc(S.user.name.slice(0,1)):I.user;
  who.classList.toggle('in',!!S.user);
@@ -483,8 +525,32 @@ document.addEventListener('submit',e=>{
  e.preventDefault(); $('#sq')?.blur();
 });
 
+document.addEventListener('change',e=>{
+ const f=e.target.closest('[data-hf]'); if(!f)return;
+ S.hf[f.dataset.hf]=f.value; rerenderHomeGrid();
+});
+function rerenderHomeGrid(){
+ const g=$('#hgrid'); if(!g)return;
+ g.innerHTML=homeGrid(); const c=$('#hcount'); if(c)c.textContent=homeList().length+'종';
+ const bar=$('.fbar'); if(bar){bar.querySelectorAll('.fsel').forEach(l=>{const k=l.querySelector('select').dataset.hf;
+  l.classList.toggle('on',!!S.hf[k]); l.querySelector('span').textContent=S.hf[k]||l.querySelector('select').getAttribute('aria-label')});
+  const has=S.hf.b||S.hf.n||S.hf.f, rs=bar.querySelector('[data-hf-reset]');
+  if(has&&!rs)bar.insertAdjacentHTML('beforeend',`<button class="chip" data-hf-reset>${I.x} 초기화</button>`);
+  if(!has&&rs)rs.remove();
+  const cnt=bar.querySelector('.fcount'); if(cnt)bar.appendChild(cnt);}
+}
+document.addEventListener('submit',e=>{
+ const f=e.target.closest('#hsearch'); if(!f)return;
+ e.preventDefault(); S.q=$('#hq').value.trim(); location.hash='#/search'+(S.q?'?q='+encodeURIComponent(S.q):''); rerender();
+});
+
 document.addEventListener('click',e=>{
  const t=e.target;
+ const w=t.closest('[data-wish]');
+ if(w){const id=+w.dataset.wish; S.wish.has(id)?S.wish.delete(id):S.wish.add(id);
+  const on=S.wish.has(id); document.querySelectorAll(`[data-wish="${id}"]`).forEach(b=>{b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+  toast(on?'찜했습니다':'찜을 뺐습니다'); return}
+ const hr=t.closest('[data-hf-reset]'); if(hr){S.hf={b:'',n:'',f:''}; document.querySelectorAll('[data-hf]').forEach(x=>x.value=''); rerenderHomeGrid(); return}
  const jump=t.closest('[data-jump]');
  if(jump){e.preventDefault();const sec=document.getElementById(jump.dataset.jump);
   if(sec){sec.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
@@ -504,6 +570,7 @@ document.addEventListener('click',e=>{
 
  if(act==='cart'||act==='buy'){
   const pid=+location.hash.split('/')[2],p=find(pid),b=BUNDLES[state.bi];
+  if(p.out){toast('품절된 상품입니다. 재입고 알림을 받아보세요');return}
   const pay=(b.mult||b.q)*p.p;
   S.cart.push({pid,bundle:b.k,nic:p.nic[state.ni],q:b.q,per:b.q,unit:pay,pay});
   if(act==='cart'){syncChrome(location.hash.split('/')[1]);toast('장바구니에 담았습니다')}
@@ -558,7 +625,7 @@ document.addEventListener('click',e=>{
   modal('정말 탈퇴하시겠어요?',
    '<p>탈퇴하면 로그인할 수 없게 되고 이름·연락처·주소가 지워집니다. 되돌릴 수 없습니다.</p>'+
    '<p style="margin-top:.6rem">주문 기록은 남습니다. 전자상거래법상 거래기록은 5년간 보관해야 합니다.</p>',
-   '탈퇴하기',()=>{S={user:null,cart:[],orders:[],flt:'전체',seq:S.seq,points:0};
+   '탈퇴하기',()=>{S={user:null,cart:[],orders:[],flt:'전체',seq:S.seq,points:0,q:'',wish:new Set(),hf:{b:'',n:'',f:''}};
     location.hash='#/';rerender();toast('탈퇴가 완료됐습니다')},true);
   return;
  }

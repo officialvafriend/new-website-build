@@ -88,6 +88,22 @@ for (const w of [390, 768, 1280]) {
 const p = await mk(390, 844);
 const step = async (label, fn) => { try { await fn(); await p.waitForTimeout(320); } catch (e) { errs.push(`흐름[${label}]: ${e.message.split('\n')[0]}`); } };
 
+// 홈: 카운트다운 · 필터 · 찜 · 푸터
+await step('홈', () => go(p, '#/'));
+const left1 = await p.textContent('#left'); await p.waitForTimeout(1200); const left2 = await p.textContent('#left');
+if (!left1 || left1 === left2) errs.push(`흐름: 카운트다운이 안 움직임 (${left1} → ${left2})`); else note('특가 카운트다운 동작');
+await step('브랜드 필터', () => p.selectOption('[data-hf="b"]', '맥스쿨'));
+const cnt = await p.textContent('#hcount');
+if (cnt !== '3종') errs.push(`흐름: 브랜드 필터 결과 ${cnt} (3종이어야 함)`); else note('홈 필터: 맥스쿨 3종');
+await step('니코틴 필터 겹치기', () => p.selectOption('[data-hf="n"]', '9.8mg'));
+if (!/없습니다/.test(await p.textContent('#hgrid'))) errs.push('흐름: 맥스쿨 + 9.8mg 인데 빈 결과 안내가 없음'); else note('빈 결과 안내 + 초기화');
+await step('필터 초기화', () => p.locator('[data-hf-reset]').first().click());
+if ((await p.textContent('#hcount')) !== '15종') errs.push('흐름: 필터 초기화 실패');
+const wishBefore = await p.evaluate(() => S.wish.size);
+await step('찜', () => p.locator('#hgrid [data-wish]').first().click());
+if ((await p.evaluate(() => S.wish.size)) !== wishBefore + 1) errs.push('흐름: 찜이 안 됨'); else note('찜 토글');
+if (!(await p.locator('footer.foot .fcol').count())) errs.push('흐름: 푸터 링크 열이 없음'); else note('푸터');
+
 // 검색
 await step('검색 화면', () => go(p, '#/search'));
 if (!(await p.evaluate(() => document.activeElement && document.activeElement.id === 'sq'))) errs.push('흐름: 검색 화면에서 입력칸에 포커스가 없음');
@@ -119,6 +135,8 @@ await step('로그인', () => p.locator('[data-act="login"]').first().click());
 if (!(await p.evaluate(() => !!S.user))) errs.push('흐름: 로그인 실패');
 else note('로그인됨');
 
+await step('품절 상품', () => go(p, '#/p/6'));
+if (!(await p.evaluate(() => document.querySelector('[data-act="buy"]').disabled))) errs.push('흐름: 품절인데 구매 버튼이 살아 있음'); else note('품절 상품은 구매 막힘');
 await step('상품', () => go(p, '#/p/12'));
 await step('장바구니 담기', () => p.locator('[data-act="cart"]').first().click());
 if ((await p.textContent('#cartN')) === '0') errs.push('흐름: 담기 후 배지가 0');

@@ -27,12 +27,7 @@ extra = """
 .cf-cap dl{font-size:14px}
 """
 
-# 9월 특가 섹션을 가로 스크롤 대신 커버플로우로
-old = """  <div class="scroller">${P.filter(p=>p.was||p.tag==='BEST'||p.tag==='신상').map(card).join('')}</div></section>"""
-new = """  <div class="cf" id="cf"></div>
-  <div class="cf-go"><a class="btn btn-d" id="cfGo" href="#/shop">이 상품 보기 ${I.arrow}</a></div></section>"""
-assert old in js
-js = js.replace(old, new, 1)
+# 커버플로우 자리는 site.js 홈에 이미 들어 있다 (#cf)
 
 old = """ syncChrome(seg[0]||'');"""
 new = """ syncChrome(seg[0]||'');
@@ -77,19 +72,16 @@ js = 'const I=' + json.dumps(icons, ensure_ascii=False) + ';\n' + js
 
 def ic(name): return icons[name]
 
-shell = f"""<header class="gnb"><div class="wrap gnb-in">
+shell = f"""<div class="util"><div class="wrap">
+  <a href="#/">공지사항</a><a href="#/p/1">자주 묻는 질문</a><a href="#/">카카오톡 문의</a><a href="#/orders">배송조회</a>
+  <span class="r">만 19세 이상 · 휴대폰 본인확인 후 구매</span></div></div>
+<header class="gnb"><div class="wrap gnb-in">
   <a class="lg" href="#/"><span class="g"></span>액상덕후</a>
   <span class="ttl" id="ttl" aria-hidden="true"></span>
-  <nav>
-   <a href="#/shop" data-k="shop">전체 상품</a>
-   <a href="#/shop?n=0mg" data-k="">무니코틴</a>
-   <a href="#/shop?f=멘솔" data-k="">멘솔</a>
-   <a href="#/shop?b=액상덕후" data-k="">자체 제작</a>
-   <a href="#/orders" data-k="orders">주문내역</a>
-  </nav>
+  <form class="hs" id="hsearch" role="search"><input id="hq" type="search" placeholder="‘샤인머스캣’ 처럼 찾아보세요" aria-label="상품 검색" autocomplete="off"><button type="submit" aria-label="검색">{ic('search')}</button></form>
   <div class="sp">
-   <a class="gi" href="#/search" aria-label="상품 검색">{ic('search')}</a>
-   <a class="gi" href="#/cart" aria-label="장바구니">{ic('bag')}<span class="b n" id="cartN">0</span></a>
+   <a class="gi" href="#/search" aria-label="상품 검색" style="display:none" id="gsearch">{ic('search')}</a>
+   <a class="gi wide" href="#/cart" aria-label="장바구니">{ic('bag')}<span class="lbl" id="cartL">장바구니</span><span class="b n" id="cartN">0</span></a>
    <a class="who" id="who" href="#/login" aria-label="로그인">{ic('user')}</a>
   </div>
  </div></header>
