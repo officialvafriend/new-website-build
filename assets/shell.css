@@ -13,6 +13,8 @@ body.dhr-wrap .wd-mobile-drawer-backdrop,
 body.dhr-wrap .wd-custom-breadcrumb-bar,
 body.dhr-wrap .wd-custom-top-wrap,
 body.dhr-wrap .wd-custom-footer,
+body.dhr-wrap .dh-annbar,
+body.dhr-wrap .dh-topbar,
 body.dhr-wrap #wd-top-announce{ display: none !important; }
 
 /* 216px 사이드 헤더 + 본문 그리드를 푼다 */
