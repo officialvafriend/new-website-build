@@ -87,7 +87,7 @@ add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\\enqueue_editor_tok
  * 없고, 플러그인을 끄면 그대로 돌아갑니다.
  */
 function enqueue_theme_css(): void {
-	if ( is_admin() || is_front_page() ) {
+	if ( is_admin() || is_front_page() || is_page( 'membership-cancel' ) ) {
 		return;
 	}
 	$relative = 'assets/duckhoo-theme.css';
@@ -132,12 +132,12 @@ add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_membership_cancel_s
  * 고객이 직접 취소할 수 있는 주문 상태를 넓힙니다.
  *
  * WooCommerce 는 기본적으로 pending·failed 주문에만 "취소" 링크를 내보냅니다.
- * 이 사이트의 주문은 keyple-order-status 가 붙인 한국형 상태로 들어가므로
- * 그 목록에 걸리지 않고, 그래서 마이페이지에 취소 버튼 자체가 그려지지 않습니다.
- * 고객이 취소를 못 하는 원인이 여기입니다.
+ * 이 사이트의 무통장입금 주문은 on-hold("결제 확인 중")로 들어가는데 그 목록에
+ * 없어서 마이페이지에 취소 버튼 자체가 그려지지 않았습니다. 고객이 취소를 못 하던
+ * 원인이 여기입니다.
  *
- * 여는 것은 입금전 하나뿐입니다. 확인필요는 입금 문자가 이미 들어온 뒤의
- * 상태라 고객이 스스로 취소하면 환불 처리가 남습니다. 그건 사람이 봐야 합니다.
+ * 여는 것은 입금 전 상태(on-hold, 그리고 이름표가 "입금전"인 상태)뿐입니다.
+ * 입금확인(payment-confirmed) 이후는 열지 않습니다 — 환불이 남아 사람이 봐야 합니다.
  */
 function customer_cancellable_statuses(): array {
 	static $slugs = null;
@@ -152,15 +152,18 @@ function customer_cancellable_statuses(): array {
 		return $slugs;
 	}
 
-	// 슬러그는 keyple 이 정하는 값이라 하드코딩하지 않고 이름표로 찾습니다.
-	// 슬러그가 바뀌어도 이름표가 그대로면 계속 동작합니다.
+	// 실제 사이트(2026-09 관리자 주문 목록)에는 "입금전" 상태가 없다. 무통장입금 주문은
+	// WooCommerce 기본 on-hold("결제 확인 중")로 들어간다 — 293건. 그게 입금 전이다.
+	// WooCommerce 는 기본값으로 pending·failed 만 취소를 허용하므로 on-hold 를 더한다.
+	// keyple 이 나중에 "입금전" 이름표를 붙인 상태를 쓰면 그것도 잡는다.
+	$slugs[] = 'on-hold';
 	foreach ( wc_get_order_statuses() as $slug => $label ) {
 		if ( '입금전' === trim( wp_strip_all_tags( (string) $label ) ) ) {
 			$slugs[] = (string) preg_replace( '/^wc-/', '', (string) $slug );
 		}
 	}
 
-	return $slugs;
+	return array_values( array_unique( $slugs ) );
 }
 
 /**

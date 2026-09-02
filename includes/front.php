@@ -370,12 +370,28 @@ function footer_html(): void {
  * @return string
  */
 function take_front_page( string $template ): string {
-	if ( is_front_page() && ! is_admin() && function_exists( 'wc_get_products' ) ) {
-		if ( apply_filters( 'duckhoo_take_front_page', true ) ) {
-			return DIR . 'templates/home.php';
-		}
+	if ( is_admin() || ! function_exists( 'wc_get_products' ) ) {
+		return $template;
+	}
+	if ( is_front_page() && apply_filters( 'duckhoo_take_front_page', true ) ) {
+		return DIR . 'templates/home.php';
+	}
+	// 회원탈퇴 페이지: 테마의 마이페이지 템플릿이 자기 탈퇴 상자를 그리고 the_content 를
+	// 부르지 않는다. 그 상자의 admin-ajax 처리가 동작하지 않아 고객이 탈퇴를 못 했다.
+	// 이 페이지도 우리 껍데기로 그리고 includes/membership-cancel.php 의 폼을 넣는다.
+	if ( is_page( 'membership-cancel' ) && apply_filters( 'duckhoo_take_membership_cancel', true ) ) {
+		return DIR . 'templates/page-membership-cancel.php';
 	}
 	return $template;
+}
+
+/**
+ * 우리 껍데기를 쓰는 화면인가.
+ *
+ * @return bool
+ */
+function is_shell_page(): bool {
+	return ! is_admin() && ( is_front_page() || is_page( 'membership-cancel' ) );
 }
 add_filter( 'template_include', __NAMESPACE__ . '\\take_front_page', 99 );
 
@@ -386,7 +402,7 @@ add_filter( 'template_include', __NAMESPACE__ . '\\take_front_page', 99 );
  * @return void
  */
 function assets(): void {
-	if ( ! is_front_page() || is_admin() ) {
+	if ( ! is_shell_page() ) {
 		return;
 	}
 	wp_dequeue_style( 'welcome-drink-style' );

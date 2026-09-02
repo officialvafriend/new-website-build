@@ -2,3 +2,5 @@ node_modules/
 .DS_Store
 __pycache__/
 *.pyc
+# 스텁 테스트가 만드는 임시 파일
+.dhr-main-test.php

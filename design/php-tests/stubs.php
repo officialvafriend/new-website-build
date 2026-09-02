@@ -69,3 +69,17 @@ function wc_get_order_statuses(){
   ];
 }
 function wc_get_orders($args){ return $GLOBALS['__orders']; }
+
+if(!function_exists('plugin_dir_path')) { function plugin_dir_path($f){ return dirname($f).'/'; } }
+if(!function_exists('plugin_dir_url')) { function plugin_dir_url($f){ return 'https://example.test/wp-content/plugins/new-website-build/'; } }
+if(!function_exists('wp_enqueue_style')) { function wp_enqueue_style(...$a){} } if(!function_exists('wp_enqueue_script')) { function wp_enqueue_script(...$a){} } if(!function_exists('wp_add_inline_script')) { function wp_add_inline_script(...$a){} } if(!function_exists('wp_dequeue_style')) { function wp_dequeue_style(...$a){} } if(!function_exists('plugins_url')) { function plugins_url(...$a){ return ''; } }
+if(!function_exists('is_admin')) { function is_admin(){ return false; } } if(!function_exists('is_front_page')) { function is_front_page(){ return false; } } if(!function_exists('is_page')) { function is_page($s=''){ return false; } }
+if(!function_exists('get_terms')) { function get_terms($a){ return []; } } if(!function_exists('is_wp_error')) { function is_wp_error($x){ return false; } } if(!function_exists('wp_timezone')) { function wp_timezone(){ return new DateTimeZone('Asia/Seoul'); } }
+if(!function_exists('get_theme_mod')) { function get_theme_mod($k){ return 0; } } if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image(...$a){ return ''; } } if(!function_exists('get_bloginfo')) { function get_bloginfo($k){ return '액상덕후'; } }
+if(!function_exists('get_search_query')) { function get_search_query(){ return ''; } } if(!function_exists('language_attributes')) { function language_attributes(){} } if(!function_exists('body_class')) { function body_class(){} } if(!function_exists('wp_head')) { function wp_head(){} } if(!function_exists('wp_footer')) { function wp_footer(){} } if(!function_exists('wp_body_open')) { function wp_body_open(){} }
+if(!function_exists('get_privacy_policy_url')) { function get_privacy_policy_url(){ return ''; } } if(!function_exists('wp_date')) { function wp_date($f){ return date($f); } } if(!function_exists('has_term')) { function has_term(...$a){ return false; } } if(!function_exists('get_permalink_stub')) { function get_permalink_stub(){ } }
+// 메인 플러그인 파일을 그대로 읽으면 includes/ 도 따라 읽힌다. front.php 는 wc_get_products 없이도 정의만 된다.
+$src = file_get_contents(dirname(__DIR__, 2).'/duckhoo-redesign.php');
+$src = str_replace("require_once plugin_dir_path( __FILE__ ) . 'includes/membership-cancel.php';", '', $src); // 이미 읽었다
+$src = preg_replace('/^<\?php\s*/', '', $src, 1);
+file_put_contents(dirname(__DIR__, 2).'/.dhr-main-test.php', "<?php\n".$src);

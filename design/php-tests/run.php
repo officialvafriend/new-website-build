@@ -87,5 +87,11 @@ $ok(str_contains($filled,'dh-leave'), '빈 페이지는 채운다');
 $kept = ($ns.'fill_empty_page')('<p>여기에 원래 안내문이 길게 들어 있고 사람이 직접 쓴 내용이 있습니다. 건드리면 안 됩니다.</p>');
 $ok(!str_contains($kept,'dh-leave'), '내용이 있는 페이지는 그대로 둔다');
 
+// 15. 주문취소 필터: on-hold(결제 확인 중 = 입금 전) 가 열리고, 입금확인은 안 열린다
+require_once dirname(__DIR__, 2).'/.dhr-main-test.php';
+$allowed = \Duckhoo\Redesign\allow_cancel_before_deposit( ['pending','failed'] );
+$ok(in_array('on-hold',$allowed,true) && in_array('pending',$allowed,true), 'on-hold 가 취소 가능 목록에 들어간다');
+$ok(!in_array('payment-confirmed',$allowed,true) && !in_array('keyple-shipping',$allowed,true), '입금확인·배송중은 열리지 않는다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
