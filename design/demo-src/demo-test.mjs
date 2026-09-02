@@ -54,18 +54,31 @@ for (const w of [390, 768, 1280]) {
   for (const r of routes) {
     await go(p, r);
     const m = await p.evaluate(() => {
-      window.scrollTo(9999, 0); const x = window.scrollX; window.scrollTo(0, 0);
+      const v = document.querySelector('#view'); v.scrollTo(9999, 0); const x = v.scrollLeft; v.scrollTo(0, 0);
       const tabs = document.querySelector('.tabs');
-      return { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, x,
+      return { sw: v.scrollWidth, cw: v.clientWidth, x, dsw: document.documentElement.scrollWidth, dcw: document.documentElement.clientWidth,
                docH: document.documentElement.scrollHeight, cliH: document.documentElement.clientHeight,
                tabBottom: tabs ? Math.round(tabs.getBoundingClientRect().bottom) : 0,
-               len: document.querySelector('#view').innerHTML.trim().length };
+               len: v.innerHTML.trim().length };
     });
-    if (m.sw > m.cw + 1 || m.x > 0) errs.push(`[${w}] 가로 넘침 @${r}: sw=${m.sw} cw=${m.cw} scrollX=${m.x}`);
+    if (m.sw > m.cw + 1 || m.x > 0 || m.dsw > m.dcw + 1) errs.push(`[${w}] 가로 넘침 @${r}: sw=${m.sw} cw=${m.cw} scrollX=${m.x} doc=${m.dsw}/${m.dcw}`);
     if (m.len < 80) errs.push(`[${w}] 빈 화면 @${r}`);
-    // 문서가 화면보다 짧아지면 라우트를 옮길 때 아래 탭바가 튄다
-    if (m.docH < m.cliH - 1) errs.push(`[${w}] 문서가 화면보다 짧음 @${r}: docH=${m.docH} cliH=${m.cliH}`);
+    // 문서 자체는 스크롤하지 않는다 (스크롤은 #view 안에서만). 그래야 탭바가 안 움직인다.
+    if (m.docH > m.cliH + 1) errs.push(`[${w}] 문서가 스크롤됨 @${r}: docH=${m.docH} cliH=${m.cliH}`);
     if (w < 880 && Math.abs(m.tabBottom - m.cliH) > 1) errs.push(`[${w}] 탭바가 화면 아래에 안 붙음 @${r}: ${m.tabBottom} vs ${m.cliH}`);
+  }
+  if (w < 880) {
+    await go(p, '#/');
+    const before = await p.evaluate(() => Math.round(document.querySelector('.tabs').getBoundingClientRect().top));
+    await p.evaluate(() => document.querySelector('#view').scrollTo(0, 900)); await p.waitForTimeout(300);
+    const after = await p.evaluate(() => Math.round(document.querySelector('.tabs').getBoundingClientRect().top));
+    const small = await p.evaluate(() => document.querySelector('.gnb').classList.contains('small'));
+    if (before !== after) errs.push(`[${w}] 스크롤 중 탭바가 움직임 ${before}→${after}`);
+    if (!small) errs.push(`[${w}] 스크롤해도 작은 제목이 안 켜짐`);
+    await go(p, '#/orders');
+    const after2 = await p.evaluate(() => Math.round(document.querySelector('.tabs').getBoundingClientRect().top));
+    if (before !== after2) errs.push(`[${w}] 홈→주문내역에서 탭바가 움직임 ${before}→${after2}`);
+    note(`${w}px 탭바 고정 (${before}px) · 작은 제목 전환`);
   }
   note(`${w}px 라우트 ${routes.length}개 확인`);
   await p.close();

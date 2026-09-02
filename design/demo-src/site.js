@@ -62,44 +62,69 @@ const stBadge=k=>`<span class="st ${ST[k][1]}">${ST[k][0]}</span>`;
 /* ── 화면 ── */
 const V={};
 
+/* 홈 — 큰 제목 → 분류 타일 → 브랜드 → 이번 달 큰 카드(패럴랙스) → 9월 특가 → 무니코틴 → 안내 */
+const CATS=[
+ {k:'무니코틴',s:'0mg',q:'n=0mg',c:['#7FA83C','#5B9BD5','#8E44AD']},
+ {k:'저농도',s:'0.98mg',q:'n=0.98mg',c:['#1F2937','#7B1E3A','#1E5F74']},
+ {k:'고농도',s:'9.8mg',q:'n=9.8mg',c:['#C2334D','#E0B020','#6FA83C']},
+ {k:'멘솔',s:'시원한 것만',q:'f=멘솔',c:['#31A8A0','#4FA8C7','#1E5F74']},
+ {k:'첨가제',s:'섞어 쓰는',q:'b=첨가제',c:['#3AAFD9']},
+ {k:'자체 제작',s:'액상덕후',q:'b=액상덕후',c:['#1F2937','#7B1E3A','#1E5F74']},
+];
+const FEATS=[
+ {id:13,tag:'신상',title:'더블 슬로우블로우 파인애플',sub:'네스티 대표작. 파인애플에 약한 민트.'},
+ {id:12,tag:'재구매 1위',title:'금실딸기',sub:'딸기우유에 가까운 단맛. 질리지 않습니다.'},
+ {id:4,tag:'9월 특가',title:'샤인머스캣 무니코틴',sub:'9,000원에서 8,100원. 9월 한 달만.'},
+];
+const feat=f=>{const p=find(f.id);return `<a class="feat" href="#/p/${p.id}" style="--fc:${p.c}">
+ <div class="feat-art"><span class="glow"></span><span class="btl" style="background:${p.c}" data-px></span>
+  <span class="tag">${f.tag}</span></div>
+ <div class="feat-body"><h3>${esc(f.title)}</h3><p>${esc(f.sub)}</p></div>
+ <div class="feat-foot"><span class="pr">병당 <b class="n">${won(p.p)}원</b>${p.was?` <s style="color:#8E8E93;font-weight:500">${won(p.was)}</s>`:''}</span>
+  <span class="btn">구매 ${I.arrow}</span></div></a>`};
+
 V.home=()=>`<div class="wrap">
- <section class="sec" style="text-align:center;padding-top:2rem">
-  <span class="chip on" style="pointer-events:none">9월 특가 진행 중</span>
-  <h1 style="font-size:clamp(1.8rem,1.2rem + 3vw,3rem);font-weight:300;margin-top:.9rem">
-   액상, <b style="font-weight:900">병당 가격</b>으로<br>고르세요. <em style="font-style:normal;color:var(--acdeep);font-weight:900">더 담을수록 싸게.</em></h1>
-  <p style="margin-top:.8rem;color:var(--ink2);font-size:15px">9개 브랜드 173종 · 무니코틴부터 9.8mg까지</p>
-  <div style="margin-top:1.2rem;display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap">
-   <a class="btn btn-p" href="#/shop">특가 보러가기</a>
-   <a class="btn btn-o" href="#/shop?f=멘솔">멘솔 찾기</a></div>
- </section>
- <section class="sec"><div class="sec-h"><h2>9월 특가</h2><span class="sub">4종</span>
-  <a class="lk" style="margin-left:auto" href="#/shop">전체 보기 ›</a></div>
+ <section class="hero"><div><h1>액상덕후</h1>
+  <p class="lead">9개 브랜드 173종. 무니코틴부터 9.8mg까지, <b>병당 가격</b>으로 고르세요.</p></div></section>
+ <div class="tiles">${CATS.map(c=>`<a class="tile" href="#/shop?${c.q}">
+  <span class="art">${c.c.map(col=>`<span class="btl" style="background:${col}"></span>`).join('')}</span>
+  <b>${c.k}</b><span>${c.s}</span></a>`).join('')}</div>
+
+ <section class="sec" style="padding-top:.4rem"><div class="sec-h"><h2>브랜드</h2></div>
+  <div class="chips-x">${BRANDS.map(b=>`<a class="chip" href="#/shop?b=${encodeURIComponent(b)}">${b}</a>`).join('')}</div></section>
+
+ <section class="sec"><div class="sec-h"><h2>이번 달 볼 것</h2><span class="sub">3개</span></div>
+  ${FEATS.map(feat).join('')}</section>
+
+ <section class="sec"><div class="sec-h"><h2>9월 특가</h2><span class="sub">4종 · 넘겨 보세요</span>
+  <a class="lk" style="margin-left:auto" href="#/shop">전체 보기 ${I.chev}</a></div>
   <div class="scroller">${P.filter(p=>p.was||p.tag==='BEST'||p.tag==='신상').map(card).join('')}</div></section>
- <section class="sec"><div class="sec-h"><h2>액상덕후 자체 제작</h2>
-  <a class="lk" style="margin-left:auto" href="#/shop?b=액상덕후">전체 보기 ›</a></div>
-  <div class="scroller">${P.filter(p=>p.b==='액상덕후').map(card).join('')}</div></section>
- <section class="sec"><div class="sec-h"><h2>무니코틴</h2><span class="sub">가장 많이 찾는 분류</span></div>
+
+ <section class="sec"><div class="sec-h"><h2>무니코틴</h2><span class="sub">가장 많이 찾는 분류</span>
+  <a class="lk" style="margin-left:auto" href="#/shop?n=0mg">전체 보기 ${I.chev}</a></div>
   <div class="scroller">${P.filter(p=>p.nic[0]==='0mg').map(card).join('')}</div></section>
- <section class="sec"><div class="sec-h"><h2>브랜드</h2></div>
-  <div class="chips">${BRANDS.map(b=>`<a class="chip" href="#/shop?b=${encodeURIComponent(b)}">${b}</a>`).join('')}</div></section>
- <section class="sec"><div class="panel"><h3>계좌이체 전용입니다</h3>
-  <p style="font-size:13.5px;color:var(--ink2);line-height:1.7">카드결제는 받지 않습니다.
-  <b style="color:var(--ink)">입금자명을 주문자명과 똑같이</b> 넣어주시면 자동으로 입금확인됩니다.
-  이름이 다르면 저희가 손으로 찾아야 해서 하루쯤 늦어집니다.</p></div></section>
- <footer style="padding:2rem 0 3rem;font-size:12px;color:var(--ink3);line-height:1.9;border-top:1px solid var(--line);margin-top:2rem">
-  <b style="color:var(--ink)">19세 미만 청소년에게 판매하지 않습니다.</b><br>
+
+ <section class="sec"><div class="sec-h"><h2>이렇게 삽니다</h2></div>
+  <div class="info">
+   <div class="panel">${I.bank}<div><b>계좌이체 전용</b><p>카드결제는 받지 않습니다. 주문 후 안내되는 계좌로 보내주세요.</p></div></div>
+   <div class="panel">${I.check}<div><b>입금자명 = 주문자명</b><p>이름이 같으면 자동으로 입금확인됩니다. 다르면 사람이 찾느라 하루쯤 늦어집니다.</p></div></div>
+   <div class="panel">${I.truck}<div><b>3만원 이상 무료배송</b><p>입금확인 당일 발송. 우체국택배로 갑니다.</p></div></div>
+  </div></section>
+
+ <footer class="ft"><b>19세 미만 청소년에게 판매하지 않습니다.</b><br>
   구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>액상덕후 · 전자담배 액상 전문몰</footer>
 </div>`;
 
 V.shop=q=>{
- const b=q.get('b'); if(q.get('f'))S.flt=q.get('f');
- let list=b?P.filter(p=>p.b===b):P;
- if(!b&&S.flt!=='전체')list=list.filter(p=>p.f===S.flt);
+ const b=q.get('b'),n=q.get('n'); if(q.get('f'))S.flt=q.get('f');
+ let list=b?P.filter(p=>p.b===b):n?P.filter(p=>p.nic.includes(n)):P;
+ if(!b&&!n&&S.flt!=='전체')list=list.filter(p=>p.f===S.flt);
+ const title=b?esc(b):n?(n==='0mg'?'무니코틴':n==='0.98mg'?'저농도 0.98mg':'고농도 9.8mg'):'전체 상품';
  return `<div class="wrap"><div class="crumb"><a href="#/">홈</a> › 상품</div>
- <h1 class="pagetitle">${b?esc(b):'전체 상품'}</h1>
- ${b?'':`<div class="filters">${FL.map(f=>`<button class="chip ${f===S.flt?'on':''}" data-flt="${f}">${f}
+ <h1 class="pagetitle">${title}</h1>
+ ${(b||n)?'':`<div class="filters">${FL.map(f=>`<button class="chip ${f===S.flt?'on':''}" data-flt="${f}">${f}
   <span class="c">${f==='전체'?P.length:P.filter(x=>x.f===f).length}</span></button>`).join('')}</div>`}
- <p style="font-size:12.5px;color:var(--ink3);margin-bottom:.8rem">${list.length}종</p>
+ <p style="font-size:14px;color:var(--ink3);margin-bottom:.8rem">${list.length}종</p>
  <div class="grid">${list.map(card).join('')}</div><div style="height:2rem"></div></div>`;
 };
 
@@ -115,11 +140,11 @@ V.p=id=>{
   <div>
    <span class="brand">${esc(p.b)}</span>
    <h1 style="font-size:clamp(1.3rem,1.1rem + 1vw,1.8rem);margin:.3rem 0 .5rem">${esc(p.n)}</h1>
-   <p style="font-size:13.5px;color:var(--ink2);line-height:1.7">${esc(p.d)}</p>
+   <p style="font-size:15px;color:var(--ink2);line-height:1.7">${esc(p.d)}</p>
    <div style="margin-top:.9rem;display:flex;align-items:baseline;gap:.4rem">
     ${p.was?`<span class="was n" style="text-decoration:line-through;color:var(--ink3)">${won(p.was)}</span>`:''}
     <b class="n" style="font-size:26px;font-weight:900;letter-spacing:-.03em">${won(p.p)}</b>
-    <span style="font-size:12.5px;color:var(--ink3)">원 / 30ml 단품</span></div>
+    <span style="font-size:14px;color:var(--ink3)">원 / 30ml 단품</span></div>
    <div style="margin-top:1.3rem"><div class="sec-h" style="margin-bottom:.5rem"><h2 style="font-size:14px">구성 선택</h2></div>
     <div class="opts">${BUNDLES.map((x,i)=>{const pp=(x.mult||x.q)*p.p,per2=Math.round(pp/x.q);
      return `<button class="opt ${i===state.bi?'on':''}" data-bi="${i}"><span class="l"><b>${x.k}</b>
@@ -137,7 +162,7 @@ V.p=id=>{
 
 V.cart=()=>{
  if(!S.cart.length)return `<div class="wrap"><h1 class="pagetitle">장바구니</h1>
-  <div class="empty"><div class="ico">▤</div><p>담긴 상품이 없습니다.</p>
+  <div class="empty"><div class="ico">${I.bag}</div><p>담긴 상품이 없습니다.</p>
   <a class="btn btn-p" href="#/shop">상품 보러가기</a></div></div>`;
  return `<div class="wrap"><h1 class="pagetitle">장바구니 <span class="n" style="color:var(--ink3);font-size:.6em">${cartQty()}병</span></h1>
  <div class="panel">${S.cart.map((c,i)=>{const p=find(c.pid);return `<div class="lrow">
@@ -147,11 +172,11 @@ V.cart=()=>{
    <span class="qty"><button data-dec="${i}" aria-label="수량 줄이기">−</button><span class="n">${c.q}</span>
    <button data-inc="${i}" aria-label="수량 늘리기">+</button></span></span>
   <span class="lend"><b class="n">${won(c.pay)}원</b><br>
-   <button class="lk" data-del="${i}" style="font-size:11.5px;color:var(--ink3)">삭제</button></span></div>`}).join('')}</div>
+   <button class="lk" data-del="${i}" style="font-size:13.5px;color:var(--ink3)">삭제</button></span></div>`}).join('')}</div>
  <div class="totals"><div><span>상품 금액</span><span class="n">${won(cartSum())}원</span></div>
   <div><span>배송비</span><span class="n">${ship()?won(ship())+'원':'무료'}</span></div>
   <div class="big"><span>결제 예정 금액</span><b class="n">${won(cartSum()+ship())}원</b></div></div>
- ${ship()?`<p style="font-size:12px;color:var(--ink3);margin-top:.5rem">30,000원 이상 구매 시 배송비 무료입니다.</p>`:''}
+ ${ship()?`<p style="font-size:13.5px;color:var(--ink3);margin-top:.5rem">30,000원 이상 구매 시 배송비 무료입니다.</p>`:''}
  <div style="margin-top:1.2rem"><a class="btn btn-p btn-w" href="#/checkout">주문서 작성</a></div>
  <div style="height:2rem"></div></div>`;
 };
@@ -168,7 +193,7 @@ V.checkout=()=>{
   <div class="field"><label>주소</label><input id="oAddr" placeholder="주소를 입력하세요" value="서울시 강남구 테헤란로 1"></div>
   <div class="field"><label>배송 메모</label><input id="oMemo" placeholder="부재 시 문 앞에 놓아주세요"></div></div>
  <div class="panel"><h3>결제</h3>
-  <p style="font-size:13px;color:var(--ink2);margin-bottom:.8rem">무통장입금 전용입니다. 카드결제는 받지 않습니다.</p>
+  <p style="font-size:14px;color:var(--ink2);margin-bottom:.8rem">무통장입금 전용입니다. 카드결제는 받지 않습니다.</p>
   <div class="field key"><label>입금자명</label>
    <input id="oDep" value="${esc(S.user.name)}">
    <span class="hint"><b>주문자명과 똑같이</b> 넣어주세요. 다르면 자동 확인이 안 되고
@@ -184,9 +209,9 @@ V.checkout=()=>{
 
 V.done=oid=>{
  const o=S.orders.find(x=>x.id===oid); if(!o)return V.e404();
- return `<div class="wrap"><div class="big-ok"><div class="ico">✓</div>
+ return `<div class="wrap"><div class="big-ok"><div class="ico">${I.check}</div>
   <h1 style="font-size:1.5rem">주문이 접수됐습니다</h1>
-  <p style="color:var(--ink2);font-size:13.5px;margin-top:.5rem">주문번호 #${o.id}</p></div>
+  <p style="color:var(--ink2);font-size:15px;margin-top:.5rem">주문번호 #${o.id}</p></div>
  <div class="panel"><h3>입금 안내</h3>
   <div class="acct"><span class="v"><b>국민 ●●●●●●-●●-●●●●●●</b><span>예금주 액상덕후</span></span>
    <button class="btn btn-d btn-sm" data-act="copy">복사</button></div>
@@ -203,16 +228,16 @@ V.login=next=>`<div class="wrap" style="max-width:440px"><h1 class="pagetitle">�
   <div class="field"><label>아이디</label><input id="lId" placeholder="아이디" value="duckhoo"></div>
   <div class="field"><label>비밀번호</label><input id="lPw" type="password" placeholder="비밀번호" value="demo1234"></div>
   <button class="btn btn-p btn-w" data-act="login" data-next="${next||''}">로그인</button>
-  <p style="text-align:center;font-size:13px;color:var(--ink3);margin-top:1rem">
+  <p style="text-align:center;font-size:14px;color:var(--ink3);margin-top:1rem">
    아직 회원이 아니신가요? <a class="lk" href="#/join">회원가입</a></p></div>
- <p style="font-size:12px;color:var(--ink3);margin-top:1rem;text-align:center">데모입니다. 아무 값이나 넣어도 로그인됩니다.</p>
+ <p style="font-size:13.5px;color:var(--ink3);margin-top:1rem;text-align:center">데모입니다. 아무 값이나 넣어도 로그인됩니다.</p>
  <div style="height:2rem"></div></div>`;
 
 V.join=()=>`<div class="wrap" style="max-width:440px"><h1 class="pagetitle">회원가입</h1>
  <div class="steps"><div class="${state.joined?'':'on'}">1 본인확인</div><div class="${state.joined?'on':''}">2 정보입력</div></div>
  ${!state.joined?`<div class="panel">
   <h3>휴대폰 본인확인</h3>
-  <p style="font-size:13px;color:var(--ink2);line-height:1.7">전자담배 액상은 <b style="color:var(--ink)">19세 미만 판매 금지</b> 품목입니다.
+  <p style="font-size:14px;color:var(--ink2);line-height:1.7">전자담배 액상은 <b style="color:var(--ink)">19세 미만 판매 금지</b> 품목입니다.
    PASS 앱으로 본인확인을 완료해야 가입할 수 있습니다.</p>
   <div class="warnbox" style="margin-top:.9rem">본인확인은 건너뛸 수 없습니다.
    미성년자 확인 시 가입이 거부되고, 이미 가입된 계정은 정지됩니다.</div>
@@ -230,21 +255,21 @@ V.join=()=>`<div class="wrap" style="max-width:440px"><h1 class="pagetitle">회�
 V.orders=()=>{
  if(!S.user)return V.login('orders');
  if(!S.orders.length)return `<div class="wrap"><h1 class="pagetitle">주문내역</h1>
-  <div class="empty"><div class="ico">▤</div><p>주문 내역이 없습니다.</p>
+  <div class="empty"><div class="ico">${I.receipt}</div><p>주문 내역이 없습니다.</p>
   <a class="btn btn-p" href="#/shop">상품 보러가기</a></div></div>`;
  return `<div class="wrap"><h1 class="pagetitle">주문내역</h1>
  ${S.orders.map(o=>`<a class="panel" style="display:block;margin-bottom:.7rem" href="#/order/${o.id}">
   <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem">
-   <span style="font-family:var(--mono);font-size:12.5px;color:var(--ink3)">#${o.id}</span>
-   ${stBadge(o.st)}<span style="margin-left:auto;font-size:11.5px;color:var(--ink3)">${o.date}</span></div>
+   <span style="font-family:var(--mono);font-size:14px;color:var(--ink3)">#${o.id}</span>
+   ${stBadge(o.st)}<span style="margin-left:auto;font-size:13.5px;color:var(--ink3)">${o.date}</span></div>
   ${o.items.slice(0,2).map(c=>{const p=find(c.pid);return `<div class="lrow" style="padding:.5rem 0;border:0">
    <span class="lthumb" style="background:${p.t};flex-basis:46px;width:46px;height:46px">
     <span class="btl" style="background:${p.c};width:20px;height:34px"></span></span>
    <span class="lbody"><span class="t" style="font-size:13px">${esc(p.n)}</span>
     <span class="s">${c.bundle} · ${c.q}병</span></span></div>`}).join('')}
-  ${o.items.length>2?`<p style="font-size:12px;color:var(--ink3);padding-left:56px">외 ${o.items.length-2}건</p>`:''}
+  ${o.items.length>2?`<p style="font-size:13.5px;color:var(--ink3);padding-left:56px">외 ${o.items.length-2}건</p>`:''}
   <div style="display:flex;align-items:baseline;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--line)">
-   <span style="font-size:12.5px;color:var(--ink3)">결제 금액</span>
+   <span style="font-size:14px;color:var(--ink3)">결제 금액</span>
    <b class="n" style="margin-left:auto;font-size:15px">${won(o.total)}원</b></div></a>`).join('')}
  <div style="height:2rem"></div></div>`;
 };
@@ -259,7 +284,7 @@ V.order=oid=>{
  return `<div class="wrap"><div class="crumb"><a href="#/orders">주문내역</a> › #${o.id}</div>
  <h1 class="pagetitle">주문 상세</h1>
  <div class="panel"><div style="display:flex;align-items:center;gap:.6rem">
-  ${stBadge(o.st)}<span style="margin-left:auto;font-size:12px;color:var(--ink3);font-family:var(--mono)">${o.date}</span></div>
+  ${stBadge(o.st)}<span style="margin-left:auto;font-size:13.5px;color:var(--ink3);font-family:var(--mono)">${o.date}</span></div>
   ${o.st==='pend'?`<div class="note" style="margin-top:.8rem">입금자명 <b>${esc(o.depositor)}</b> 으로
    <b>${won(o.total)}원</b> 입금해 주세요.</div>`:''}
   ${o.st==='chk'?`<div class="warnbox" style="margin-top:.8rem"><b>입금자명이 주문자명과 다릅니다.</b>
@@ -275,7 +300,7 @@ V.order=oid=>{
   ${canCancel?`<button class="btn btn-dg" style="flex:1" data-act="cancel" data-oid="${o.id}">주문 취소</button>`
    :`<button class="btn btn-o" style="flex:1" disabled title="${why}">주문 취소</button>`}
   <a class="btn btn-o" style="flex:1" href="#/orders">목록으로</a></div>
- ${canCancel?'':`<p style="font-size:12px;color:var(--ink3);margin-top:.6rem">
+ ${canCancel?'':`<p style="font-size:13.5px;color:var(--ink3);margin-top:.6rem">
   ${why} 카카오톡으로 문의해 주세요.</p>`}
  <div style="height:2rem"></div></div>`;
 };
@@ -285,15 +310,15 @@ V.my=()=>{
  return `<div class="wrap"><h1 class="pagetitle">마이페이지</h1>
  <div class="panel"><div style="display:flex;align-items:center;gap:.8rem">
   <span style="width:46px;height:46px;border-radius:999px;background:var(--acsoft);display:flex;align-items:center;
-   justify-content:center;font-size:20px">◍</span>
+   justify-content:center;color:var(--acdeep)">${I.user}</span>
   <span><b style="font-size:15px">${esc(S.user.name)}</b>
-   <span style="display:block;font-size:12px;color:var(--ink3)">${esc(S.user.id)} · 일반회원</span></span>
+   <span style="display:block;font-size:13.5px;color:var(--ink3)">${esc(S.user.id)} · 일반회원</span></span>
   <span style="margin-left:auto;text-align:right"><b class="n" style="font-size:15px">${won(S.points)}</b>
-   <span style="display:block;font-size:11.5px;color:var(--ink3)">적립금</span></span></div>
+   <span style="display:block;font-size:13.5px;color:var(--ink3)">적립금</span></span></div>
   <div class="note" style="margin-top:.9rem">본인확인 완료 · 만 19세 이상</div></div>
  <div class="mine">
-  <a href="#/orders"><i>▤</i>주문내역</a><a href="#/cart"><i>▦</i>장바구니</a>
-  <a href="#/shop"><i>♡</i>찜한 상품</a><a href="#/my"><i>◷</i>적립금</a></div>
+  <a href="#/orders">${I.receipt}주문내역</a><a href="#/cart">${I.bag}장바구니</a>
+  <a href="#/shop">${I.heart}찜한 상품</a><a href="#/my">${I.coin}적립금</a></div>
  <div class="panel" style="margin-top:1rem"><h3>계정</h3>
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
    <button class="btn btn-o btn-sm" data-act="logout">로그아웃</button>
@@ -317,24 +342,24 @@ const searchBody=q=>{
   <div class="sec-h" style="margin-top:.4rem"><h2 style="font-size:1.05rem">많이 찾는 상품</h2></div>
   <div class="grid">${P.filter(p=>p.tag).map(card).join('')}</div>`;
  const hits=searchHits(q);
- if(!hits.length)return `<div class="empty"><div class="ico">⌕</div>
+ if(!hits.length)return `<div class="empty"><div class="ico">${I.search}</div>
   <p><b>${esc(q)}</b> 에 맞는 상품이 없습니다.<br>브랜드나 맛으로 다시 찾아보세요.</p>
   <div class="skw" style="justify-content:center">${SKW.map(k=>`<button class="chip" data-kw="${k}">${k}</button>`).join('')}</div></div>`;
- return `<p style="font-size:12.5px;color:var(--ink3);margin-bottom:.8rem">${hits.length}종</p>
+ return `<p style="font-size:14px;color:var(--ink3);margin-bottom:.8rem">${hits.length}종</p>
   <div class="grid">${hits.map(card).join('')}</div>`;
 };
 
 V.search=()=>`<div class="wrap"><div class="crumb"><a href="#/">홈</a> › 검색</div>
  <h1 class="pagetitle">검색</h1>
  <form class="sfield" id="sform" role="search">
-  <span aria-hidden="true" style="color:var(--ink3)">⌕</span>
+  ${I.search}
   <input id="sq" type="search" enterkeyhint="search" autocomplete="off"
    placeholder="상품명 · 브랜드 · 맛 · 니코틴" aria-label="상품 검색" value="${esc(S.q)}">
-  ${S.q?'<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>':''}
+  ${S.q?`<button type="button" class="x" data-kw="" aria-label="검색어 지우기">${I.x}</button>`:''}
  </form>
  <div id="sres">${searchBody(S.q)}</div><div style="height:2rem"></div></div>`;
 
-V.e404=()=>`<div class="wrap"><div class="empty"><div class="ico">?</div>
+V.e404=()=>`<div class="wrap"><div class="empty"><div class="ico">${I.spark}</div>
  <p>페이지를 찾을 수 없습니다.</p><a class="btn btn-p" href="#/">홈으로</a></div></div>`;
 
 /* ── 라우터 ── */
@@ -359,7 +384,12 @@ function route(){
  else if(seg[0]==='my')html=V.my();
  else html=V.e404();
  $('#view').innerHTML=html;
- window.scrollTo(0,0);
+ $('#view').scrollTo(0,0);
+ /* 큰 제목이 올라가면 헤더 가운데에 작은 제목이 뜬다 */
+ const big=$('#view h1');
+ const bt=big?big.textContent.replace(/\s+/g,' ').trim().slice(0,18):'';
+ $('#ttl').textContent=bt==='액상덕후'?'':bt; /* 홈은 로고가 이미 그 말이다 */
+ $('.gnb').classList.remove('small');
  syncChrome(seg[0]||'');
  if(seg[0]==='search'){const i=$('#sq'); if(i){const v=i.value;i.focus();i.setSelectionRange(v.length,v.length)}}
  if(window.gsap&&!matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -368,12 +398,23 @@ function route(){
 function syncChrome(k){
  $('#cartN').textContent=cartQty();
  $('#cartN').style.display=cartQty()?'flex':'none';
- $('#who').textContent=S.user?S.user.name:'로그인';
- $('#who').setAttribute('href',S.user?'#/my':'#/login');
+ const who=$('#who');
+ who.innerHTML=S.user?esc(S.user.name.slice(0,1)):I.user;
+ who.classList.toggle('in',!!S.user);
+ who.setAttribute('href',S.user?'#/my':'#/login');
+ who.setAttribute('aria-label',S.user?S.user.name+' 마이페이지':'로그인');
+ const tb=$('#tabN'); if(tb){tb.textContent=cartQty();tb.style.display=cartQty()?'flex':'none'}
  document.querySelectorAll('.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.k===(k||'')));
  document.querySelectorAll('.gnb nav a').forEach(a=>a.classList.toggle('on',a.dataset.k===(k||'')));
 }
 const rerender=()=>route();
+
+/* 큰 제목이 헤더 뒤로 들어가면 작은 제목을 켠다 */
+$('#view').addEventListener('scroll',()=>{
+ const big=$('#view h1'), g=$('.gnb');
+ if(!big){g.classList.toggle('small',$('#view').scrollTop>8);return}
+ g.classList.toggle('small',big.getBoundingClientRect().bottom<g.getBoundingClientRect().bottom+4);
+},{passive:true});
 
 /* ── 이벤트 ── */
 /* 결과만 갈아끼운다. 화면 전체를 다시 그리면 입력 포커스가 날아간다. */
@@ -381,7 +422,7 @@ function paintSearch(){
  const box=$('#sres'); if(box)box.innerHTML=searchBody(S.q);
  const f=$('#sform'); if(f){
   const x=f.querySelector('.x');
-  if(S.q&&!x){f.insertAdjacentHTML('beforeend','<button type="button" class="x" data-kw="" aria-label="검색어 지우기">✕</button>')}
+  if(S.q&&!x){f.insertAdjacentHTML('beforeend',`<button type="button" class="x" data-kw="" aria-label="검색어 지우기">${I.x}</button>`)}
   else if(!S.q&&x){x.remove()}
  }
  history.replaceState(null,'','#/search'+(S.q?'?q='+encodeURIComponent(S.q):''));
