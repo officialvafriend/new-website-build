@@ -155,8 +155,8 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
 
 ### 스테이징 배포 확인법
 
-GitHub Deployments 는 처음엔 첫 연결 때 한 번만 돌았다 (사용자가 대시보드에서
-배포를 눌러 이후 반영됨). push 뒤 반영까지 몇 분 걸릴 수 있다. 최신인지 보는 법:
+GitHub Deployments **자동 배포가 켜져 있다** (2026-09-02 부터). push 하면 몇 분 안에
+스테이징에 반영된다. 그 전에는 첫 연결 때 한 번만 돌아서 손으로 눌러야 했다. 최신인지 보는 법:
 파일이 아니라 **렌더 결과**로 본다 — 홈 HTML 의 `<h1>` 이나 카드 수처럼 그 커밋에서
 바뀐 것을 curl 로 확인한다 (`?nocache=<난수>` 를 붙여 캐시를 피한다). 새 파일이
 생긴 커밋이면 `assets/*.css` 의 200/404 로도 된다.
