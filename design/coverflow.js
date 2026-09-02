@@ -38,6 +38,7 @@ function coverflow(root, slides, opt={}){
     cap.innerHTML=`<b>${s.title}</b><span>${s.subtitle}</span>
       <dl>${s.meta.map(m=>`<div><dt>${m.label}</dt><dd>${m.value}</dd></div>`).join('')}</dl>`;
     dots.forEach((d,i)=>d.setAttribute('aria-current',i===sel));
+    o.onSel&&o.onSel(sel);
   }
   function setSel(v){ if(v!==sel){ sel=v; caption(); } }
   function settle(t){
