@@ -1,98 +1,164 @@
-/* 테마 인라인 <style> 이 우리 파일보다 뒤에 오므로 같은 특이도면 진다 — 그래서 전부 html body.dhr-wrap 으로 한 단계 올렸다.
+/* 옛 프론트(duckhoo-front)와 사장님 Code Snippets 가 우리 뒤에 인라인 <style> 로 들어온다.
+   그 중 `dh-cta-fix` 는 `html body.dh-shell-on.dh-shell-on` 처럼 클래스를 두 번 써서 특이도를 올리고
+   !important 까지 붙인다. 같은 특이도면 뒤에 오는 쪽이 이기므로 우리는 클래스를 세 번 써
+   (0,3,2) 로 한 단계 더 올린다 — `html body.dhr.dhr-wrap.dhr-wrap`.
+   등록된 핸들(dh-shell · dh-shop-polish · dh-front)은 shell.php 가 아예 뺀다.
    테마 껍데기를 걷어내고 우리 것을 씌운다 (홈·회원탈퇴 제외 모든 화면).
    테마 규칙이 !important 라 여기도 그렇게 쓴다. 테마 파일은 건드리지 않는다. */
 
 /* 테마의 사이드 헤더 · 푸터 · 탭바 · 빠른 메뉴 · 모바일 헤더 · 마이페이지 상단 */
-html body.dhr-wrap #masthead.dh-side,
-html body.dhr-wrap #colophon,
-html body.dhr-wrap .dh-tabbar,
-html body.dhr-wrap .dh-quick,
-html body.dhr-wrap .dh-side-foot,
-html body.dhr-wrap .wd-mobile-header-custom,
-html body.dhr-wrap .wd-mobile-drawer,
-html body.dhr-wrap .wd-mobile-drawer-backdrop,
-html body.dhr-wrap .wd-custom-breadcrumb-bar,
-html body.dhr-wrap .wd-custom-top-wrap,
-html body.dhr-wrap .wd-custom-footer,
-html body.dhr-wrap .dh-annbar,
-html body.dhr-wrap .dh-topbar,
-html body.dhr-wrap #wd-top-announce{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap #masthead.dh-side,
+html body.dhr.dhr-wrap.dhr-wrap #colophon,
+html body.dhr.dhr-wrap.dhr-wrap .dh-tabbar,
+html body.dhr.dhr-wrap.dhr-wrap .dh-quick,
+html body.dhr.dhr-wrap.dhr-wrap .dh-side-foot,
+html body.dhr.dhr-wrap.dhr-wrap .wd-mobile-header-custom,
+html body.dhr.dhr-wrap.dhr-wrap .wd-mobile-drawer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-mobile-drawer-backdrop,
+html body.dhr.dhr-wrap.dhr-wrap .wd-custom-breadcrumb-bar,
+html body.dhr.dhr-wrap.dhr-wrap .wd-custom-top-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-custom-footer,
+html body.dhr.dhr-wrap.dhr-wrap .dh-annbar,
+html body.dhr.dhr-wrap.dhr-wrap .dh-topbar,
+html body.dhr.dhr-wrap.dhr-wrap #wd-top-announce,
+html body.dhr.dhr-wrap.dhr-wrap .wd-main-header,
+html body.dhr.dhr-wrap.dhr-wrap #vf-sticky-trigger-bar{ display: none !important; }
 
 /* 216px 사이드 헤더 + 본문 그리드를 푼다 */
-html body.dhr-wrap{ background: var(--dh-ground, #F5F5F7) !important; background-image: none !important; }
-html body.dhr-wrap #page.dh-shell{
+html body.dhr.dhr-wrap.dhr-wrap{
+  background: var(--dh-ground, #F4F6F7) !important; background-image: none !important; background-attachment: scroll !important;
+  padding: 0 !important; margin: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap #page.dh-shell{
   display: block !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
   background: transparent !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible !important;
   grid-template-columns: none !important;
 }
-html body.dhr-wrap #content.dh-content{ padding: 0 !important; min-height: 40vh; }
-html body.dhr-wrap .wd-custom-mypage-shell{ background: transparent !important; }
+html body.dhr.dhr-wrap.dhr-wrap #content.dh-content{ padding: 0 !important; min-height: 40vh; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-custom-mypage-shell{ background: transparent !important; }
 
 /* 본문 폭 — 우리 헤더와 같은 컨테이너 */
-html body.dhr-wrap #content > *,
-html body.dhr-wrap .woocommerce-page #content > .woocommerce{ max-width: 1200px; margin-left: auto; margin-right: auto; }
-html body.dhr-wrap #content{ padding: 1rem clamp(1.1rem,.6rem + 2vw,2.5rem) 2.5rem !important; }
-html body.dhr-wrap .woocommerce-breadcrumb{ font-size: 13px; color: var(--dh-ink-3); margin-bottom: .8rem; }
-html body.dhr-wrap h1.page-title, html body.dhr-wrap h1.woocommerce-products-header__title{
+html body.dhr.dhr-wrap.dhr-wrap #content > *,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-page #content > .woocommerce{ max-width: 1200px; margin-left: auto; margin-right: auto; }
+html body.dhr.dhr-wrap.dhr-wrap #content{ padding: 1rem clamp(1.1rem,.6rem + 2vw,2.5rem) 2.5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-breadcrumb{ font-size: 13px; color: var(--dh-ink-3); margin-bottom: .8rem; }
+html body.dhr.dhr-wrap.dhr-wrap h1.page-title, html body.dhr.dhr-wrap.dhr-wrap h1.woocommerce-products-header__title{
   font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 900; letter-spacing: -.04em; margin: .4rem 0 1rem;
 }
 
 /* 목록: 우리 카드 4열 */
-html body.dhr-wrap ul.products{ display: grid !important; gap: .85rem !important; grid-template-columns: repeat(2,1fr) !important; margin: 0 0 1.5rem !important; padding: 0 !important; list-style: none; }
-@media (min-width:640px){ html body.dhr-wrap ul.products{ grid-template-columns: repeat(3,1fr) !important; } }
-@media (min-width:980px){ html body.dhr-wrap ul.products{ grid-template-columns: repeat(4,1fr) !important; } }
-html body.dhr-wrap ul.products li.product{ width: auto !important; margin: 0 !important; float: none !important; padding: 0 !important; background: none !important; border-radius: 0 !important; box-shadow: none !important; }
-html body.dhr-wrap ul.products li.product:hover{ transform: none !important; }
-html body.dhr-wrap .woocommerce-result-count{ font-size: 14px; color: var(--dh-ink-3); font-weight: 500; }
-html body.dhr-wrap .woocommerce-ordering select{ min-height: 44px; border-radius: 999px; border: 1.5px solid var(--dh-line-2); padding: 0 2.2rem 0 1rem; font-size: 14px; font-weight: 700; background: var(--dh-surface); }
-html body.dhr-wrap .woocommerce-pagination ul.page-numbers{ display: flex; gap: .35rem; justify-content: center; list-style: none; padding: 0; margin: 1.5rem 0; border: 0 !important; flex-wrap: wrap; }
-html body.dhr-wrap .woocommerce-pagination li{ border: 0 !important; }
-html body.dhr-wrap .woocommerce-pagination .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); font-weight: 700; padding: 0 .6rem; }
-html body.dhr-wrap .woocommerce-pagination .page-numbers.current{ background: var(--dh-ink); color: #fff; }
+html body.dhr.dhr-wrap.dhr-wrap ul.products{ display: grid !important; gap: .85rem !important; grid-template-columns: repeat(2,1fr) !important; margin: 0 0 1.5rem !important; padding: 0 !important; list-style: none; }
+@media (min-width:640px){ html body.dhr.dhr-wrap.dhr-wrap ul.products{ grid-template-columns: repeat(3,1fr) !important; } }
+@media (min-width:980px){ html body.dhr.dhr-wrap.dhr-wrap ul.products{ grid-template-columns: repeat(4,1fr) !important; } }
+html body.dhr.dhr-wrap.dhr-wrap ul.products li.product{ width: auto !important; margin: 0 !important; float: none !important; padding: 0 !important; background: none !important; border-radius: 0 !important; box-shadow: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap ul.products li.product:hover{ transform: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-result-count{ font-size: 14px; color: var(--dh-ink-3); font-weight: 500; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-ordering select{ min-height: 44px; border-radius: 999px; border: 1.5px solid var(--dh-line-2); padding: 0 2.2rem 0 1rem; font-size: 14px; font-weight: 700; background: var(--dh-surface); }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ display: flex; gap: .35rem; justify-content: center; list-style: none; padding: 0; margin: 1.5rem 0; border: 0 !important; flex-wrap: wrap; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li{ border: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); font-weight: 700; padding: 0 .6rem; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination .page-numbers.current{ background: var(--dh-ink); color: #fff; }
 
 /* 상세: 이미지 · 요약 두 칸, 그 위에 키플의 STEP 옵션은 그대로 */
-html body.dhr-wrap .single-product div.product{ display: grid; gap: 1.2rem; grid-template-columns: 1fr; }
-@media (min-width:900px){ html body.dhr-wrap .single-product div.product{ grid-template-columns: 1.05fr .95fr; gap: 2rem; align-items: start; } }
-html body.dhr-wrap .single-product div.product > *{ grid-column: 1 / -1; }
-html body.dhr-wrap .single-product div.product .woocommerce-product-gallery{ grid-column: 1; width: 100% !important; float: none !important; margin: 0 !important; }
-html body.dhr-wrap .single-product div.product .summary{ grid-column: 1; width: 100% !important; float: none !important; margin: 0 !important; }
-@media (min-width:900px){ html body.dhr-wrap .single-product div.product .summary{ grid-column: 2; grid-row: 1 / span 2; } }
-html body.dhr-wrap .woocommerce-product-gallery__image img{ border-radius: 22px; background: var(--dh-surface); }
-html body.dhr-wrap .single-product .product_title{ font-size: clamp(1.4rem,1.1rem + 1.2vw,1.9rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.2; }
-html body.dhr-wrap .single-product .summary p.price{ font-size: 24px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink); }
-html body.dhr-wrap .single-product .summary p.price del{ font-size: 15px; color: var(--dh-ink-3); font-weight: 500; }
-html body.dhr-wrap .woocommerce-tabs ul.tabs{ display: flex; gap: .3rem; border-bottom: 1px solid var(--dh-line); padding: 0 !important; margin: 1.6rem 0 1.2rem !important; overflow-x: auto; }
-html body.dhr-wrap .woocommerce-tabs ul.tabs::before, html body.dhr-wrap .woocommerce-tabs ul.tabs li::before, html body.dhr-wrap .woocommerce-tabs ul.tabs li::after{ display: none !important; }
-html body.dhr-wrap .woocommerce-tabs ul.tabs li{ background: none !important; border: 0 !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; }
-html body.dhr-wrap .woocommerce-tabs ul.tabs li a{ display: flex; align-items: center; min-height: 48px; padding: 0 .9rem !important; font-size: 15px; font-weight: 700; color: var(--dh-ink-3); border-bottom: 2.5px solid transparent; margin-bottom: -1px; }
-html body.dhr-wrap .woocommerce-tabs ul.tabs li.active a{ color: var(--dh-ink); border-bottom-color: var(--dh-ink); }
-html body.dhr-wrap .woocommerce-tabs .panel{ font-size: 16px; line-height: 1.75; color: var(--dh-ink-2); }
-html body.dhr-wrap .related.products > h2, html body.dhr-wrap .upsells.products > h2{ font-size: 22px; font-weight: 800; letter-spacing: -.035em; margin: 2rem 0 .9rem; }
+html body.dhr.dhr-wrap.dhr-wrap .single-product div.product{ display: grid; gap: 1.2rem; grid-template-columns: 1fr; }
+@media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .single-product div.product{ grid-template-columns: 1.05fr .95fr; gap: 2rem; align-items: start; } }
+html body.dhr.dhr-wrap.dhr-wrap .single-product div.product > *{ grid-column: 1 / -1; }
+html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .woocommerce-product-gallery{ grid-column: 1; width: 100% !important; float: none !important; margin: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .summary{ grid-column: 1; width: 100% !important; float: none !important; margin: 0 !important; }
+@media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .summary{ grid-column: 2; grid-row: 1 / span 2; } }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-product-gallery__image img{ border-radius: 22px; background: var(--dh-surface); }
+html body.dhr.dhr-wrap.dhr-wrap .single-product .product_title{ font-size: clamp(1.4rem,1.1rem + 1.2vw,1.9rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.2; }
+html body.dhr.dhr-wrap.dhr-wrap .single-product .summary p.price{ font-size: 24px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .single-product .summary p.price del{ font-size: 15px; color: var(--dh-ink-3); font-weight: 500; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs{ display: flex; gap: .3rem; border-bottom: 1px solid var(--dh-line); padding: 0 !important; margin: 1.6rem 0 1.2rem !important; overflow-x: auto; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs::before, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li::before, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li::after{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li{ background: none !important; border: 0 !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li a{ display: flex; align-items: center; min-height: 48px; padding: 0 .9rem !important; font-size: 15px; font-weight: 700; color: var(--dh-ink-3); border-bottom: 2.5px solid transparent; margin-bottom: -1px; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li.active a{ color: var(--dh-ink); border-bottom-color: var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs .panel{ font-size: 16px; line-height: 1.75; color: var(--dh-ink-2); }
+html body.dhr.dhr-wrap.dhr-wrap .related.products > h2, html body.dhr.dhr-wrap.dhr-wrap .upsells.products > h2{ font-size: 22px; font-weight: 800; letter-spacing: -.035em; margin: 2rem 0 .9rem; }
 
 /* 장바구니 · 결제 · 계정 컨테이너 */
-html body.dhr-wrap .woocommerce-cart .woocommerce, html body.dhr-wrap .woocommerce-checkout .woocommerce, html body.dhr-wrap .woocommerce-account .woocommerce{ max-width: 1000px; margin: 0 auto; }
-html body.dhr-wrap .entry-title, html body.dhr-wrap .page-title{ font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 900; letter-spacing: -.04em; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-cart .woocommerce, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout .woocommerce, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account .woocommerce{ max-width: 1000px; margin: 0 auto; }
+html body.dhr.dhr-wrap.dhr-wrap .entry-title, html body.dhr.dhr-wrap.dhr-wrap .page-title{ font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 900; letter-spacing: -.04em; }
 
 /* 아래 탭바가 본문을 가리지 않게 */
-@media (max-width:879px){ html body.dhr-wrap{ padding-bottom: calc(62px + env(safe-area-inset-bottom)) !important; } }
+@media (max-width:879px){ html body.dhr.dhr-wrap.dhr-wrap{ padding-bottom: calc(62px + env(safe-area-inset-bottom)) !important; } }
 
 /* 푸터 — 테마의 !important 규칙에 밀려 바탕이 흰색으로 풀렸다. 여기서 다시 못 박는다. */
-html body.dhr-wrap footer.foot{ background: #111 !important; color: #C7CBD1 !important; margin-top: 2.4rem !important; padding: 2.6rem 0 2rem !important; }
-html body.dhr-wrap footer.foot .fcol b, html body.dhr-wrap footer.foot .lg-w, html body.dhr-wrap footer.foot .fkakao b, html body.dhr-wrap footer.foot .flegal b{ color: #fff !important; }
-html body.dhr-wrap footer.foot a, html body.dhr-wrap footer.foot p, html body.dhr-wrap footer.foot .fmuted, html body.dhr-wrap footer.foot .flegal{ color: #C7CBD1 !important; }
-html body.dhr-wrap footer.foot .fkakao{ background: #1C1C1E !important; }
-html body.dhr-wrap footer.foot .fkakao span, html body.dhr-wrap footer.foot .fmuted{ color: #9A9FA6 !important; }
-html body.dhr-wrap footer.foot .lg-w .g{ background: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot{ background: #111 !important; color: #C7CBD1 !important; margin-top: 2.4rem !important; padding: 2.6rem 0 2rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .fcol b, html body.dhr.dhr-wrap.dhr-wrap footer.foot .lg-w, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fkakao b, html body.dhr.dhr-wrap.dhr-wrap footer.foot .flegal b{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot a, html body.dhr.dhr-wrap.dhr-wrap footer.foot p, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fmuted, html body.dhr.dhr-wrap.dhr-wrap footer.foot .flegal{ color: #C7CBD1 !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .fkakao{ background: #1C1C1E !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .fkakao span, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fmuted{ color: #9A9FA6 !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .lg-w .g{ background: #fff !important; }
 /* 헤더도 같은 이유로 */
-html body.dhr-wrap header.gnb{ background: #fff !important; }
-html body.dhr-wrap nav.tabs{ background: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap header.gnb{ background: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap nav.tabs{ background: #fff !important; }
 
 /* 목록 제목·검색 결과 제목은 보인다 (테마가 숨겨 둔다) */
 /* 테마는 목록 h1 을 1px 로 숨기고 .woocommerce-products-header 를 아예 안 찍는다 — 제목은 shell.php archive_title 이 루프 앞에 그린다 */
-html body.dhr-wrap .dhr-arch{ display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .3rem 0 1rem; }
-html body.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1.4vw,2.1rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.2; margin: 0; word-break: keep-all; }
-html body.dhr-wrap .dhr-arch__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3); }
-html body.dhr-wrap .dhr-arch__d{ flex-basis: 100%; font-size: 15px; line-height: 1.55; color: var(--dh-ink-2, #3F464D); word-break: keep-all; }
-html body.dhr-wrap .dhr-arch__d p{ margin: 0; }
-html body.dhr-wrap .woocommerce-products-header, html body.dhr-wrap .woocommerce-products-header__title, html body.dhr-wrap h1.page-title{ display: block !important; }
-html body.dhr-wrap .woocommerce-notices-wrapper:empty{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch{ display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .3rem 0 1rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1.4vw,2.1rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.2; margin: 0; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d{ flex-basis: 100%; font-size: 15px; line-height: 1.55; color: var(--dh-ink-2, #3F464D); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d p{ margin: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-products-header, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-products-header__title, html body.dhr.dhr-wrap.dhr-wrap h1.page-title{ display: block !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-notices-wrapper:empty{ display: none; }
+
+/* ── 옛 프론트가 칠해 둔 파스텔 그라데이션 · 둥근 카드 페이지를 지운다 ──────────
+   dh-shell 은 body 에 그라데이션을, #page 에 1240px 흰 카드(radius 30px · 그림자)를 줬고
+   dh-cta-fix 스니펫이 그 위에 다시 그라데이션을 덮었다. 우리 화면은 불투명 한 겹이다. */
+html body.dhr.dhr-wrap.dhr-wrap #page.dh-shell,
+html body.dhr.dhr-wrap.dhr-wrap #content.dh-content,
+html body.dhr.dhr-wrap.dhr-wrap .dh-main,
+html body.dhr.dhr-wrap.dhr-wrap main#primary.site-main{
+  background: transparent !important; background-image: none !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-container{ max-width: none !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap main#primary.site-main{ max-width: none !important; }
+
+/* ── 상품 상세 ─────────────────────────────────────────────────────────────
+   사진과 구매 상자를 바탕 위에 뜬 흰 면으로 만든다. 폼 필드와 데이터 경로는 그대로다. */
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .woocommerce-product-gallery,
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .summary{
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 16px !important; padding: clamp(.9rem,.6rem + 1vw,1.4rem) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .woocommerce-tabs,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .related.products{ background: transparent !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary .dhx-price-per{ font-weight: 800 !important; }
+
+/* 구성 선택(.dhx) — 옛 프론트의 민트·회색 톤을 우리 토큰으로 갈아끼운다.
+   JS 와 DOM 은 건드리지 않는다. 값이 오가는 PPOM select 는 그대로다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhx{
+  --dhx-ink: var(--dh-ink, #111111);
+  --dhx-ink-2: var(--dh-ink-2, #4E565F);
+  --dhx-ink-3: var(--dh-ink-3, #616870);   /* 원래 #94A3AE 는 흰 배경 2.59:1 로 AA 미달 */
+  --dhx-line: var(--dh-line, #E1E5E8);
+  --dhx-line-2: var(--dh-line-strong, #C9CFD4);
+  --dhx-ground: var(--dh-surface-2, #EDF0F2);
+  --dhx-brand: var(--dh-primary, #111111);
+  --dhx-accent: var(--dh-accent-deep, #1565C0);
+  --dhx-accent-soft: var(--dh-accent-soft, #E6F6FE);
+  --dhx-r: 14px;
+}
+/* 11–13px 은 쓰지 않는다 — 캡션 최소 13px, 본문 15px */
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card__head{ font-size: 15px !important; padding: 15px 14px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card__no{ width: 22px !important; height: 22px !important; flex-basis: 22px !important; font-size: 12px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card__state{ font-size: 13px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__name,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__name,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip__pick{ font-size: 15px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__price,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__sub{ font-size: 13px !important; }
+/* 구매 버튼은 사이트 전체와 같은 검정 알약 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-buy,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-cta,
+html body.dhr.dhr-wrap.dhr-wrap .dhx button.dhx-buy{
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important; border-radius: 999px !important; min-height: 48px !important;
+  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+}

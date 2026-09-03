@@ -98,6 +98,30 @@ function assets(): void {
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\assets', 110 );
 
 /**
+ * 옛 프론트(duckhoo-front)가 얹어 둔 껍데기 CSS 를 뺀다.
+ *
+ * `dh-shell` 은 body 에 파스텔 그라데이션을, `#page` 에 1240px 둥근 흰 카드와 216px 사이드
+ * 내비를 그린다. 우리 헤더·푸터와 겹쳐 어색하다. `dh-shop-polish` · `dh-front` 도 같은 층이다.
+ * 상품 옵션 UI(`dh-option-ui`)는 남긴다 — 그것이 PPOM select 에 값을 넣는 쪽이다.
+ * 우리가 하는 건 등록된 스타일 핸들을 빼는 것뿐이다. 플러그인 파일은 건드리지 않는다.
+ *
+ * 사장님 Code Snippets 가 직접 찍는 `<style id="dh-cta-fix">` 는 핸들이 없어 뺄 수 없다.
+ * 그건 shell.css 가 특이도로 덮는다.
+ *
+ * @return void
+ */
+function drop_legacy_shell(): void {
+	if ( ! wraps() ) {
+		return;
+	}
+	$handles = apply_filters( 'duckhoo_drop_legacy_styles', array( 'dh-shell', 'dh-shop-polish', 'dh-front' ) );
+	foreach ( (array) $handles as $handle ) {
+		wp_dequeue_style( (string) $handle );
+	}
+}
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\drop_legacy_shell', 200 );
+
+/**
  * 상품 목록의 카드를 우리 카드로. WooCommerce 는 목록에서 content-product.php 를
  * wc_get_template_part 로 부른다. 그 파일만 우리 것으로 바꾼다 — 링크 · 상품 ID 는 같다.
  *
