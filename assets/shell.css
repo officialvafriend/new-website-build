@@ -414,8 +414,7 @@ html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
 }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div{ font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; font-weight: 800 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button,
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty button{ min-width: 40px !important; min-height: 40px !important; }
+
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__sub,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ font-size: 13px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ min-height: 44px !important; display: inline-flex !important; align-items: center !important; padding: 0 .9rem !important; }
@@ -734,7 +733,7 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product form.cart .dh-drawer-ship{ displa
 html body.dhr.dhr-wrap.dhr-wrap.single-product div.product.dhp{ display: block !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main{ padding: 0 0 3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb{ display: flex; gap: .35rem; align-items: center; padding: 1rem 0 .8rem; font-size: 13px; color: var(--dh-ink-3, #616870); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a{ color: inherit; text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a{ color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a + a::before{ content: "›"; margin-right: .35rem; color: var(--dh-line-strong, #C9CFD4); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a:last-child{ color: var(--dh-ink, #111); font-weight: 700; }
 
@@ -840,7 +839,23 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb img{ width: 100% !important;
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__body{ min-width: 0; flex: 1 1 auto; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__head{ font-size: 15px !important; font-weight: 800 !important; letter-spacing: -.02em !important; color: var(--dh-ink, #111) !important; line-height: 1.4; word-break: keep-all; display: flex; justify-content: space-between; gap: .5rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ margin-top: .45rem !important; display: grid; gap: .3rem; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option{ display: flex !important; align-items: center !important; gap: .5rem !important; font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; padding: .35rem .6rem !important; background: var(--dh-surface-2, #EDF0F2) !important; border-radius: 8px !important; border: 0 !important; }
+/* 옵션 줄 — 라벨이 길어 한 줄에 라벨 · × · 수량 · 가격이 다 못 들어간다. 두 줄로 접는다:
+   1줄 라벨(+×), 2줄 수량 | 가격. 옆 칸으로 흘러넘치던 원인이 min-width:auto 였다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option{
+  display: grid !important; grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-areas: "label remove" "qty price" !important; gap: .45rem .6rem !important; align-items: center !important;
+  min-width: 0 !important; max-width: 100% !important; font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important;
+  padding: .55rem .7rem !important; background: var(--dh-surface-2, #EDF0F2) !important; border-radius: 10px !important; border: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__label{ grid-area: label; display: flex !important; align-items: flex-start !important; gap: .4rem !important; min-width: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__text{ min-width: 0; white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.4; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__remove{ grid-area: remove; justify-self: end; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty{ grid-area: qty; display: inline-flex !important; align-items: center !important; overflow: hidden !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; border-radius: 999px !important; background: var(--dh-surface, #fff) !important; width: max-content !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button{ width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; border: 0 !important; background: none !important; color: var(--dh-ink, #111) !important; font-size: 17px !important; font-weight: 700 !important; padding: 0 !important; cursor: pointer; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty span{ min-width: 2rem; text-align: center; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__price{ grid-area: price; justify-self: end; font-size: 15px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td.wd-cpg-col-info{ min-width: 0 !important; overflow: hidden !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__body, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ min-width: 0 !important; max-width: 100% !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__label,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ font-size: 12px !important; font-weight: 800 !important; padding: .1rem .4rem !important; border-radius: 5px !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink-2, #4E565F) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__num{ font-size: 17px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums; }
