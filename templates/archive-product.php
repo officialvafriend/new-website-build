@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 use function Duckhoo\Redesign\Front\{card, icon};
 
 $dha_total = (int) $GLOBALS['wp_query']->found_posts;
-$dha_title = is_search() ? '“' . get_search_query() . '” 검색 결과' : (string) woocommerce_page_title( false );
+$dha_title = is_search() ? '“' . get_search_query() . '” 검색 결과' : ( is_shop() ? '전체 상품' : (string) woocommerce_page_title( false ) );
 $dha_desc  = is_product_taxonomy() ? (string) term_description() : '';
 $dha_shop  = wc_get_page_permalink( 'shop' );
 $dha_cats  = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 8 ) );

@@ -821,7 +821,8 @@ html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tr.wd-cpg-row{
   padding: 1rem !important; margin: 0 !important;
 }
 @media (min-width:900px){
-  html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tr.wd-cpg-row{ grid-template-columns: minmax(0,1fr) 150px 170px 120px !important; grid-template-areas: "info qty sub ship" !important; }
+  /* 고정 폭 세 칸이 상품 칸을 254px 로 굶겼다. 배송 정보를 금액 아래 줄로 내리고 상품 칸에 여유를 준다. */
+  html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tr.wd-cpg-row{ grid-template-columns: minmax(0,1fr) 110px 150px !important; grid-template-areas: "info qty sub" "info qty ship" !important; row-gap: .3rem !important; }
 }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td.wd-cpg-col-info{ grid-area: info; }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td.wd-cpg-col-qty{ grid-area: qty; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: .3rem !important; }
@@ -834,15 +835,15 @@ html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td.wd-cpg-col-shipping{ grid-
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info{ display: flex !important; gap: .8rem !important; align-items: flex-start !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__check{ padding-top: .2rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__check input{ width: 20px; height: 20px; accent-color: #111; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb{ flex: 0 0 84px; width: 84px; height: 84px; border-radius: 12px; overflow: hidden; background: var(--dh-surface-2, #EDF0F2); display: block; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb{ flex: 0 0 72px; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; background: var(--dh-surface-2, #EDF0F2); display: block; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; display: block; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__body{ min-width: 0; flex: 1 1 auto; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__head{ font-size: 15px !important; font-weight: 800 !important; letter-spacing: -.02em !important; color: var(--dh-ink, #111) !important; line-height: 1.4; word-break: keep-all; display: flex; justify-content: space-between; gap: .5rem; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ margin-top: .45rem !important; display: grid; gap: .3rem; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ margin-top: .45rem !important; display: grid; gap: .3rem; padding: 0 !important; }
 /* 옵션 줄 — 라벨이 길어 한 줄에 라벨 · × · 수량 · 가격이 다 못 들어간다. 두 줄로 접는다:
    1줄 라벨(+×), 2줄 수량 | 가격. 옆 칸으로 흘러넘치던 원인이 min-width:auto 였다. */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option{
-  display: grid !important; grid-template-columns: minmax(0,1fr) auto !important;
+  display: grid !important; grid-template-columns: minmax(0,1fr) 44px !important;
   grid-template-areas: "label remove" "qty price" !important; gap: .45rem .6rem !important; align-items: center !important;
   min-width: 0 !important; max-width: 100% !important; font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important;
   padding: .55rem .7rem !important; background: var(--dh-surface-2, #EDF0F2) !important; border-radius: 10px !important; border: 0 !important;
