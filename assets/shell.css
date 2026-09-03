@@ -327,3 +327,18 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-subtotal__btn{
   border: 1.5px solid var(--dh-line, #E1E5E8) !important; border-radius: 999px !important;
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
 }
+
+/* 장바구니의 마지막 손질 — 분홍 그라데이션 알림 하나가 더 있고(인라인 style),
+   수량 ± 가 28px, 캡션 몇 개가 12px 다. */
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
+  background: var(--dh-accent-soft, #E8F5FE) !important; background-image: none !important;
+  border: 1px solid #BFE4FA !important; border-radius: 14px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div{ font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty button,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn-minus,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn-plus{ min-width: 40px !important; min-height: 40px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__sub,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ font-size: 13px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ min-height: 44px !important; display: inline-flex !important; align-items: center !important; padding: 0 .9rem !important; }
