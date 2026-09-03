@@ -290,3 +290,24 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout .wd-point-dummy-btn{
   border: 1.5px solid var(--dh-primary, #111) !important; border-radius: 999px !important;
   min-height: 44px !important; font-size: 15px !important; font-weight: 700 !important;
 }
+
+/* 주문서에 테마가 페이지 슬러그("checkout")를 h1 으로 한 번 더 찍는다.
+   바로 아래 "결제하기" 가 진짜 제목이라 영문 슬러그만 남는다. 장바구니도 같다. */
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-checkout .wd-page__header,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-cart .wd-page__header{ display: none !important; }
+
+/* 무통장입금 안내 — 입금자명이 주문자명과 다르면 자동확인이 안 되고 사람이 손대야 한다.
+   그래서 이 안내는 눈에 띄어야 한다. 다만 인라인으로 박힌 #ff1f79 는 흰 배경 3.6:1 로
+   AA 미달이라, 색으로만 소리치는 대신 카드로 세우고 글자는 읽히는 색으로 바꾼다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice{
+  background: var(--dh-surface-2, #EDF0F2) !important;
+  border-left: 4px solid var(--dh-status-check, #B42318) !important;
+  border-radius: 12px !important; padding: .9rem 1rem !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p{ color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; line-height: 1.6 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p:first-child{ color: var(--dh-status-check, #B42318) !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-guide-box{
+  background: var(--dh-surface-2, #EDF0F2) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 12px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-guide-box p{ color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; }
