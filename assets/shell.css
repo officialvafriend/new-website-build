@@ -365,3 +365,74 @@ html body.dhr.dhr-wrap.dhr-wrap.page .entry-content strong{ color: var(--dh-ink,
 /* 껍데기를 쓰는 화면에서도 같다 — 관리 바 아래로 헤더가 끼어 들어가지 않게. */
 @media (min-width:601px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar header.gnb{ top: 46px !important; } }
 @media (min-width:783px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar header.gnb{ top: 32px !important; } }
+
+/* ── 로그인 · 회원가입 · 내 계정 ────────────────────────────────────────────
+   폼 필드의 name·id 는 그대로 둔다. 보이는 것만 바꾼다. */
+
+/* 로그인은 한 줄로 읽히는 좁은 카드가 낫다 */
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-account:not(.logged-in) .woocommerce{ max-width: 460px; margin-left: auto; margin-right: auto; }
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-ResetPassword{
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 16px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.8rem) !important; margin: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account h2{
+  font-size: 22px; font-weight: 900; letter-spacing: -.035em; margin: 0 0 1rem;
+  text-decoration: none !important; border: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login label,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register label{
+  display: block; font-size: 14px; font-weight: 700; color: var(--dh-ink-2, #4E565F); margin-bottom: .35rem;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input.input-text,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register input.input-text,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-ResetPassword input.input-text{
+  width: 100% !important; min-height: 48px !important; font-size: 16px !important;
+  border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; border-radius: 12px !important;
+  padding: 0 .9rem !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-login__submit,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register .woocommerce-form-register__submit,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-ResetPassword button.button{
+  width: 100% !important; min-height: 48px !important; margin: .2rem 0 0 !important;
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important; border-radius: 999px !important;
+  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important; float: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-login__rememberme{ display: flex; align-items: center; gap: .45rem; margin: .9rem 0 0; font-size: 15px; }
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password{ margin: .9rem 0 0; font-size: 15px; }
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password a{ color: var(--dh-accent-deep, #1565C0); text-decoration: none; }
+
+/* 회원가입 — 테마가 이 페이지에만 자기 헤더·서랍을 또 그린다. 우리 헤더와 겹친다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-header,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-drawer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-drawer-backdrop,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-topline,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-header{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-main{ max-width: 460px; margin: 0 auto; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-body{
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 16px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.8rem) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn{
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  min-height: 52px !important; border-radius: 999px !important; text-decoration: none !important;
+  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn + a.wd-register-btn{
+  margin-top: .6rem !important;
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+  border: 1.5px solid var(--dh-primary, #111) !important;
+}
+
+/* 내 계정 — 인사말과 내용에 숨 쉴 자리 */
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-account.logged-in .woocommerce-MyAccount-content{
+  background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8);
+  border-radius: 16px; padding: clamp(1.1rem,.8rem + 1.2vw,1.6rem);
+  font-size: 16px; line-height: 1.7; color: var(--dh-ink-2, #4E565F);
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content p{ margin: 0 0 .8rem; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content strong{ color: var(--dh-ink, #111); }
