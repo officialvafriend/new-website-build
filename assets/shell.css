@@ -155,11 +155,35 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__name,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip__pick{ font-size: 15px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__price,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__sub{ font-size: 13px !important; }
-/* 구매 버튼은 사이트 전체와 같은 검정 알약 */
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-buy,
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-cta,
-html body.dhr.dhr-wrap.dhr-wrap .dhx button.dhx-buy{
-  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
-  border: 0 !important; border-radius: 999px !important; min-height: 48px !important;
+/* 구매 줄 — 옛 CSS 는 반투명 + backdrop-filter 블러다. 우리 규칙은 불투명 한 겹이다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions{
+  background: var(--dh-surface, #fff) !important; backdrop-filter: none !important;
+  border-top: 1px solid var(--dh-line, #E1E5E8) !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions button{
+  height: 48px !important; min-height: 48px !important; border-radius: 999px !important;
   font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
 }
+/* 담기 — 흰 바탕에 검정 테두리 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions button.single_add_to_cart_button{
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+  border: 1.5px solid var(--dh-primary, #111) !important;
+}
+/* 결제하기 — 사이트 전체와 같은 검정 알약 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions button.wd-direct-checkout-btn{
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important;
+}
+/* 아직 맛을 안 고른 상태 — 회색이되 글자는 읽힌다 (AA) */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions button[disabled],
+html body.dhr.dhr-wrap.dhr-wrap .dhx .vf-drawer-actions button.is-disabled{
+  background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-3, #616870) !important;
+  border-color: var(--dh-line, #E1E5E8) !important; cursor: not-allowed !important;
+}
+
+/* 상세 설명 — 상품 사진과 같은 흰 면 위에, 이미지는 가운데로 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .woocommerce-tabs .panel{
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 16px !important; padding: clamp(.9rem,.6rem + 1vw,1.6rem) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product #tab-description img{ display: block !important; margin-left: auto !important; margin-right: auto !important; height: auto !important; }
