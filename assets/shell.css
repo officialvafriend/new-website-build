@@ -848,8 +848,14 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option{
   min-width: 0 !important; max-width: 100% !important; font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important;
   padding: .55rem .7rem !important; background: var(--dh-surface-2, #EDF0F2) !important; border-radius: 10px !important; border: 0 !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__label{ grid-area: label; display: flex !important; align-items: flex-start !important; gap: .4rem !important; min-width: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__text{ min-width: 0; white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.4; }
+/* 라벨은 흐르는 글로. 플렉스로 두면 '필수' 배지가 한 줄을 다 먹고 글자에 21px 만 남는다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__label{ grid-area: label; display: block !important; min-width: 0 !important; line-height: 1.45; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ display: inline-block !important; vertical-align: 1px; margin-right: .35rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__text{ display: inline !important; flex: none !important; width: auto !important; min-width: 0; white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width:639px){
+  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb{ flex-basis: 56px !important; width: 56px !important; height: 56px !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info{ gap: .55rem !important; }
+}
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__remove{ grid-area: remove; justify-self: end; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty{ grid-area: qty; display: inline-flex !important; align-items: center !important; overflow: hidden !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; border-radius: 999px !important; background: var(--dh-surface, #fff) !important; width: max-content !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button{ width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; border: 0 !important; background: none !important; color: var(--dh-ink, #111) !important; font-size: 17px !important; font-weight: 700 !important; padding: 0 !important; cursor: pointer; }
