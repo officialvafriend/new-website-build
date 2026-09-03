@@ -13,6 +13,7 @@ $GLOBALS['__transients'] = [];
 function add_filter($h,$cb,$p=10,$a=1){ $GLOBALS['__filters'][$h][]=$cb; }
 function remove_filter($h,$cb,$p=10){ }
 function add_action($h,$cb,$p=10,$a=1){ $GLOBALS['__actions'][$h][]=$cb; }
+if ( ! function_exists( 'register_activation_hook' ) ) { function register_activation_hook($f,$cb){ $GLOBALS['__activation'][]=$cb; } }
 function do_action($h,...$a){ }
 function add_shortcode($t,$cb){ $GLOBALS['__shortcodes'][$t]=$cb; }
 function apply_filters($h,$v,...$rest){ foreach($GLOBALS['__filters'][$h]??[] as $cb){ $v=$cb($v,...$rest);} return $v; }
