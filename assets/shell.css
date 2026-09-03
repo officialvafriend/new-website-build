@@ -599,3 +599,69 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.produc
 }
 @media (min-width:640px){ html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{ grid-template-columns: repeat(3,1fr) !important; } }
 @media (min-width:980px){ html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{ grid-template-columns: repeat(4,1fr) !important; } }
+
+/* ── 구매 상자를 우리가 그린다 ─────────────────────────────────────────────
+   타입 스케일: 13 · 15 · 17 · 20 · 34. 크기가 곧 순서다.
+   구획은 선으로 나눈다 — 회색 상자를 겹쳐 쌓지 않는다. */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary{
+  padding: clamp(1.1rem,.8rem + 1.2vw,1.8rem) !important;
+  display: flex !important; flex-direction: column !important; gap: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-eb{ display: flex; align-items: center; gap: .45rem; margin-bottom: .5rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-brand{ font-size: 13px; font-weight: 700; color: var(--dh-ink-3, #616870); letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-badge{
+  font-size: 13px; font-weight: 800; letter-spacing: -.01em; padding: .16rem .5rem; border-radius: 6px;
+  background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-2, #4E565F);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--sale{ background: #FDEBD8; color: #8A4B0C; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--new{ background: var(--dh-accent-soft, #E8F5FE); color: var(--dh-accent-deep, #1565C0); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--best{ background: #FBE4EA; color: #9F1239; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--out{ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-3, #616870); }
+
+html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title{
+  font-size: clamp(1.35rem,1.15rem + .9vw,1.7rem) !important; font-weight: 800 !important;
+  letter-spacing: -.04em !important; line-height: 1.28 !important; color: var(--dh-ink, #111) !important;
+  margin: 0 0 .9rem !important; word-break: keep-all;
+}
+
+html body.dhr.dhr-wrap.dhr-wrap .dhp-price{ display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-off{ font-size: 20px; font-weight: 900; letter-spacing: -.03em; color: #B42318; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-was{ font-size: 15px; font-weight: 500; color: var(--dh-ink-3, #616870); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-now{ font-size: clamp(1.9rem,1.5rem + 1.6vw,2.15rem); font-weight: 900; letter-spacing: -.04em; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-now span{ font-size: .5em; font-weight: 800; margin-left: .12em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-unit{
+  display: inline-flex; align-items: baseline; gap: .4rem; margin-top: .55rem;
+  padding: .3rem .7rem; border-radius: 999px; background: var(--dh-accent-soft, #E8F5FE);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-unit b{ font-size: 17px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-unit span{ font-size: 13px; font-weight: 700; color: var(--dh-accent-deep, #1565C0); }
+
+/* 키플 위젯(조회수 · 오늘출발 · 무료배송)은 정보다. 다만 상자를 겹치지 않는다. */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-viewer-count{ order: -1; align-self: flex-start; margin: 0 0 .7rem !important; padding: .3rem .6rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-today-dispatch,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-free-shipping-gauge{
+  background: transparent !important; border: 0 !important; border-radius: 0 !important;
+  padding: .8rem 0 !important; margin: 0 !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-today-dispatch{ border-top: 1px solid var(--dh-line, #E1E5E8) !important; margin-top: 1.1rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-free-shipping-gauge{ border-bottom: 1px solid var(--dh-line, #E1E5E8) !important; padding-bottom: 1.1rem !important; }
+
+/* 사는 방법 — 결제 단계에서 처음 보면 늦는다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust{ list-style: none; margin: 1.2rem 0 0 !important; padding: 1.1rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .8rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li{ margin: 0 !important; padding: 0 0 0 1.55rem; position: relative; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li::before{
+  content: ""; position: absolute; left: 0; top: .28em; width: 15px; height: 15px;
+  background: currentColor; color: var(--dh-ink-3, #616870);
+  -webkit-mask: center/contain no-repeat; mask: center/contain no-repeat;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__bank::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18'/%3E%3C/svg%3E"); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__truck::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 6h11v10H3zM14 9h4l3 3v4h-7z'/%3E%3Ccircle cx='7' cy='18' r='2'/%3E%3Ccircle cx='17.5' cy='18' r='2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 6h11v10H3zM14 9h4l3 3v4h-7z'/%3E%3Ccircle cx='7' cy='18' r='2'/%3E%3Ccircle cx='17.5' cy='18' r='2'/%3E%3C/svg%3E"); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__shield::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z'/%3E%3C/svg%3E"); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust b{ display: block; font-size: 15px; font-weight: 800; letter-spacing: -.025em; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span{ display: block; font-size: 13px; line-height: 1.5; color: var(--dh-ink-3, #616870); margin-top: .12rem; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span b{ display: inline; font-size: 13px; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-links{ display: flex; gap: 1rem; margin: 1rem 0 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-links a{ font-size: 14px; font-weight: 700; color: var(--dh-accent-deep, #1565C0); text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+
+/* 사진은 잘라내지 않는다 — 병 전체가 보여야 한다 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .woocommerce-product-gallery__image img{ object-fit: contain !important; background: #fff !important; }

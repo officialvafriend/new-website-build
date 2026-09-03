@@ -35,6 +35,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/shell.php';
 // 안내 페이지(이용약관 · 개인정보처리방침 · 배송/교환/환불) — 없으면 만든다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/pages.php';
 
+// 상품 상세의 구매 상자.
+require_once plugin_dir_path( __FILE__ ) . 'includes/product.php';
+
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\Pages\\ensure' );
 
 /**
