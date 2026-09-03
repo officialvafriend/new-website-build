@@ -227,6 +227,34 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 - 관리자로 로그인하면 워드프레스 관리 바가 화면 위에 고정되므로 sticky 헤더에
   `body.admin-bar` 오프셋(783px↑ 32px · 601–782px 46px)을 준다. 없으면 헤더가 잘려 보인다
 
+## 사는 쪽으로 미는 것들 (레퍼런스 cruntin.com 의 구조, 2026-09-03)
+
+레퍼런스의 힘은 색이 아니라 **매 화면이 판다**는 것이다. 우리 데이터로 같은 자리를 채웠다.
+
+- 헤더 위 `.promo` 띠: 비로그인 `가입 즉시 8,800원 적립` → `/register/`, 로그인은 무료배송 조건.
+  숫자는 `Front\signup_points()` (필터 `duckhoo_signup_points`), 무료배송 기준은 필터
+  `duckhoo_free_shipping_min` (30,000). 고정이 아니라 스크롤하면 같이 올라간다
+- 모바일 헤더 아래 `.bnav` 칩 (880px↑ 숨김, 데스크톱은 `.dnav`) · 홈 `.qcats` 둥근 분류 타일.
+  분류 이름은 `Front\short_cat()` 으로 줄인다 ("9월 특가 할인" → "이달 특가", "기기 / 팟 / 코일" → "기기·팟")
+- 상품 상세: 사진 위 할인율 알약 `.dhp-gal__pill` · 몇 장째 `.dhp-gal__n` · 가격 아래 `Product\benefits()`
+  (`ul.dhp-ben`, 필터 `duckhoo_product_benefits`) · **모바일 고정 구매 줄 `.dhp-bar`** — 진짜 버튼은 폼 안의
+  `.single_add_to_cart_button` / `.wd-direct-checkout-btn` 이고 구매 줄은 잠김 상태 · 총액
+  (`.dhx-sum__total`, 없으면 `data-price` × 수량)을 비추며 누르면 그 버튼을 대신 누른다.
+  폼의 버튼이 화면에 보이는 동안은 내려가 있다 (`IntersectionObserver` → `.is-away`). 상세에서는 탭바를 숨긴다
+- **장바구니 서랍 `.dhc`** (`Front\cart_drawer_html()`, 모든 껍데기 화면의 푸터 뒤): 헤더 · 탭바의
+  장바구니 버튼과 담기 직후(`.woocommerce-message`)에 열린다. 내용은 Store API
+  `/wp-json/wc/store/v1/cart` (쿠키 + `Nonce` 헤더, 응답 헤더의 Nonce 를 이어 쓴다). 지우기만 여기서
+  (`remove-item`), 수량은 키플 장바구니 페이지에서. **비로그인에는 썸네일을 그리지 않는다** — Store API
+  사진은 19 가림을 안 거친다. 불투명 · 데스크톱 오른쪽 420px · 모바일 아래 시트 · 포커스 가둠 · Esc
+- 푸터 `.fbank`: `woocommerce_bacs_accounts` 의 계좌 + 입금자명 안내
+- JS 설정은 `Front\js_config()` 한 곳 (`window.DHR`): 로그인 여부 · 논스 · 무료배송 기준 · 장바구니/상품 URL
+- 사장님 스니펫 두 개가 화면을 덮는다: 비로그인 상품 페이지의 성인인증 안내 `#dh-agegate2`
+  (`.dh-ag2-later` 로 닫힘) 와 홈 팝업 `#pop-dim`/`#pop6`. 플러그인은 건드리지 않고, **테스트 스크립트에서만**
+  지운다 (`scratchpad/live/nudge-shot.mjs` 의 `later()`)
+
+검증: `scratchpad/live/nudge-shot.mjs` — 비로그인/로그인 × 모바일/데스크톱에서 띠 · 칩 · 타일 · 구매 줄 · 서랍
+(담기 → 서랍 열림 → 지우기 → 배지 0) · 푸터 계좌를 재고 찍는다. 담은 것은 스크립트가 도로 지운다.
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·

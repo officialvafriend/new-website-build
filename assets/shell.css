@@ -988,3 +988,17 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip::after{ content: ""; position: abs
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message{ background: var(--dh-accent-soft, #E8F5FE) !important; border: 0 !important; border-radius: 12px !important; color: var(--dh-ink, #111) !important; padding: .8rem 1rem !important; margin: 1rem 0 0 !important; font-size: 14px !important; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message::before{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message a.button{ order: 2; margin-left: auto; min-height: 40px; padding: 0 1rem !important; border-radius: 999px !important; background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important; display: inline-flex; align-items: center; }
+/* 가입 말풍선은 구매 줄이 올라와 있을 때만 — 줄이 내려가 있으면 말풍선만 떠 있게 된다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar:not(.is-away) .dhp-bar__tip{ display: none; }
+/* 관리자에게는 워드프레스 관리 바가 위를 덮는다 — 서랍 머리가 그 아래로 들어가지 않게 */
+@media (min-width:880px) and (min-width:601px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar .dhc__panel{ top: 46px; } }
+@media (min-width:880px) and (min-width:783px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar .dhc__panel{ top: 32px; } }
+/* 맛 칩 — 글자를 15px 로 키우고 나니 한 줄 고정(nowrap)이 칸을 넘어 왼쪽이 잘렸다. 줄바꿈을 허용한다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip{ max-width: 100%; min-width: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip__pick{ white-space: normal !important; text-align: left !important; flex: 1 1 auto; min-width: 0; word-break: keep-all; line-height: 1.35 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini button{ height: 40px !important; min-height: 40px !important; flex-basis: 32px !important; width: 32px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini .dhx-qty__n{ height: 40px !important; }
+/* 묶음 줄 — 이름이 길면 수량 조절이 다음 줄로 내려간다. 이름을 다섯 줄로 접는 것보다 낫다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle{ flex-wrap: wrap !important; row-gap: .5rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__pick{ flex: 1 1 200px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle > .dhx-qty{ margin-left: auto; }
