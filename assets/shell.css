@@ -104,7 +104,6 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d{ flex-basis: 100%; font-size: 15px; line-height: 1.55; color: var(--dh-ink-2, #3F464D); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d p{ margin: 0; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-products-header, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-products-header__title, html body.dhr.dhr-wrap.dhr-wrap h1.page-title{ display: block !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-notices-wrapper:empty{ display: none; }
 
 /* ── 옛 프론트가 칠해 둔 파스텔 그라데이션 · 둥근 카드 페이지를 지운다 ──────────
@@ -247,4 +246,47 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx-src{
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button{ height: 44px !important; min-height: 44px !important; }
 @media (min-width:900px){
   html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button{ height: 36px !important; min-height: 36px !important; }
+}
+
+/* ── 장바구니 (keyple .wd-cpg) ─────────────────────────────────────────────
+   주문하기가 배경 없는 글자로 나와 버튼으로 보이지 않았다. 사이트 공통 검정 알약으로. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order__btn{
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important; border-radius: 999px !important;
+  min-height: 52px !important; width: 100% !important; max-width: 420px !important;
+  font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order__continue{
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  min-height: 44px !important; padding: 0 1.1rem !important; border-radius: 999px !important;
+  border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; color: var(--dh-ink-2, #4E565F) !important;
+  font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-bulk__btn{
+  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 700 !important;
+  border: 1.5px solid var(--dh-line, #E1E5E8) !important; border-radius: 999px !important;
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+}
+/* 자동할인 안내 — 분홍 상자를 우리 강조면으로 */
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice{
+  background: var(--dh-accent-soft, #E8F5FE) !important; border: 1px solid #BFE4FA !important;
+  border-radius: 14px !important;
+}
+
+/* ── 주문서 ────────────────────────────────────────────────────────────────
+   결제하기가 파란 채움 + 검은 글자였다. 우리 검정 알약으로 바꾼다. */
+html body.dhr.dhr-wrap.dhr-wrap #place_order,
+html body.dhr.dhr-wrap.dhr-wrap #place_order.button.alt{
+  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
+  border: 0 !important; border-radius: 999px !important; min-height: 56px !important;
+  font-size: 19px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+}
+/* 쿠폰·적립금 적용 버튼 — 회색 위 회색 글자(3.9:1)를 걷는다 */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout button.button,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout #wc_gc_cart_redeem_send,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout .wd-point-dummy-btn{
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+  border: 1.5px solid var(--dh-primary, #111) !important; border-radius: 999px !important;
+  min-height: 44px !important; font-size: 15px !important; font-weight: 700 !important;
 }
