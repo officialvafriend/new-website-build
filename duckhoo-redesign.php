@@ -32,6 +32,11 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/front.php';
 // 껍데기 — 홈 말고 모든 화면에 우리 헤더·푸터·탭바를 씌웁니다. 테마 템플릿은 그대로 돕니다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/shell.php';
 
+// 안내 페이지(이용약관 · 개인정보처리방침 · 배송/교환/환불) — 없으면 만든다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/pages.php';
+
+register_activation_hook( __FILE__, __NAMESPACE__ . '\\Pages\\ensure' );
+
 /**
  * 프론트엔드에 디자인 토큰을 불러옵니다.
  *

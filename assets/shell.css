@@ -341,3 +341,23 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty button{ min-width: 40px !important; 
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__sub,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ font-size: 13px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ min-height: 44px !important; display: inline-flex !important; align-items: center !important; padding: 0 .9rem !important; }
+
+/* ── 안내 문서(이용약관 · 개인정보처리방침 · 배송/교환/환불) ──────────────────
+   긴 글은 읽는 폭과 리듬이 전부다. 한 줄 65자 언저리, 제목 앞에 숨 쉴 자리. */
+html body.dhr.dhr-wrap.dhr-wrap.page .wd-page__content,
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content{
+  background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8);
+  border-radius: 16px; padding: clamp(1.1rem,.8rem + 1.4vw,2.2rem);
+  font-size: 16px; line-height: 1.75; color: var(--dh-ink-2, #4E565F);
+}
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content > *{ max-width: 68ch; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content h2{
+  margin: 2.2rem 0 .7rem; font-size: 20px; font-weight: 800; letter-spacing: -.03em;
+  color: var(--dh-ink, #111); line-height: 1.35; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content h2:first-child{ margin-top: 0; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content h3{ margin: 1.5rem 0 .5rem; font-size: 17px; font-weight: 800; color: var(--dh-ink, #111); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content p{ margin: 0 0 1rem; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content ul{ margin: 0 0 1.2rem; padding-left: 1.15rem; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content li{ margin-bottom: .45rem; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap.page .entry-content strong{ color: var(--dh-ink, #111); font-weight: 700; }
