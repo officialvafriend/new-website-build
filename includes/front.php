@@ -194,6 +194,7 @@ function icon( string $name ): string {
 			'arrow'   => '<path d="M5 12h14M13 6l6 6-6 6"/>',
 			'bank'    => '<path d="M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18"/>',
 			'truck'   => '<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+			'shield'  => '<path d="M12 3.2 19 6v5.6c0 4.8-3.3 7.7-7 8.9-3.7-1.2-7-4.1-7-8.9V6z"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';

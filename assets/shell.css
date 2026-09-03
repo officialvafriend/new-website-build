@@ -648,15 +648,10 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-free-shipping-gauge{ border-b
 
 /* 사는 방법 — 결제 단계에서 처음 보면 늦는다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust{ list-style: none; margin: 1.2rem 0 0 !important; padding: 1.1rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .8rem; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li{ margin: 0 !important; padding: 0 0 0 1.55rem; position: relative; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li::before{
-  content: ""; position: absolute; left: 0; top: .28em; width: 15px; height: 15px;
-  background: currentColor; color: var(--dh-ink-3, #616870);
-  -webkit-mask: center/contain no-repeat; mask: center/contain no-repeat;
-}
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__bank::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18'/%3E%3C/svg%3E"); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__truck::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 6h11v10H3zM14 9h4l3 3v4h-7z'/%3E%3Ccircle cx='7' cy='18' r='2'/%3E%3Ccircle cx='17.5' cy='18' r='2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M3 6h11v10H3zM14 9h4l3 3v4h-7z'/%3E%3Ccircle cx='7' cy='18' r='2'/%3E%3Ccircle cx='17.5' cy='18' r='2'/%3E%3C/svg%3E"); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__shield::before{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z'/%3E%3C/svg%3E"); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li{ margin: 0 !important; padding: 0 !important; display: flex; gap: .6rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__ic{ flex: 0 0 18px; color: var(--dh-ink-3, #616870); display: flex; padding-top: .12rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__ic svg{ width: 18px; height: 18px; stroke-width: 1.9; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__tx{ min-width: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust b{ display: block; font-size: 15px; font-weight: 800; letter-spacing: -.025em; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span{ display: block; font-size: 13px; line-height: 1.5; color: var(--dh-ink-3, #616870); margin-top: .12rem; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span b{ display: inline; font-size: 13px; color: var(--dh-ink, #111); }

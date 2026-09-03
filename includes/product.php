@@ -19,7 +19,7 @@ declare( strict_types = 1 );
 
 namespace Duckhoo\Redesign\Product;
 
-use function Duckhoo\Redesign\Front\{split_name, per_bottle, eyebrow};
+use function Duckhoo\Redesign\Front\{split_name, per_bottle, eyebrow, icon};
 
 defined( 'ABSPATH' ) || exit;
 
@@ -101,8 +101,9 @@ function trust(): void {
 	);
 	echo '<ul class="dhp-trust">';
 	foreach ( $rows as $r ) {
-		echo '<li class="dhp-trust__' . esc_attr( $r[0] ) . '"><b>' . esc_html( $r[1] ) . '</b>'
-			. '<span>' . wp_kses( $r[2], array( 'b' => array() ) ) . '</span></li>';
+		echo '<li><span class="dhp-trust__ic">' . icon( $r[0] ) . '</span>' // phpcs:ignore
+			. '<span class="dhp-trust__tx"><b>' . esc_html( $r[1] ) . '</b>'
+			. '<span>' . wp_kses( $r[2], array( 'b' => array() ) ) . '</span></span></li>';
 	}
 	echo '</ul>';
 	echo '<p class="dhp-links"><a href="' . esc_url( home_url( '/shipping/' ) ) . '">배송 · 교환 · 환불 안내</a>'
