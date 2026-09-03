@@ -518,9 +518,9 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account h2::before{ display: none !
     display: grid; grid-template-columns: 232px minmax(0,1fr); gap: 1.6rem; align-items: start;
   }
   /* 알림 상자가 첫 칸을 차지해 메뉴와 내용이 한 칸씩 밀린다 — 자리를 못박는다 */
-  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account.logged-in .woocommerce > .woocommerce-notices-wrapper{ grid-column: 1 / -1; grid-row: 1; }
-  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ grid-column: 1; grid-row: 2; width: auto !important; float: none !important; margin: 0 !important; }
-  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content{ grid-column: 2; grid-row: 2; width: auto !important; float: none !important; margin: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account.logged-in .woocommerce > .woocommerce-notices-wrapper{ grid-column: 1 / -1 !important; grid-row: 1 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ grid-column: 1 !important; grid-row: 2 !important; width: auto !important; float: none !important; margin: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content{ grid-column: 2 !important; grid-row: 2 !important; width: auto !important; float: none !important; margin: 0 !important; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{ display: block !important; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{ width: 100%; justify-content: flex-start !important; }
 }
