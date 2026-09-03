@@ -164,6 +164,9 @@ function archive_title(): void {
 	if ( ! ( is_shop() || is_product_taxonomy() || is_search() ) ) {
 		return;
 	}
+	if ( apply_filters( 'duckhoo_take_archive', true ) ) {
+		return; // templates/archive-product.php 가 제목을 그린다
+	}
 	$title = is_search() ? '“' . get_search_query() . '” 검색 결과' : (string) woocommerce_page_title( false );
 	$total = function_exists( 'wc_get_loop_prop' ) ? (int) wc_get_loop_prop( 'total' ) : 0;
 	$desc  = is_product_taxonomy() ? (string) term_description() : '';

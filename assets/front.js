@@ -93,3 +93,14 @@
   prod.querySelectorAll('.summary .wc-prl-recommendations, .summary .related, .summary .upsells').forEach(function(el){ moved.push(el); });
   moved.forEach(function(el){ prod.appendChild(el); });
 })();
+
+/* 상품 사진 — 썸네일을 누르면 그 사진이 크게. src 를 바꾸지 않고 슬라이드를 보였다 감춘다. */
+(function(){
+  var g = document.querySelector('[data-gal]'); if(!g) return;
+  var slides = [].slice.call(g.querySelectorAll('.dhp-gal__slide')), thumbs = [].slice.call(g.querySelectorAll('[data-thumb]'));
+  function go(i){ slides.forEach(function(s,k){ s.classList.toggle('on', k===i); }); thumbs.forEach(function(t,k){ t.classList.toggle('on', k===i); t.setAttribute('aria-selected', k===i); }); }
+  thumbs.forEach(function(t){ t.addEventListener('click', function(){ go(+t.dataset.thumb); }); });
+  var x0=null; g.addEventListener('touchstart', function(e){ x0=e.touches[0].clientX; }, {passive:true});
+  g.addEventListener('touchend', function(e){ if(x0===null||slides.length<2) return; var dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)<45) return;
+    var cur=slides.findIndex(function(s){ return s.classList.contains('on'); }); go((cur+(dx<0?1:-1)+slides.length)%slides.length); }, {passive:true});
+})();

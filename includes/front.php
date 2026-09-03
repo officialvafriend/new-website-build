@@ -395,6 +395,15 @@ function take_front_page( string $template ): string {
 	if ( is_page( 'membership-cancel' ) && apply_filters( 'duckhoo_take_membership_cancel', true ) ) {
 		return DIR . 'templates/page-membership-cancel.php';
 	}
+	// 상품 상세 · 목록. 테마 템플릿은 조회수 · 타이머 · 게이지 · 추천을 구매 상자 하나에
+	// 쌓고, 목록은 제목 없이 카드만 깐다. 우리 화면으로 그린다. 구매 폼과 쿼리는 그대로다.
+	if ( function_exists( 'is_product' ) && is_product() && apply_filters( 'duckhoo_take_product', true ) ) {
+		return DIR . 'templates/single-product.php';
+	}
+	if ( function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() || ( is_search() && 'product' === get_query_var( 'post_type' ) ) )
+		&& apply_filters( 'duckhoo_take_archive', true ) ) {
+		return DIR . 'templates/archive-product.php';
+	}
 	return $template;
 }
 
