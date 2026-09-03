@@ -336,9 +336,8 @@ html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
 }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div{ font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; font-weight: 800 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty button,
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn-minus,
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn-plus{ min-width: 40px !important; min-height: 40px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty button{ min-width: 40px !important; min-height: 40px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__sub,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ font-size: 13px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ min-height: 44px !important; display: inline-flex !important; align-items: center !important; padding: 0 .9rem !important; }
