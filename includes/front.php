@@ -131,6 +131,11 @@ function per_bottle( \WC_Product $p ): array {
 	$price = (float) $p->get_price();
 	$qty   = 1;
 	$name  = $p->get_name();
+	// 증정·사은품·기기 구성은 병이 구매 단위가 아니다. "기기 + 액상 5병 증정" 을 5로
+	// 나누면 기기값이 액상값처럼 보인다. 이런 상품은 총액만 쓴다.
+	if ( preg_match( '/증정|사은품|기기|디바이스|스타터/u', $name ) ) {
+		return array( 'per' => $price, 'qty' => 1 );
+	}
 	if ( preg_match( '/(\d+)\s*\+\s*(\d+)/u', $name, $m ) ) {
 		$qty = (int) $m[1] + (int) $m[2]; // "5+5 묶음" = 10병, "3+1" = 4병
 	} elseif ( preg_match( '/(\d+)\s*병/u', $name, $m ) ) {
@@ -222,36 +227,33 @@ function card( \WC_Product $p ): string {
 	$eb  = eyebrow( $p );
 	$url = get_permalink( $p->get_id() );
 	$img = $p->get_image( 'woocommerce_thumbnail', array( 'loading' => 'lazy' ) );
-	$sold = (int) $p->get_total_sales();
 	$rating = (float) $p->get_average_rating();
 
 	$meta = array();
 	if ( $rating > 0 ) {
 		$meta[] = '<span class="star">★</span><b>' . esc_html( number_format( $rating, 1 ) ) . '</b>';
 	}
-	if ( $sold > 0 ) {
-		$meta[] = '<span>' . esc_html( number_format_i18n( $sold ) ) . '개 판매</span>';
-	}
 	if ( '' !== $n['brand'] ) {
 		array_unshift( $meta, '<span class="brand">' . esc_html( $n['brand'] ) . '</span>' );
 	}
 
-	$price = '<b>' . esc_html( number_format_i18n( $pb['per'] ) ) . '</b>';
-	if ( $p->is_on_sale() && $pb['qty'] > 1 ) {
-		$price = '<s>' . esc_html( number_format_i18n( (float) $p->get_regular_price() / $pb['qty'] ) ) . '</s>' . $price;
-	} elseif ( $p->is_on_sale() ) {
+	// 파는 값이 먼저다. 병당 가격은 묶음일 때만 아래에 덧붙인다.
+	$price = '<b>' . esc_html( number_format_i18n( (float) $p->get_price() ) ) . '</b>';
+	if ( $p->is_on_sale() && (float) $p->get_regular_price() > 0 ) {
 		$price = '<s>' . esc_html( number_format_i18n( (float) $p->get_regular_price() ) ) . '</s>' . $price;
 	}
-	$unit = $pb['qty'] > 1 ? '원 · 병당 (' . $pb['qty'] . '병)' : '원';
+	$per = $pb['qty'] > 1
+		? '<div class="perb">병당 ' . esc_html( number_format_i18n( $pb['per'] ) ) . '원 · ' . (int) $pb['qty'] . '병</div>'
+		: '';
 
 	return '<article class="card' . ( $p->is_in_stock() ? '' : ' is-out' ) . '">'
 		. '<a class="fig" href="' . esc_url( $url ) . '" aria-label="' . esc_attr( $n['title'] ) . '">'
 		. ( $eb ? '<span class="eb ' . esc_attr( $eb[1] ) . '">' . esc_html( $eb[0] ) . '</span>' : '' )
 		. $img . '</a>'
-		. '<button type="button" class="wish" data-wish="' . (int) $p->get_id() . '" aria-pressed="false" aria-label="' . esc_attr( $n['title'] ) . ' 찜">' . icon( 'heart' ) . '</button>'
 		. '<div class="bd"><a class="nm" href="' . esc_url( $url ) . '">' . esc_html( $n['title'] ) . '</a>'
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
-		. '<div class="pr"><span class="n">' . $price . '</span><small>' . esc_html( $unit ) . '</small></div></div></article>';
+		. '<div class="pr"><span class="n">' . $price . '</span><small>원</small></div>'
+		. $per . '</div></article>';
 }
 
 /**
@@ -274,7 +276,7 @@ function header_html(): void {
 		<a href="<?php echo esc_url( home_url( '/tip/' ) ); ?>">Tip</a>
 		<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
 		<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">배송조회</a>
-		<span class="r">만 19세 이상 · 휴대폰 본인확인 후 구매</span>
+		<span class="r">19세 미만 판매 금지</span>
 	</div></div>
 	<header class="gnb"><div class="wrap gnb-in">
 		<a class="lg" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo logo_html(); // phpcs:ignore ?></a>
@@ -322,6 +324,17 @@ function tabbar_html(): void {
 }
 
 /**
+ * 카카오톡 문의 주소. 오픈채팅 링크가 생기면 이 필터 한 줄로 바꾼다.
+ *
+ *     add_filter( 'duckhoo_kakao_url', fn() => 'https://open.kakao.com/o/XXXXXXX' );
+ *
+ * @return string
+ */
+function kakao_url(): string {
+	return (string) apply_filters( 'duckhoo_kakao_url', home_url( '/inquiries/' ) );
+}
+
+/**
  * 푸터. 모든 화면에 붙는다.
  *
  * @return void
@@ -336,12 +349,11 @@ function footer_html(): void {
 		<div class="fgrid">
 			<div class="fabout"><a class="lg lg-w" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="g"></span>액상덕후</a>
 				<p>전자담배 액상 전문몰. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
-				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">문의하기</a></div></div>
+				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo kakao_url() === home_url( '/inquiries/' ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
 			<div class="fcol"><b>상품</b><?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( $c->name ); ?></a><?php endforeach; ?></div>
 			<div class="fcol"><b>브랜드</b><?php foreach ( $brands as $b ) : ?><a href="<?php echo esc_url( add_query_arg( array( 's' => '[' . $b . ']', 'post_type' => 'product' ), home_url( '/' ) ) ); ?>"><?php echo esc_html( $b ); ?></a><?php endforeach; ?></div>
 			<div class="fcol"><b>안내</b>
-				<a href="<?php echo esc_url( home_url( '/tip/' ) ); ?>">배송 · 교환 · 환불</a>
-				<a href="<?php echo esc_url( home_url( '/event/' ) ); ?>">이벤트</a>
+				<a href="<?php echo esc_url( home_url( '/shipping/' ) ); ?>">배송 · 교환 · 환불</a>
 				<a href="<?php echo esc_url( home_url( '/register/' ) ); ?>">회원가입</a>
 				<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">주문조회</a>
 				<a href="<?php echo esc_url( home_url( '/membership-cancel/' ) ); ?>">회원탈퇴</a></div>

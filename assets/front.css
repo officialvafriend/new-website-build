@@ -122,10 +122,6 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .card.is-out .fig{filter:saturate(.25) opacity(.7)}
 .dhr .eb{position:absolute;top:.7rem;left:.7rem;font-size:13px;font-weight:800;letter-spacing:-.01em;color:#1565C0;background:rgba(255,255,255,.92);padding:.25rem .55rem;border-radius:8px;z-index:1}
 .dhr .eb.out{color:#5F6770}.dhr .eb.sale{color:#B45309}.dhr .eb.best{color:#9F1239}
-.dhr .wish{position:absolute;top:1rem;right:1rem;width:40px;height:40px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;color:#4A525B;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);z-index:2;transition:transform 150ms}
-.dhr .wish svg{width:20px;height:20px;stroke-width:2.1}
-.dhr .wish:hover{transform:scale(1.08)}
-.dhr .wish.on{color:#E11D48}.dhr .wish.on svg{fill:#E11D48;stroke:#E11D48}
 .dhr .card .bd{padding:.2rem .95rem 1rem;display:flex;flex-direction:column;gap:.25rem;flex:1 1 auto}
 .dhr .card .nm{font-size:15.5px;font-weight:700;line-height:1.35;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
 .dhr .meta{display:flex;align-items:center;gap:.3rem;font-size:13.5px;color:#5F6770;font-weight:500;flex-wrap:wrap}
@@ -192,3 +188,27 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .scb.off{opacity:0;pointer-events:none}
 .dhr .scw-none .scb{display:none!important}
 @media(min-width:880px){.dhr .scb{display:flex}.dhr .scroller{cursor:grab;scroll-snap-type:none}.dhr .scroller.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}}
+
+/* 히어로 슬라이드 */
+.dhr .hslide{position:relative;overflow:hidden;border-radius:22px}
+.dhr .hslide-track{display:flex;transition:transform .45s cubic-bezier(.22,1,.36,1);will-change:transform}
+.dhr .hslide-item{flex:0 0 100%;min-width:0;border-radius:22px}
+@media(prefers-reduced-motion:reduce){.dhr .hslide-track{transition:none}}
+.dhr .hprice{display:flex;align-items:baseline;gap:.5rem;font-variant-numeric:tabular-nums}
+.dhr .hprice s{color:#5F6770;font-size:15px;font-weight:500}
+.dhr .hprice b{font-size:clamp(1.35rem,1.1rem + 1vw,1.75rem);font-weight:900;letter-spacing:-.03em;color:#111}
+.dhr .hnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:999px;border:1.5px solid #E1E5E8;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.dhr .hnav svg{width:22px;height:22px}
+.dhr .hprev{left:.6rem}.dhr .hprev svg{transform:rotate(90deg)}
+.dhr .hnext{right:.6rem}.dhr .hnext svg{transform:rotate(-90deg)}
+.dhr .hnav:hover{background:#F4F6F7}
+.dhr .hdots{position:absolute;left:0;right:0;bottom:.85rem;display:flex;align-items:center;justify-content:center;gap:.45rem;z-index:2}
+.dhr .hdot{width:24px;height:24px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dhr .hdot::before{content:"";width:8px;height:8px;border-radius:999px;background:#C9CFD4}
+.dhr .hdot.on::before{width:22px;background:#111}
+.dhr .hplay{width:24px;height:24px;margin-left:.3rem;padding:0;border:0;background:none;cursor:pointer;color:#4E565F;display:flex;align-items:center;justify-content:center}
+.dhr .hplay::before{content:"";width:9px;height:10px;background:currentColor;clip-path:polygon(0 0,3px 0,3px 10px,0 10px,0 0),polygon(6px 0,9px 0,9px 10px,6px 10px,6px 0)}
+.dhr .hplay[data-playing="0"]::before{clip-path:polygon(0 0,9px 5px,0 10px)}
+
+/* 카드 — 병당 가격은 파는 값 아래 캡션으로 */
+.dhr .perb{margin-top:.2rem;font-size:13px;font-weight:600;color:#4E565F;font-variant-numeric:tabular-nums}
