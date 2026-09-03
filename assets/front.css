@@ -267,6 +267,9 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .dhc.on .dhc__panel{transform:none}
 @media(min-width:880px){.dhr .dhc__panel{left:auto;top:0;width:420px;max-height:none;border-radius:0;transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){.dhr .dhc__panel,.dhr .dhc__dim{transition:none}}
+/* 관리자에게는 워드프레스 관리 바(880px↑ 에서는 32px)가 위를 덮는다 — 서랍 머리가 그 아래로 들어가지 않게.
+   홈은 shell.css 를 싣지 않으니 여기 둔다. */
+@media(min-width:880px){body.dhr.admin-bar .dhc__panel{top:32px}}
 body.dhc-open{overflow:hidden}
 .dhr .dhc__head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem .7rem;border-bottom:1px solid #E2E4E8}
 .dhr .dhc__head h2{font-size:19px;font-weight:900;letter-spacing:-.03em;display:flex;align-items:baseline;gap:.35rem}
