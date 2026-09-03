@@ -189,26 +189,29 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .scw-none .scb{display:none!important}
 @media(min-width:880px){.dhr .scb{display:flex}.dhr .scroller{cursor:grab;scroll-snap-type:none}.dhr .scroller.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}}
 
-/* 히어로 슬라이드 */
-.dhr .hslide{position:relative;overflow:hidden;border-radius:22px}
+/* 히어로 슬라이드 — 조작 줄은 카드 아래에 둔다. 카드 위에 겹치면 제목과 버튼을 가린다. */
+.dhr .hslide{display:flex;flex-direction:column;gap:.6rem}
+.dhr .hviewport{overflow:hidden;border-radius:22px}
 .dhr .hslide-track{display:flex;transition:transform .45s cubic-bezier(.22,1,.36,1);will-change:transform}
 .dhr .hslide-item{flex:0 0 100%;min-width:0;border-radius:22px}
 @media(prefers-reduced-motion:reduce){.dhr .hslide-track{transition:none}}
 .dhr .hprice{display:flex;align-items:baseline;gap:.5rem;font-variant-numeric:tabular-nums}
 .dhr .hprice s{color:#5F6770;font-size:15px;font-weight:500}
 .dhr .hprice b{font-size:clamp(1.35rem,1.1rem + 1vw,1.75rem);font-weight:900;letter-spacing:-.03em;color:#111}
-.dhr .hnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:999px;border:1.5px solid #E1E5E8;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.dhr .hctl{display:flex;align-items:center;justify-content:center;gap:.25rem}
+.dhr .hnav{width:44px;height:44px;padding:0;border:0;background:none;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:999px}
 .dhr .hnav svg{width:22px;height:22px}
-.dhr .hprev{left:.6rem}.dhr .hprev svg{transform:rotate(90deg)}
-.dhr .hnext{right:.6rem}.dhr .hnext svg{transform:rotate(-90deg)}
-.dhr .hnav:hover{background:#F4F6F7}
-.dhr .hdots{position:absolute;left:0;right:0;bottom:.85rem;display:flex;align-items:center;justify-content:center;gap:.45rem;z-index:2}
-.dhr .hdot{width:24px;height:24px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.dhr .hdot::before{content:"";width:8px;height:8px;border-radius:999px;background:#C9CFD4}
+.dhr .hprev svg{transform:rotate(180deg)}
+.dhr .hnav:hover{background:#E9ECEF}
+.dhr .hdots{display:flex;align-items:center;gap:.15rem}
+.dhr .hdot{width:24px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dhr .hdot::before{content:"";width:8px;height:8px;border-radius:999px;background:#C9CFD4;transition:width .2s,background .2s}
 .dhr .hdot.on::before{width:22px;background:#111}
-.dhr .hplay{width:24px;height:24px;margin-left:.3rem;padding:0;border:0;background:none;cursor:pointer;color:#4E565F;display:flex;align-items:center;justify-content:center}
-.dhr .hplay::before{content:"";width:9px;height:10px;background:currentColor;clip-path:polygon(0 0,3px 0,3px 10px,0 10px,0 0),polygon(6px 0,9px 0,9px 10px,6px 10px,6px 0)}
-.dhr .hplay[data-playing="0"]::before{clip-path:polygon(0 0,9px 5px,0 10px)}
+.dhr .hplay{width:44px;height:44px;margin-left:.15rem;padding:0;border:0;background:none;cursor:pointer;color:#4E565F;display:flex;align-items:center;justify-content:center;gap:3px;border-radius:999px}
+.dhr .hplay:hover{background:#E9ECEF}
+.dhr .hplay::before,.dhr .hplay::after{content:"";width:3px;height:12px;background:currentColor;border-radius:1px}
+.dhr .hplay[data-playing="0"]::before{width:0;height:0;background:none;border-left:10px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent;border-radius:0}
+.dhr .hplay[data-playing="0"]::after{display:none}
 
 /* 카드 — 병당 가격은 파는 값 아래 캡션으로 */
 .dhr .perb{margin-top:.2rem;font-size:13px;font-weight:600;color:#4E565F;font-variant-numeric:tabular-nums}

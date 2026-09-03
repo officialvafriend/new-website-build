@@ -86,7 +86,7 @@ $month = (int) wp_date( 'n' );
 	<section class="hero2">
 		<?php if ( $heroes ) : ?>
 		<div class="hslide" data-hero aria-roledescription="캐러셀" aria-label="추천 묶음 상품">
-			<div class="hslide-track">
+			<div class="hviewport"><div class="hslide-track">
 			<?php foreach ( $heroes as $i => $hp_item ) :
 				$hn = split_name( $hp_item );
 				$hp = per_bottle( $hp_item );
@@ -104,14 +104,16 @@ $month = (int) wp_date( 'n' );
 					<div class="hart"><span class="box"><?php echo $hp_item->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span></div>
 				</a>
 			<?php endforeach; ?>
-			</div>
+			</div></div>
 			<?php if ( count( $heroes ) > 1 ) : ?>
-			<button type="button" class="hnav hprev" aria-label="이전 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
-			<button type="button" class="hnav hnext" aria-label="다음 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
-			<div class="hdots" role="tablist" aria-label="상품 선택">
-				<?php foreach ( $heroes as $i => $unused ) : ?>
-				<button type="button" role="tab" class="hdot<?php echo $i ? '' : ' on'; ?>" aria-label="<?php echo esc_attr( ( $i + 1 ) . '번째 상품' ); ?>" aria-selected="<?php echo $i ? 'false' : 'true'; ?>"></button>
-				<?php endforeach; ?>
+			<div class="hctl">
+				<button type="button" class="hnav hprev" aria-label="이전 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
+				<div class="hdots" role="tablist" aria-label="상품 선택">
+					<?php foreach ( $heroes as $i => $unused ) : ?>
+					<button type="button" role="tab" class="hdot<?php echo $i ? '' : ' on'; ?>" aria-label="<?php echo esc_attr( ( $i + 1 ) . '번째 상품' ); ?>" aria-selected="<?php echo $i ? 'false' : 'true'; ?>"></button>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="hnav hnext" aria-label="다음 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
 				<button type="button" class="hplay" aria-label="자동 넘김 멈춤" data-playing="1"></button>
 			</div>
 			<?php endif; ?>
