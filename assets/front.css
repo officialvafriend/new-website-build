@@ -87,6 +87,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .msearch svg{width:21px;height:21px}
 @media(min-width:880px){.dhr .msearch{display:none}}
 .dhr .hero2{display:grid;gap:.9rem;grid-template-columns:1fr;padding-top:1rem}
+.dhr .hero2 > *{min-width:0}
 @media(min-width:880px){.dhr .hero2{grid-template-columns:1.55fr 1fr;padding-top:1.4rem}}
 .dhr .hcard{display:flex;border-radius:28px;overflow:hidden;position:relative;min-height:250px;transition:transform 200ms}
 .dhr .hcard:hover{transform:translateY(-3px)}
@@ -196,9 +197,11 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 @media(min-width:880px){.dhr .scb{display:flex}.dhr .scroller{cursor:grab;scroll-snap-type:none}.dhr .scroller.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}}
 
 /* 히어로 슬라이드 — 조작 줄은 카드 아래에 둔다. 카드 위에 겹치면 제목과 버튼을 가린다. */
-.dhr .hslide{display:flex;flex-direction:column;gap:.6rem}
-.dhr .hviewport{overflow:hidden;border-radius:22px}
-.dhr .hslide-track{display:flex;transition:transform .45s cubic-bezier(.22,1,.36,1);will-change:transform}
+.dhr .hslide{display:flex;flex-direction:column;gap:.6rem;min-width:0}
+/* min-width:0 이 없으면 그리드/플렉스 칸이 내용 폭으로 벌어져서 translateX(-100%) 가
+   뷰포트 한 장이 아니라 트랙 전체를 움직인다 */
+.dhr .hviewport{overflow:hidden;border-radius:22px;width:100%;min-width:0}
+.dhr .hslide-track{display:flex;width:100%;min-width:0;transition:transform .45s cubic-bezier(.22,1,.36,1);will-change:transform}
 .dhr .hslide-item{flex:0 0 100%;min-width:0;border-radius:22px}
 @media(prefers-reduced-motion:reduce){.dhr .hslide-track{transition:none}}
 .dhr .hprice{display:flex;align-items:baseline;gap:.5rem;font-variant-numeric:tabular-nums}
