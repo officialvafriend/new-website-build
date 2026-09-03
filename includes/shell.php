@@ -139,6 +139,21 @@ function loop_card( string $template, string $slug, string $name ): string {
 add_filter( 'wc_get_template_part', __NAMESPACE__ . '\\loop_card', 20, 3 );
 
 /**
+ * 마이페이지 첫 화면을 우리 것으로. 워드커머스 기본은 안내 문단 하나뿐이다.
+ *
+ * @param string $template 원래 파일.
+ * @param string $name     템플릿 이름.
+ * @return string
+ */
+function account_dashboard( string $template, string $name ): string {
+	if ( 'myaccount/dashboard.php' === $name && wraps() ) {
+		return dirname( __DIR__ ) . '/templates/myaccount-dashboard.php';
+	}
+	return $template;
+}
+add_filter( 'wc_get_template', __NAMESPACE__ . '\\account_dashboard', 20, 2 );
+
+/**
  * 목록 제목. 테마는 카테고리 이름을 h1 으로 찍되 1px 로 숨긴다 (접근성용). 그래서 목록만 있고
  * 어느 분류를 보는지 알 수 없다. 루프 앞에 보이는 제목 · 건수 · 분류 설명을 넣는다. 테마 h1 은 그대로 둔다.
  */
