@@ -23,7 +23,11 @@ if ( ! $product instanceof \WC_Product ) {
 	$product = wc_get_product( get_the_ID() );
 }
 $dhp_name   = split_name( $product );
-$dhp_images = array_values( array_filter( array_merge( array( $product->get_image_id() ), $product->get_gallery_image_ids() ) ) );
+// 비로그인 방문자에겐 키플이 상품 사진을 "19" 로 가린다. 그 가림은 카드가 쓰는
+// get_image() 경로에 걸려 있고, wc_get_gallery_image_html() 에는 안 걸린다.
+// 그래서 비로그인은 get_image() 로 한 장만 그리고 갤러리를 열지 않는다. 우회하지 않는다.
+$dhp_gated  = ! is_user_logged_in();
+$dhp_images = $dhp_gated ? array() : array_values( array_filter( array_merge( array( $product->get_image_id() ), $product->get_gallery_image_ids() ) ) );
 $dhp_desc   = trim( (string) $product->get_description() );
 $dhp_short  = trim( (string) $product->get_short_description() );
 $dhp_rel    = array_filter( array_map( 'wc_get_product', wc_get_related_products( $product->get_id(), 8 ) ) );
@@ -59,7 +63,9 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 						echo '<div class="dhp-gal__slide' . ( $i ? '' : ' on' ) . '" data-slide="' . (int) $i . '">'
 							. wc_get_gallery_image_html( $dhp_id, 0 === $i ) . '</div>'; // phpcs:ignore
 					}
-					if ( ! $dhp_images ) {
+					if ( $dhp_gated ) {
+						echo '<div class="dhp-gal__slide on">' . $product->get_image( 'woocommerce_single' ) . '</div>'; // phpcs:ignore
+					} elseif ( ! $dhp_images ) {
 						echo '<div class="dhp-gal__slide on">' . wc_placeholder_img( 'woocommerce_single' ) . '</div>'; // phpcs:ignore
 					}
 					?>
