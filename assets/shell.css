@@ -311,3 +311,19 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-guide-box{
   border-radius: 12px !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-guide-box p{ color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; }
+
+/* 장바구니·주문서에 남은 작은 조작들 — 지우기(🗑 · ×) · 바로구매 · 수정.
+   지우는 버튼이 16px 이면 옆의 수량 버튼을 누르기 쉽다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__remove,
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__remove,
+html body.dhr.dhr-wrap.dhr-wrap .wd-orderer-edit-btn{
+  min-width: 44px !important; min-height: 44px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  font-size: 15px !important; color: var(--dh-ink-2, #4E565F) !important;
+  background: transparent !important; border: 0 !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-subtotal__btn{
+  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 700 !important;
+  border: 1.5px solid var(--dh-line, #E1E5E8) !important; border-radius: 999px !important;
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+}
