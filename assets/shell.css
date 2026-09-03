@@ -148,7 +148,9 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product div.product{
 }
 @media (min-width:900px){
   html body.dhr.dhr-wrap.dhr-wrap.single-product div.product{ grid-template-columns: minmax(0,1.02fr) minmax(0,.98fr) !important; gap: 2rem !important; }
-  html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .woocommerce-product-gallery{ position: sticky; top: 84px; }
+  /* 사진을 sticky 로 붙여 뒀더니 아래 행(상세설명 · 연관 상품)이 스크롤로 올라오면서
+     사진 위에 겹쳤다. sticky 는 새 스택 컨텍스트를 만들어 뒤 형제가 위에 그려진다.
+     이 화면에서 얻는 것보다 잃는 게 커서 걷어냈다. */
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > *{ grid-column: 1 / -1 !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .woocommerce-product-gallery{ grid-column: 1 !important; grid-row: 1 !important; width: 100% !important; float: none !important; margin: 0 !important; }
@@ -572,3 +574,23 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__foot{ display: flex; gap: 1rem; margin
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__foot a{ min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__out{ color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__leave{ color: var(--dh-ink-3, #616870); margin-left: auto; }
+
+/* 상품 아래 섹션 — 추천 · 상세설명 · 연관 상품은 전체 폭 한 줄씩. */
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .wc-prl-recommendations,
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .woocommerce-tabs,
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .related.products,
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .upsells.products{
+  grid-column: 1 / -1 !important; width: 100% !important; margin: 2.2rem 0 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations h2,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .related.products > h2,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .upsells.products > h2{
+  font-size: clamp(1.15rem,1rem + .6vw,1.4rem) !important; font-weight: 800 !important;
+  letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important; margin: 0 0 .9rem !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{
+  display: grid !important; grid-template-columns: repeat(2,1fr) !important; gap: .85rem !important;
+  margin: 0 !important; padding: 0 !important;
+}
+@media (min-width:640px){ html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{ grid-template-columns: repeat(3,1fr) !important; } }
+@media (min-width:980px){ html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{ grid-template-columns: repeat(4,1fr) !important; } }

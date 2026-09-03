@@ -80,3 +80,16 @@
   show(0);
   setPlay(!calm);
 })();
+
+/* 상품 상세 — 추천 상품이 구매 상자 안에 들어가 있다.
+   WooCommerce Product Recommendations 가 woocommerce_after_add_to_cart_form 에 붙어서
+   .summary 의 자식으로 그려지기 때문이다. 구매 상자 안에 상품 카드가 4개 끼어 있으면
+   무엇을 사는 화면인지 흐려진다. 두 칸 아래로 꺼내 전체 폭으로 눕힌다.
+   DOM 을 옮기기만 한다 — 링크도 폼도 그대로다. */
+(function(){
+  var prod = document.querySelector('.single-product div.product');
+  if(!prod) return;
+  var moved = [];
+  prod.querySelectorAll('.summary .wc-prl-recommendations, .summary .related, .summary .upsells').forEach(function(el){ moved.push(el); });
+  moved.forEach(function(el){ prod.appendChild(el); });
+})();
