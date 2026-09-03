@@ -154,7 +154,12 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product div.product{
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > *{ grid-column: 1 / -1 !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .woocommerce-product-gallery{ grid-column: 1 !important; grid-row: 1 !important; width: 100% !important; float: none !important; margin: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .summary{ grid-column: 1 !important; grid-row: 2 !important; width: 100% !important; float: none !important; margin: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .summary{
+  grid-column: 1 !important; grid-row: 2 !important; width: 100% !important; float: none !important; margin: 0 !important;
+  /* 테마가 구매 상자를 sticky 로 붙여 둔다. 아래 행(연관 상품 · 추천)이 같은 그리드 안에
+     있어서, 스크롤하면 카드들이 구매 상자 밑으로 지나가며 겹친다. */
+  position: static !important; top: auto !important;
+}
 @media (min-width:900px){
   html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .summary{ grid-column: 2 !important; grid-row: 1 !important; }
 }
