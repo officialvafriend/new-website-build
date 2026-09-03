@@ -94,6 +94,7 @@ function assets(): void {
 	wp_enqueue_style( 'duckhoo-front', plugins_url( 'assets/front.css', $base ), array( 'duckhoo-tokens' ), (string) filemtime( $dir . 'assets/front.css' ) );
 	wp_enqueue_style( 'duckhoo-shell', plugins_url( 'assets/shell.css', $base ), array( 'duckhoo-front', 'duckhoo-theme' ), (string) filemtime( $dir . 'assets/shell.css' ) );
 	wp_enqueue_script( 'duckhoo-front', plugins_url( 'assets/front.js', $base ), array(), (string) filemtime( $dir . 'assets/front.js' ), true );
+	wp_add_inline_script( 'duckhoo-front', \Duckhoo\Redesign\Front\js_config(), 'before' );
 }
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\assets', 110 );
 

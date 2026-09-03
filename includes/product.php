@@ -86,6 +86,24 @@ function price(): void {
 }
 
 /**
+ * 가격 바로 아래 — 살까 말까를 정하는 사실 세 줄. 길게는 버튼 아래 trust() 가 말한다.
+ *
+ * @return void
+ */
+function benefits(): void {
+	global $product;
+	$rows = array( '30,000원 이상 무료배송 · 우체국택배', '평일 16시 이전 입금 확인 시 당일 출고', '미개봉 7일 이내 교환 · 환불' );
+	if ( ! is_user_logged_in() ) {
+		array_unshift( $rows, '첫 가입 시 ' . number_format_i18n( \Duckhoo\Redesign\Front\signup_points() ) . '원 적립 · 본인확인 1분' );
+	}
+	echo '<ul class="dhp-ben">';
+	foreach ( apply_filters( 'duckhoo_product_benefits', $rows, $product ) as $r ) {
+		echo '<li>' . esc_html( $r ) . '</li>';
+	}
+	echo '</ul>';
+}
+
+/**
  * 버튼 아래 — 이 가게에서 사는 방법. 결제 단계에서 처음 보면 늦는 이야기다.
  *
  * @return void

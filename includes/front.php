@@ -271,7 +271,17 @@ function header_html(): void {
 	$initial = $user->exists() ? mb_substr( $user->display_name ?: $user->user_login, 0, 1 ) : '';
 	$nonic   = cat_by_name( '무니코틴' );
 	$sale    = cat_by_name( '특가' );
+	$in    = is_user_logged_in();
+	$pts   = signup_points();
+	$cats  = array_values( array_filter( array( $sale, $nonic, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '기기' ) ) ) );
 	?>
+	<?php if ( ! $in ) : ?>
+	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
+		<b>가입 즉시 <?php echo esc_html( number_format_i18n( $pts ) ); ?>원 적립</b><span>휴대폰 본인확인으로 1분이면 됩니다</span><?php echo icon( 'arrow' ); // phpcs:ignore ?>
+	</a>
+	<?php else : ?>
+	<div class="promo promo--in"><b>30,000원 이상 무료배송</b><span>평일 16시 이전 입금 확인 시 당일 출고</span></div>
+	<?php endif; ?>
 	<div class="util"><div class="wrap">
 		<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
 		<a href="<?php echo esc_url( home_url( '/tip/' ) ); ?>">Tip</a>
@@ -296,7 +306,13 @@ function header_html(): void {
 			<a class="gi wide" href="<?php echo esc_url( $cart ); ?>" aria-label="장바구니"><?php echo icon( 'bag' ); // phpcs:ignore ?><span class="lbl"><?php echo $cart_n ? esc_html( $cart_n . '개' ) : '장바구니'; ?></span><span class="b n" <?php echo $cart_n ? '' : 'style="display:none"'; ?>><?php echo (int) $cart_n; ?></span></a>
 			<a class="who <?php echo $initial ? 'in' : ''; ?>" href="<?php echo esc_url( $account ); ?>" aria-label="<?php echo $initial ? '마이페이지' : '로그인'; ?>"><?php echo $initial ? esc_html( $initial ) : icon( 'user' ); // phpcs:ignore ?></a>
 		</div>
-	</div></header>
+	</div>
+	<nav class="bnav" aria-label="바로 가기"><div class="wrap">
+		<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
+		<?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( preg_replace( '/^\d+월\s*/u', '이달 ', $c->name ) ); ?></a><?php endforeach; ?>
+		<?php if ( ! $in ) : ?><a class="bnav__hi" href="<?php echo esc_url( home_url( '/register/' ) ); ?>">첫 가입 <?php echo esc_html( number_format_i18n( $pts ) ); ?>원</a><?php endif; ?>
+	</div></nav>
+	</header>
 	<?php
 }
 
@@ -322,6 +338,36 @@ function tabbar_html(): void {
 		echo '<a href="' . esc_url( $t[1] ) . '" class="' . ( $t[0] === $k ? 'on' : '' ) . '">' . icon( $t[2] ) . esc_html( $t[3] ) . '</a>'; // phpcs:ignore
 	}
 	echo '</nav>';
+}
+
+/**
+ * 무통장입금 계좌. 워드커머스 BACS 설정에서 읽는다 — 주문서에 찍히는 것과 같은 값이다.
+ *
+ * @return array<int,array{bank:string,number:string,name:string}>
+ */
+function bank_accounts(): array {
+	$out = array();
+	foreach ( (array) get_option( 'woocommerce_bacs_accounts', array() ) as $a ) {
+		$num = trim( (string) ( $a['account_number'] ?? '' ) );
+		if ( '' === $num ) {
+			continue;
+		}
+		$out[] = array(
+			'bank'   => trim( (string) ( $a['bank_name'] ?? '' ) ),
+			'number' => $num,
+			'name'   => trim( (string) ( $a['account_name'] ?? '' ) ),
+		);
+	}
+	return $out;
+}
+
+/**
+ * 가입 적립금. 사이트가 8,800원을 준다 — 테마 안내 띠와 주문서 안내가 같은 숫자를 쓴다.
+ *
+ * @return int
+ */
+function signup_points(): int {
+	return (int) apply_filters( 'duckhoo_signup_points', 8800 );
 }
 
 /**
@@ -365,10 +411,46 @@ function footer_html(): void {
 				<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
 				<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회 (1588-1300)</a></div>
 		</div>
+		<?php $banks = bank_accounts(); if ( $banks ) : ?>
+		<div class="fbank"><b>입금 계좌</b>
+			<?php foreach ( $banks as $b ) : ?><span class="n"><?php echo esc_html( trim( $b['bank'] . ' ' . $b['number'] ) ); ?><?php echo $b['name'] ? ' · ' . esc_html( $b['name'] ) : ''; ?></span><?php endforeach; ?>
+			<span class="fmuted">입금자명은 주문자명과 똑같이 넣어 주세요. 같으면 자동으로 확인됩니다.</span></div>
+		<?php endif; ?>
 		<div class="flegal"><b>19세 미만 청소년에게 판매하지 않습니다.</b> 구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
 			상호 투더문 · 대표 백시문 · 대구광역시 중구 경상감영길 21, 3층(동문동) · 사업자등록번호 642-08-02808 · 통신판매업 신고 제 2025-대구중구-0487 호<br>
 			<a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>">이용약관</a> · <a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>">개인정보처리방침</a> · © 액상덕후</div>
 	</div></footer>
+	<?php cart_drawer_html(); ?>
+	<?php
+}
+
+/**
+ * 장바구니 서랍. 담기 직후와 헤더 장바구니 버튼에서 열린다. 내용은 Store API 로 채운다.
+ * 결제로 가는 길을 한 번 더 보여 주는 게 목적이다 — 장바구니 페이지로 보내 흐름을 끊지 않는다.
+ *
+ * @return void
+ */
+function cart_drawer_html(): void {
+	$cart     = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );
+	$checkout = function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' );
+	?>
+	<div class="dhc" data-cart-drawer hidden>
+		<div class="dhc__dim" data-cart-close></div>
+		<aside class="dhc__panel" role="dialog" aria-modal="true" aria-labelledby="dhc-title">
+			<header class="dhc__head"><h2 id="dhc-title">장바구니 <span class="n" data-cart-count></span></h2>
+				<button type="button" class="dhc__x" data-cart-close aria-label="닫기">×</button></header>
+			<div class="dhc__ship" data-cart-ship hidden><span data-cart-ship-text></span><span class="dhc__bar"><i data-cart-ship-fill></i></span></div>
+			<div class="dhc__list" data-cart-list><p class="dhc__empty">담긴 상품이 없습니다.</p></div>
+			<footer class="dhc__foot">
+				<div class="dhc__tot"><span>상품 금액</span><b class="n" data-cart-total>0원</b></div>
+				<div class="dhc__btns">
+					<a class="btn btn-o" href="<?php echo esc_url( $cart ); ?>">장바구니 보기</a>
+					<a class="btn btn-d" href="<?php echo esc_url( $checkout ); ?>" data-cart-checkout>결제하기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a>
+				</div>
+				<p class="dhc__note">무통장입금 전용 · 입금자명을 주문자명과 똑같이</p>
+			</footer>
+		</aside>
+	</div>
 	<?php
 }
 
@@ -434,9 +516,27 @@ function assets(): void {
 	wp_enqueue_script( 'duckhoo-front', plugins_url( 'assets/front.js', DIR . 'duckhoo-redesign.php' ), array(), (string) filemtime( $js ), true );
 	// 이번 달 마지막 날 23:59:59 (사이트 시간대) — 특가 마감 카운트다운
 	$end = new \DateTime( 'last day of this month 23:59:59', wp_timezone() );
-	wp_add_inline_script( 'duckhoo-front', 'window.DHR={saleEnd:' . $end->getTimestamp() . '000};', 'before' );
+	wp_add_inline_script( 'duckhoo-front', js_config( array( 'saleEnd' => $end->getTimestamp() * 1000 ) ), 'before' );
 }
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\assets', 100 );
+
+/**
+ * front.js 에 넘기는 값. 홈과 껍데기 화면이 같은 것을 쓴다.
+ * Store API 논스는 장바구니 서랍의 지우기에 쓴다 — 응답 헤더의 Nonce 가 오면 그것이 앞선다.
+ *
+ * @param array<string,mixed> $extra 화면별 추가 값.
+ * @return string `window.DHR = {...}` 한 줄.
+ */
+function js_config( array $extra = array() ): string {
+	$cfg = array(
+		'loggedIn' => is_user_logged_in(),
+		'nonce'    => wp_create_nonce( 'wc_store_api' ),
+		'freeShip' => (int) apply_filters( 'duckhoo_free_shipping_min', 30000 ),
+		'cartUrl'  => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
+		'shopUrl'  => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
+	);
+	return 'window.DHR=' . wp_json_encode( array_merge( $cfg, $extra ) ) . ';';
+}
 
 /**
  * 상품이 바뀌면 캐시를 비운다.

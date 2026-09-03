@@ -224,3 +224,80 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 
 /* 카드 — 병당 가격은 파는 값 아래 캡션으로 */
 .dhr .perb{margin-top:.2rem;font-size:13px;font-weight:600;color:#4E565F;font-variant-numeric:tabular-nums}
+
+/* ── 구매·가입을 미는 것들 (레퍼런스: 매 화면이 판다) ──────────────────────── */
+/* 가입 유도 띠 — 헤더 위. 스크롤하면 같이 올라간다 (고정 아님). */
+.dhr .promo{display:flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.45rem 1rem;background:#111;color:#fff;font-size:14px;line-height:1.35;text-align:center}
+.dhr .promo b{font-weight:800;color:#fff}
+.dhr .promo span{color:#C7CBD1;font-weight:500}
+.dhr .promo svg{width:18px;height:18px;stroke-width:2.4;color:#38BDF8}
+.dhr a.promo:hover b{text-decoration:underline;text-underline-offset:3px}
+.dhr .promo--in{background:#E8F5FE;color:#111}
+.dhr .promo--in b{color:#1565C0}.dhr .promo--in span{color:#4E565F}
+@media(max-width:479px){.dhr .promo span{display:none}}
+/* 바로 가기 칩 — 모바일 헤더 아래. 데스크톱은 .dnav 가 같은 일을 한다. */
+.dhr .bnav{border-top:1px solid #EEF0F2;background:#fff}
+.dhr .bnav .wrap{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none;padding-top:.45rem;padding-bottom:.55rem}
+.dhr .bnav .wrap::-webkit-scrollbar{display:none}
+.dhr .bnav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:36px;padding:0 .85rem;border-radius:999px;background:#F1F3F5;color:#111;font-size:14px;font-weight:700;white-space:nowrap}
+.dhr .bnav a.bnav__hi{background:#111;color:#fff}
+@media(min-width:880px){.dhr .bnav{display:none}}
+/* 분류 타일 — 홈 */
+.dhr .qcats{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem .2rem;margin:1.1rem 0 .2rem;text-align:center}
+.dhr .qcats a{display:flex;flex-direction:column;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:#111;min-width:0}
+.dhr .qcats__ic{width:54px;height:54px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 0 #E2E4E8;transition:transform 160ms}
+.dhr .qcats a:hover .qcats__ic{transform:translateY(-2px)}
+.dhr .qcats__ic img{width:100%;height:100%;object-fit:cover}
+.dhr .qcats__ic b{font-size:20px;font-weight:900;color:#1565C0}
+.dhr .qcats a span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media(min-width:640px){.dhr .qcats{gap:.6rem;margin-top:1.4rem}.dhr .qcats__ic{width:72px;height:72px}.dhr .qcats a{font-size:14px}}
+@media(min-width:880px){.dhr .qcats{display:flex;justify-content:center;gap:2.2rem}.dhr .qcats__ic{width:84px;height:84px}.dhr .qcats__ic b{font-size:26px}}
+/* 푸터 — 입금 계좌 */
+.dhr .fbank{margin-top:1.8rem;padding:1rem 1.1rem;background:#1C1C1E;border-radius:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1rem;font-size:14.5px}
+.dhr .fbank b{color:#fff;font-size:15px}
+.dhr .fbank .n{color:#fff;font-weight:700;letter-spacing:.01em}
+.dhr .fbank .fmuted{flex-basis:100%}
+
+/* ── 장바구니 서랍 — 불투명. 데스크톱은 오른쪽 420px, 모바일은 아래에서 올라온다. ── */
+.dhr .dhc{position:fixed;inset:0;z-index:60}
+.dhr .dhc[hidden]{display:none}
+.dhr .dhc__dim{position:absolute;inset:0;background:rgba(17,17,17,.55);opacity:0;transition:opacity .2s}
+.dhr .dhc.on .dhc__dim{opacity:1}
+.dhr .dhc__panel{position:absolute;left:0;right:0;bottom:0;max-height:88dvh;display:flex;flex-direction:column;background:#fff;border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);padding-bottom:env(safe-area-inset-bottom)}
+.dhr .dhc.on .dhc__panel{transform:none}
+@media(min-width:880px){.dhr .dhc__panel{left:auto;top:0;width:420px;max-height:none;border-radius:0;transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.dhr .dhc__panel,.dhr .dhc__dim{transition:none}}
+body.dhc-open{overflow:hidden}
+.dhr .dhc__head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem .7rem;border-bottom:1px solid #E2E4E8}
+.dhr .dhc__head h2{font-size:19px;font-weight:900;letter-spacing:-.03em;display:flex;align-items:baseline;gap:.35rem}
+.dhr .dhc__head h2 .n{font-size:15px;color:#1565C0}
+.dhr .dhc__x{width:44px;height:44px;border-radius:999px;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;color:#111}
+.dhr .dhc__x:hover{background:#ECEDF0}
+.dhr .dhc__ship{padding:.75rem 1.1rem 0;font-size:14px;color:#4E565F}
+.dhr .dhc__ship b{color:#111}
+.dhr .dhc__ship.is-ok b{color:#1565C0}
+.dhr .dhc__bar{display:block;height:6px;border-radius:999px;background:#ECEDF0;margin-top:.45rem;overflow:hidden}
+.dhr .dhc__bar i{display:block;height:100%;width:0;background:#38BDF8;transition:width .3s}
+.dhr .dhc__ship.is-ok .dhc__bar i{background:#1565C0}
+.dhr .dhc__list{flex:1 1 auto;overflow-y:auto;padding:.5rem 1.1rem;min-height:120px}
+.dhr .dhc__list.is-busy{opacity:.55}
+.dhr .dhc__empty{text-align:center;padding:2rem 0;color:#4E565F;font-size:15px;line-height:1.7}
+.dhr .dhc__empty a{color:#1565C0;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.dhr .dhc__it{display:grid;grid-template-columns:64px minmax(0,1fr) 44px;gap:.7rem;align-items:start;padding:.8rem 0;border-bottom:1px solid #EEF0F2}
+.dhr .dhc__it.is-busy{opacity:.4}
+.dhr .dhc__im{width:64px;height:64px;border-radius:12px;overflow:hidden;background:#F1F3F5;display:block}
+.dhr .dhc__im img,.dhr .dhc__im i{width:100%;height:100%;object-fit:cover;display:block}
+.dhr .dhc__nm{display:block;font-size:15px;font-weight:700;line-height:1.35;letter-spacing:-.02em;word-break:keep-all}
+.dhr .dhc__op{margin-top:.2rem;font-size:13px;color:#616870;line-height:1.45;word-break:keep-all}
+.dhr .dhc__row{display:flex;justify-content:space-between;align-items:baseline;margin-top:.35rem;font-size:13.5px;color:#4E565F}
+.dhr .dhc__row b{font-size:15px;color:#111}
+.dhr .dhc__rm{width:44px;height:44px;border-radius:999px;font-size:24px;line-height:1;color:#616870;display:flex;align-items:center;justify-content:center;margin:-.6rem -.6rem 0 0}
+.dhr .dhc__rm:hover{background:#ECEDF0;color:#111}
+.dhr .dhc__foot{padding:.8rem 1.1rem 1rem;border-top:1px solid #E2E4E8;background:#fff}
+.dhr .dhc__tot{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;color:#4E565F;margin-bottom:.7rem}
+.dhr .dhc__tot b{font-size:22px;font-weight:900;letter-spacing:-.03em;color:#111}
+.dhr .dhc__btns{display:grid;grid-template-columns:1fr 1.4fr;gap:.5rem}
+.dhr .dhc__btns .btn{min-height:50px}
+.dhr .btn-o{background:#fff;color:#111;box-shadow:inset 0 0 0 1.5px #111}
+.dhr .dhc__btns .btn.is-off{background:#ECEDF0;color:#616870;cursor:default}
+.dhr .dhc__note{margin-top:.6rem;text-align:center;font-size:13px;color:#616870}

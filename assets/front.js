@@ -104,3 +104,143 @@
   g.addEventListener('touchend', function(e){ if(x0===null||slides.length<2) return; var dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)<45) return;
     var cur=slides.findIndex(function(s){ return s.classList.contains('on'); }); go((cur+(dx<0?1:-1)+slides.length)%slides.length); }, {passive:true});
 })();
+
+/* 상품 사진 — 몇 장째인지. 썸네일·넘김 양쪽에서 같은 숫자를 본다. */
+(function(){
+  var g = document.querySelector('[data-gal]'), n = g && g.querySelector('[data-gal-n] b'); if(!g || !n) return;
+  var slides = g.querySelectorAll('.dhp-gal__slide');
+  var obs = new MutationObserver(function(){ for(var i=0;i<slides.length;i++){ if(slides[i].classList.contains('on')){ n.textContent = i + 1; break; } } });
+  for(var i=0;i<slides.length;i++) obs.observe(slides[i], {attributes:true, attributeFilter:['class']});
+})();
+
+/* 장바구니 서랍 — 담기 직후와 헤더·탭바의 장바구니 버튼에서 연다.
+   내용은 WooCommerce Store API(/wc/store/v1/cart) 로 읽는다. 지우기만 여기서 하고
+   수량은 장바구니 페이지(키플)에서 — 묶음 옵션은 그쪽 규칙이 있다.
+   비로그인은 사진을 그리지 않는다: Store API 사진은 키플의 19 가림을 안 거친다. */
+(function(){
+  var D = window.DHR || {}, root = document.querySelector('[data-cart-drawer]'); if(!root || !window.fetch) return;
+  var list = root.querySelector('[data-cart-list]'), count = root.querySelector('[data-cart-count]'), total = root.querySelector('[data-cart-total]');
+  var ship = root.querySelector('[data-cart-ship]'), shipT = root.querySelector('[data-cart-ship-text]'), shipF = root.querySelector('[data-cart-ship-fill]');
+  var checkout = root.querySelector('[data-cart-checkout]'), panel = root.querySelector('.dhc__panel');
+  var nonce = D.nonce || '', unit = 0, opener = null, cartUrl = D.cartUrl || '/cart/';
+  var won = function(v){ var x = Number(v) / Math.pow(10, unit); return (isFinite(x) ? Math.round(x) : 0).toLocaleString('ko-KR') + '원'; };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var strip = function(s){ return String(s == null ? '' : s).replace(/<[^>]*>/g, '').trim(); };
+
+  function badge(n){
+    document.querySelectorAll('.gnb .gi.wide').forEach(function(a){
+      var b = a.querySelector('.b'), l = a.querySelector('.lbl');
+      if(b){ b.textContent = n; b.style.display = n ? '' : 'none'; }
+      if(l){ l.textContent = n ? n + '개' : '장바구니'; }
+    });
+  }
+  function render(c){
+    var items = (c && c.items) || [], n = c ? (c.items_count || 0) : 0;
+    unit = (c && c.totals && c.totals.currency_minor_unit) || 0;
+    count.textContent = n ? n : '';
+    total.textContent = won(c && c.totals ? c.totals.total_items : 0);
+    if(!items.length){ list.innerHTML = '<p class="dhc__empty">담긴 상품이 없습니다.<br><a href="' + esc(D.shopUrl || '/shop/') + '">상품 보러 가기</a></p>'; }
+    else list.innerHTML = items.map(function(it){
+      var img = D.loggedIn && it.images && it.images[0] ? '<img src="' + esc(it.images[0].thumbnail) + '" alt="" loading="lazy">' : '<i></i>';
+      var opts = (it.item_data || []).map(function(d){ return strip(d.display || d.value); }).filter(Boolean);
+      return '<div class="dhc__it" data-key="' + esc(it.key) + '"><a class="dhc__im" href="' + esc(it.permalink) + '">' + img + '</a>'
+        + '<div class="dhc__tx"><a class="dhc__nm" href="' + esc(it.permalink) + '">' + esc(strip(it.name)) + '</a>'
+        + (opts.length ? '<p class="dhc__op">' + esc(opts.join(' · ')) + '</p>' : '')
+        + '<div class="dhc__row"><span>수량 ' + esc(it.quantity) + '</span><b class="n">' + won(it.totals && it.totals.line_total) + '</b></div></div>'
+        + '<button type="button" class="dhc__rm" data-cart-remove aria-label="' + esc(strip(it.name)) + ' 빼기">×</button></div>';
+    }).join('');
+    var goal = Number(D.freeShip || 0), sub = c && c.totals ? Number(c.totals.total_items) / Math.pow(10, unit) : 0;
+    if(goal && items.length){
+      ship.hidden = false; var left = goal - sub;
+      shipT.innerHTML = left > 0 ? '<b>' + left.toLocaleString('ko-KR') + '원</b> 더 담으면 무료배송' : '<b>무료배송</b> 조건을 채웠어요';
+      shipF.style.width = Math.min(100, sub / goal * 100) + '%'; ship.classList.toggle('is-ok', left <= 0);
+    } else ship.hidden = true;
+    if(checkout){ checkout.classList.toggle('is-off', !items.length); checkout.setAttribute('aria-disabled', items.length ? 'false' : 'true'); }
+    badge(n);
+  }
+  function load(){
+    list.classList.add('is-busy');
+    return fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}}).then(function(r){
+      var h = r.headers.get('Nonce') || r.headers.get('X-WC-Store-API-Nonce'); if(h) nonce = h;
+      if(!r.ok) throw new Error(r.status); return r.json();
+    }).then(render).finally(function(){ list.classList.remove('is-busy'); });
+  }
+  function open(from){
+    opener = from || document.activeElement; root.hidden = false; document.body.classList.add('dhc-open');
+    requestAnimationFrame(function(){ root.classList.add('on'); var x = root.querySelector('.dhc__x'); if(x) x.focus(); });
+    return load().catch(function(){ list.innerHTML = '<p class="dhc__empty">장바구니를 불러오지 못했습니다.<br><a href="' + esc(cartUrl) + '">장바구니 페이지로</a></p>'; });
+  }
+  function close(){
+    root.classList.remove('on'); document.body.classList.remove('dhc-open');
+    setTimeout(function(){ root.hidden = true; }, 220);
+    if(opener && opener.focus) opener.focus();
+  }
+  root.addEventListener('click', function(e){
+    if(e.target.closest('[data-cart-close]')){ close(); return; }
+    var rm = e.target.closest('[data-cart-remove]'); if(!rm) return;
+    var it = rm.closest('[data-key]'); if(!it) return; it.classList.add('is-busy'); rm.disabled = true;
+    fetch('/wp-json/wc/store/v1/cart/remove-item', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json', 'Nonce': nonce}, body: JSON.stringify({key: it.dataset.key})})
+      .then(function(r){ var h = r.headers.get('Nonce'); if(h) nonce = h; if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(render).catch(function(){ it.classList.remove('is-busy'); rm.disabled = false; location.href = cartUrl; });
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !root.hidden) close(); });
+  if(checkout) checkout.addEventListener('click', function(e){ if(checkout.classList.contains('is-off')){ e.preventDefault(); } });
+  /* 서랍 안에서만 탭이 돈다 */
+  panel.addEventListener('keydown', function(e){
+    if(e.key !== 'Tab') return;
+    var f = panel.querySelectorAll('a[href],button:not([disabled])'); if(!f.length) return;
+    var a = f[0], z = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
+    else if(!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
+  });
+
+  /* 헤더 · 탭바의 장바구니 → 서랍. 장바구니 페이지 자체에서는 그냥 링크. */
+  if(!document.body.classList.contains('woocommerce-cart')){
+    document.querySelectorAll('.gnb .gi.wide, nav.tabs a[href*="/cart"]').forEach(function(a){
+      a.addEventListener('click', function(e){ if(e.metaKey || e.ctrlKey) return; e.preventDefault(); open(a); });
+    });
+  }
+  /* 담긴 직후 — WooCommerce 알림이 "장바구니에 추가" 를 말하면 서랍을 연다 */
+  var msg = document.querySelector('.woocommerce-message');
+  if(msg && /장바구니|cart/i.test(msg.textContent) && !document.body.classList.contains('woocommerce-cart')){ setTimeout(function(){ open(null); }, 350); }
+  window.DHR = D; D.openCart = open;
+})();
+
+/* 상품 상세 — 아래 고정 구매 줄(모바일). 진짜 버튼은 폼 안의 것이다: 담기 · 결제하기의
+   잠김 상태와 글자를 그대로 비추고, 누르면 그 버튼을 대신 누른다. 폼의 버튼이 화면에
+   보일 때는 줄을 내린다 — 같은 버튼이 두 번 보이면 안 된다. */
+(function(){
+  var bar = document.querySelector('[data-buybar]'), form = document.querySelector('form.cart'); if(!bar || !form) return;
+  var add = form.querySelector('.single_add_to_cart_button'), buy = form.querySelector('.wd-direct-checkout-btn');
+  if(!add) return;
+  var tot = bar.querySelector('[data-bar-total]'), bCart = bar.querySelector('[data-bar-cart]'), bBuy = bar.querySelector('[data-bar-buy]');
+  var price = Number(bar.dataset.price || 0), qty = form.querySelector('input.qty');
+  var won = function(v){ return Math.round(v).toLocaleString('ko-KR') + '원'; };
+  function sync(){
+    var off = !!add.disabled || add.classList.contains('vf-btn-disabled') || add.classList.contains('disabled');
+    bar.classList.toggle('is-off', off);
+    var sum = form.querySelector('.dhx-sum__total, .wd-option-builder-total');
+    var t = sum ? sum.textContent.trim() : '';
+    if(t && !/^0\s*원?$/.test(t)) tot.textContent = t;
+    else if(price) tot.textContent = won(price * (qty ? Math.max(1, Number(qty.value) || 1) : 1));
+    else tot.textContent = '—';
+    bBuy.textContent = off ? (sum ? '옵션을 골라 주세요' : add.textContent.trim() || '결제하기') : (buy ? '결제하기' : '장바구니에 담기');
+    bCart.hidden = !buy;
+  }
+  function hit(real){
+    if(bar.classList.contains('is-off')){
+      var box = form.querySelector('.dhx') || form; box.scrollIntoView({behavior:'smooth', block:'start'});
+      bar.classList.add('nudge'); setTimeout(function(){ bar.classList.remove('nudge'); }, 700); return;
+    }
+    real.click();
+  }
+  bCart.addEventListener('click', function(){ hit(add); });
+  bBuy.addEventListener('click', function(){ hit(buy || add); });
+  new MutationObserver(sync).observe(form, {subtree:true, childList:true, attributes:true, attributeFilter:['disabled','class'], characterData:true});
+  form.addEventListener('input', sync); form.addEventListener('change', sync);
+  var anchor = form.querySelector('.vf-drawer-actions') || add;
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(en){ bar.classList.toggle('is-away', !en[0].isIntersecting); }, {threshold: 0.2}).observe(anchor);
+  } else bar.classList.add('is-away');
+  sync(); bar.hidden = false;
+})();

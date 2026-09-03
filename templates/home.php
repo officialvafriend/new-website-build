@@ -126,6 +126,22 @@ $month = (int) wp_date( 'n' );
 		</a>
 	</section>
 
+	<?php
+	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
+	$qc = array_values( array_filter( array( $sale_cat, $nonic_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '기기' ), $rank_cat ) ) );
+	if ( $qc ) : ?>
+	<nav class="qcats" aria-label="분류 바로 가기">
+		<?php foreach ( $qc as $c ) :
+			$tid = (int) get_term_meta( $c->term_id, 'thumbnail_id', true );
+			$lbl = preg_replace( '/^\d+월\s*/u', '이달 ', $c->name ); ?>
+		<a href="<?php echo esc_url( get_term_link( $c ) ); ?>">
+			<span class="qcats__ic"><?php echo $tid ? wp_get_attachment_image( $tid, 'woocommerce_gallery_thumbnail' ) : '<b>' . esc_html( mb_substr( $lbl, 0, 1 ) ) . '</b>'; // phpcs:ignore ?></span>
+			<span><?php echo esc_html( $lbl ); ?></span>
+		</a>
+		<?php endforeach; ?>
+	</nav>
+	<?php endif; ?>
+
 	<?php if ( $deals ) : ?>
 	<section class="deals"><div class="deals-h"><h2>오늘의 특가</h2>
 		<span class="ends">마감까지 <b id="dhr-left" class="n">—</b></span></div>

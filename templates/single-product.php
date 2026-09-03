@@ -58,6 +58,10 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 
 			<div class="dhp-gal" data-gal>
 				<div class="dhp-gal__main">
+					<?php if ( $product->is_on_sale() && (float) $product->get_regular_price() > (float) $product->get_price() ) : ?>
+					<span class="dhp-gal__pill">이달 특가 <?php echo (int) round( ( 1 - (float) $product->get_price() / (float) $product->get_regular_price() ) * 100 ); ?>% 할인</span>
+					<?php endif; ?>
+					<?php if ( count( $dhp_images ) > 1 ) : ?><span class="dhp-gal__n" data-gal-n><b>1</b> / <?php echo count( $dhp_images ); ?></span><?php endif; ?>
 					<?php
 					foreach ( $dhp_images as $i => $dhp_id ) {
 						echo '<div class="dhp-gal__slide' . ( $i ? '' : ' on' ) . '" data-slide="' . (int) $i . '">'
@@ -86,6 +90,7 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 				<?php
 				head();
 				price();
+				\Duckhoo\Redesign\Product\benefits();
 				if ( '' !== $dhp_short ) {
 					echo '<div class="dhp-short">' . wp_kses_post( wpautop( $dhp_short ) ) . '</div>';
 				}
@@ -126,6 +131,12 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 	<?php do_action( 'woocommerce_after_single_product' ); ?>
 </div>
 </main>
+<div class="dhp-bar" data-buybar data-price="<?php echo esc_attr( (string) $product->get_price() ); ?>" hidden>
+	<div class="dhp-bar__sum"><span>총 금액</span><b class="n" data-bar-total>—</b></div>
+	<button type="button" class="dhp-bar__cart" data-bar-cart aria-label="장바구니에 담기"><?php echo icon( 'bag' ); // phpcs:ignore ?></button>
+	<button type="button" class="dhp-bar__buy" data-bar-buy>결제하기</button>
+	<?php if ( ! is_user_logged_in() ) : ?><a class="dhp-bar__tip" href="<?php echo esc_url( home_url( '/register/' ) ); ?>">가입 즉시 <?php echo esc_html( number_format_i18n( \Duckhoo\Redesign\Front\signup_points() ) ); ?>원 적립</a><?php endif; ?>
+</div>
 <?php wp_footer(); ?>
 </body>
 </html>

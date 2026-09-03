@@ -946,3 +946,45 @@ html body.dhr.dhr-wrap.dhr-wrap .wc_payment_method label{ font-size: 16px !impor
 html body.dhr.dhr-wrap.dhr-wrap .place-order{ padding: 0 !important; margin-top: .8rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-terms-custom{ font-size: 14px !important; color: var(--dh-ink-2, #4E565F) !important; line-height: 1.6 !important; margin: .8rem 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap #place_order{ width: 100% !important; }
+
+/* ══ 상품 상세 — 사는 쪽으로 미는 것들 ═══════════════════════════════════════ */
+/* 사진 위 — 할인율 알약, 몇 장째 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__pill{ position: absolute; z-index: 2; top: .8rem; left: .8rem; background: #111; color: #fff; font-size: 13px; font-weight: 800; padding: .35rem .7rem; border-radius: 999px; letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__n{ position: absolute; z-index: 2; right: .8rem; bottom: .8rem; background: #fff; border: 1px solid var(--dh-line, #E1E5E8); color: var(--dh-ink-2, #4E565F); font-size: 13px; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__n b{ color: var(--dh-ink, #111); }
+/* 가격 아래 — 살까 말까를 정하는 사실 세 줄 */
+html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben{ list-style: none; margin: .9rem 0 0 !important; padding: .8rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .35rem; }
+html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li{ margin: 0 !important; padding: 0 0 0 1.1rem !important; position: relative; font-size: 14px; line-height: 1.5; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li::before{ content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 999px; background: var(--dh-accent, #38BDF8); }
+html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li:first-child{ color: var(--dh-ink, #111); font-weight: 700; }
+/* 아래 고정 구매 줄 — 모바일. 폼의 버튼이 보이는 동안은 내려가 있다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 36; display: flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom)); background: var(--dh-surface, #fff); border-top: 1px solid var(--dh-line, #E1E5E8);
+  transform: translateY(110%); transition: transform .22s cubic-bezier(.22,1,.36,1);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar[hidden]{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-away{ transform: none; }
+@media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ transition: none; } }
+@media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ display: none !important; } }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum{ display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.15; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum span{ font-size: 13px; color: var(--dh-ink-3, #616870); font-weight: 600; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum b{ font-size: 19px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart{ flex: 0 0 50px; width: 50px; height: 50px; border-radius: 14px; border: 1.5px solid var(--dh-ink, #111); background: #fff; color: var(--dh-ink, #111); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart[hidden]{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart svg{ width: 22px; height: 22px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ flex: 0 0 auto; min-width: 42%; height: 50px; padding: 0 1.3rem; border-radius: 14px; background: var(--dh-primary, #111); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -.01em; border: 0; cursor: pointer; white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-off .dhp-bar__buy{ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-2, #4E565F); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-off .dhp-bar__cart{ border-color: var(--dh-line-strong, #C9CFD4); color: var(--dh-ink-3, #616870); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.nudge .dhp-bar__buy{ animation: dhp-nudge .5s; }
+@keyframes dhp-nudge{ 20%{ transform: translateX(-4px); } 60%{ transform: translateX(4px); } }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip{
+  position: absolute; right: 1rem; bottom: calc(100% + .45rem); background: #111; color: #fff; font-size: 13px; font-weight: 700; padding: .4rem .7rem; border-radius: 999px; text-decoration: none; white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip::after{ content: ""; position: absolute; right: 1.4rem; top: 100%; border: 5px solid transparent; border-top-color: #111; }
+/* 구매 줄이 탭바 자리를 쓴다 */
+@media (max-width:899px){ html body.dhr.dhr-wrap.dhr-wrap.dhp-page nav.tabs{ display: none !important; } html body.dhr.dhr-wrap.dhr-wrap.dhp-page{ padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important; } }
+/* 담긴 뒤의 워드커머스 알림 — 서랍이 대신 말하니 짧게 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message{ background: var(--dh-accent-soft, #E8F5FE) !important; border: 0 !important; border-radius: 12px !important; color: var(--dh-ink, #111) !important; padding: .8rem 1rem !important; margin: 1rem 0 0 !important; font-size: 14px !important; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message::before{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message a.button{ order: 2; margin-left: auto; min-height: 40px; padding: 0 1rem !important; border-radius: 999px !important; background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important; display: inline-flex; align-items: center; }
