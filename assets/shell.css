@@ -148,7 +148,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx{
 }
 /* 11–13px 은 쓰지 않는다 — 캡션 최소 13px, 본문 15px */
 html body.dhr.dhr-wrap.dhr-wrap .dhx-card__head{ font-size: 15px !important; padding: 15px 14px !important; }
-html body.dhr.dhr-wrap.dhr-wrap .dhx-card__no{ width: 22px !important; height: 22px !important; flex-basis: 22px !important; font-size: 12px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card__no{ width: 24px !important; height: 24px !important; flex-basis: 24px !important; font-size: 13px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx-card__state{ font-size: 13px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__name,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__name,
@@ -230,3 +230,11 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .summary .dh-unit i{
   color: var(--dh-accent-deep, #1565C0) !important; font-style: normal !important;
   font-size: 14px !important; font-weight: 700 !important;
 }
+
+/* 남은 12–12.5px 캡션을 13px 바닥으로 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-lock,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-picked__empty,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-desc{ font-size: 13px !important; }
+/* 옛 프론트가 화면 밖에 세워 둔 원본 필드 — 값은 그대로 두고 폭만 잡는다.
+   안 잡으면 문서 폭이 뷰포트보다 넓어진다 (body 가 clip 이라 스크롤은 안 되지만). */
+html body.dhr.dhr-wrap.dhr-wrap .dhx-src{ max-width: 100% !important; overflow: hidden !important; }

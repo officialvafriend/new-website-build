@@ -47,7 +47,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 @media(min-width:880px){.dhr .gi.wide{width:auto;padding:0 .9rem 0 .7rem;gap:.4rem;border:1.5px solid #CFD3D8;border-radius:999px;height:40px}.dhr .gi .lbl{display:inline;font-size:14px;font-weight:700}.dhr .gi.wide .b{position:static;margin-left:.1rem}}
 .dhr .msearch-btn{display:flex}
 @media(min-width:880px){.dhr .msearch-btn{display:none}}
-.dhr .who{width:36px;height:36px;border-radius:999px;background:#E4F4FD;color:#1565C0;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-left:.25rem}
+.dhr .who{width:44px;height:44px;border-radius:999px;background:#E4F4FD;color:#1565C0;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-left:.25rem}
 .dhr .who.in{background:#111;color:#fff}
 
 /* 아래 탭 (모바일) */
@@ -176,7 +176,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .fkakao span{font-size:13.5px;color:#9A9FA6}
 .dhr .fcol{display:flex;flex-direction:column;gap:.45rem}
 .dhr .fcol b{color:#fff;font-size:15px;margin-bottom:.3rem}
-.dhr .fcol a{font-size:14.5px;color:#C7CBD1;min-height:32px;display:flex;align-items:center}
+.dhr .fcol a{font-size:14.5px;color:#C7CBD1;min-height:44px;display:flex;align-items:center}
 .dhr .fcol a:hover{color:#fff}
 .dhr .fmuted{font-size:13.5px;color:#9A9FA6;line-height:1.6}
 .dhr .flegal a{color:#C7CBD1;text-decoration:underline}

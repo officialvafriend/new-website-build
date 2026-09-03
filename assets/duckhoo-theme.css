@@ -317,3 +317,9 @@ tr.woocommerce-orders-table__row--status-cancelled .woocommerce-orders-table__ce
   color: var(--dh-ink-2); font-size: 15px;
 }
 .woocommerce-info::before, .woocommerce-message::before{ color: var(--dh-accent-deep); }
+
+/* 장바구니 자동할인 안내 — 인라인 style 로 12px 핑크(#E91E63, 흰 배경 4.02:1 로 AA 미달)가
+   박혀 있다. 인라인은 !important 로만 이긴다. 크기는 13px 바닥, 색은 우리 강조색으로. */
+#coupon-auto-notice div{ font-size: 13px !important; }
+#coupon-auto-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; letter-spacing: 0 !important; }
+#coupon-auto-notice div + div{ font-size: 14px !important; color: var(--dh-ink-2, #4E565F) !important; }
