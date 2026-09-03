@@ -149,6 +149,18 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
 - 목록 제목은 테마가 h1 을 1px 로 숨기고 `.woocommerce-products-header` 도 안 찍는다.
   `Shell\archive_title()` 이 `woocommerce_before_shop_loop` 앞(5)에 제목 · 건수 · 분류 설명을
   `.dhr-arch` 로 그린다. 테마 h1 은 그대로 둔다 (접근성)
+- **상품 상세 · 목록은 우리 템플릿이다** (`templates/single-product.php` · `templates/archive-product.php`,
+  `Front\take_front_page()` 가 `is_product()` · `is_shop()/is_product_taxonomy()/상품 검색` 에서 바꾼다.
+  필터 `duckhoo_take_product` · `duckhoo_take_archive`). 구매 폼은
+  `woocommerce_template_single_add_to_cart()` 한 줄이 워드커머스 · PPOM · 키플 옵션 UI 를 그대로 그린다.
+  제목 · 가격 · 사는 방법은 `includes/product.php` (`head()` · `price()` · `trust()`).
+  **비로그인은 갤러리를 열지 않고 `get_image()` 한 장만** 그린다 — `wc_get_gallery_image_html()` 에는
+  키플의 19 가림이 안 걸린다 (확인함). 로그인 = 본인확인 회원이라 그때만 갤러리.
+- 장바구니(`.wd-cpg`) · 주문서는 키플 마크업 그대로 두고 CSS 로 카드/두 칸으로 편다
+  (체크박스 · 수량 · 삭제가 name 으로 걸려 있다). 표는 `table.wd-cpg-table tr.wd-cpg-row` 처럼
+  **표 리셋 규칙보다 특이도를 높여** 잡아야 한다 — 한 번 졌다
+- 스테이징 배포가 늦어질 때: CSS 는 `last-modified` 헤더, PHP 는 렌더 결과(`/shop/` 의 `<h1>`)로 본다.
+  2026-09-03 10:10 커밋이 40분 넘게 안 올라온 적이 있다
 - **옛 프론트(duckhoo-front)의 껍데기를 걷어냈다.** `dh-shell` 이 body 에 파스텔 그라데이션을,
   `#page` 에 1240px 둥근 흰 카드와 216px 사이드 내비를 그려 우리 헤더·푸터와 겹쳤다.
   `Shell\drop_legacy_shell()` 이 등록된 핸들 `dh-shell` · `dh-shop-polish` · `dh-front` 를
