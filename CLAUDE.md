@@ -147,6 +147,19 @@ curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool | grep -A3 re
 - 목록 제목은 테마가 h1 을 1px 로 숨기고 `.woocommerce-products-header` 도 안 찍는다.
   `Shell\archive_title()` 이 `woocommerce_before_shop_loop` 앞(5)에 제목 · 건수 · 분류 설명을
   `.dhr-arch` 로 그린다. 테마 h1 은 그대로 둔다 (접근성)
+- **옛 프론트(duckhoo-front)의 껍데기를 걷어냈다.** `dh-shell` 이 body 에 파스텔 그라데이션을,
+  `#page` 에 1240px 둥근 흰 카드와 216px 사이드 내비를 그려 우리 헤더·푸터와 겹쳤다.
+  `Shell\drop_legacy_shell()` 이 등록된 핸들 `dh-shell` · `dh-shop-polish` · `dh-front` 를
+  `wp_dequeue_style` 한다 (필터 `duckhoo_drop_legacy_styles`). 플러그인 파일은 건드리지 않는다.
+  **상품 옵션 UI(`dh-option-ui`)는 남긴다** — 그것이 PPOM select 에 값을 넣는 쪽이다. 색과
+  글자 크기만 우리 토큰으로 덮는다 (`.dhx` 안의 `--dhx-*` 를 재정의)
+- 사장님 Code Snippets 가 찍는 `<style id="dh-cta-fix">` 는 **핸들이 없어 뺄 수 없다.** 게다가
+  `html body.dh-shell-on.dh-shell-on` 처럼 클래스를 두 번 써서 특이도를 올리고 !important 를
+  붙인다. 그래서 shell.css 는 클래스를 세 번 쓴다 — `html body.dhr.dhr-wrap.dhr-wrap` (0,3,2).
+  이 스니펫을 사장님이 지우면 그 한 단계는 도로 내려도 된다
+- 장바구니(`.wd-cpg`)와 주문서는 워드프레스 기본이 아니라 **키플이 만든 페이지**다.
+  `duckhoo-theme.css` 의 클래식 장바구니 선택자(`.shop_table` 등)는 여기에 안 걸린다.
+  주문하기(`.wd-cpg-order__btn`)·결제하기(`#place_order`)는 shell.css 가 검정 알약으로 만든다
 - 가로 스크롤러는 데스크톱에서 휠이 세로로만 가므로 `front.js` 가 양쪽 화살표와
   마우스 드래그를 붙인다
 - 데이터: 카테고리는 이름 일부("특가" · "무니코틴" · "랭킹")로 찾는다 — "8월 특가 할인"
@@ -266,6 +279,11 @@ add_filter( 'duckhoo_member_points', fn( $v, $id ) => (float) get_user_meta( $id
   jQuery 다. 빌드 단계가 없으므로 직접 수정하면 된다.
 - `--dhx-ink-3: #94A3AE` 가 11.5px 상태 텍스트에 쓰이는데 흰 배경 2.59:1 로
   AA 에 크게 미달한다.
+- **주문서에서 테마 스크립트가 죽는다.** `assets/js/wd-checkout-custom.js:185` 가 래퍼 밖에서
+  `$` 를 쓰는데 워드프레스는 `jQuery` 만 준다 (`$ is not a function`). 그 줄부터 안 걸리므로
+  **쿠폰 카드 체크박스가 아무 일도 하지 않는다.** 테마 파일이라 우리가 고치지 않았다.
+  플러그인에서 고치려면 테마 스크립트보다 먼저 `window.$ = window.jQuery` 를 넣으면 된다
+  (이 사이트에서 `$` 를 쓰는 다른 스크립트는 없다). 사장님 판단이 필요하다
 
 ## 데모 사이트
 
