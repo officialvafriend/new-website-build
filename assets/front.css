@@ -24,6 +24,12 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .util .wrap{display:flex;gap:1.2rem;min-height:34px;align-items:center}
 .dhr .util .r{margin-left:auto;color:#5F6770}
 .dhr .gnb{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid #E2E4E8}
+/* 로그인한 관리자에게는 워드프레스 관리 바가 화면 위에 고정으로 붙는다. 그대로 두면
+   스크롤할 때 우리 헤더가 그 아래로 들어가 아랫동이만 보인다.
+   관리 바는 783px 이상에서 32px, 601–782px 에서 46px 로 고정이고, 600px 이하에서는
+   absolute 라 같이 스크롤되므로 offset 이 필요 없다. */
+@media(min-width:601px){body.admin-bar .gnb{top:46px}}
+@media(min-width:783px){body.admin-bar .gnb{top:32px}}
 .dhr .gnb-in{display:flex;align-items:center;gap:.6rem;height:56px}
 .dhr .lg{display:flex;align-items:center;gap:.4rem;font-weight:900;font-size:17px;letter-spacing:-.05em;min-height:44px;white-space:nowrap}
 .dhr .lg .g{width:20px;height:20px;border-radius:50% 50% 50% 4px;background:#111}

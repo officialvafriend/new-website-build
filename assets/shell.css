@@ -361,3 +361,7 @@ html body.dhr.dhr-wrap.dhr-wrap.page .entry-content p{ margin: 0 0 1rem; word-br
 html body.dhr.dhr-wrap.dhr-wrap.page .entry-content ul{ margin: 0 0 1.2rem; padding-left: 1.15rem; }
 html body.dhr.dhr-wrap.dhr-wrap.page .entry-content li{ margin-bottom: .45rem; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap.page .entry-content strong{ color: var(--dh-ink, #111); font-weight: 700; }
+
+/* 껍데기를 쓰는 화면에서도 같다 — 관리 바 아래로 헤더가 끼어 들어가지 않게. */
+@media (min-width:601px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar header.gnb{ top: 46px !important; } }
+@media (min-width:783px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar header.gnb{ top: 32px !important; } }
