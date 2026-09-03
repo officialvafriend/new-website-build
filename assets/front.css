@@ -239,7 +239,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .bnav{border-top:1px solid #EEF0F2;background:#fff}
 .dhr .bnav .wrap{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none;padding-top:.45rem;padding-bottom:.55rem}
 .dhr .bnav .wrap::-webkit-scrollbar{display:none}
-.dhr .bnav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:36px;padding:0 .85rem;border-radius:999px;background:#F1F3F5;color:#111;font-size:14px;font-weight:700;white-space:nowrap}
+.dhr .bnav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:40px;padding:0 .85rem;border-radius:999px;background:#F1F3F5;color:#111;font-size:14px;font-weight:700;white-space:nowrap}
 .dhr .bnav a.bnav__hi{background:#111;color:#fff}
 @media(min-width:880px){.dhr .bnav{display:none}}
 /* 분류 타일 — 홈 */
