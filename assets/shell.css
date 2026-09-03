@@ -187,3 +187,33 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .woocommerce-tabs .panel{
   border-radius: 16px !important; padding: clamp(.9rem,.6rem + 1vw,1.6rem) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product #tab-description img{ display: block !important; margin-left: auto !important; margin-right: auto !important; height: auto !important; }
+
+/* 상세에 남아 있던 옛 색 — 핑크 뱃지 · 파란 밑줄 가격 · 민트 안내를 우리 것으로.
+   글자 크기 바닥(캡션 13px)도 여기서 지킨다. */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-viewer-count{
+  background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important;
+  font-size: 13px !important; border-radius: 999px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-viewer-count strong{ color: var(--dh-accent-deep, #1565C0) !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .product_title{ color: var(--dh-ink, #111) !important; }
+
+/* 가격 — 파랑·밑줄을 걷고, 실제 숫자를 크게 (묶음 상품은 병당 가격이 비교 지표다) */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price bdi,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price .amount{ color: var(--dh-ink, #111) !important; text-decoration: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins{ text-decoration: none !important; font-weight: 900 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins .amount,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins bdi{ font-size: 26px !important; font-weight: 900 !important; letter-spacing: -.03em !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del .amount,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del bdi{ color: var(--dh-ink-3, #616870) !important; font-size: 15px !important; font-weight: 500 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-ppom-required-mark,
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-bundle-required-mark{ color: var(--dh-status-check, #B42318) !important; }
+
+/* 배송·혜택 안내의 민트 톤과 12.5px 캡션 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx{ color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-ship .t,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-ship span.t,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-gauge__row .t{ color: var(--dh-accent-deep, #1565C0) !important; font-size: 13px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-sum__label,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-gauge__n{ font-size: 13px !important; }
