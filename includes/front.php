@@ -309,7 +309,7 @@ function header_html(): void {
 	</div>
 	<nav class="bnav" aria-label="바로 가기"><div class="wrap">
 		<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
-		<?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( preg_replace( '/^\d+월\s*/u', '이달 ', $c->name ) ); ?></a><?php endforeach; ?>
+		<?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( short_cat( $c->name ) ); ?></a><?php endforeach; ?>
 		<?php if ( ! $in ) : ?><a class="bnav__hi" href="<?php echo esc_url( home_url( '/register/' ) ); ?>">첫 가입 <?php echo esc_html( number_format_i18n( $pts ) ); ?>원</a><?php endif; ?>
 	</div></nav>
 	</header>
@@ -338,6 +338,24 @@ function tabbar_html(): void {
 		echo '<a href="' . esc_url( $t[1] ) . '" class="' . ( $t[0] === $k ? 'on' : '' ) . '">' . icon( $t[2] ) . esc_html( $t[3] ) . '</a>'; // phpcs:ignore
 	}
 	echo '</nav>';
+}
+
+/**
+ * 분류 이름을 칩·타일에 들어갈 짧은 꼴로. "9월 특가 할인" → "이달 특가", "입호흡 액상" → "입호흡",
+ * "기기 / 팟 / 코일" → "기기·팟". 달이 바뀌어도 이름을 안 고치게 "N월" 은 "이달" 로 읽는다.
+ *
+ * @param string $name 분류 이름.
+ * @return string
+ */
+function short_cat( string $name ): string {
+	$n = preg_replace( '/^\d+월\s*/u', '이달 ', trim( $name ) );
+	$n = preg_replace( '/\s*할인$/u', '', $n );
+	$n = preg_replace( '/^액상\s+/u', '', $n );
+	if ( ! preg_match( '/^액상$/u', $n ) ) {
+		$n = preg_replace( '/\s+액상$/u', '', $n );
+	}
+	$parts = preg_split( '/\s*\/\s*/u', $n );
+	return implode( '·', array_slice( $parts, 0, 2 ) );
 }
 
 /**

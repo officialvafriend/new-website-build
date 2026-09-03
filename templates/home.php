@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, icon, header_html, tabbar_html, footer_html};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, icon, header_html, tabbar_html, footer_html, short_cat};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -133,9 +133,10 @@ $month = (int) wp_date( 'n' );
 	<nav class="qcats" aria-label="분류 바로 가기">
 		<?php foreach ( $qc as $c ) :
 			$tid = (int) get_term_meta( $c->term_id, 'thumbnail_id', true );
-			$lbl = preg_replace( '/^\d+월\s*/u', '이달 ', $c->name ); ?>
+			$lbl = short_cat( $c->name );
+			$ini = mb_substr( preg_replace( '/^이달\s*/u', '', $lbl ), 0, 1 ); ?>
 		<a href="<?php echo esc_url( get_term_link( $c ) ); ?>">
-			<span class="qcats__ic"><?php echo $tid ? wp_get_attachment_image( $tid, 'woocommerce_gallery_thumbnail' ) : '<b>' . esc_html( mb_substr( $lbl, 0, 1 ) ) . '</b>'; // phpcs:ignore ?></span>
+			<span class="qcats__ic"><?php echo $tid ? wp_get_attachment_image( $tid, 'woocommerce_gallery_thumbnail' ) : '<b>' . esc_html( $ini ) . '</b>'; // phpcs:ignore ?></span>
 			<span><?php echo esc_html( $lbl ); ?></span>
 		</a>
 		<?php endforeach; ?>
