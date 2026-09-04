@@ -591,13 +591,16 @@ function footer_html(): void {
 			<div class="fcol fcol--open"><b>고객센터</b>
 				<a href="tel:010-5133-5852" class="n">010-5133-5852</a>
 				<span class="fmuted">평일 10:00–19:00 · 점심 12:00–13:00<br>주말 · 법정 공휴일 휴무</span>
-				<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
-				<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
-				<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회</a></div>
+				<?php // 알약 링크만 가로로 흐른다. 전화번호 · 시간은 위에 한 줄씩 — 줄바꿈이 잘리지 않게 한다 ?>
+				<div class="fcol__pills">
+					<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
+					<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
+					<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회</a></div></div>
 		</div>
 		<?php $banks = bank_accounts(); if ( $banks ) : ?>
 		<div class="fbank"><b>입금 계좌</b>
-			<?php foreach ( $banks as $b ) : ?><span class="n"><?php echo esc_html( trim( $b['bank'] . ' ' . $b['number'] ) ); ?><?php echo $b['name'] ? ' · ' . esc_html( $b['name'] ) : ''; ?></span><?php endforeach; ?>
+			<?php // 은행 · 번호 · 예금주를 각각 따로 둔다. 한 덩어리면 좁은 화면에서 이름 가운데가 잘려 두 줄이 된다 ?>
+			<?php foreach ( $banks as $b ) : ?><span class="fbank__acc"><?php if ( $b['bank'] ) : ?><span class="fbank__bank"><?php echo esc_html( $b['bank'] ); ?></span><?php endif; ?><span class="n"><?php echo esc_html( $b['number'] ); ?></span><?php if ( $b['name'] ) : ?><span class="fbank__who">예금주 <?php echo esc_html( $b['name'] ); ?></span><?php endif; ?></span><?php endforeach; ?>
 			<span class="fmuted">입금자명은 주문자명과 똑같이 넣어 주세요. 같으면 자동으로 확인됩니다.</span></div>
 		<?php endif; ?>
 		<div class="flegal"><b>19세 미만 청소년에게 판매하지 않습니다.</b> 구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
