@@ -1943,6 +1943,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head::before
 /* 무료배송 게이지는 시트에서 뺀다 — 데스크톱 서랍과 같다. 시트는 고르고 사는 자리라
    화면의 5분의 1을 안내가 차지하면 정작 옵션이 밀린다 (상세 본문에는 그대로 있다) */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .wd-free-shipping-gauge{ display: none !important; }
+/* 게이지를 뺀 자리가 빈 칸으로 남았다. 시트는 화면이 좁으니 위 여백을 줄인다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet form.cart{ margin-top: .2rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .vf-drawer-body{ padding-top: 0 !important; }
 /* 시트가 올라오면 아래 구매 줄은 내린다 — 같은 버튼이 두 번 보이면 안 된다 */
 html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on .dhp-bar{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on{ overflow: hidden !important; }
