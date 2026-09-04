@@ -1417,7 +1417,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ color: #fff !important; }
    (`.summary`)에 사진 높이만큼 인라인 height 를 박아 넣어 그보다 긴 내용이 상자 밖으로
    흘러 상세 설명 위에 겹쳤다. 인라인 스타일은 선택자로 못 이긴다.
    그래서 상자를 나눴다 — 카드마다 자기 내용만큼만 높이를 갖는다. 넘칠 상자가 없다. */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-buy{ display: grid; gap: .8rem; align-content: start; min-width: 0; }
+/* 칸 폭을 못 박지 않으면 안쪽에 줄바꿈이 안 되는 요소 하나가 칸을 밀어내 카드가
+   화면보다 넓어진다 (320px 자리에 393px). auto 는 max-content 라 넘칠 수 있다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-buy{
+  display: grid; gap: .8rem; align-content: start;
+  grid-template-columns: minmax(0, 1fr); min-width: 0;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-buy > *{ min-width: 0; max-width: 100%; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card{
   background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8); border-radius: 18px;
   padding: clamp(1.1rem,.8rem + 1.2vw,1.6rem); min-width: 0;

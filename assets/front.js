@@ -243,9 +243,24 @@
   if(bOpen){ bOpen.addEventListener('click', function(){ if(!sheet()){ form.scrollIntoView({behavior:'smooth', block:'start'}); } }); }
   new MutationObserver(sync).observe(form, {subtree:true, childList:true, attributes:true, attributeFilter:['disabled','class'], characterData:true});
   form.addEventListener('input', sync); form.addEventListener('change', sync);
+  /* 구매 줄은 **구매 상자를 지나쳐 내려갔을 때만** 올린다. 맨 위에서부터 떠 있으면
+     아직 보지도 않은 버튼이 화면을 가리고, 상자가 화면 아래에 있다는 사실도 감춘다.
+     상자가 화면 위로 지나갔는지(bottom < 0)로 판단한다 — 아래에 있을 때는 올리지 않는다. */
   var anchor = form.querySelector('.vf-drawer-actions') || add;
+  function above(){ return anchor.getBoundingClientRect().bottom < 0; }
   if('IntersectionObserver' in window){
-    new IntersectionObserver(function(en){ bar.classList.toggle('is-away', !en[0].isIntersecting); }, {threshold: 0.2}).observe(anchor);
+    new IntersectionObserver(function(en){
+      bar.classList.toggle('is-away', !en[0].isIntersecting && above());
+    }, {threshold: 0.2}).observe(anchor);
+    /* 관찰자는 경계를 넘을 때만 깨어난다 — 아주 빠른 스크롤이나 되돌아온 화면을 위해 한 번 더 본다 */
+    var t2 = false;
+    window.addEventListener('scroll', function(){
+      if(t2) return; t2 = true;
+      requestAnimationFrame(function(){ t2 = false;
+        var r = anchor.getBoundingClientRect();
+        bar.classList.toggle('is-away', r.bottom < 0);
+      });
+    }, {passive: true});
   } else bar.classList.add('is-away');
   sync(); bar.hidden = false;
 })();
