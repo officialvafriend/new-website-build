@@ -455,7 +455,7 @@ function header_html(): void {
 		<nav class="dnav">
 			<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
 			<?php $mtl = cat_by_name( '입호흡' ); if ( $mtl ) : ?><a href="<?php echo esc_url( get_term_link( $mtl ) ); ?>">입호흡</a><?php endif; ?>
-			<?php if ( $sale ) : ?><a href="<?php echo esc_url( get_term_link( $sale ) ); ?>"><?php echo esc_html( $sale->name ); ?></a><?php endif; ?>
+			<?php if ( $sale ) : ?><a href="<?php echo esc_url( get_term_link( $sale ) ); ?>"><?php echo esc_html( short_cat( $sale->name ) ); ?></a><?php endif; ?>
 		</nav>
 		<div class="sp">
 			<a class="gi msearch-btn" href="<?php echo esc_url( add_query_arg( array( 'post_type' => 'product' ), home_url( '/' ) ) ); ?>#dhr-search" aria-label="상품 검색"><?php echo icon( 'search' ); // phpcs:ignore ?></a>
@@ -573,7 +573,7 @@ function footer_html(): void {
 			<div class="fabout"><a class="lg lg-w" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="g"></span>액상덕후</a>
 				<p>전자담배 액상 전문몰. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
 				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo kakao_url() === home_url( '/inquiries/' ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
-			<div class="fcol"><b>상품</b><?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( $c->name ); ?></a><?php endforeach; ?></div>
+			<div class="fcol"><b>상품</b><?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( short_cat( $c->name ) ); ?></a><?php endforeach; ?></div>
 			<div class="fcol"><b>브랜드</b><?php foreach ( $brands as $b ) : ?><a href="<?php echo esc_url( brand_url( $b ) ); ?>"><?php echo esc_html( $b ); ?></a><?php endforeach; ?></div>
 			<div class="fcol"><b>안내</b>
 				<a href="<?php echo esc_url( home_url( '/shipping/' ) ); ?>">배송 · 교환 · 환불</a>
