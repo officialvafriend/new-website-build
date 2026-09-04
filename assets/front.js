@@ -499,14 +499,24 @@
   var wl = cpg.querySelector('.wd-cpg-wishlist');
   if(wl && !wl.querySelector('a[href*="/product/"], .wd-cpg-recom__item, li')) wl.classList.add('is-empty');
 
+  /* 안내 문구는 사장님 스니펫이 우리 뒤에 다시 그린다. 한 번 쓰고 끝내면 옛 문구로
+     되돌아가므로, 그 자리를 지켜보다가 우리 것이 아니면 다시 쓴다. */
   var tiers = (window.DHR && window.DHR.discount) || [];
-  var note = document.querySelector('#coupon-auto-notice');
-  if(note && tiers.length){
-    var won = function(v){ return Number(v).toLocaleString('ko-KR'); };
-    var lines = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ');
+  if(!tiers.length) return;
+  var won = function(v){ return Number(v).toLocaleString('ko-KR'); };
+  var line = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ') + ' 자동 할인';
+  function write(){
+    var note = document.querySelector('#coupon-auto-notice');
+    if(!note || note.dataset.dhr === line) return;
     note.textContent = '';
     var b = document.createElement('b'); b.textContent = '금액대별 자동 할인';
-    var d = document.createElement('span'); d.className = 'n'; d.textContent = lines + ' 자동 할인';
+    var d = document.createElement('span'); d.className = 'n'; d.textContent = line;
     note.appendChild(b); note.appendChild(d);
+    note.dataset.dhr = line;
   }
+  write();
+  var host = document.querySelector('.wd-cpg') || document.body;
+  var mo = new MutationObserver(write);
+  mo.observe(host, {childList: true, subtree: true, characterData: true});
+  setTimeout(function(){ mo.disconnect(); write(); }, 8000);
 })();
