@@ -116,19 +116,23 @@ function point_balance( int $user_id ): ?float {
 }
 
 /**
- * 탈퇴를 막는 이유들. 비어 있으면 탈퇴할 수 있다.
+ * 탈퇴 전에 알려야 할 것들. 막지는 않는다 — 손님이 알고 결정하도록 보여 줄 뿐이다.
+ *
+ * 사장님 결정(2026-09-04): 진행 중 주문이나 남은 적립금이 있어도 탈퇴할 수 있다.
+ * 예전처럼 아예 막고 싶으면 필터 한 줄이면 된다:
+ * `add_filter( 'duckhoo_membership_cancel_require_clear', '__return_true' );`
  *
  * @param int $user_id 회원 ID.
  * @return string[]
  */
-function blockers( int $user_id ): array {
+function cautions( int $user_id ): array {
 	$reasons = array();
 
 	$open = open_order_count( $user_id );
 	if ( $open > 0 ) {
 		$reasons[] = sprintf(
 			/* translators: %d: 진행 중인 주문 수 */
-			__( '아직 끝나지 않은 주문이 %d건 있습니다. 배송이 끝난 뒤에 탈퇴해 주세요.', 'duckhoo-redesign' ),
+			__( '아직 끝나지 않은 주문이 %d건 있습니다. 주문은 그대로 진행되지만, 탈퇴하면 로그인할 수 없어 진행 상황을 직접 확인하지 못합니다.', 'duckhoo-redesign' ),
 			$open
 		);
 	}
@@ -137,12 +141,24 @@ function blockers( int $user_id ): array {
 	if ( null !== $points && $points > 0 ) {
 		$reasons[] = sprintf(
 			/* translators: %s: 남은 적립금 */
-			__( '적립금이 %s원 남아 있습니다. 다 쓰신 뒤에 탈퇴해 주세요. 탈퇴하면 사라지고 되돌릴 수 없습니다.', 'duckhoo-redesign' ),
+			__( '적립금이 %s원 남아 있습니다. 탈퇴하면 사라지고 되돌릴 수 없습니다.', 'duckhoo-redesign' ),
 			number_format_i18n( $points )
 		);
 	}
 
-	return apply_filters( 'duckhoo_membership_cancel_blockers', $reasons, $user_id );
+	/* 예전 이름의 필터도 계속 받는다 — 이미 걸어 둔 코드가 있을 수 있다. */
+	$reasons = (array) apply_filters( 'duckhoo_membership_cancel_blockers', $reasons, $user_id );
+
+	return (array) apply_filters( 'duckhoo_membership_cancel_cautions', $reasons, $user_id );
+}
+
+/**
+ * 진행 중 주문 · 남은 적립금이 있을 때 아예 막을지. 기본은 막지 않는다.
+ *
+ * @return bool
+ */
+function require_clear(): bool {
+	return (bool) apply_filters( 'duckhoo_membership_cancel_require_clear', false );
 }
 
 /**
@@ -262,7 +278,7 @@ function handle_submit(): void {
 
 	$user_id = get_current_user_id();
 
-	if ( blockers( $user_id ) ) {
+	if ( require_clear() && cautions( $user_id ) ) {
 		return;
 	}
 
@@ -307,7 +323,8 @@ function render(): string {
 	}
 
 	$user_id = get_current_user_id();
-	$stop    = blockers( $user_id );
+	$notes   = cautions( $user_id );
+	$stop    = require_clear() ? $notes : array();
 
 	ob_start();
 	?>
@@ -327,6 +344,16 @@ function render(): string {
 				<p><a class="dh-leave__link" href="<?php echo esc_url( wc_get_account_endpoint_url( 'orders' ) ); ?>"><?php esc_html_e( '주문내역 보기', 'duckhoo-redesign' ); ?></a></p>
 			<?php endif; ?>
 		<?php else : ?>
+			<?php if ( $notes ) : ?>
+			<div class="dh-leave__stop dh-leave__stop--soft">
+				<p class="dh-leave__stop-title"><?php esc_html_e( '탈퇴 전에 확인해 주세요.', 'duckhoo-redesign' ); ?></p>
+				<ul>
+					<?php foreach ( $notes as $reason ) : ?>
+						<li><?php echo esc_html( $reason ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+			<?php endif; ?>
 			<div class="dh-leave__warn">
 				<p><?php esc_html_e( '탈퇴하면 로그인할 수 없게 되고, 이름·연락처·주소는 지워집니다. 되돌릴 수 없습니다.', 'duckhoo-redesign' ); ?></p>
 				<p><?php esc_html_e( '주문 기록은 남습니다. 전자상거래법상 거래기록은 5년간 보관해야 합니다.', 'duckhoo-redesign' ); ?></p>

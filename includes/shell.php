@@ -147,6 +147,22 @@ add_filter( 'wc_get_template_part', __NAMESPACE__ . '\\loop_card', 20, 3 );
  * @param string $name     템플릿 이름.
  * @return string
  */
+/**
+ * 마이페이지 메뉴에서 안 쓰는 항목을 뺀다. 이 가게는 내려받을 상품을 팔지 않는다.
+ * 되살리려면: `add_filter( 'duckhoo_account_menu_hide', '__return_empty_array' );`
+ *
+ * @param array<string,string> $items 메뉴 항목.
+ * @return array<string,string>
+ */
+function account_menu( array $items ): array {
+	foreach ( (array) apply_filters( 'duckhoo_account_menu_hide', array( 'downloads' ) ) as $key ) {
+		unset( $items[ (string) $key ] );
+	}
+
+	return $items;
+}
+add_filter( 'woocommerce_account_menu_items', __NAMESPACE__ . '\\account_menu', 20 );
+
 function account_dashboard( string $template, string $name ): string {
 	if ( 'myaccount/dashboard.php' === $name && wraps() ) {
 		return dirname( __DIR__ ) . '/templates/myaccount-dashboard.php';

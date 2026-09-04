@@ -14,23 +14,23 @@ $ok(in_array('keyple-before',$open,true) && in_array('keyple-shipping',$open,tru
 $ok(!in_array('keyple-done',$open,true), '배송완료는 진행 중이 아니다');
 $ok(!in_array('completed',$open,true) && !in_array('cancelled',$open,true), '완료·취소는 진행 중이 아니다');
 
-// 2. 진행 중 주문이 있으면 탈퇴가 막힌다
+// 2. 진행 중 주문 · 남은 적립금은 이제 막지 않고 알려만 준다 (사장님 결정 2026-09-04)
 $GLOBALS['__orders'] = [101,102];
-$b = ($ns.'blockers')(1);
-$ok(count($b)===1 && str_contains($b[0],'2건'), '진행 중 주문 2건 → 탈퇴 막힘');
+$b = ($ns.'cautions')(1);
+$ok(count($b)===1 && str_contains($b[0],'2건'), '진행 중 주문 2건 → 안내 문구');
 
 // 3. 주문이 없고 적립금도 없으면 통과
 $GLOBALS['__orders'] = [];
-$ok(($ns.'blockers')(1) === [], '주문 없음 → 탈퇴 가능');
+$ok(($ns.'cautions')(1) === [], '주문 없음 → 안내 없음');
 
 // 4. 적립금이 남아 있으면 막힌다 (메타 이름으로 찾는다)
 $GLOBALS['__usermeta'][1] = ['keyple_point' => '2400'];
-$b = ($ns.'blockers')(1);
-$ok(count($b)===1 && str_contains($b[0],'2,400'), '적립금 2,400원 → 탈퇴 막힘');
+$b = ($ns.'cautions')(1);
+$ok(count($b)===1 && str_contains($b[0],'2,400'), '적립금 2,400원 → 안내 문구');
 
 // 5. 적립금 0 이면 안 막는다
 $GLOBALS['__usermeta'][1] = ['keyple_point' => '0'];
-$ok(($ns.'blockers')(1) === [], '적립금 0원 → 탈퇴 가능');
+$ok(($ns.'cautions')(1) === [], '적립금 0원 → 안내 없음');
 
 // 6. 필터로 준 값이 메타보다 우선한다
 $GLOBALS['__usermeta'][1] = ['keyple_point' => '0'];
@@ -41,7 +41,7 @@ $GLOBALS['__filters']['duckhoo_member_points'] = [];
 // 7. 화면: 막힌 상태
 $GLOBALS['__usermeta'][1] = ['keyple_point' => '2400'];
 $html = ($ns.'render')();
-$ok(str_contains($html,'지금은 탈퇴할 수 없습니다') && !str_contains($html,'name="duckhoo_password"'), '막힌 상태에서는 폼을 안 그린다');
+$ok(str_contains($html,'탈퇴 전에 확인해 주세요') && str_contains($html,'name="duckhoo_password"'), '안내가 있어도 폼은 그린다');
 
 // 8. 화면: 진행 가능
 $GLOBALS['__usermeta'][1] = [];

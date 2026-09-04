@@ -130,3 +130,10 @@
 .dh-leave--done h2 {
   margin-bottom: var(--dh-space-3, 0.75rem);
 }
+
+/* 진행 중 주문 · 남은 적립금은 막지 않고 알려만 준다 — 경고가 아니라 확인 사항이다 */
+.dh-leave__stop--soft {
+  background: #FFF7ED;
+  border-left: 4px solid #C2410C;
+}
+.dh-leave__stop--soft .dh-leave__stop-title { color: #8A4B0C; }
