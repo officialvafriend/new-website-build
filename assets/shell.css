@@ -1034,7 +1034,10 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .summary{ height: auto !important
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__head{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{
   position: fixed !important; right: 24px; left: auto; bottom: 24px; top: auto; z-index: 45;
-  width: min(400px, calc(100vw - 48px)); max-height: calc(100dvh - 120px); overflow-y: auto; overscroll-behavior: contain;
+  /* 위 .dhp-card 규칙이 `max-height: none !important` 로 못 박아 둔다 (내용이 상자 밖으로
+     새는 것을 막으려고). 서랍일 때만 그 못을 뺀다 — 안 그러면 서랍이 화면보다 길어진다. */
+  width: min(400px, calc(100vw - 48px)); height: auto !important; max-height: calc(100dvh - 120px) !important;
+  overflow-y: auto !important; overscroll-behavior: contain;
   border-radius: 20px; padding-top: 0;
   box-shadow: 0 0 0 1px rgba(17,17,17,.06), 0 4px 10px rgba(17,17,17,.09), 0 44px 80px -30px rgba(17,17,17,.5);
   animation: dhp-dock-in .42s cubic-bezier(.16,1,.3,1);
