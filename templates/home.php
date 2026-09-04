@@ -21,13 +21,14 @@ $shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink(
 
 $deals  = $sale_cat ? products( array( 'category' => array( $sale_cat->slug ), 'limit' => 10, 'orderby' => 'date', 'order' => 'DESC' ) ) : products( array( 'include' => wc_get_product_ids_on_sale(), 'limit' => 10 ) );
 $newest = products( array( 'limit' => 8, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) );
-// 병당 1만 원 아래 — 묶음 중에서 병당 가격이 가장 낮은 것. 이 가게에서 고객이 실제로 비교하는 숫자다.
-$cheap = array_filter( products( array( 'limit' => 40, 'orderby' => 'popularity', 'stock_status' => 'instock' ) ), function ( $p ) {
-	$b = per_bottle( $p );
-	return $b['qty'] > 1 && $b['per'] <= 10000;
-} );
-usort( $cheap, fn( $a, $b ) => per_bottle( $a )['per'] <=> per_bottle( $b )['per'] );
-$cheap = array_slice( array_values( $cheap ), 0, 10 );
+// 입호흡 액상 단품 — 한 병씩 고르는 사람을 위한 줄. 묶음 · 세트 · 기획은 뺀다
+// (묶음은 히어로와 특가 · 주력 브랜드 줄이 이미 맡고 있다).
+$mtl_cat = cat_by_name( '입호흡' );
+$mtl     = $mtl_cat ? array_values( array_filter(
+	products( array( 'category' => array( $mtl_cat->slug ), 'limit' => 40, 'orderby' => 'popularity', 'stock_status' => 'instock' ) ),
+	fn( $p ) => ! preg_match( '/묶음|세트|이벤트|기획|\d+\s*\+\s*\d|\d+\s*병/u', $p->get_name() )
+) ) : array();
+$mtl = array_slice( $mtl, 0, 16 );
 $brand_names = featured_brands( 12 );
 // 히어로는 묶음 상품을 넘겨 본다. 묶음이 이 가게의 주력이고, 병당 가격이 내려가는 게
 // 첫 화면에서 보여야 할 이야기다. 사진이 있고 재고가 있는 것만, 최대 5장.
@@ -175,10 +176,12 @@ $month = (int) wp_date( 'n' );
 	<div class="tick" aria-hidden="true"><div class="tick-in"><?php for ( $r = 0; $r < 2; $r++ ) { foreach ( $brand_names as $b ) { echo '<span>' . esc_html( $b ) . '</span><i></i>'; } } ?></div></div>
 	<?php endif; ?>
 
-	<?php if ( $cheap ) : ?>
+	<?php if ( $mtl ) : ?>
 	<section class="sec">
-		<?php section_head( '병당 가격으로 고르기', '병당 1만 원 아래', '묶음으로 담을수록 한 병 값이 내려갑니다', $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>
-		<?php carousel( $cheap, '병당 1만 원 아래' ); ?></section>
+		<?php section_head( '한 병씩 고르기', '입호흡 액상 단품', '묶음 말고 필요한 맛만 골라 담으세요', get_term_link( $mtl_cat ) ); ?>
+		<?php carousel( $mtl, '입호흡 액상 단품' ); ?>
+		<div class="center" style="margin-top:.4rem"><a class="btn btn-o" href="<?php echo esc_url( get_term_link( $mtl_cat ) ); ?>">입호흡 액상 전체 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a></div>
+	</section>
 	<?php endif; ?>
 
 	<?php if ( $newest ) : ?>

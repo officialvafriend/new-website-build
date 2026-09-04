@@ -192,7 +192,7 @@ function brand_products( string $brand, int $limit = 4 ): array {
  * @return string[] 브랜드 이름.
  */
 function featured_brands( int $limit = 6 ): array {
-	$want = (array) apply_filters( 'duckhoo_featured_brands', array( '노보', '디오리퀴드', '화이트아웃', '펠릭스', '액상덕후' ) );
+	$want = (array) apply_filters( 'duckhoo_featured_brands', array( '노보', '디오리퀴드', '화이트아웃', '펠릭스' ) );
 	$have = array_keys( brands() );
 	$out  = array();
 	foreach ( $want as $w ) {

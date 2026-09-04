@@ -1137,3 +1137,88 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsel__tick{ flex: 0 0 18px; width: 18px; heigh
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.on .dhsel__tick{ opacity: 1; }
 /* 첫 줄은 "고르지 않음" 자리다 — 값이 아니라 안내다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt:first-child .dhsel__nm{ color: var(--dh-ink-3, #616870); }
+
+/* 구매 버튼의 호버 — 테마 쪽 색 그림자가 분홍으로 번졌다. 우리 것으로 못 박는다. */
+html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button,
+html body.dhr.dhr-wrap.dhr-wrap .single_add_to_cart_button,
+html body.dhr.dhr-wrap.dhr-wrap .wd-direct-checkout-btn{
+  filter: none !important; text-shadow: none !important; transition: box-shadow .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button:hover,
+html body.dhr.dhr-wrap.dhr-wrap .single_add_to_cart_button:hover,
+html body.dhr.dhr-wrap.dhr-wrap .wd-direct-checkout-btn:hover{
+  outline: 0 !important; text-shadow: none !important; filter: none !important;
+  box-shadow: 0 8px 20px -8px rgba(17,17,17,.45) !important; transform: translateY(-1px);
+}
+html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button:active,
+html body.dhr.dhr-wrap.dhr-wrap .single_add_to_cart_button:active,
+html body.dhr.dhr-wrap.dhr-wrap .wd-direct-checkout-btn:active{ transform: translateY(1px) scale(.99); }
+html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button[disabled]:hover,
+html body.dhr.dhr-wrap.dhr-wrap .single_add_to_cart_button[disabled]:hover{ box-shadow: none !important; transform: none; }
+
+/* ══ 마이페이지 — 표를 카드로 ═══════════════════════════════════════════════
+   워드커머스 기본 주문 표는 좁은 칸에 번호 · 날짜 · 상태 · 금액 · 버튼을 밀어 넣는다.
+   주문 하나가 카드 한 장이 되게 편다. 마크업은 그대로다 (링크 · 취소 버튼이 거기 걸려 있다). */
+@media (min-width: 900px){
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account .woocommerce{ display: grid; grid-template-columns: 232px minmax(0,1fr); gap: 1.6rem; align-items: start; }
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{
+  background: var(--dh-surface, #fff); border-radius: 18px; padding: .6rem; margin: 0 0 1rem !important; width: auto !important; float: none !important;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+@media (min-width: 900px){ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ position: sticky; top: 92px; margin: 0 !important; } }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{ list-style: none; margin: 0 !important; padding: 0 !important; display: grid; gap: 2px; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li{ margin: 0 !important; border: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{
+  display: flex; align-items: center; min-height: 48px; padding: 0 .95rem !important; border-radius: 12px;
+  font-size: 15px; font-weight: 700; color: var(--dh-ink-2, #4E565F) !important; text-decoration: none; background: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a:hover{ background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-primary, #111) !important; color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content{ width: auto !important; float: none !important; padding: 0 !important; }
+
+/* 주문 표 → 카드 */
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table{ border: 0 !important; border-collapse: separate !important; width: 100% !important; margin: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table thead{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table tbody{ display: grid !important; gap: .7rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table tr.woocommerce-orders-table__row{
+  display: grid !important; grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-areas: "num status" "date total" "act act" !important; gap: .35rem .8rem !important; align-items: center !important;
+  background: var(--dh-surface, #fff) !important; border: 0 !important; border-radius: 16px !important; padding: 1.1rem 1.2rem !important;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+@media (min-width: 720px){
+  html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table tr.woocommerce-orders-table__row{
+    grid-template-columns: minmax(0,1.1fr) auto minmax(0,.9fr) auto !important;
+    grid-template-areas: "num status total act" "date status total act" !important; row-gap: .2rem !important;
+  }
+}
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table td{ display: block !important; border: 0 !important; padding: 0 !important; text-align: left !important; }
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table td::before,
+html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table th::before{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number{ grid-area: num; display: block !important; border: 0 !important; padding: 0 !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number a{ font-size: 16px; font-weight: 800; color: var(--dh-ink, #111) !important; text-decoration: none; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-date{ grid-area: date; font-size: 13.5px !important; color: var(--dh-ink-3, #616870) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-status{ grid-area: status; justify-self: end; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-status{
+  font-size: 13px !important; font-weight: 800 !important; padding: .3rem .7rem !important; border-radius: 999px !important;
+  background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important; white-space: nowrap;
+}
+/* 상태별 색 — 입금 확인 중은 손님이 할 일이 남은 상태다 */
+html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-on-hold .woocommerce-orders-table__cell-order-status{ background: #FDEBD8 !important; color: #8A4B0C !important; }
+html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-payment-confirmed .woocommerce-orders-table__cell-order-status,
+html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-ready-to-ship .woocommerce-orders-table__cell-order-status{ background: var(--dh-accent-soft, #E8F5FE) !important; color: var(--dh-accent-deep, #1565C0) !important; }
+html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-delivered .woocommerce-orders-table__cell-order-status,
+html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-completed .woocommerce-orders-table__cell-order-status{ background: #E7F3EA !important; color: #1B5E2A !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-total{ grid-area: total; font-size: 15px !important; color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-total strong{ font-size: 17px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions{ grid-area: act; display: flex !important; gap: .45rem !important; flex-wrap: wrap; }
+@media (min-width: 720px){ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions{ justify-content: flex-end; } }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button{
+  min-height: 44px !important; padding: 0 1.1rem !important; border-radius: 999px !important; font-size: 14px !important; font-weight: 700 !important;
+  display: inline-flex !important; align-items: center; background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
+  border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; box-shadow: none !important; text-decoration: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button:hover{ border-color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button.cancel{ border-color: #E4C3BF !important; color: var(--dh-status-check, #B42318) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button.view{ background: var(--dh-primary, #111) !important; color: #fff !important; border-color: var(--dh-primary, #111) !important; }

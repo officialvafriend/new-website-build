@@ -457,3 +457,26 @@
 
   form.querySelectorAll('select.ppom-input, .ppom-field-wrapper select').forEach(build);
 })();
+
+/* 묶음 "다시 누르면 해지" — 옛 옵션 UI(dh-option-ui)의 안내대로 동작하지 않았다.
+   골라 둔 줄을 다시 눌러도 그대로 남는다. 그 플러그인의 상태를 우리가 다시 짜지 않고,
+   같은 화면에 있는 수량 − 버튼을 0까지 눌러 준다 — 해지는 그쪽이 스스로 한다. */
+(function(){
+  document.addEventListener('click', function(e){
+    var pick = e.target.closest('.dhx-bundle__pick');
+    if(!pick) return;
+    var row = pick.closest('.dhx-bundle');
+    if(!row || !row.classList.contains('is-on')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var minus = row.querySelector('.dhx-qty button');
+    if(!minus) return;
+    var guard = 0;
+    (function step(){
+      if(guard++ > 40 || !row.classList.contains('is-on')) return;
+      var n = row.querySelector('.dhx-qty__n');
+      if(n && Number(n.textContent) <= 0) return;
+      minus.click();
+      setTimeout(step, 70);
+    })();
+  }, true);
+})();
