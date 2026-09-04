@@ -243,14 +243,15 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .bnav a.bnav__hi{background:#111;color:#fff}
 @media(min-width:880px){.dhr .bnav{display:none}}
 /* 분류 타일 — 홈 */
-.dhr .qcats{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:.5rem .2rem;margin:1.1rem 0 .2rem;text-align:center}
+/* 폰에서는 두 줄로 — 한 줄에 일곱 개를 밀어 넣으면 타일이 아이콘보다 좁아진다 */
+.dhr .qcats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem .2rem;margin:1.1rem 0 .2rem;text-align:center}
 .dhr .qcats a{display:flex;flex-direction:column;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:#111;min-width:0}
 .dhr .qcats__ic{width:54px;height:54px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 0 #E2E4E8;transition:transform 160ms}
 .dhr .qcats a:hover .qcats__ic{transform:translateY(-2px)}
 .dhr .qcats__ic img{width:100%;height:100%;object-fit:cover}
 .dhr .qcats__ic svg{width:26px;height:26px;color:#111;stroke-width:1.9}
 .dhr .qcats a span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-@media(min-width:640px){.dhr .qcats{gap:.6rem;margin-top:1.4rem}.dhr .qcats__ic{width:72px;height:72px}.dhr .qcats a{font-size:14px}}
+@media(min-width:640px){.dhr .qcats{grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:.6rem;margin-top:1.4rem}.dhr .qcats__ic{width:72px;height:72px}.dhr .qcats a{font-size:14px}}
 @media(min-width:640px){.dhr .qcats__ic svg{width:30px;height:30px}}
 @media(min-width:880px){.dhr .qcats{display:flex;justify-content:center;gap:2.2rem}.dhr .qcats__ic{width:84px;height:84px}.dhr .qcats__ic svg{width:34px;height:34px}}
 /* 푸터 — 입금 계좌 */

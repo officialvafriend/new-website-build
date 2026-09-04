@@ -149,7 +149,7 @@ $month = (int) wp_date( 'n' );
 
 	<?php
 	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
-	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), cat_by_name( '노보' ) ) ) );
+	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), cat_by_name( '적립금' ), cat_by_name( '노보' ) ) ) );
 	if ( $qc ) : ?>
 	<nav class="qcats" aria-label="분류 바로 가기">
 		<?php foreach ( $qc as $c ) : ?>

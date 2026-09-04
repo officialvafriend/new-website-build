@@ -432,7 +432,8 @@ function header_html(): void {
 	$sale    = cat_by_name( '특가' );
 	$in    = is_user_logged_in();
 	$pts   = signup_points();
-	$cats  = array_values( array_filter( array( $sale, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ) ) ) );
+	// 가입하면 8,800원을 주면서 그 돈을 쓸 곳으로 가는 길이 어디에도 없었다.
+	$cats  = array_values( array_filter( array( $sale, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
 	?>
 	<?php if ( ! $in ) : ?>
 	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
@@ -508,6 +509,8 @@ function tabbar_html(): void {
  */
 function short_cat( string $name ): string {
 	$n = preg_replace( '/^\d+월\s*/u', '이달 ', trim( $name ) );
+	// "8,800 적립금 상품" — 금액은 사이트 곳곳에 이미 있다. 칩에는 이름만 남긴다.
+	$n = preg_replace( '/^[\d,]+\s*(?=적립)/u', '', $n );
 	$n = preg_replace( '/\s*할인$/u', '', $n );
 	$n = preg_replace( '/^액상\s+/u', '', $n );
 	if ( ! preg_match( '/^액상$/u', $n ) ) {
@@ -567,7 +570,7 @@ function footer_html(): void {
 	$account = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
 	// 헤더 칩과 같은 순서 — 특가 · 입호흡 · 폐호흡 · 무니코틴 · 기기.
 	$cats    = array_values( array_filter( array(
-		cat_by_name( '특가' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '무니코틴' ), cat_by_name( '기기' ), cat_by_name( '랭킹' ),
+		cat_by_name( '특가' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '무니코틴' ), cat_by_name( '기기' ), cat_by_name( '적립금' ), cat_by_name( '랭킹' ),
 	) ) );
 	$brands  = featured_brands( 6 );
 	?>

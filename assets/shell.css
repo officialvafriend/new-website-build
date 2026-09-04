@@ -1891,3 +1891,14 @@ html body.dhr.dhr-wrap.dhr-wrap .dh-ag2-later{
   text-decoration: underline; text-underline-offset: 3px; background: none; border: 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dh-ag2-later:hover{ color: var(--dh-ink, #111); }
+
+/* 푸터 입금 계좌 — 테마 페이지(dhr-wrap)에서 번호와 캡션이 검정으로 덮였다.
+   홈(body.dhr)에서는 front.css 의 (0,2,0) 규칙이 이기지만 테마 화면에서는 진다.
+   검은 상자 위 검은 글씨라 아예 안 보였다 — 같은 색을 여기서 다시 못 박는다. */
+html body.dhr.dhr-wrap.dhr-wrap .fbank .n{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__meta{ color: #AAB1B9 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__t b{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__note{ color: #D3D9DF !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__note b{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__copy{ color: #111 !important; background: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .fbank__copy.is-done{ background: #7DD3FC !important; color: #0B2434 !important; }
