@@ -159,8 +159,14 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 	<?php do_action( 'woocommerce_after_single_product' ); ?>
 </div>
 </main>
+<?php // 시트가 열렸을 때 뒤를 덮는 막. 불투명 카드 뒤라 여기서는 반투명이어도 글을 읽지 않는다 ?>
+<div class="dhp-sheetdim" data-sheet-dim hidden></div>
 <div class="dhp-bar" data-buybar data-price="<?php echo esc_attr( (string) $product->get_price() ); ?>" hidden>
-	<div class="dhp-bar__sum"><span>총 금액</span><b class="n" data-bar-total>—</b></div>
+	<?php // 총액을 누르면 구매 카드가 아래에서 올라온다 — 상세를 내려 읽다 옵션을 바꾸려고 맨 위로 되돌아가지 않게 ?>
+	<button type="button" class="dhp-bar__sum" data-bar-open aria-label="옵션 열기">
+		<span class="dhp-bar__sumtx"><span>총 금액</span><b class="n" data-bar-total>—</b></span>
+		<?php echo icon( 'chev' ); // phpcs:ignore ?>
+	</button>
 	<button type="button" class="dhp-bar__cart" data-bar-cart aria-label="장바구니에 담기"><?php echo icon( 'bag' ); // phpcs:ignore ?></button>
 	<button type="button" class="dhp-bar__buy" data-bar-buy>결제하기</button>
 	<?php if ( ! is_user_logged_in() ) : ?><a class="dhp-bar__tip" href="<?php echo esc_url( home_url( '/register/' ) ); ?>">가입 즉시 <?php echo esc_html( number_format_i18n( \Duckhoo\Redesign\Front\signup_points() ) ); ?>원 적립</a><?php endif; ?>

@@ -227,8 +227,11 @@
     bBuy.textContent = off ? (sum ? '옵션을 골라 주세요' : add.textContent.trim() || '결제하기') : (buy ? '결제하기' : '장바구니에 담기');
     bCart.hidden = !buy;
   }
+  /* 아직 고르지 않았으면 맨 위로 되돌리지 않는다 — 구매 카드를 아래에서 올린다 */
+  function sheet(){ return window.DHR && window.DHR.openBuySheet && window.DHR.openBuySheet(); }
   function hit(real){
     if(bar.classList.contains('is-off')){
+      if(sheet()) return;
       var box = form.querySelector('.dhx') || form; box.scrollIntoView({behavior:'smooth', block:'start'});
       bar.classList.add('nudge'); setTimeout(function(){ bar.classList.remove('nudge'); }, 700); return;
     }
@@ -236,6 +239,8 @@
   }
   bCart.addEventListener('click', function(){ hit(add); });
   bBuy.addEventListener('click', function(){ hit(buy || add); });
+  var bOpen = bar.querySelector('[data-bar-open]');
+  if(bOpen){ bOpen.addEventListener('click', function(){ if(!sheet()){ form.scrollIntoView({behavior:'smooth', block:'start'}); } }); }
   new MutationObserver(sync).observe(form, {subtree:true, childList:true, attributes:true, attributeFilter:['disabled','class'], characterData:true});
   form.addEventListener('input', sync); form.addEventListener('change', sync);
   var anchor = form.querySelector('.vf-drawer-actions') || add;
@@ -283,7 +288,40 @@
   var card = document.querySelector('[data-dock]'), wrap = document.querySelector('[data-dockwrap]');
   var open = document.querySelector('[data-dock-open]');
   if(!card || !wrap || !open) return;
-  var wide = window.matchMedia('(min-width: 900px)'), shut = false, docked = false;
+  var wide = window.matchMedia('(min-width: 900px)'), shut = false, docked = false, onSheet = false;
+  var dim = document.querySelector('[data-sheet-dim]');
+
+  /* 모바일 — 같은 카드를 아래에서 올라오는 시트로 만든다. 데스크톱 서랍과 똑같이
+     **폼을 복제하지 않는다**: 진짜 폼이 그대로 올라오므로 고른 옵션이 유지되고,
+     구매 게이트가 읽는 칸 이름도 폼 안쪽이라 바뀌지 않는다. */
+  function openSheet(){
+    if(wide.matches) return false;
+    if(onSheet) return true;
+    wrap.style.minHeight = wrap.getBoundingClientRect().height + 'px';
+    onSheet = true;
+    card.classList.add('is-sheet');
+    document.body.classList.add('dhp-sheet-on');
+    if(dim) dim.hidden = false;
+    card.scrollTop = 0;
+    return true;
+  }
+  function closeSheet(){
+    if(!onSheet) return false;
+    onSheet = false;
+    card.classList.remove('is-sheet');
+    document.body.classList.remove('dhp-sheet-on');
+    if(dim) dim.hidden = true;
+    wrap.style.minHeight = '';
+    return true;
+  }
+  window.DHR = window.DHR || {};
+  window.DHR.openBuySheet = openSheet;
+  if(dim) dim.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSheet(); });
+  /* 담기 · 결제하기를 누르면 시트는 할 일을 마쳤다 */
+  card.addEventListener('click', function(e){
+    if(e.target.closest('.single_add_to_cart_button, .wd-direct-checkout-btn')) setTimeout(closeSheet, 60);
+  });
 
   function undock(){
     if(!docked) return; docked = false;
@@ -305,8 +343,11 @@
   }
   var tick = false;
   window.addEventListener('scroll', function(){ if(!tick){ tick = true; requestAnimationFrame(function(){ tick = false; paint(); }); } }, {passive:true});
-  window.addEventListener('resize', function(){ undock(); paint(); });
-  card.querySelector('[data-dock-close]').addEventListener('click', function(){ shut = true; undock(); open.hidden = false; });
+  window.addEventListener('resize', function(){ undock(); closeSheet(); paint(); });
+  card.querySelector('[data-dock-close]').addEventListener('click', function(){
+    if(closeSheet()) return;
+    shut = true; undock(); open.hidden = false;
+  });
   open.addEventListener('click', function(){ shut = false; open.hidden = true; dock(); card.querySelector('select, button, input') && card.querySelector('select, button, input').focus(); });
   paint();
 })();
