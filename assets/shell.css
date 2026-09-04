@@ -235,6 +235,9 @@ html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions{
   display: flex !important; gap: .5rem !important; margin: 1rem 0 0 !important;
   padding: 0 !important; background: transparent !important; backdrop-filter: none !important;
   border: 0 !important; box-shadow: none !important; z-index: auto !important; height: auto !important;
+  /* 이 줄은 버튼과 높이가 똑같은데 overflow 가 hidden 이었다. 그래서 호버로 버튼이 1px
+     떠오르는 순간 윗변이 잘려 "위가 가려진" 것처럼 보였다. 그림자도 같이 잘렸다. */
+  overflow: visible !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button{
   flex: 1 1 0 !important; height: 52px !important; min-height: 52px !important; max-width: none !important;
