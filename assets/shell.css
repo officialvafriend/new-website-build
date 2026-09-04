@@ -1354,7 +1354,8 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address address{ font-style: normal
 @media (max-width:899px){
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ background: transparent !important; box-shadow: none !important; padding: 0 !important; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{
-    display: flex !important; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding: .2rem 0 .9rem !important; margin: 0 !important;
+    display: flex !important; flex-wrap: nowrap !important; gap: .4rem; overflow-x: auto; scrollbar-width: none;
+    padding: .2rem 0 .9rem !important; margin: 0 !important;
   }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul::-webkit-scrollbar{ display: none; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li{ flex: 0 0 auto; }
