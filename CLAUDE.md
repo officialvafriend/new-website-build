@@ -308,6 +308,22 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 - **구매 버튼 호버는 우리 것으로 못 박았다.** 테마 쪽 색 그림자가 분홍으로 번지는데 규칙을
   하나씩 찾는 대신 `filter · text-shadow · outline · box-shadow` 를 통째로 덮는다
 
+## 장바구니 · 팝업 (2026-09-04, 세 번째)
+
+- **장바구니 두 칸은 `form.wd-cpg-form` 자체를 격자로 만들어 나눈다.** `.wd-cpg` 를 격자로
+  두고 폼을 `display:contents` 로 풀면 제목 · 안내가 칸을 가로질러 행 번호가 어긋나고,
+  오른쪽 덩어리가 제목 위로 올라간다. 폼을 격자로 두면 그 셈이 없다
+- 합계 · 주문 버튼 · 할인 적용 안내는 `front.js` 가 `.dhr-cartside` 로 묶어 오른쪽에 붙인다.
+  **감싸는 상자는 반드시 form 안에** 만든다 — 주문 버튼이 `type=submit name=wd_checkout_selected` 다
+- **금액대별 자동 할인 안내는 사장님 스니펫이 우리 뒤에 다시 그린다.** 한 번 쓰고 끝내면
+  옛 문구로 되돌아가므로 MutationObserver 로 지켜보다 다시 쓴다 (8초 뒤 해제).
+  문구의 값은 `window.DHR.discount` — 필터 `duckhoo_auto_discount` (현재 10만원↑ 1만원)
+- 인라인 style 로 분홍 그라데이션이 박힌 곳: `#coupon-auto-notice` · `#coupon-applied-notice`
+  (`!important` 필요), 형광 분홍 배지 `.wd-cpg__count`, 추천 썸네일의 6px 안쪽 여백
+- **사장님 홈 팝업(`#pop6`)은 모양만 맞춘다.** 끄는 것은 스니펫 쪽 일이다. 스니펫이 인라인
+  `<style>` 로 `#pop6 .bbtn` (1,0,1) 을 쓰므로 우리는 `body.dhr #pop6 .bbtn` (1,1,2) 로 이긴다.
+  홈은 `body.dhr` 뿐이라 (dhr-wrap 이 없다) 팝업 규칙은 **front.css** 에 둔다
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·
