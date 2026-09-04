@@ -175,55 +175,60 @@ function account_hero(): void {
 add_action( 'woocommerce_account_navigation', __NAMESPACE__ . '\\account_hero', 5 );
 
 /**
- * 가입 세 화면(`/register/` · `/agree/` · `/join-form/`)에 머리판을 얹고,
- * 화면 이름을 우리말로 고친다.
+ * 지금 보고 있는 가입 단계. 아니면 null.
  *
- * 페이지 내용을 저장하지 않는다 — 보여줄 때만 바꾸므로 관리자에 있는 글은 그대로다.
- *
- * @param string $html 원래 내용.
- * @return string
+ * @return array{int,string,string}|null
  */
-function signup_content( string $html ): string {
-	static $done = false;
-	if ( $done || ! wraps() || ! is_main_query() ) {
-		return $html;
+function current_step(): ?array {
+	if ( ! wraps() || ! is_page() ) {
+		return null;
 	}
-	// 슬러그를 직접 읽으면 테마가 어떤 루프에서 본문을 그리느냐에 따라 어긋난다.
-	// is_page() 는 지금 보고 있는 페이지 자체를 본다.
-	$hit = null;
 	foreach ( steps() as $slug => $step ) {
 		if ( is_page( $slug ) ) {
-			$hit = $step;
-			break;
+			return $step;
 		}
 	}
-	if ( null === $hit ) {
-		return $html;
-	}
-	$done                     = true;
-	list( $no, $title, $sub ) = $hit;
+	return null;
+}
 
-	// 영문 제목이 화면마다 다른 뜻으로 붙어 있었다 — 가입 화면인데 "Sign In" 이다.
-	$html = str_replace(
-		array( '<h2 class="wd-join-title">Sign In</h2>', '<h2 class="wd-agree-title">Terms &amp; Policy</h2>', '<h2 class="wd-agree-title">Terms & Policy</h2>' ),
-		'',
-		$html
-	);
+/**
+ * 가입 세 화면의 머리판.
+ *
+ * 이 세 장은 페이지 본문이 아니라 템플릿이 통째로 그린다 — `the_content` 가
+ * 아예 돌지 않는다. 그래서 우리 헤더 바로 뒤(`wp_body_open`)에 붙인다.
+ *
+ * @return void
+ */
+function signup_hero(): void {
+	$step = current_step();
+	if ( null === $step ) {
+		return;
+	}
+	list( $no, $title, $sub ) = $step;
 
 	$chips = 3 === $no
 		? array( '만 19세 이상', '본인확인 먼저' )
 		: array( '가입 즉시 ' . number_format_i18n( signup_points() ) . '원 적립', '1분 소요' );
 
-	ob_start();
+	echo '<div class="dhr-authtop"><div class="wrap">';
 	hero( '회원가입', $title, $sub, $chips, $no );
-	$head = ob_get_clean();
-
-	// 가입 화면 어디에도 로그인으로 돌아가는 길이 없었다.
-	$back = '<p class="dhr-back">이미 회원이신가요? <a href="' . esc_url( wc_get_page_permalink( 'myaccount' ) ) . '">로그인</a></p>';
-
-	return $head . $html . $back;
+	echo '</div></div>';
 }
-add_filter( 'the_content', __NAMESPACE__ . '\\signup_content', 20 );
+add_action( 'wp_body_open', __NAMESPACE__ . '\\signup_hero', 6 );
+
+/**
+ * 가입 화면 아래, 로그인으로 돌아가는 길. 세 장 어디에도 없었다.
+ *
+ * @return void
+ */
+function signup_back(): void {
+	if ( null === current_step() ) {
+		return;
+	}
+	echo '<div class="dhr-authtop dhr-authtop--end"><div class="wrap"><p class="dhr-back">이미 회원이신가요? <a href="'
+		. esc_url( (string) wc_get_page_permalink( 'myaccount' ) ) . '">로그인</a></p></div></div>';
+}
+add_action( 'wp_footer', __NAMESPACE__ . '\\signup_back', 4 );
 
 /**
  * 가입 화면에도 우리 본문 폭을 준다. 테마 페이지 제목은 머리판이 대신하므로 숨긴다

@@ -651,7 +651,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-agree-shell,
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-shell{ background: transparent !important; font-family: inherit !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-main,
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-main,
-html body.dhr.dhr-wrap.dhr-wrap .wd-join-main{ max-width: 640px !important; margin: 0 auto !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-main{ max-width: 640px !important; margin: 0 auto !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-body,
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-body,
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-body{ max-width: none !important; margin: 0 !important; }
@@ -806,6 +806,21 @@ html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn:hover{
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-password-match,
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-email-validate{ font-size: 13.5px !important; }
+
+/* 가입 세 화면은 페이지 본문이 아니라 템플릿이 통째로 그린다. 머리판은 우리 헤더
+   바로 뒤에 붙고, 본문 폭은 이 상자가 준다. 영문 제목(Sign In · Terms & Policy)은
+   머리판이 대신하므로 뺀다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop{ padding-top: clamp(1rem,.7rem + 1.2vw,1.6rem); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop > .wrap{ max-width: 640px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop .dhr-ah{ margin-bottom: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop--end{ padding: 0 0 2.4rem; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-title,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-title{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-main,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-main,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-main{
+  padding: 1.1rem clamp(1.1rem,.6rem + 2vw,2.5rem) .4rem !important;
+}
 
 /* 가입 화면 아래 로그인으로 돌아가는 길 */
 html body.dhr.dhr-wrap.dhr-wrap .dhr-back{
