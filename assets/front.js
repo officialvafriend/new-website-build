@@ -420,6 +420,11 @@
         if(window.jQuery) window.jQuery(sel).trigger('change');
       }
       paint(); close(true);
+      /* 테마(wd-option-builder)는 고른 것을 아래 목록에 카드로 쌓고 50ms 뒤 선택창을
+         "선택해주세요" 로 되돌린다 — 값은 그쪽 숨은 필드가 쥔다. 원래 select 가 그렇게
+         돌아가므로 우리 선택창도 같이 돌아가야 한다. 안 그러면 고르지도 않은 것이
+         골라진 것처럼 남는다. */
+      setTimeout(paint, 120); setTimeout(paint, 500);
     }
 
     trig.addEventListener('click', function(){ list.hidden ? open() : close(true); });
