@@ -593,7 +593,7 @@ function footer_html(): void {
 				<span class="fmuted">평일 10:00–19:00 · 점심 12:00–13:00<br>주말 · 법정 공휴일 휴무</span>
 				<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
 				<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
-				<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회 (1588-1300)</a></div>
+				<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회</a></div>
 		</div>
 		<?php $banks = bank_accounts(); if ( $banks ) : ?>
 		<div class="fbank"><b>입금 계좌</b>
