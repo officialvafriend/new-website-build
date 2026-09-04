@@ -1364,3 +1364,14 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address address{ font-style: normal
   }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-primary, #111) !important; border-color: var(--dh-primary, #111); }
 }
+/* 주소 두 장이 어긋난다 — 테마가 `.u-column1/2` 래퍼에 float 과 폭을 준다.
+   격자는 `.woocommerce-Addresses` 에 걸려 있고 카드는 그 손자라, 래퍼도 함께 풀어야 한다. */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Addresses > *{
+  width: auto !important; float: none !important; margin: 0 !important; padding: 0 !important; display: flex !important; min-width: 0;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Addresses > * > .woocommerce-Address{ width: 100% !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address address,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h2,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h3{ text-align: left !important; }
