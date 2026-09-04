@@ -1347,7 +1347,7 @@ html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li::before{ content: ""; position: ab
 html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li:first-child{ color: var(--dh-ink, #111); font-weight: 700; }
 /* 아래 고정 구매 줄 — 모바일. 폼의 버튼이 보이는 동안은 내려가 있다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 36; display: flex; align-items: center; gap: .5rem;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 36; display: block;
   padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom)); background: var(--dh-surface, #fff); border-top: 1px solid var(--dh-line, #E1E5E8);
   transform: translateY(110%); transition: transform .22s cubic-bezier(.22,1,.36,1);
 }
@@ -1355,9 +1355,28 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar[hidden]{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-away{ transform: none; }
 @media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ transition: none; } }
 @media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ display: none !important; } }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum{ display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.15; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum span{ font-size: 13px; color: var(--dh-ink-3, #616870); font-weight: 600; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum b{ font-size: 19px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); white-space: nowrap; }
+/* 구매 카드를 여는 줄. 화살표 하나로는 눌러야 하는 줄인지 알 수 없어 손님이 전화로 묻는다 —
+   한 줄을 통째로 버튼으로 만들고 「옵션 열기」라고 글자로 적는다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open{
+  display: flex; align-items: center; gap: .55rem; width: 100%; min-height: 46px;
+  margin: 0 0 .5rem; padding: 0 .7rem 0 .85rem; border-radius: 12px;
+  border: 1px solid var(--dh-line, #E1E5E8); background: var(--dh-surface-2, #F4F6F7);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background-color .2s, border-color .2s;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open:hover{ background: #EDF0F2; border-color: var(--dh-line-2, #CBD2D8); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__lbl{ flex: 0 0 auto; font-size: 13px; font-weight: 600; color: var(--dh-ink-3, #616870); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open .n{
+  flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 900; letter-spacing: -.03em;
+  color: var(--dh-ink, #111); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__more{
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: .1rem;
+  font-size: 13.5px; font-weight: 800; color: var(--dh-accent-deep, #1565C0); white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__more svg{ width: 16px; height: 16px; transform: rotate(-90deg); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__row{ display: flex; align-items: center; gap: .5rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart{ flex: 0 0 50px; width: 50px; height: 50px; border-radius: 14px; border: 1.5px solid var(--dh-ink, #111); background: #fff; color: var(--dh-ink, #111); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart[hidden]{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart svg{ width: 22px; height: 22px; }
@@ -1961,19 +1980,14 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head::before
 /* 무료배송 게이지는 시트에서 뺀다 — 데스크톱 서랍과 같다. 시트는 고르고 사는 자리라
    화면의 5분의 1을 안내가 차지하면 정작 옵션이 밀린다 (상세 본문에는 그대로 있다) */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .wd-free-shipping-gauge{ display: none !important; }
-/* 게이지를 뺀 자리가 빈 칸으로 남았다. 시트는 화면이 좁으니 위 여백을 줄인다 */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet form.cart{ margin-top: .2rem !important; }
+/* 게이지를 뺀 자리가 빈 칸으로 남았다. 머리판과 1번 상자 사이가 73px 이나 됐다:
+   form 의 위 여백 16px + 비어 있는 PPOM 가격·오류 상자 42px. 시트는 화면이 좁으니 둘 다 없앤다.
+   (오류 상자는 :empty 일 때만 감춘다 — 오류가 들어오면 다시 보인다) */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet.is-sheet form.cart{ margin-top: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .vf-drawer-body{ padding-top: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .ppom-wrapper{ margin-top: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet #ppom-price-container:empty,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet #ppom-error-container:empty{ display: none !important; }
 /* 시트가 올라오면 아래 구매 줄은 내린다 — 같은 버튼이 두 번 보이면 안 된다 */
 html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on .dhp-bar{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on{ overflow: hidden !important; }
-/* 총액을 누르면 열린다 — 버튼이지만 생김새는 그대로 */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum{
-  display: flex !important; flex-direction: row !important; align-items: center; gap: .3rem;
-  flex: 1 1 auto; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer;
-  color: inherit; font: inherit; text-align: left;
-}
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sumtx{ display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__sum > svg{
-  flex: 0 0 16px; width: 16px; height: 16px; color: var(--dh-ink-3, #616870); transform: rotate(-90deg);
-}
