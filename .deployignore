@@ -4,6 +4,10 @@
 # Claude Code 스킬 — 개발 도구일 뿐 사이트 코드가 아닙니다 (약 11MB)
 .claude/
 
+# Higgsfield 스킬 (npx skills add) — 개발 도구. 사이트 코드가 아닙니다
+.agents/
+skills-lock.json
+
 # 디자인 시안과 문서 — 참고용. 사이트에서 로드되지 않습니다.
 design/
 
