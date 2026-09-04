@@ -125,7 +125,7 @@ function trust(): void {
 	}
 	echo '</ul>';
 	echo '<p class="dhp-links"><a href="' . esc_url( home_url( '/shipping/' ) ) . '">배송 · 교환 · 환불 안내</a>'
-		. '<a href="' . esc_url( home_url( '/inquiries/' ) ) . '">1:1 문의</a></p>';
+		. '<a href="' . esc_url( \Duckhoo\Redesign\Front\inquiry_url() ) . '">1:1 문의</a></p>';
 }
 
 /**

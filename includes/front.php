@@ -447,7 +447,7 @@ function header_html(): void {
 	<div class="util"><div class="wrap">
 		<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
 		<a href="<?php echo esc_url( home_url( '/tip/' ) ); ?>">Tip</a>
-		<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
+		<a href="<?php echo esc_url( inquiry_url() ); ?>">1:1 문의</a>
 		<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">배송조회</a>
 		<span class="r">19세 미만 판매 금지</span>
 	</div></div>
@@ -553,6 +553,26 @@ function signup_points(): int {
 }
 
 /**
+ * 1:1 문의 주소.
+ *
+ * `/inquiries/` 는 kboard 게시판이고, **비로그인 방문자에게는 `alert` 을 띄운 뒤
+ * `wp-login.php` 로 보내 버린다.** 워드프레스 관리자 로그인 화면이라 손님 눈에는
+ * 사이트가 통째로 다른 곳으로 튄 것처럼 보이고, 실제로 쓸 수도 없다.
+ * 게시판 플러그인은 건드리지 않는다 — 대신 **로그인 전에는 우리 로그인 화면으로**
+ * 보내고, 로그인하면 문의 게시판으로 돌아오게 한다.
+ *
+ * @return string
+ */
+function inquiry_url(): string {
+	$board = (string) apply_filters( 'duckhoo_inquiry_page', home_url( '/inquiries/' ) );
+	if ( is_user_logged_in() ) {
+		return $board;
+	}
+	$login = function_exists( 'wc_get_page_permalink' ) ? (string) wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
+	return add_query_arg( 'redirect_to', rawurlencode( $board ), $login );
+}
+
+/**
  * 카카오톡 문의 주소. 오픈채팅 링크가 생기면 이 필터 한 줄로 바꾼다.
  *
  *     add_filter( 'duckhoo_kakao_url', fn() => 'https://open.kakao.com/o/XXXXXXX' );
@@ -560,7 +580,7 @@ function signup_points(): int {
  * @return string
  */
 function kakao_url(): string {
-	return (string) apply_filters( 'duckhoo_kakao_url', home_url( '/inquiries/' ) );
+	return (string) apply_filters( 'duckhoo_kakao_url', inquiry_url() );
 }
 
 /**
@@ -580,7 +600,7 @@ function footer_html(): void {
 		<div class="fgrid">
 			<div class="fabout"><a class="lg lg-w" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="g"></span>액상덕후</a>
 				<p>전자담배 액상 전문몰. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
-				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo kakao_url() === home_url( '/inquiries/' ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
+				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo 0 === strpos( kakao_url(), home_url() ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
 			<?php
 			// 폰에서 푸터가 화면 두 개를 넘었다. 링크 묶음은 접어 두고 제목만 보인다
 			// (front.js 가 여닫는다). 데스크톱은 CSS 가 늘 펼쳐 둔다.
@@ -601,7 +621,7 @@ function footer_html(): void {
 				<span class="fmuted">평일 10:00–19:00 · 점심 12:00–13:00<br>주말 · 법정 공휴일 휴무</span>
 				<?php // 알약 링크만 가로로 흐른다. 전화번호 · 시간은 위에 한 줄씩 — 줄바꿈이 잘리지 않게 한다 ?>
 				<div class="fcol__pills">
-					<a href="<?php echo esc_url( home_url( '/inquiries/' ) ); ?>">1:1 문의</a>
+					<a href="<?php echo esc_url( inquiry_url() ); ?>">1:1 문의</a>
 					<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
 					<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회</a></div></div>
 		</div>

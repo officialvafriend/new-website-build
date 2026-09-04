@@ -110,10 +110,15 @@ function login_hero(): void {
 	if ( ! wraps() ) {
 		return;
 	}
+	// 문의처럼 로그인이 필요한 화면에서 온 사람에게는 왜 여기에 왔는지 알려 준다.
+	$from = isset( $_GET['redirect_to'] ) ? rawurldecode( wp_unslash( (string) $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$sub  = ( '' !== $from && false !== strpos( $from, '/inquiries' ) )
+		? '문의를 남기려면 로그인이 필요합니다. 로그인하면 문의 게시판으로 돌아갑니다.'
+		: '주문내역 · 적립금 · 배송지가 한곳에 있습니다.';
 	hero(
 		'액상덕후 회원',
 		'로그인',
-		'주문내역 · 적립금 · 배송지가 한곳에 있습니다.',
+		$sub,
 		array( '가입 즉시 ' . number_format_i18n( signup_points() ) . '원 적립', '19세 이상 본인확인' )
 	);
 }
@@ -142,6 +147,31 @@ function login_join(): void {
 	<?php
 }
 add_action( 'woocommerce_after_customer_login_form', __NAMESPACE__ . '\\login_join', 20 );
+
+/**
+ * 로그인 뒤 원래 가려던 곳으로 돌려보낸다.
+ *
+ * 문의 게시판처럼 로그인이 필요한 화면에서 우리 로그인으로 보낼 때 `?redirect_to=` 를
+ * 달아 두면, 로그인이 끝나고 그 화면으로 돌아온다. 주소는 `wp_validate_redirect()` 로
+ * 같은 사이트인지 확인한다 — 바깥으로 튀는 주소는 버린다.
+ *
+ * @return void
+ */
+function login_redirect_field(): void {
+	if ( ! wraps() || is_user_logged_in() ) {
+		return;
+	}
+	$raw = isset( $_GET['redirect_to'] ) ? rawurldecode( wp_unslash( (string) $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( '' === $raw ) {
+		return;
+	}
+	$safe = wp_validate_redirect( $raw, '' );
+	if ( '' === $safe ) {
+		return;
+	}
+	echo '<input type="hidden" name="redirect" value="' . esc_attr( $safe ) . '">';
+}
+add_action( 'woocommerce_login_form', __NAMESPACE__ . '\\login_redirect_field' );
 
 /**
  * 로그인한 회원의 머리판. 메뉴 · 내용보다 먼저 나온다.
