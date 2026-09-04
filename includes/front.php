@@ -368,9 +368,12 @@ function card( \WC_Product $p ): string {
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
 		. '<div class="pr">' . $was . $off . $price . '</div>'
 		. $per . '</div>'
-		// 구매하기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 보낸다.
+		// 구매하기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지로 보낸다.
+		// **`#dhp-buy` 같은 조각을 붙이지 않는다** — 브라우저가 그 자리로 뛰어내려서
+		// 페이지가 한가운데(폰 940px · 데스크톱 611px)부터 열렸다. 맨 위에서 사진 · 가격을
+		// 먼저 보여주는 것이 맞고, 폰은 그 상태에서 아래 고정 구매 줄이 이미 떠 있다.
 		. ( $p->is_in_stock()
-			? '<a class="buy" href="' . esc_url( $url ) . '#dhp-buy" aria-label="' . esc_attr( $n['title'] ) . ' 구매하기">구매하기</a>'
+			? '<a class="buy" href="' . esc_url( $url ) . '" aria-label="' . esc_attr( $n['title'] ) . ' 구매하기">구매하기</a>'
 			: '<span class="buy is-out">품절</span>' )
 		. '</article>';
 }
