@@ -356,6 +356,21 @@
     var w = document.createElement('span'); w.className = cls + '-w'; w.innerHTML = s; return w.firstChild;
   }
 
+  /* 사장님 스니펫(vf 구매 게이트)은 각 select 의 **조상 텍스트**로 그 칸이 무슨 칸인지
+     판단한다 — 위로 올라가다 한글이 2자 이상 나오는 조상에서 멈추고, 거기서 <select> 만
+     지운 나머지 글자를 칸 이름으로 쓴다. 그래서 select 옆에 글자를 하나라도 더 놓으면
+     칸 이름이 바뀌어 버린다.
+
+     실제로 그렇게 깨졌다: 우리가 select 를 .dhsel 안으로 옮기고 그 안에 옵션 글자를
+     늘어놓자 "기기 함께 구매하기 (할인 특가 · 선택사항)" 이던 칸 이름이 "…조바 기기…"
+     가 되어, 「함께 구매」(선택사항) 로 빠져 있던 칸이 **필수**로 잡혔다. 그 칸은 기기를
+     사지 않으면 고를 수가 없으니 구매 버튼이 영영 열리지 않았다 (필수 2개 중 1개).
+
+     그래서 이 선택창은 **폼 안에 글자를 남기지 않는다**:
+       · select 는 원래 부모 그대로 둔다 (1px 로 접어만 둔다)
+       · 고른 값은 텍스트 노드가 아니라 data-l + CSS content 로 그린다
+       · 목록은 열 때만 만들어 document.body 로 띄우고 닫으면 지운다
+     읽어 주는 것은 aria-label 이 맡는다. */
   function build(sel){
     if(sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
     if(sel.multiple || sel.options.length < 2) return;
@@ -369,45 +384,70 @@
     trig.setAttribute('aria-expanded', 'false'); trig.setAttribute('aria-controls', id + '-l');
     var val = el('span', 'dhsel__val'), cost = el('span', 'dhsel__cost n');
     trig.appendChild(val); trig.appendChild(cost); trig.appendChild(svg('m6 9 6 6 6-6', 'dhsel__chev'));
-
-    var list = el('div', 'dhsel__list');
-    list.id = id + '-l'; list.setAttribute('role', 'listbox'); list.hidden = true;
+    root.appendChild(trig);
 
     var wrap = sel.closest('.ppom-field-wrapper, .form-row');
     var lab = wrap && wrap.querySelector('label');
-    if(lab) trig.setAttribute('aria-label', lab.textContent.replace(/\*+/g, '').trim());
+    var fieldName = lab ? lab.textContent.replace(/\*+/g, '').trim() : '';
 
-    var rows = [];
-    [].forEach.call(sel.options, function(o, i){
-      var d = split(o.textContent);
-      var r = el('div', 'dhsel__opt');
-      r.setAttribute('role', 'option'); r.dataset.i = i; r.tabIndex = -1;
-      var nm = el('span', 'dhsel__nm'); nm.textContent = d.name; r.appendChild(nm);
-      if(d.price){ var pr = el('span', 'dhsel__pr n'); pr.textContent = d.price; r.appendChild(pr); }
-      r.appendChild(svg('m5 12.5 5 5 9.5-11', 'dhsel__tick'));
-      if(o.disabled){ r.setAttribute('aria-disabled', 'true'); r.classList.add('is-off'); }
-      list.appendChild(r); rows.push(r);
-    });
+    var list = null, rows = [];
 
+    function place(){
+      if(!list) return;
+      var r = trig.getBoundingClientRect();
+      list.style.left = r.left + 'px';
+      list.style.width = r.width + 'px';
+      var below = innerHeight - r.bottom - 12;
+      if(below < 200 && r.top > below){ list.style.top = ''; list.style.bottom = (innerHeight - r.top + 6) + 'px'; }
+      else { list.style.bottom = ''; list.style.top = (r.bottom + 6) + 'px'; }
+    }
+
+    function make(){
+      list = el('div', 'dhsel__list dhsel__list--pop');
+      list.id = id + '-l'; list.setAttribute('role', 'listbox');
+      rows = [];
+      [].forEach.call(sel.options, function(o, i){
+        var d = split(o.textContent);
+        var r = el('div', 'dhsel__opt');
+        r.setAttribute('role', 'option'); r.dataset.i = i; r.tabIndex = -1;
+        var nm = el('span', 'dhsel__nm'); nm.textContent = d.name; r.appendChild(nm);
+        if(d.price){ var pr = el('span', 'dhsel__pr n'); pr.textContent = d.price; r.appendChild(pr); }
+        r.appendChild(svg('m5 12.5 5 5 9.5-11', 'dhsel__tick'));
+        if(o.disabled){ r.setAttribute('aria-disabled', 'true'); r.classList.add('is-off'); }
+        var on = i === sel.selectedIndex;
+        r.classList.toggle('on', on); r.setAttribute('aria-selected', on ? 'true' : 'false');
+        list.appendChild(r); rows.push(r);
+      });
+      list.addEventListener('click', function(e){ var r = e.target.closest('.dhsel__opt'); if(r) pick(+r.dataset.i); });
+      list.addEventListener('keydown', keys);
+      document.body.appendChild(list);
+      place();
+    }
+
+    /* 값은 글자가 아니라 속성으로 — 폼 안 텍스트를 늘리지 않는다 */
     function paint(){
       var o = sel.options[sel.selectedIndex] || sel.options[0];
       var d = split(o ? o.textContent : '');
-      val.textContent = d.name; cost.textContent = d.price;
+      val.dataset.l = d.name; cost.dataset.l = d.price;
       root.classList.toggle('is-set', sel.selectedIndex > 0);
-      rows.forEach(function(r, i){
+      trig.setAttribute('aria-label', (fieldName ? fieldName + ': ' : '') + d.name + (d.price ? ' ' + d.price : ''));
+      if(list){ rows.forEach(function(r, i){
         var on = i === sel.selectedIndex;
         r.classList.toggle('on', on); r.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
+      }); }
     }
     function open(){
-      if(!list.hidden) return;
-      list.hidden = false; root.classList.add('is-open'); trig.setAttribute('aria-expanded', 'true');
+      if(list) return;
+      make(); root.classList.add('is-open'); trig.setAttribute('aria-expanded', 'true');
+      addEventListener('scroll', place, true); addEventListener('resize', place);
       var cur = rows[sel.selectedIndex] || rows[0];
       if(cur){ cur.focus(); cur.scrollIntoView({block: 'nearest'}); }
     }
     function close(back){
-      if(list.hidden) return;
-      list.hidden = true; root.classList.remove('is-open'); trig.setAttribute('aria-expanded', 'false');
+      if(!list) return;
+      removeEventListener('scroll', place, true); removeEventListener('resize', place);
+      list.remove(); list = null; rows = [];
+      root.classList.remove('is-open'); trig.setAttribute('aria-expanded', 'false');
       if(back) trig.focus();
     }
     function pick(i){
@@ -420,20 +460,13 @@
         sel.dispatchEvent(new Event('input', {bubbles: true}));
         sel.dispatchEvent(new Event('change', {bubbles: true}));
       }
-      paint(); close(true);
+      close(true); paint();
       /* 테마(wd-option-builder)는 고른 것을 아래 목록에 카드로 쌓고 50ms 뒤 선택창을
          "선택해주세요" 로 되돌린다 — 값은 그쪽 숨은 필드가 쥔다. 원래 select 가 그렇게
-         돌아가므로 우리 선택창도 같이 돌아가야 한다. 안 그러면 고르지도 않은 것이
-         골라진 것처럼 남는다. */
+         돌아가므로 우리 선택창도 같이 돌아가야 한다. */
       setTimeout(paint, 120); setTimeout(paint, 500);
     }
-
-    trig.addEventListener('click', function(){ list.hidden ? open() : close(true); });
-    trig.addEventListener('keydown', function(e){
-      if(e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); open(); }
-    });
-    list.addEventListener('click', function(e){ var r = e.target.closest('.dhsel__opt'); if(r) pick(+r.dataset.i); });
-    list.addEventListener('keydown', function(e){
+    function keys(e){
       var at = rows.indexOf(document.activeElement);
       if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if(at >= 0) pick(at); }
       else if(e.key === 'Escape'){ e.preventDefault(); close(true); }
@@ -442,16 +475,24 @@
       else if(e.key === 'Home'){ e.preventDefault(); rows[0].focus(); }
       else if(e.key === 'End'){ e.preventDefault(); rows[rows.length - 1].focus(); }
       else if(e.key === 'Tab'){ close(false); }
+    }
+
+    trig.addEventListener('click', function(){ list ? close(true) : open(); });
+    trig.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); open(); }
     });
-    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(false); });
+    document.addEventListener('click', function(e){
+      if(root.contains(e.target) || (list && list.contains(e.target))) return;
+      close(false);
+    });
     /* 다른 스크립트가 값을 바꿔도 따라 그린다 */
     sel.addEventListener('change', paint);
 
     sel.classList.add('dhsel-src');
     sel.setAttribute('tabindex', '-1');
     sel.setAttribute('aria-hidden', 'true');
+    /* select 는 원래 부모에 그대로 둔다. 옮기면 스니펫의 칸 이름 계산이 어긋난다. */
     sel.parentNode.insertBefore(root, sel);
-    root.appendChild(trig); root.appendChild(list); root.appendChild(sel);
     paint();
   }
 
