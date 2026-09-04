@@ -582,3 +582,12 @@
     else if(!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
   });
 })();
+
+/* 푸터 링크 묶음 — 폰에서만 접힌다. 데스크톱은 CSS 가 늘 펼쳐 두므로 상태를 봐도 소용없다. */
+(function(){
+  document.querySelectorAll('[data-fcol] .fcol__t').forEach(function(t){
+    t.addEventListener('click', function(){
+      t.setAttribute('aria-expanded', t.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+    });
+  });
+})();

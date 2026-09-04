@@ -493,3 +493,29 @@ body.dhr .dh-leave__go:hover{filter:brightness(1.12)}
 body.dhr .dh-leave__go:active{transform:translateY(1px)}
 body.dhr .dh-leave__go[disabled]{background:#8A8A8F;cursor:default;filter:none}
 @media(prefers-reduced-motion:reduce){body.dhr .dh-leave__box,body.dhr .dh-leave__dim{transition:none}}
+
+/* ── 푸터 — 폰에서 화면 두 개가 넘었다. 링크 묶음을 접는다. ─────────────────── */
+.dhr .fcol__t{display:none}
+.dhr .fcol__list{display:flex;flex-direction:column;gap:.45rem}
+@media(max-width:759px){
+  .dhr .fgrid{gap:0}
+  .dhr .fabout{margin-bottom:1.2rem}
+  .dhr .fabout p{margin:.7rem 0 .9rem;font-size:14px}
+  .dhr .fcol{border-top:1px solid #2A2A2E}
+  .dhr .fcol[data-fcol]{display:block}
+  .dhr .fcol__t{display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;
+    min-height:52px;padding:0;background:none;border:0;cursor:pointer;color:#fff;font:inherit;text-align:left}
+  .dhr .fcol__t b{margin:0;font-size:15px;font-weight:700;color:#fff}
+  .dhr .fcol__t svg{width:18px;height:18px;color:#9A9FA6;transform:rotate(90deg);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+  .dhr .fcol__t[aria-expanded="true"] svg{transform:rotate(-90deg)}
+  .dhr .fcol__list{display:none;padding:0 0 .6rem}
+  .dhr .fcol__t[aria-expanded="true"] + .fcol__list{display:flex}
+  /* 고객센터는 늘 펼쳐 둔다 */
+  .dhr .fcol--open{padding:.9rem 0 .2rem}
+  .dhr .fcol--open b{display:block;margin-bottom:.2rem}
+  .dhr .fcol a{min-height:44px}
+  .dhr .fbank{margin-top:1.2rem;padding:.9rem 1rem;gap:.5rem .7rem}
+  .dhr .fbank .fmuted{font-size:13px;line-height:1.5}
+  .dhr .flegal{margin-top:1.2rem;padding-top:1rem;font-size:12.5px;line-height:1.7}
+  .dhr .foot{padding:1.8rem 0 1.4rem;margin-top:1.8rem}
+}
