@@ -269,6 +269,28 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 - 페이지 번호: `ul.page-numbers` 자신도 클래스가 `page-numbers` 라 알약 배경 규칙이 목록 전체에
   걸려 흰 막대가 화면 폭만큼 깔렸다. `li > .page-numbers` 로 좁혔다
 
+## 선택창 · 구매 서랍 (2026-09-04)
+
+- **선택창은 우리가 그린다** (`front.js` 의 `.dhsel`, 스타일은 `shell.css`). 브라우저가 그리는
+  `select` 목록은 CSS 가 닿지 않는다. 원본 `select` 는 `.dhsel-src` 로 1px 접어 두고 값을 쥔 채
+  남는다 — **name · value · change 경로는 그대로다.**
+  - **`<button>` 으로 만들지 않는다.** 테마 `wd-option-builder.js` 가 `form.cart` 안의 버튼을
+    전부 걷어 자기 구매 줄로 옮기고 라벨을 `.text()` 로 덮어쓴다. 한 번 그렇게 당해 목록이 비었다.
+    `role` 만 준 `div` 로 짓는다
+  - **`change` 는 한 번만 쏜다.** jQuery 위임 핸들러는 네이티브 이벤트로도 깨어나므로
+    `jQuery(sel).trigger('change')` 를 더하면 테마가 같은 옵션을 두 번 담아 수량이 2가 된다
+  - 테마는 고른 옵션을 아래 목록에 카드로 쌓고 **50ms 뒤 선택창을 placeholder 로 되돌린다**
+    (`resetSelectToPlaceholder`). 값은 숨은 필드가 쥔다. 그래서 우리 선택창도 같이 되돌려야 한다
+  - 묶음 상품은 옛 옵션 UI(`.dhx`)가 이미 같은 일을 하므로 걸리지 않는다 (`.dhx-src` 검사)
+- **데스크톱 구매 서랍**: 구매 카드(`.dhp-card--form`)가 화면 밖으로 나가면 그 카드 **자체**가
+  오른쪽 고정 서랍이 된다. 폼을 복제하지 않으므로 고른 옵션이 그대로다. 바깥 `.dhp-dockwrap` 이
+  높이를 기억해 자리를 메우고, 닫으면 `구매하기` 알약만 남는다.
+  높이 제한에는 `!important` 가 필요하다 — 위 `.dhp-card` 규칙이 `max-height: none !important` 다
+- **입체감**: 그림자를 두 겹(바닥 + 주변)으로, 카드는 포인터를 따라 최대 3.2도 기운다.
+  카루셀 상자는 가로만 자른다 (`overflow-x: clip; overflow-y: visible`) — `hidden` 이면 들린
+  카드의 그림자가 잘린다. 반투명 · 블러는 여전히 쓰지 않는다
+- 테마의 무료배송 게이지가 형광 분홍(`#FF0D74`)으로 강조한다 → `--dh-accent-warm` 으로 덮는다
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·
