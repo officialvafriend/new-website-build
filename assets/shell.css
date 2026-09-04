@@ -561,8 +561,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-done .dhr-ah__no{ backgroun
   html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__chips{ margin-left: auto; }
 }
 
-/* 테마 페이지 제목은 머리판이 대신한다. 마크업은 그대로 두고 화면에서만 뺀다 */
-html body.dhr.dhr-wrap.dhr-wrap.dhr-auth .wd-page__header{ display: none !important; }
+/* 테마 페이지 제목은 머리판이 대신한다. 마크업은 그대로 두고 화면에서만 뺀다.
+   `:has()` 로 **머리판이 실제로 그려진 화면에서만** 뺀다 — 그러지 않으면 어떤 이유로
+   머리판이 안 나왔을 때 제목이 하나도 없는 화면이 된다. */
+html body.dhr.dhr-wrap.dhr-wrap.dhr-auth .wd-page__article:has(.dhr-ah) .wd-page__header{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap.dhr-auth{ background: var(--dh-bg, #F4F6F7) !important; }
 html body.dhr.dhr-wrap.dhr-wrap.dhr-auth .wd-page__content > .woocommerce > h2{
   position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
