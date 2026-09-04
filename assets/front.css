@@ -526,3 +526,8 @@ body.dhr .dh-leave__go[disabled]{background:#8A8A8F;cursor:default;filter:none}
   .dhr .flegal{margin-top:1.2rem;padding-top:1rem;font-size:12.5px;line-height:1.7}
   .dhr .foot{padding:1.8rem 0 1.4rem;margin-top:1.8rem}
 }
+/* 팝업 오버레이가 폰에서 화면보다 넓어져 가로 스크롤이 생겼다 (390px 화면에 564px).
+   스니펫이 정하는 폭을 화면 안으로 가둔다. */
+body.dhr #pop-dim{position:fixed!important;inset:0!important;width:100%!important;max-width:100vw!important;overflow:hidden auto!important}
+body.dhr #pop6{max-width:min(480px,calc(100vw - 1.6rem))!important;width:calc(100vw - 1.6rem)!important}
+body.dhr #pop6 .panel{max-width:100%!important;width:100%!important}
