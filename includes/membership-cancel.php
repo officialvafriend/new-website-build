@@ -384,6 +384,32 @@ function render(): string {
 
 				<button type="submit" class="dh-leave__submit"><?php esc_html_e( '탈퇴하기', 'duckhoo-redesign' ); ?></button>
 			</form>
+
+			<?php
+			// 마지막 확인. 되돌릴 수 없는 일이라 숫자를 눈앞에 두고 한 번 더 묻는다.
+			// 자바스크립트가 없으면 이 창은 안 뜨고 폼이 바로 넘어간다 — 서버 검사는 그대로다.
+			$points = point_balance( $user_id );
+			$open   = open_order_count( $user_id );
+			?>
+			<div class="dh-leave__confirm" data-leave-confirm hidden>
+				<div class="dh-leave__dim" data-leave-close></div>
+				<div class="dh-leave__box" role="dialog" aria-modal="true" aria-labelledby="dh-leave-ask">
+					<h3 id="dh-leave-ask"><?php esc_html_e( '정말 탈퇴하시겠습니까?', 'duckhoo-redesign' ); ?></h3>
+					<ul class="dh-leave__confirm-list">
+						<?php if ( null !== $points && $points > 0 ) : ?>
+						<li><b><?php echo esc_html( sprintf( /* translators: %s: 적립금 */ __( '적립금 %s원', 'duckhoo-redesign' ), number_format_i18n( $points ) ) ); ?></b><?php esc_html_e( '이 모두 삭제됩니다. 되돌릴 수 없습니다.', 'duckhoo-redesign' ); ?></li>
+						<?php endif; ?>
+						<?php if ( $open > 0 ) : ?>
+						<li><b><?php echo esc_html( sprintf( /* translators: %d: 주문 수 */ __( '진행 중인 주문 %d건', 'duckhoo-redesign' ), $open ) ); ?></b><?php esc_html_e( '은 그대로 배송되지만, 로그인할 수 없어 진행 상황을 확인하지 못합니다.', 'duckhoo-redesign' ); ?></li>
+						<?php endif; ?>
+						<li><?php esc_html_e( '이름 · 연락처 · 주소가 지워지고 다시 로그인할 수 없습니다.', 'duckhoo-redesign' ); ?></li>
+					</ul>
+					<div class="dh-leave__confirm-btns">
+						<button type="button" class="dh-leave__cancel" data-leave-close><?php esc_html_e( '취소', 'duckhoo-redesign' ); ?></button>
+						<button type="button" class="dh-leave__go" data-leave-go><?php esc_html_e( '탈퇴하기', 'duckhoo-redesign' ); ?></button>
+					</div>
+				</div>
+			</div>
 		<?php endif; ?>
 	</div>
 	<?php

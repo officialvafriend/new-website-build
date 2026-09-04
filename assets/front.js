@@ -543,3 +543,42 @@
     pop.classList.add('dhr-single');
   })();
 })();
+
+/* 회원탈퇴 마지막 확인 — 되돌릴 수 없는 일이라, 사라지는 적립금 액수를 눈앞에 두고
+   한 번 더 묻는다. 스크립트가 없으면 이 창은 안 뜨고 폼이 바로 넘어간다 (서버 검사는 그대로). */
+(function(){
+  var form = document.querySelector('form.dh-leave__form');
+  var box = document.querySelector('[data-leave-confirm]');
+  if(!form || !box) return;
+  var go = box.querySelector('[data-leave-go]'), panel = box.querySelector('.dh-leave__box');
+  var opener = null, armed = false;
+
+  function open(){
+    opener = document.activeElement;
+    box.hidden = false; document.body.classList.add('dhc-open');
+    requestAnimationFrame(function(){ box.classList.add('on'); go.focus(); });
+  }
+  function close(){
+    box.classList.remove('on'); document.body.classList.remove('dhc-open');
+    setTimeout(function(){ box.hidden = true; }, 200);
+    if(opener && opener.focus) opener.focus();
+  }
+  form.addEventListener('submit', function(e){
+    if(armed) return;                    /* 확인을 누른 뒤에는 그대로 보낸다 */
+    if(!form.reportValidity()) return;    /* 비밀번호 · 동의 체크가 먼저다 */
+    e.preventDefault(); open();
+  });
+  go.addEventListener('click', function(){
+    armed = true; go.disabled = true; go.textContent = '처리 중…';
+    if(form.requestSubmit) form.requestSubmit(); else form.submit();
+  });
+  box.addEventListener('click', function(e){ if(e.target.closest('[data-leave-close]')) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !box.hidden) close(); });
+  panel.addEventListener('keydown', function(e){
+    if(e.key !== 'Tab') return;
+    var f = panel.querySelectorAll('button:not([disabled])'); if(!f.length) return;
+    var a = f[0], z = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
+    else if(!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
+  });
+})();
