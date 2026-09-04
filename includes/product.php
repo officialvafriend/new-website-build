@@ -124,7 +124,10 @@ function trust(): void {
 			. '<span>' . wp_kses( $r[2], array( 'b' => array() ) ) . '</span></span></li>';
 	}
 	echo '</ul>';
+	// 카카오톡은 로그인 없이 바로 물어볼 수 있는 유일한 창구다 — 게시판보다 앞에 둔다.
+	$kakao = \Duckhoo\Redesign\Front\kakao_url();
 	echo '<p class="dhp-links"><a href="' . esc_url( home_url( '/shipping/' ) ) . '">배송 · 교환 · 환불 안내</a>'
+		. '<a href="' . esc_url( $kakao ) . '"' . ( \Duckhoo\Redesign\Front\is_external( $kakao ) ? ' target="_blank" rel="noopener"' : '' ) . '>카카오톡 문의</a>'
 		. '<a href="' . esc_url( \Duckhoo\Redesign\Front\inquiry_url() ) . '">1:1 문의</a></p>';
 }
 

@@ -573,14 +573,28 @@ function inquiry_url(): string {
 }
 
 /**
- * 카카오톡 문의 주소. 오픈채팅 링크가 생기면 이 필터 한 줄로 바꾼다.
+ * 카카오톡 문의 주소 — 액상덕후 오픈채팅방.
+ *
+ * 로그인이 필요 없는 유일한 문의 창구다. 게시판(`1:1 문의`)은 회원만 쓸 수 있어서,
+ * 아직 가입하지 않은 사람이 물어볼 곳은 여기뿐이다.
+ * 방을 옮기면 이 필터 한 줄로 바꾼다:
  *
  *     add_filter( 'duckhoo_kakao_url', fn() => 'https://open.kakao.com/o/XXXXXXX' );
  *
  * @return string
  */
 function kakao_url(): string {
-	return (string) apply_filters( 'duckhoo_kakao_url', inquiry_url() );
+	return (string) apply_filters( 'duckhoo_kakao_url', 'https://open.kakao.com/o/sZOm9HJh' );
+}
+
+/**
+ * 그 주소가 우리 사이트 밖인가. 밖이면 새 창으로 연다.
+ *
+ * @param string $url 주소.
+ * @return bool
+ */
+function is_external( string $url ): bool {
+	return 0 !== strpos( $url, home_url() );
 }
 
 /**
@@ -600,7 +614,7 @@ function footer_html(): void {
 		<div class="fgrid">
 			<div class="fabout"><a class="lg lg-w" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="g"></span>액상덕후</a>
 				<p>전자담배 액상 전문몰. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
-				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo 0 === strpos( kakao_url(), home_url() ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
+				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo is_external( kakao_url() ) ? ' target="_blank" rel="noopener"' : ''; ?>>문의하기</a></div></div>
 			<?php
 			// 폰에서 푸터가 화면 두 개를 넘었다. 링크 묶음은 접어 두고 제목만 보인다
 			// (front.js 가 여닫는다). 데스크톱은 CSS 가 늘 펼쳐 둔다.
