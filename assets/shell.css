@@ -903,16 +903,20 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total span{ font-weight: 
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total strong{ font-size: 24px !important; font-weight: 900 !important; letter-spacing: -.035em !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order{ display: flex !important; flex-direction: column !important; align-items: center !important; gap: .6rem !important; margin: 1rem 0 0 !important; }
 @media (min-width:900px){
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg{ display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 1.5rem; align-items: start; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > *{ grid-column: 1; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > .wd-cpg__title, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > #coupon-auto-notice, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > .woocommerce-notices-wrapper{ grid-column: 1 / -1; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form{ display: contents; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form > *{ grid-column: 1; }
-  /* 합계 + 주문 버튼은 한 덩어리(front.js 가 form 안에서 묶는다)로 오른쪽에 따라온다 */
-  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside{ grid-column: 2 !important; grid-row: 1 / -1; position: sticky; top: 92px; align-self: start; display: grid; gap: .8rem; }
-  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside .wd-cpg-summary{ margin: 0 !important; }
-  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside .wd-cpg-order{ margin: 0 !important; }
+  /* 두 칸은 **폼 안에서** 나눈다. `.wd-cpg` 를 격자로 만들고 폼을 display:contents 로
+     풀면 제목 · 안내가 칸을 가로지르며 행 번호가 어긋나 오른쪽 덩어리가 제목 위로 올라간다.
+     폼 자체를 격자로 두면 그런 셈이 필요 없다 — 주문 버튼도 폼 안에 그대로 있다. */
+  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form{
+    display: grid !important; grid-template-columns: minmax(0,1fr) 360px; gap: 0 1.5rem; align-items: start;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form > *{ grid-column: 1; min-width: 0; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside{
+    grid-column: 2 !important; grid-row: 1 / -1 !important; position: sticky; top: 92px; align-self: start;
+    display: grid; gap: .8rem; margin: 0 !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside > *{ margin: 0 !important; }
 }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside{ display: grid; gap: .8rem; }
 
 /* ══ 주문서 — 두 칸 ═════════════════════════════════════════════════════════ */
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-title{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem) !important; font-weight: 900 !important; letter-spacing: -.045em !important; margin: 1.2rem 0 1rem !important; text-align: left !important; }

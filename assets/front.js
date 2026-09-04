@@ -494,6 +494,9 @@
   if(form && sum && order && sum.parentElement === order.parentElement && !document.querySelector('.dhr-cartside')){
     var side = document.createElement('div'); side.className = 'dhr-cartside';
     sum.parentNode.insertBefore(side, sum);
+    /* 할인 적용 안내는 합계 옆이 제자리다 */
+    var applied = form.querySelector('#coupon-applied-notice');
+    if(applied) side.appendChild(applied);
     side.appendChild(sum); side.appendChild(order);
   }
   var wl = cpg.querySelector('.wd-cpg-wishlist');
