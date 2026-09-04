@@ -369,3 +369,9 @@ body.dhc-open{overflow:hidden}
 .dhr .pr b small{font-size:13px;font-weight:700;margin-left:1px}
 .dhr .pr .off{font-size:17px}
 .dhr .card .nm{min-height:0}
+/* 좁은 두 칸(폰)에서는 + 를 사진 오른쪽 위로 올리고 가격 줄이 카드 폭을 다 쓴다 */
+@media(max-width:639px){
+  .dhr .qa{top:.9rem;bottom:auto;width:40px;height:40px}
+  .dhr .pr,.dhr .perb{padding-right:0}
+  .dhr .pr b{font-size:18px}.dhr .pr .off{font-size:16px}
+}
