@@ -256,14 +256,27 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 /* 푸터 — 입금 계좌 */
 /* 입금 계좌 — 검은 푸터 위 어두운 상자에 흰 글씨는 읽기 어려웠다. 계좌번호만
    밝은 알약으로 띄운다. 이 줄은 손님이 받아 적는 줄이라 가장 잘 보여야 한다. */
-.dhr .fbank{margin-top:1.8rem;padding:1.1rem 1.2rem;background:#1C1C1E;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .9rem;font-size:14.5px}
-.dhr .fbank b{color:#fff;font-size:15px;flex:0 0 auto}
-.dhr .fbank__acc{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem;min-width:0}
-.dhr .fbank__bank{color:#fff;font-weight:700;font-size:14.5px;flex:0 0 auto}
-/* 번호 알약은 절대 쪼개지지 않는다 — 받아 적는 줄이 두 줄로 끊기면 잘못 적는다 */
-.dhr .fbank .n{flex:0 0 auto;white-space:nowrap;background:#fff;color:#111;font-weight:800;font-size:16px;letter-spacing:.02em;padding:.45rem .85rem;border-radius:10px;font-variant-numeric:tabular-nums}
-.dhr .fbank__who{flex:0 0 auto;min-width:0;color:#C7CBD1;font-size:14px}
-.dhr .fbank .fmuted{flex-basis:100%;color:#C7CBD1}
+.dhr .fbank{margin-top:1.8rem;padding:1.2rem 1.3rem;background:#17171A;border:1px solid #2C2C31;border-radius:18px}
+.dhr .fbank__t{display:flex;align-items:center;gap:.5rem;margin:0 0 .8rem}
+.dhr .fbank__t svg{width:20px;height:20px;color:#7DD3FC;stroke-width:1.9}
+.dhr .fbank__t b{color:#fff;font-size:14.5px;font-weight:700;letter-spacing:.01em}
+.dhr .fbank__row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.dhr .fbank__row + .fbank__row{margin-top:.8rem}
+.dhr .fbank__acc{flex:1 1 auto;min-width:0}
+/* 옮겨 적는 줄이다 — 여기가 이 상자에서 가장 커야 한다 */
+.dhr .fbank .n{display:block;color:#fff;font-size:22px;font-weight:900;letter-spacing:.03em;
+  line-height:1.2;font-variant-numeric:tabular-nums;word-break:break-all}
+.dhr .fbank__meta{display:block;margin-top:.3rem;font-size:13.5px;color:#AAB1B9;line-height:1.5}
+.dhr .fbank__copy{flex:0 0 auto;min-height:44px;padding:0 1.1rem;border-radius:999px;border:0;
+  background:#fff;color:#111;font:inherit;font-size:14px;font-weight:800;cursor:pointer;
+  transition:transform .2s cubic-bezier(.16,1,.3,1),background-color .2s}
+.dhr .fbank__copy:hover{background:#E8F5FE}
+.dhr .fbank__copy:active{transform:scale(.97)}
+.dhr .fbank__copy.is-done{background:#7DD3FC;color:#0B2434}
+/* 이름이 다르면 자동확인이 안 되고 사람이 손으로 처리한다 — 그래서 따로 세워 둔다 */
+.dhr .fbank__note{margin:.9rem 0 0;padding:.7rem .85rem;border-radius:12px;background:#242429;
+  font-size:13px;line-height:1.6;color:#D3D9DF}
+.dhr .fbank__note b{color:#fff;font-weight:800}
 
 /* ── 장바구니 서랍 — 불투명. 데스크톱은 오른쪽 420px, 모바일은 아래에서 올라온다. ── */
 .dhr .dhc{position:fixed;inset:0;z-index:60}
@@ -528,11 +541,8 @@ body.dhr .dh-leave__go[disabled]{background:#8A8A8F;cursor:default;filter:none}
     border:1px solid #2E2E33;background:#1C1C1E;font-size:14px;font-weight:600;color:#C7CBD1;
     max-width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dhr .fcol a{min-height:44px}
-  /* 좁은 화면에서는 제목 · 계좌 · 예금주를 한 줄씩 — 한 줄에 밀어 넣으면 이름이 잘린다 */
-  .dhr .fbank{margin-top:1.2rem;padding:.9rem 1rem;display:block}
-  .dhr .fbank b{display:block;margin-bottom:.5rem}
-  .dhr .fbank__who{flex:0 0 100%}
-  .dhr .fbank .fmuted{display:block;margin-top:.6rem;font-size:13px;line-height:1.5}
+  .dhr .fbank{margin-top:1.2rem;padding:1rem 1.05rem}
+  .dhr .fbank .n{font-size:20px}
   .dhr .flegal{margin-top:1.2rem;padding-top:1rem;font-size:12.5px;line-height:1.7}
   .dhr .foot{padding:1.8rem 0 1.4rem;margin-top:1.8rem}
 }

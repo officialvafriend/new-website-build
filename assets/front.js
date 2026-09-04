@@ -692,3 +692,45 @@
     unlock();
   }).observe(box, {attributes: true, attributeFilter: ['hidden']});
 })();
+
+/* 계좌번호 복사 — 계좌이체만 받는 가게라 이 열한 자리를 손으로 옮겨 적는다.
+   한 자리만 틀려도 입금이 안 맞고 사람이 손으로 찾아야 한다. */
+(function(){
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.fbank__copy');
+    if(!b) return;
+    var v = b.dataset.copy || '';
+    var done = function(){
+      var was = b.dataset.was || b.textContent;
+      b.dataset.was = was; b.textContent = '복사됨'; b.classList.add('is-done');
+      setTimeout(function(){ b.textContent = was; b.classList.remove('is-done'); }, 1600);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(v).then(done, function(){});
+      return;
+    }
+    /* 옛 브라우저 — 화면 밖에 잠깐 두고 복사한다 */
+    var t = document.createElement('textarea');
+    t.value = v; t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;top:-1000px;left:-1000px;opacity:0';
+    document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); done(); }catch(err){}
+    t.remove();
+  });
+})();
+
+/* 약관 화면의 나이 문구. 이 가게가 파는 것은 만 19세 미만에게 팔 수 없다 —
+   일반 가입 약관의 "만 14세" 를 그대로 두면 안 된다. 사장님 스니펫이 그리는
+   페이지라 그 파일은 건드리지 않고, 동의 항목의 글자만 바꾼다.
+   **약관 본문(스크롤 상자)은 손대지 않는다** — 거기 14세는 개인정보 수집 규정이라 맞는 말이다. */
+(function(){
+  var row = document.querySelector('.wd-agree-age');
+  if(!row) return;
+  [].forEach.call(row.childNodes, function(n){
+    if(n.nodeType === 1 && !n.classList.contains('wd-agree-required')){
+      n.innerHTML = n.innerHTML.replace(/만\s*14\s*세/g, '만 19세');
+    } else if(n.nodeType === 3){
+      n.nodeValue = n.nodeValue.replace(/만\s*14\s*세/g, '만 19세');
+    }
+  });
+})();

@@ -601,10 +601,21 @@ function footer_html(): void {
 					<a href="https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm" target="_blank" rel="noopener">우체국택배 조회</a></div></div>
 		</div>
 		<?php $banks = bank_accounts(); if ( $banks ) : ?>
-		<div class="fbank"><b>입금 계좌</b>
-			<?php // 은행 · 번호 · 예금주를 각각 따로 둔다. 한 덩어리면 좁은 화면에서 이름 가운데가 잘려 두 줄이 된다 ?>
-			<?php foreach ( $banks as $b ) : ?><span class="fbank__acc"><?php if ( $b['bank'] ) : ?><span class="fbank__bank"><?php echo esc_html( $b['bank'] ); ?></span><?php endif; ?><span class="n"><?php echo esc_html( $b['number'] ); ?></span><?php if ( $b['name'] ) : ?><span class="fbank__who">예금주 <?php echo esc_html( $b['name'] ); ?></span><?php endif; ?></span><?php endforeach; ?>
-			<span class="fmuted">입금자명은 주문자명과 똑같이 넣어 주세요. 같으면 자동으로 확인됩니다.</span></div>
+		<?php // 이 가게는 계좌이체만 받는다. 계좌 줄은 손님이 옮겨 적는 줄이라 푸터에서 가장 잘 보여야 한다 ?>
+		<div class="fbank">
+			<p class="fbank__t"><?php echo icon( 'bank' ); // phpcs:ignore ?><b>입금 계좌</b></p>
+			<?php foreach ( $banks as $b ) : ?>
+			<div class="fbank__row">
+				<div class="fbank__acc">
+					<span class="n"><?php echo esc_html( $b['number'] ); ?></span>
+					<span class="fbank__meta"><?php echo esc_html( $b['bank'] ); ?><?php echo $b['name'] ? ' · 예금주 ' . esc_html( $b['name'] ) : ''; ?></span>
+				</div>
+				<?php // 열한 자리를 손으로 옮겨 적다 틀리면 입금이 안 맞는다 ?>
+				<button type="button" class="fbank__copy" data-copy="<?php echo esc_attr( $b['number'] ); ?>">복사</button>
+			</div>
+			<?php endforeach; ?>
+			<p class="fbank__note">입금자명은 <b>주문자명과 똑같이</b> 넣어 주세요. 같으면 자동으로 확인됩니다.</p>
+		</div>
 		<?php endif; ?>
 		<div class="flegal"><b>19세 미만 청소년에게 판매하지 않습니다.</b> 구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다<br>
 			상호 투더문 · 대표 백시문 · 대구광역시 중구 경상감영길 21, 3층(동문동) · 사업자등록번호 642-08-02808 · 통신판매업 신고 제 2025-대구중구-0487 호<br>
