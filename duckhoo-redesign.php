@@ -38,6 +38,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/pages.php';
 // 상품 상세의 구매 상자.
 require_once plugin_dir_path( __FILE__ ) . 'includes/product.php';
 
+// 계정 · 회원가입 화면 — 머리판과 가입 단계.
+require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
+
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\Pages\\ensure' );
 
 /**

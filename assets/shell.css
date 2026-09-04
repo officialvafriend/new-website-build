@@ -484,28 +484,335 @@ html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-lo
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password{ margin: .9rem 0 0; font-size: 15px; }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password a{ color: var(--dh-accent-deep, #1565C0); text-decoration: none; }
 
-/* 회원가입 — 테마가 이 페이지에만 자기 헤더·서랍을 또 그린다. 우리 헤더와 겹친다. */
+/* ── 계정 · 회원가입 머리판 ────────────────────────────────────────────────
+   테마는 페이지마다 왼쪽 위에 낱말 하나짜리 제목(`.wd-page__title`)을 찍는다.
+   마이페이지에서 그것이 "내 계정" 으로 떠 있었다. 지우는 대신 제목이 설 자리를
+   만든다 — 어두운 머리판 하나가 로그인 · 가입 3단계 · 마이페이지를 묶는다.
+
+   유리(반투명 + 블러)는 여기서만 쓴다. 머리판 위 알약 · 단계 표시처럼
+   **뒤 배경을 우리가 정한 곳**에만 얹고, 글을 읽는 면(폼 카드 · 상품 목록)은
+   여전히 불투명이다. 카드가 수십 장 깔리는 화면에 블러를 넣으면 스크롤이 끊긴다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah{
+  position: relative; isolation: isolate; overflow: hidden;
+  margin: 0 0 1.4rem; padding: clamp(1.3rem,1rem + 1.6vw,2rem) clamp(1.1rem,.8rem + 1.6vw,1.9rem);
+  border-radius: 22px; background: #111; color: #fff;
+  box-shadow: 0 1px 2px rgba(16,24,32,.16), 0 18px 40px -22px rgba(16,24,32,.45);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__bg{
+  position: absolute; inset: -30%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(46% 60% at 10% 8%,  rgba(56,189,248,.40) 0%, rgba(56,189,248,0) 62%),
+    radial-gradient(44% 58% at 92% 4%,  rgba(194,65,12,.34)  0%, rgba(194,65,12,0)  60%),
+    radial-gradient(52% 62% at 62% 104%, rgba(21,101,192,.42) 0%, rgba(21,101,192,0) 64%);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__in{ display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.1rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__txt{ flex: 1 1 240px; min-width: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__eb{
+  margin: 0 0 .35rem; font-size: 13.5px; font-weight: 700; letter-spacing: .02em; color: #A9D9F5;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t{
+  margin: 0; padding: 0; border: 0; font-size: clamp(26px,22px + 1.6vw,34px); font-weight: 900;
+  line-height: 1.15; letter-spacing: -.03em; color: #fff; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t::before,
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t::after{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__s{
+  margin: .5rem 0 0; font-size: 15px; line-height: 1.6; color: #D6DEE6; word-break: keep-all; max-width: 46ch;
+}
+/* 유리 알약 — 뒤가 우리 머리판이라 대비를 계산할 수 있다 (흰 글자 12:1 위) */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__chips{
+  display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: 0; padding: 0;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__chips li{
+  display: inline-flex; align-items: center; min-height: 34px; padding: 0 .8rem; border-radius: 999px;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.26);
+  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
+  font-size: 13.5px; font-weight: 700; color: #fff; white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__av{
+  flex: 0 0 54px; width: 54px; height: 54px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 900; color: #111;
+  background: #fff; box-shadow: 0 6px 18px -8px rgba(0,0,0,.7);
+}
+/* 단계 — 몇 장 중 몇 번째인지 보이지 않으면 가입이 끝나는지 알 수 없다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps{
+  display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: 1.1rem 0 0; padding: 0;
+  counter-reset: none;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li{
+  display: inline-flex; align-items: center; gap: .45rem; min-height: 36px; padding: 0 .85rem 0 .5rem;
+  border-radius: 999px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.18);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  font-size: 13.5px; font-weight: 700; color: #C4CCD4; white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-done{ color: #A9D9F5; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-now{
+  background: #fff; border-color: #fff; color: #111;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__no{
+  flex: 0 0 22px; width: 22px; height: 22px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.18); font-size: 12.5px; font-weight: 800; color: #fff;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-now .dhr-ah__no{ background: #111; color: #fff; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-done .dhr-ah__no{ background: rgba(169,217,245,.24); color: #A9D9F5; }
+@media (min-width: 760px){
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-ah{ margin-bottom: 1.8rem; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__chips{ margin-left: auto; }
+}
+
+/* 테마 페이지 제목은 머리판이 대신한다. 마크업은 그대로 두고 화면에서만 뺀다 */
+html body.dhr.dhr-wrap.dhr-wrap.dhr-auth .wd-page__header{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap.dhr-auth{ background: var(--dh-bg, #F4F6F7) !important; }
+html body.dhr.dhr-wrap.dhr-wrap.dhr-auth .wd-page__content > .woocommerce > h2{
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── 로그인 ──────────────────────────────────────────────────────────────
+   현관이다. 좁은 한 칸으로 모으고, 폼은 머리판 아래 흰 카드로 얹는다. */
+html body.dhr.dhr-wrap.dhr-wrap.dhr-auth.woocommerce-account:not(.logged-in) .wd-page__content > .woocommerce{
+  max-width: 560px; margin-inline: auto;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login{
+  margin: 0 !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.7rem) !important;
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 1px 2px rgba(16,24,32,.05), 0 16px 34px -24px rgba(16,24,32,.30);
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .form-row{ margin: 0 0 .9rem !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login label{
+  display: block; margin-bottom: .35rem; font-size: 14px; font-weight: 700; color: var(--dh-ink, #111);
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input.input-text,
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input[type="password"]{
+  width: 100% !important; min-height: 52px !important; font-size: 16px !important;
+  border: 1px solid var(--dh-line-2, #CBD2D8) !important; border-radius: 12px !important;
+  padding: 0 13px !important; background: #fff !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-login__rememberme{
+  display: flex !important; align-items: center; gap: .5rem; margin: 0 0 1rem !important; font-weight: 600;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-login__rememberme span{ font-size: 14.5px; color: var(--dh-ink-2, #4E565F); }
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login button[type="submit"]{
+  width: 100% !important; min-height: 52px !important; border: 0 !important; border-radius: 999px !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important;
+  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  text-decoration: none !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password{ margin: .9rem 0 0 !important; text-align: center; }
+
+/* 회원가입으로 가는 길이 이 화면에 아예 없었다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join{
+  display: flex; flex-wrap: wrap; align-items: center; gap: .9rem;
+  margin: 1rem 0 0; padding: 1.1rem 1.2rem; border-radius: 18px;
+  background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt{ flex: 1 1 220px; min-width: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt b{ display: block; font-size: 16px; font-weight: 800; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt span{ display: block; margin-top: .25rem; font-size: 14px; line-height: 1.6; color: var(--dh-ink-3, #616870); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go{
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 0 1.3rem; border-radius: 999px;
+  border: 1.5px solid var(--dh-primary, #111); background: var(--dh-surface, #fff);
+  color: var(--dh-ink, #111) !important; font-size: 15px; font-weight: 800; text-decoration: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go:hover{ background: var(--dh-primary, #111); color: #fff !important; }
+@media (max-width: 559px){ html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go{ flex: 1 1 100%; } }
+
+/* ── 가입 3단계 — 키플이 만든 페이지 세 장 ────────────────────────────────
+   세 장 모두 자기 헤더 · 카테고리 줄 · 푸터를 따로 그린다. 링크는 프로덕션을
+   가리키고 분류 이름도 옛것이다. 우리 껍데기만 남기고 걷어낸다.
+   폼 · 필드 이름 · 본인확인 버튼에는 손대지 않는다. */
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-header,
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-drawer,
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-mobile-drawer-backdrop,
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-topline,
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-header{ display: none !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-main{ max-width: 460px; margin: 0 auto; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-body{
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-breadcrumb,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-top-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-cats-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-footer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-mobile-header,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-mobile-drawer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-mobile-drawer-backdrop,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-breadcrumb,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-top-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-cats-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-footer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-mobile-header,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-mobile-drawer,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-mobile-drawer-backdrop,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-breadcrumb,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-top-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-cats-wrap,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-footer{ display: none !important; }
+
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-shell,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-shell,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-shell{ background: transparent !important; font-family: inherit !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-main,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-main,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-main{ max-width: 640px !important; margin: 0 auto !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-body,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-body,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-body{ max-width: none !important; margin: 0 !important; }
+
+/* 폼은 흰 카드 한 장 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-box,
+html body.dhr.dhr-wrap.dhr-wrap form.wd-join-form,
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{
   background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
-  border-radius: 16px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.8rem) !important;
+  border-radius: 20px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.7rem) !important;
+  box-shadow: 0 1px 2px rgba(16,24,32,.05), 0 16px 34px -24px rgba(16,24,32,.30);
 }
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{ display: grid !important; gap: .6rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn{
   display: flex !important; align-items: center !important; justify-content: center !important;
   min-height: 52px !important; border-radius: 999px !important; text-decoration: none !important;
   font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
-  background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
-  border: 0 !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; border: 0 !important; margin: 0 !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn + a.wd-register-btn{
-  margin-top: .6rem !important;
-  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
-  border: 1.5px solid var(--dh-primary, #111) !important;
+
+/* 약관 동의 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-check-row,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-box-label,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-subcheck,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-age{
+  font-size: 15.5px !important; line-height: 1.55 !important; color: var(--dh-ink, #111) !important;
+  gap: .65rem !important; align-items: center !important; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-check-row{
+  margin: 0 0 1rem !important; padding: 0 0 1rem !important;
+  border-bottom: 1px solid var(--dh-line, #E1E5E8); font-weight: 800 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-shell input[type="checkbox"]{
+  width: 22px !important; height: 22px !important; flex: 0 0 22px !important; margin: 0 !important;
+  accent-color: var(--dh-primary, #111); cursor: pointer;
+}
+/* 필수 표시가 형광 분홍(#ff5c73)이었다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-required{
+  color: var(--dh-accent-deep, #1565C0) !important; font-size: 13.5px !important; font-weight: 700 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-box-item{ margin-bottom: 1.4rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-scrollbox,
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-marketing-box{
+  background: var(--dh-surface-2, #F4F6F7) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-radius: 12px !important; padding: .9rem 1rem !important;
+  font-size: 14px !important; line-height: 1.75 !important; color: var(--dh-ink-2, #4E565F) !important;
+  height: 168px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-marketing-title{ font-size: 15.5px !important; color: var(--dh-ink, #111) !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-actions{
+  display: flex !important; gap: .6rem !important; margin-top: 1.4rem !important; justify-content: stretch !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap button.wd-agree-submit{
+  flex: 1 1 auto !important; order: 2; min-height: 52px !important; height: auto !important; padding: 0 1.2rem !important;
+  border: 0 !important; border-radius: 999px !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important;
+  font-size: 16px !important; font-weight: 800 !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap a.wd-agree-cancel{
+  order: 1; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  min-height: 52px; padding: 0 1.2rem; border-radius: 999px;
+  border: 1.5px solid var(--dh-line-2, #CBD2D8) !important; background: var(--dh-surface, #fff) !important;
+  color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
+}
+
+/* 정보 입력 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-field{ margin: 0 0 1.4rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-field:last-of-type{ margin-bottom: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-label{
+  display: block !important; margin: 0 0 .45rem !important;
+  font-size: 14px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-required{ color: var(--dh-accent-deep, #1565C0) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-stack{ display: grid !important; gap: .5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap input.wd-join-input,
+html body.dhr.dhr-wrap.dhr-wrap select.wd-join-select{
+  width: 100% !important; min-height: 52px !important; height: 52px !important;
+  padding: 0 13px !important; font-size: 16px !important; color: var(--dh-ink, #111) !important;
+  background: #fff !important; border: 1px solid var(--dh-line-2, #CBD2D8) !important; border-radius: 12px !important;
+  box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap input.wd-join-input:focus,
+html body.dhr.dhr-wrap.dhr-wrap select.wd-join-select:focus{
+  border-color: var(--dh-accent-deep, #1565C0) !important;
+  box-shadow: 0 0 0 3px var(--dh-accent-soft, #E8F5FE) !important; outline: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap input.wd-join-input--locked,
+html body.dhr.dhr-wrap.dhr-wrap select.wd-join-select[disabled]{
+  background: var(--dh-surface-2, #F4F6F7) !important; color: var(--dh-ink-3, #616870) !important;
+  border-style: dashed !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-help{
+  margin-top: .4rem !important; font-size: 13px !important; line-height: 1.55 !important;
+  color: var(--dh-ink-3, #616870) !important; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-name-row{ display: block !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-radio-group{ display: flex !important; gap: .5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap label.wd-join-radio{
+  flex: 1 1 0; display: flex !important; align-items: center; justify-content: center; gap: .5rem;
+  min-height: 52px; padding: 0 .8rem; border-radius: 12px;
+  border: 1px solid var(--dh-line-2, #CBD2D8); background: #fff;
+  font-size: 15.5px !important; font-weight: 700; color: var(--dh-ink, #111) !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap label.wd-join-radio input[type="radio"]{
+  width: 20px !important; height: 20px !important; accent-color: var(--dh-primary, #111);
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-address-top{ grid-template-columns: minmax(0,1fr) auto !important; gap: .5rem !important; margin-bottom: .5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap button.wd-join-address-btn{
+  height: 52px !important; padding: 0 1.1rem !important; border-radius: 12px !important;
+  border: 1.5px solid var(--dh-primary, #111) !important; background: var(--dh-surface, #fff) !important;
+  color: var(--dh-ink, #111) !important; font-size: 15px !important; font-weight: 800 !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-birthday{ grid-template-columns: 1.2fr .9fr .9fr !important; gap: .5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap select.wd-join-select{
+  -webkit-appearance: none !important; appearance: none !important; padding-right: 38px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 5l4 4 4-4' fill='none' stroke='%23616870' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 13px center !important;
+}
+/* 본인확인 — 이 줄이 가입의 첫 관문이다. 다른 필드보다 눈에 띄어야 한다.
+   위쪽에 같은 버튼이 한 번 더 있었다 (폼 밖). 폼 안의 것 하나만 남긴다 —
+   단계를 건너뛰는 것이 아니라 같은 버튼이 두 개였다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-dream-auth{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-form > .wd-join-field:first-of-type{
+  padding: 1rem 1.1rem !important; margin: 0 0 1.4rem !important;
+  border-radius: 16px !important; background: var(--dh-accent-soft, #E8F5FE) !important;
+  border: 1px solid #BFE4FA !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-dsma-wrap{ margin: .1rem 0 .5rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-form button.dsma-auth-button{
+  display: inline-flex !important; align-items: center; gap: .5rem;
+  min-height: 48px !important; padding: 0 1.2rem !important; border-radius: 999px !important;
+  border: 0 !important; background: var(--dh-primary, #111) !important; color: #fff !important;
+  font-size: 15.5px !important; font-weight: 800 !important; cursor: pointer;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-verify-status{
+  display: block !important; font-size: 13.5px !important; line-height: 1.55 !important;
+  font-weight: 700 !important; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-verify-status--pending{ color: var(--dh-st-check, #B42318) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-submit-wrap{ margin-top: 1.6rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap button.wd-join-submit{
+  width: 100% !important; min-height: 54px !important; height: auto !important;
+  border: 0 !important; border-radius: 999px !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important;
+  font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important; cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16,24,32,.16), 0 12px 26px -16px rgba(16,24,32,.5);
+}
+html body.dhr.dhr-wrap.dhr-wrap button.wd-join-submit:hover,
+html body.dhr.dhr-wrap.dhr-wrap button.wd-agree-submit:hover,
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn:hover{
+  background: #000 !important; filter: none !important; box-shadow: 0 1px 2px rgba(16,24,32,.16), 0 14px 30px -16px rgba(16,24,32,.55) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-password-match,
+html body.dhr.dhr-wrap.dhr-wrap .wd-join-email-validate{ font-size: 13.5px !important; }
+
+/* 가입 화면 아래 로그인으로 돌아가는 길 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-back{
+  margin: 1rem 0 0; text-align: center; font-size: 14.5px; color: var(--dh-ink-3, #616870);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-back a{
+  color: var(--dh-ink, #111); font-weight: 800; text-decoration: underline; text-underline-offset: 3px;
 }
 
 /* 내 계정 — 인사말과 내용에 숨 쉴 자리 */
@@ -528,8 +835,9 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account h2::before{ display: none !
   }
   /* 알림 상자가 첫 칸을 차지해 메뉴와 내용이 한 칸씩 밀린다 — 자리를 못박는다 */
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account.logged-in .woocommerce > .woocommerce-notices-wrapper{ grid-column: 1 / -1 !important; grid-row: 1 !important; }
-  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ grid-column: 1 !important; grid-row: 2 !important; width: auto !important; float: none !important; margin: 0 !important; }
-  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content{ grid-column: 2 !important; grid-row: 2 !important; width: auto !important; float: none !important; margin: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account.logged-in .woocommerce > .dhr-ah{ grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ grid-column: 1 !important; grid-row: 3 !important; width: auto !important; float: none !important; margin: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content{ grid-column: 2 !important; grid-row: 3 !important; width: auto !important; float: none !important; margin: 0 !important; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{ display: block !important; }
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{ width: 100%; justify-content: flex-start !important; }
 }
@@ -546,6 +854,11 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a
   background: var(--dh-primary, #111); border-color: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff);
 }
 
+html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__note{
+  margin: 0 0 1.1rem !important; padding: .8rem 1rem; border-radius: 12px;
+  background: var(--dh-surface-2, #F4F6F7); color: var(--dh-ink-2, #4E565F);
+  font-size: 14px; line-height: 1.6; word-break: keep-all;
+}
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__hi{
   display: flex; align-items: center; gap: .9rem; padding-bottom: 1.1rem; margin-bottom: 1.1rem;
   border-bottom: 1px solid var(--dh-line, #E1E5E8);

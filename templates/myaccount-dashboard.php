@@ -31,13 +31,8 @@ foreach ( wc_get_account_menu_items() as $dhr_ep => $dhr_label ) {
 }
 ?>
 <div class="dhr-acc">
-	<div class="dhr-acc__hi">
-		<span class="dhr-acc__av"><?php echo esc_html( mb_substr( $dhr_name, 0, 1 ) ); ?></span>
-		<div>
-			<b><?php echo esc_html( $dhr_name ); ?> 님</b>
-			<span>무통장입금 전용 · 입금자명이 주문자명과 같으면 자동으로 확인됩니다</span>
-		</div>
-	</div>
+	<?php // 인사말은 머리판(includes/account.php)이 그린다 — 여기서 또 그리면 이름이 두 번 나온다 ?>
+	<p class="dhr-acc__note">무통장입금 전용입니다. 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
 
 	<div class="dhr-acc__grid">
 		<?php foreach ( $dhr_tiles as $dhr_t ) : ?>
