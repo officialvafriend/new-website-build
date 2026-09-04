@@ -750,7 +750,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-join-help{
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-name-row{ display: block !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-radio-group{ display: flex !important; gap: .5rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap label.wd-join-radio{
-  flex: 1 1 0; display: flex !important; align-items: center; justify-content: center; gap: .5rem;
+  flex: 1 1 0; display: flex !important; align-items: center; justify-content: flex-start; gap: .6rem;
   min-height: 52px; padding: 0 .8rem; border-radius: 12px;
   border: 1px solid var(--dh-line-2, #CBD2D8); background: #fff;
   font-size: 15.5px !important; font-weight: 700; color: var(--dh-ink, #111) !important; cursor: pointer;
