@@ -999,3 +999,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini .dhx-qty__n{ height: 40px !i
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle{ flex-wrap: wrap !important; row-gap: .5rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__pick{ flex: 1 1 200px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle > .dhx-qty{ margin-left: auto; }
+/* 서랍 버튼 글자 — 테마의 링크 색 규칙이 검정 알약 위 글자를 회색으로 눌렀다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-d, html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-d svg{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-o{ color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off, html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off svg{ color: var(--dh-ink-3, #616870) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ color: #fff !important; }

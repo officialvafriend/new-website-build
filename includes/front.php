@@ -195,6 +195,7 @@ function icon( string $name ): string {
 			'bank'    => '<path d="M3 9.5 12 4l9 5.5H3zM5 10v7M9.5 10v7M14.5 10v7M19 10v7M3 20h18"/>',
 			'truck'   => '<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
 			'shield'  => '<path d="M12 3.2 19 6v5.6c0 4.8-3.3 7.7-7 8.9-3.7-1.2-7-4.1-7-8.9V6z"/>',
+			'plus'    => '<path d="M12 5v14M5 12h14"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';
@@ -247,14 +248,60 @@ function card( \WC_Product $p ): string {
 		? '<div class="perb">병당 ' . esc_html( number_format_i18n( $pb['per'] ) ) . '원 · ' . (int) $pb['qty'] . '병</div>'
 		: '';
 
+	$off = '';
+	if ( $p->is_on_sale() && (float) $p->get_regular_price() > (float) $p->get_price() ) {
+		$off = '<em class="off">' . (int) round( ( 1 - (float) $p->get_price() / (float) $p->get_regular_price() ) * 100 ) . '%</em>';
+	}
+
 	return '<article class="card' . ( $p->is_in_stock() ? '' : ' is-out' ) . '">'
 		. '<a class="fig" href="' . esc_url( $url ) . '" aria-label="' . esc_attr( $n['title'] ) . '">'
 		. ( $eb ? '<span class="eb ' . esc_attr( $eb[1] ) . '">' . esc_html( $eb[0] ) . '</span>' : '' )
 		. $img . '</a>'
 		. '<div class="bd"><a class="nm" href="' . esc_url( $url ) . '">' . esc_html( $n['title'] ) . '</a>'
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
-		. '<div class="pr"><span class="n">' . $price . '</span><small>원</small></div>'
-		. $per . '</div></article>';
+		. '<div class="pr">' . $off . '<span class="n">' . $price . '</span><small>원</small></div>'
+		. $per . '</div>'
+		// 빠른 담기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 보낸다.
+		. ( $p->is_in_stock() ? '<a class="qa" href="' . esc_url( $url ) . '#dhp-buy" aria-label="' . esc_attr( $n['title'] . ' 담으러 가기' ) . '">' . icon( 'plus' ) . '</a>' : '' )
+		. '</article>';
+}
+
+/**
+ * 가로 카루셀 (Swiper). 카드 폭은 CSS 가 정하고, 스크립트가 없으면 가로 스크롤로 남는다.
+ *
+ * @param \WC_Product[] $items 상품.
+ * @param string        $label 접근성 이름.
+ * @return void
+ */
+function carousel( array $items, string $label ): void {
+	if ( ! $items ) {
+		return;
+	}
+	echo '<div class="dhs-wrap"><div class="swiper dhs" aria-roledescription="캐러셀" aria-label="' . esc_attr( $label ) . '"><div class="swiper-wrapper">';
+	foreach ( $items as $p ) {
+		echo '<div class="swiper-slide">' . card( $p ) . '</div>'; // phpcs:ignore
+	}
+	echo '</div></div>'
+		. '<button type="button" class="dhs-nav dhs-prev" aria-label="이전">' . icon( 'chev' ) . '</button>' // phpcs:ignore
+		. '<button type="button" class="dhs-nav dhs-next" aria-label="다음">' . icon( 'chev' ) . '</button></div>'; // phpcs:ignore
+}
+
+/**
+ * 섹션 머리 — 작은 눈썹 · 큰 제목 · 한 줄 설명 · 더 보기.
+ *
+ * @param string $eyebrow 눈썹.
+ * @param string $title   제목.
+ * @param string $sub     설명.
+ * @param string $url     더 보기 주소 ('' 이면 없음).
+ * @return void
+ */
+function section_head( string $eyebrow, string $title, string $sub = '', string $url = '' ): void {
+	echo '<div class="sh"><div>'
+		. ( $eyebrow ? '<p class="sh-eb"><i></i>' . esc_html( $eyebrow ) . '</p>' : '' )
+		. '<h2>' . esc_html( $title ) . '</h2>'
+		. ( $sub ? '<p class="sh-sub">' . esc_html( $sub ) . '</p>' : '' ) . '</div>'
+		. ( $url ? '<a class="lk" href="' . esc_url( $url ) . '">더 보기 ' . icon( 'chev' ) . '</a>' : '' ) // phpcs:ignore
+		. '</div>';
 }
 
 /**
@@ -531,12 +578,30 @@ function assets(): void {
 	$css = DIR . 'assets/front.css';
 	$js  = DIR . 'assets/front.js';
 	wp_enqueue_style( 'duckhoo-front', plugins_url( 'assets/front.css', DIR . 'duckhoo-redesign.php' ), array( 'duckhoo-tokens' ), (string) filemtime( $css ) );
-	wp_enqueue_script( 'duckhoo-front', plugins_url( 'assets/front.js', DIR . 'duckhoo-redesign.php' ), array(), (string) filemtime( $js ), true );
+	libs();
+	wp_enqueue_script( 'duckhoo-front', plugins_url( 'assets/front.js', DIR . 'duckhoo-redesign.php' ), array( 'duckhoo-swiper', 'duckhoo-gsap-st' ), (string) filemtime( $js ), true );
 	// 이번 달 마지막 날 23:59:59 (사이트 시간대) — 특가 마감 카운트다운
 	$end = new \DateTime( 'last day of this month 23:59:59', wp_timezone() );
 	wp_add_inline_script( 'duckhoo-front', js_config( array( 'saleEnd' => $end->getTimestamp() * 1000 ) ), 'before' );
 }
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\assets', 100 );
+
+/**
+ * 카루셀(Swiper 11) · 등장(GSAP 3 + ScrollTrigger) — cdnjs. front.js 가 있으면 쓰고 없으면 그냥 지나간다.
+ * 필터 `duckhoo_front_libs` 로 끌 수 있다 (빈 배열).
+ *
+ * @return void
+ */
+function libs(): void {
+	$libs = apply_filters( 'duckhoo_front_libs', array(
+		'duckhoo-swiper'  => array( 'https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.2.10/swiper-bundle.min.js', array() ),
+		'duckhoo-gsap'    => array( 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js', array() ),
+		'duckhoo-gsap-st' => array( 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js', array( 'duckhoo-gsap' ) ),
+	) );
+	foreach ( (array) $libs as $handle => $l ) {
+		wp_enqueue_script( (string) $handle, (string) $l[0], (array) ( $l[1] ?? array() ), null, true ); // phpcs:ignore
+	}
+}
 
 /**
  * front.js 에 넘기는 값. 홈과 껍데기 화면이 같은 것을 쓴다.

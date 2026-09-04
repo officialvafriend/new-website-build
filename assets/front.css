@@ -304,3 +304,61 @@ body.dhc-open{overflow:hidden}
 .dhr .btn-o{background:#fff;color:#111;box-shadow:inset 0 0 0 1.5px #111}
 .dhr .dhc__btns .btn.is-off{background:#ECEDF0;color:#616870;cursor:default}
 .dhr .dhc__note{margin-top:.6rem;text-align:center;font-size:13px;color:#616870}
+
+/* ── 카드 2 — 라운디드 소프트 (design/carousel/soft-carousel.html 의 것을 그대로) ─────── */
+.dhr .card{border-radius:24px;box-shadow:0 12px 32px rgba(0,0,0,.04);padding:.6rem .6rem 1.1rem;transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .5s cubic-bezier(.16,1,.3,1)}
+@media(hover:hover){.dhr .card:hover{transform:translateY(-8px);box-shadow:0 24px 48px rgba(0,0,0,.08)}}
+.dhr .card .fig{margin:0;border-radius:18px;isolation:isolate}
+.dhr .card .fig img{transition:transform .8s cubic-bezier(.16,1,.3,1)}
+@media(hover:hover){.dhr .card:hover .fig img{transform:scale(1.05)}}
+.dhr .card .bd{padding:.95rem .5rem 0;gap:.2rem}
+.dhr .card .nm{font-size:16px}
+.dhr .eb{top:.75rem;left:.75rem;background:#111;color:#fff;border-radius:999px;padding:.3rem .6rem}
+.dhr .eb.sale{background:#C2410C;color:#fff}.dhr .eb.new{background:#1565C0;color:#fff}.dhr .eb.best{background:#111;color:#fff}.dhr .eb.out{background:#8A8A8F;color:#fff}
+.dhr .pr{padding-right:52px;gap:.35rem .45rem}
+.dhr .pr .off{font-style:normal;font-size:17px;font-weight:800;color:#C2410C;letter-spacing:-.02em}
+.dhr .pr b{font-size:19px}
+.dhr .perb{padding-right:52px}
+.dhr .qa{position:absolute;right:.9rem;bottom:.9rem;z-index:3;width:44px;height:44px;border-radius:50%;background:#fff;color:#111;box-shadow:0 8px 20px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.16,1,.3,1),background .3s,color .3s,box-shadow .5s cubic-bezier(.16,1,.3,1)}
+.dhr .qa svg{width:20px;height:20px;stroke-width:2.4}
+.dhr .qa:hover{transform:translateY(-3px) scale(1.06);background:#111;color:#fff;box-shadow:0 14px 28px rgba(0,0,0,.16)}
+.dhr .qa:active{transform:scale(.92)}
+
+/* ── 섹션 머리 ── */
+.dhr .sh{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:1.1rem}
+.dhr .sh-eb{display:inline-flex;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:#C2410C;letter-spacing:.02em;margin:0 0 .45rem}
+.dhr .sh-eb i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.dhr .sh h2{font-size:clamp(1.5rem,1.1rem + 1.6vw,2.1rem);letter-spacing:-.04em;line-height:1.15}
+.dhr .sh-sub{font-size:15px;font-weight:500;color:#5F6770;margin-top:.45rem}
+.dhr .sh .lk{flex:0 0 auto;white-space:nowrap}
+.dhr .deals-h > div h2{font-size:clamp(1.4rem,1.1rem + 1.2vw,1.8rem)}
+.dhr .deals-h .sh-eb{margin-bottom:.3rem}
+.dhr .deals{padding-bottom:.2rem}
+
+/* ── 카루셀 (Swiper 11) — 오른쪽 끝은 화면 끝까지 흘러 다음 카드가 살짝 보인다 ── */
+.dhr .wrap{--pad:clamp(1.1rem,.6rem + 2vw,2.5rem);padding-left:var(--pad);padding-right:var(--pad)}
+.dhr .dhs-wrap{position:relative;margin:0 calc(-1 * var(--pad,1.1rem));padding:0 var(--pad,1.1rem);overflow:hidden}
+.dhr .deals .dhs-wrap{margin:0 -1.2rem;padding:0 1.2rem}
+@media(min-width:880px){.dhr .deals .dhs-wrap{margin:0 -1.8rem;padding:0 1.8rem}}
+.dhr .dhs{position:relative;overflow:visible;padding:.5rem 0 1.3rem;z-index:1}
+.dhr .dhs .swiper-wrapper{position:relative;display:flex;width:100%;box-sizing:content-box;transition-property:transform;transition-timing-function:cubic-bezier(.25,1,.5,1)}
+.dhr .dhs .swiper-slide{flex:0 0 auto;position:relative;width:min(66vw,270px);height:auto;display:flex}
+.dhr .dhs .swiper-slide .card{width:100%}
+.dhr .dhs.swiper-initialized{cursor:grab}
+/* 스크립트가 안 왔을 때도 넘겨 볼 수 있다 */
+.dhr .dhs:not(.swiper-initialized) .swiper-wrapper{gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.dhr .dhs:not(.swiper-initialized) .swiper-slide{scroll-snap-align:start}
+.dhr .dhs-nav{display:none;position:absolute;top:calc(50% - 44px);z-index:3;width:48px;height:48px;border-radius:50%;background:#fff;color:#111;box-shadow:0 12px 32px rgba(0,0,0,.10);align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .3s,box-shadow .5s cubic-bezier(.16,1,.3,1)}
+.dhr .dhs-nav svg{width:22px;height:22px;stroke-width:2.2}
+.dhr .dhs-prev{left:calc(var(--pad,1.1rem) - 24px)}.dhr .dhs-prev svg{transform:rotate(180deg)}
+.dhr .dhs-next{right:calc(var(--pad,1.1rem) - 24px)}
+.dhr .dhs-nav:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.14)}
+.dhr .dhs-nav.swiper-button-disabled{opacity:0;pointer-events:none}
+@media(min-width:880px){.dhr .dhs-wrap.is-ready .dhs-nav{display:flex}}
+
+/* ── 브랜드 티커 — 천천히 흐르는 이름들. 동작 줄이기면 멈춘다 ── */
+.dhr .tick{overflow:hidden;margin:2.2rem calc(-1 * var(--pad,1.1rem)) .4rem;padding:.9rem 0;border-top:1px solid #E2E4E8;border-bottom:1px solid #E2E4E8;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.dhr .tick-in{display:flex;align-items:center;gap:1.6rem;width:max-content;animation:dhr-tick 48s linear infinite;font-size:clamp(1.1rem,1rem + .6vw,1.5rem);font-weight:800;letter-spacing:-.03em;color:#111;white-space:nowrap}
+.dhr .tick-in i{width:6px;height:6px;border-radius:50%;background:#C2410C;flex:0 0 auto}
+@keyframes dhr-tick{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.dhr .tick-in{animation:none}}

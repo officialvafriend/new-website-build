@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, icon, header_html, tabbar_html, footer_html, short_cat};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,7 +20,15 @@ $rank_cat  = cat_by_name( '랭킹' );
 $shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 
 $deals  = $sale_cat ? products( array( 'category' => array( $sale_cat->slug ), 'limit' => 10, 'orderby' => 'date', 'order' => 'DESC' ) ) : products( array( 'include' => wc_get_product_ids_on_sale(), 'limit' => 10 ) );
-$newest = products( array( 'limit' => 6, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) );
+$newest = products( array( 'limit' => 8, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) );
+// 병당 1만 원 아래 — 묶음 중에서 병당 가격이 가장 낮은 것. 이 가게에서 고객이 실제로 비교하는 숫자다.
+$cheap = array_filter( products( array( 'limit' => 40, 'orderby' => 'popularity', 'stock_status' => 'instock' ) ), function ( $p ) {
+	$b = per_bottle( $p );
+	return $b['qty'] > 1 && $b['per'] <= 10000;
+} );
+usort( $cheap, fn( $a, $b ) => per_bottle( $a )['per'] <=> per_bottle( $b )['per'] );
+$cheap = array_slice( array_values( $cheap ), 0, 10 );
+$brand_names = array_slice( array_keys( brands() ), 0, 12 );
 // 히어로는 묶음 상품을 넘겨 본다. 묶음이 이 가게의 주력이고, 병당 가격이 내려가는 게
 // 첫 화면에서 보여야 할 이야기다. 사진이 있고 재고가 있는 것만, 최대 5장.
 $heroes    = array();
@@ -144,20 +152,36 @@ $month = (int) wp_date( 'n' );
 	<?php endif; ?>
 
 	<?php if ( $deals ) : ?>
-	<section class="deals"><div class="deals-h"><h2>오늘의 특가</h2>
+	<section class="deals"><div class="deals-h"><div><p class="sh-eb"><i></i><?php echo (int) $month; ?>월 특가</p><h2>오늘의 특가</h2></div>
 		<span class="ends">마감까지 <b id="dhr-left" class="n">—</b></span></div>
-		<div class="scroller"><?php foreach ( $deals as $p ) { echo card( $p ); } // phpcs:ignore ?></div></section>
+		<?php carousel( $deals, '오늘의 특가' ); ?></section>
 	<?php endif; ?>
 
-	<section class="sec center"><h2 class="big2">지금 고르세요</h2>
-		<p class="lead">많이 찾는 상품부터 모았습니다.</p>
+	<section class="sec">
+		<?php section_head( '많이 찾는 순', '지금 고르세요', '이번 주 가장 많이 담긴 상품부터', $shop_url ); ?>
 		<div class="grid grid4"><?php foreach ( $grid as $p ) { echo card( $p ); } // phpcs:ignore ?></div>
 		<div class="center" style="margin-top:1.4rem"><a class="btn btn-d" href="<?php echo esc_url( $shop_url ); ?>">전체 상품 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a></div></section>
 
+	<?php if ( $brand_names ) : ?>
+	<div class="tick" aria-hidden="true"><div class="tick-in"><?php for ( $r = 0; $r < 2; $r++ ) { foreach ( $brand_names as $b ) { echo '<span>' . esc_html( $b ) . '</span><i></i>'; } } ?></div></div>
+	<?php endif; ?>
+
+	<?php if ( $cheap ) : ?>
+	<section class="sec">
+		<?php section_head( '병당 가격으로 고르기', '병당 1만 원 아래', '묶음으로 담을수록 한 병 값이 내려갑니다', $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>
+		<?php carousel( $cheap, '병당 1만 원 아래' ); ?></section>
+	<?php endif; ?>
+
+	<?php if ( $newest ) : ?>
+	<section class="sec">
+		<?php section_head( '새로 들어온', '이번 주 신상', '방금 들어온 맛부터 먼저', add_query_arg( 'orderby', 'date', $shop_url ) ); ?>
+		<?php carousel( $newest, '이번 주 신상' ); ?></section>
+	<?php endif; ?>
+
 	<?php if ( $nonic ) : ?>
-	<section class="sec"><div class="sec-h"><h2>무니코틴</h2><span class="sub">가장 많이 찾는 분류</span>
-		<a class="lk" href="<?php echo esc_url( get_term_link( $nonic_cat ) ); ?>">전체 보기 <?php echo icon( 'chev' ); // phpcs:ignore ?></a></div>
-		<div class="scroller"><?php foreach ( $nonic as $p ) { echo card( $p ); } // phpcs:ignore ?></div></section>
+	<section class="sec">
+		<?php section_head( '가장 많이 찾는 분류', '무니코틴', '니코틴 없이 맛만', get_term_link( $nonic_cat ) ); ?>
+		<?php carousel( $nonic, '무니코틴' ); ?></section>
 	<?php endif; ?>
 
 	<?php if ( $brand_list ) : ?>

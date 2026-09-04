@@ -244,3 +244,33 @@
   } else bar.classList.add('is-away');
   sync(); bar.hidden = false;
 })();
+
+/* 카루셀 — Swiper 11. 카드 폭은 CSS 가 정한다(auto). 없으면 CSS 가로 스크롤로 남는다. */
+(function(){
+  if(!window.Swiper) return;
+  document.querySelectorAll('.dhs-wrap').forEach(function(w){
+    var el = w.querySelector('.dhs'); if(!el) return;
+    new Swiper(el, { slidesPerView: 'auto', spaceBetween: 14, speed: 750, grabCursor: true,
+      keyboard: { enabled: true, onlyInViewport: true },
+      navigation: { nextEl: w.querySelector('.dhs-next'), prevEl: w.querySelector('.dhs-prev') },
+      breakpoints: { 880: { spaceBetween: 18 } } });
+    w.classList.add('is-ready');
+  });
+})();
+
+/* 등장 — 스크롤에 맞춰 카드 · 섹션 머리가 아래에서 위로. 한 번만, 동작 줄이기면 안 한다.
+   CSS 는 아무것도 감추지 않는다: 스크립트가 없으면 그냥 다 보인다. */
+(function(){
+  if(!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', function(){
+    var targets = gsap.utils.toArray('.dhr .grid > .card, .dhr .dhs .card, .dhr .sh, .dhr .bcard, .dhr .qcats a, .dhr .deals-h, .dhr .banner > div');
+    if(!targets.length) return;
+    gsap.set(targets, { y: 36, opacity: 0 });
+    ScrollTrigger.batch(targets, { start: 'top 92%', once: true, batchMax: 8,
+      onEnter: function(b){ gsap.to(b, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out', stagger: .07, overwrite: true,
+        onComplete: function(){ gsap.set(b, { clearProps: 'transform,opacity' }); } }); } });
+    /* 화면에 이미 들어와 있는 것은 바로 */
+    ScrollTrigger.refresh();
+  });
+})();
