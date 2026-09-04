@@ -222,8 +222,8 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 - 유틸 바 문구는 `19세 미만 판매 금지`
 - 헤더 · 푸터에서 **이벤트 페이지 링크를 뺐다** (추후 다시 넣기로)
 - 푸터 `배송 · 교환 · 환불` 은 `/tip/` 이 아니라 `/shipping/` 로 간다
-- 카카오톡 문의 버튼 주소는 필터 한 줄로 바꾼다:
-  `add_filter( 'duckhoo_kakao_url', fn() => 'https://open.kakao.com/o/XXXXXXX' );`
+- 카카오톡 문의 버튼은 오픈채팅방(`https://open.kakao.com/o/sZOm9HJh`)으로 간다.
+  방을 옮기면 `add_filter( 'duckhoo_kakao_url', fn() => '…' );` 한 줄
 - 관리자로 로그인하면 워드프레스 관리 바가 화면 위에 고정되므로 sticky 헤더에
   `body.admin-bar` 오프셋(783px↑ 32px · 601–782px 46px)을 준다. 없으면 헤더가 잘려 보인다
 
@@ -537,6 +537,10 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 - 로그인 머리판이 왜 여기에 왔는지 한 줄로 알려 준다 (`문의를 남기려면 로그인이 필요합니다`)
 - **구매 줄의 `결제하기` 는 남은 자리를 다 쓴다.** content 폭으로 두면 오른쪽이 비어
   두 버튼이 왼쪽으로 몰린다
+- **카카오톡 오픈채팅이 들어왔다** (2026-09-04): `https://open.kakao.com/o/sZOm9HJh`.
+  `Front\kakao_url()` 의 기본값이고 필터 `duckhoo_kakao_url` 로 바꾼다.
+  **로그인 없이 물어볼 수 있는 유일한 창구**라 상품 상세의 링크 줄에서 `1:1 문의`(회원 전용)
+  보다 앞에 둔다. 밖으로 나가는 주소는 `Front\is_external()` 이 보고 새 창으로 연다
 
 ## 안내 페이지
 
