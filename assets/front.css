@@ -319,10 +319,11 @@ body.dhc-open{overflow:hidden}
 .dhr .pr .off{font-style:normal;font-size:17px;font-weight:800;color:#C2410C;letter-spacing:-.02em}
 .dhr .pr b{font-size:19px}
 .dhr .perb{padding-right:52px}
-.dhr .qa{position:absolute;right:.9rem;bottom:.9rem;z-index:3;width:44px;height:44px;border-radius:50%;background:#fff;color:#111;box-shadow:0 8px 20px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.16,1,.3,1),background .3s,color .3s,box-shadow .5s cubic-bezier(.16,1,.3,1)}
-.dhr .qa svg{width:20px;height:20px;stroke-width:2.4}
-.dhr .qa:hover{transform:translateY(-3px) scale(1.06);background:#111;color:#fff;box-shadow:0 14px 28px rgba(0,0,0,.16)}
-.dhr .qa:active{transform:scale(.92)}
+/* 구매하기 — 카드 아래 오른쪽. 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 간다. */
+.dhr .card .buy{margin:.7rem .5rem 0;align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 1.05rem;border-radius:999px;background:#111;color:#fff;font-size:14px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;position:relative;z-index:3;transition:transform .5s cubic-bezier(.16,1,.3,1),filter .3s}
+.dhr .card .buy:hover{transform:translateY(-2px);filter:brightness(1.25)}
+.dhr .card .buy:active{transform:scale(.96)}
+.dhr .card .buy.is-out{background:#ECEDF0;color:#5F6770;cursor:default}
 
 /* ── 섹션 머리 ── */
 .dhr .sh{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:1.1rem}
@@ -370,8 +371,11 @@ body.dhc-open{overflow:hidden}
 .dhr .pr .off{font-size:17px}
 .dhr .card .nm{min-height:0}
 /* 좁은 두 칸(폰)에서는 + 를 사진 오른쪽 위로 올리고 가격 줄이 카드 폭을 다 쓴다 */
+/* 버튼이 아래 줄을 쓰니 가격은 카드 폭을 다 쓴다 */
+.dhr .pr,.dhr .perb{padding-right:0}
+.dhr .card{padding-bottom:.85rem;display:flex;flex-direction:column}
+.dhr .card .bd{flex:1 1 auto}
 @media(max-width:639px){
-  .dhr .qa{top:.9rem;bottom:auto;width:40px;height:40px}
-  .dhr .pr,.dhr .perb{padding-right:0}
   .dhr .pr b{font-size:18px}.dhr .pr .off{font-size:16px}
+  .dhr .card .buy{align-self:stretch}
 }

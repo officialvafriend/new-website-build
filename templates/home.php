@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -28,7 +28,7 @@ $cheap = array_filter( products( array( 'limit' => 40, 'orderby' => 'popularity'
 } );
 usort( $cheap, fn( $a, $b ) => per_bottle( $a )['per'] <=> per_bottle( $b )['per'] );
 $cheap = array_slice( array_values( $cheap ), 0, 10 );
-$brand_names = array_slice( array_keys( brands() ), 0, 12 );
+$brand_names = featured_brands( 12 );
 // 히어로는 묶음 상품을 넘겨 본다. 묶음이 이 가게의 주력이고, 병당 가격이 내려가는 게
 // 첫 화면에서 보여야 할 이야기다. 사진이 있고 재고가 있는 것만, 최대 5장.
 $heroes    = array();
@@ -62,8 +62,20 @@ $grid   = $rank_cat ? products( array( 'category' => array( $rank_cat->slug ), '
 if ( count( $grid ) < 12 ) {
 	$grid = array_merge( $grid, products( array( 'limit' => 12 - count( $grid ), 'orderby' => 'popularity', 'exclude' => array_map( fn( $p ) => $p->get_id(), $grid ) ) ) );
 }
-$nonic  = $nonic_cat ? products( array( 'category' => array( $nonic_cat->slug ), 'limit' => 8, 'orderby' => 'popularity' ) ) : array();
-$brand_list = array_slice( array_keys( brands() ), 0, 3 );
+// 주력 브랜드 — 노보 · 디오리퀴드 · 화이트아웃 · 펠릭스 · 액상덕후 (필터 duckhoo_featured_brands).
+// 브랜드 분류(taxonomy)가 없어서 이름 앞 [브랜드] 로 찾는다.
+$featured   = featured_brands( 5 );
+$brand_list = array_slice( $featured, 0, 3 );
+$picks      = array();
+$seen_pick  = array();
+foreach ( $featured as $fb ) {
+	foreach ( products( array( 's' => '[' . $fb . ']', 'limit' => 3, 'orderby' => 'popularity', 'stock_status' => 'instock' ) ) as $fp ) {
+		if ( ! isset( $seen_pick[ $fp->get_id() ] ) ) {
+			$seen_pick[ $fp->get_id() ] = true;
+			$picks[]                    = $fp;
+		}
+	}
+}
 
 // 특가 중 할인율이 가장 큰 것 — 오른쪽 히어로 카드 문구에 쓴다
 $best_off = 0;
@@ -136,7 +148,7 @@ $month = (int) wp_date( 'n' );
 
 	<?php
 	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
-	$qc = array_values( array_filter( array( $sale_cat, $nonic_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '기기' ), $rank_cat ) ) );
+	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), $rank_cat ) ) );
 	if ( $qc ) : ?>
 	<nav class="qcats" aria-label="분류 바로 가기">
 		<?php foreach ( $qc as $c ) :
@@ -178,15 +190,15 @@ $month = (int) wp_date( 'n' );
 		<?php carousel( $newest, '이번 주 신상' ); ?></section>
 	<?php endif; ?>
 
-	<?php if ( $nonic ) : ?>
+	<?php if ( $picks ) : ?>
 	<section class="sec">
-		<?php section_head( '가장 많이 찾는 분류', '무니코틴', '니코틴 없이 맛만', get_term_link( $nonic_cat ) ); ?>
-		<?php carousel( $nonic, '무니코틴' ); ?></section>
+		<?php section_head( '주력 브랜드', implode( ' · ', array_slice( $featured, 0, 3 ) ), '이 가게가 가장 오래 팔아 온 라인', $shop_url ); ?>
+		<?php carousel( $picks, '주력 브랜드' ); ?></section>
 	<?php endif; ?>
 
 	<?php if ( $brand_list ) : ?>
-	<section class="sec center"><h2 class="big2">브랜드로 둘러보기</h2>
-		<p class="lead">브랜드별로 모아 봤습니다.</p>
+	<section class="sec">
+		<?php section_head( '많이 찾는 라인', '브랜드로 둘러보기', '', '' ); ?>
 		<div class="bgrid"><?php foreach ( $brand_list as $b ) :
 			$bp = products( array( 's' => '[' . $b . ']', 'limit' => 4, 'orderby' => 'popularity' ) );
 			if ( ! $bp ) { continue; }

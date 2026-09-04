@@ -4,6 +4,8 @@
  *
  * 테마 목록은 제목을 1px 로 숨기고 결과 수도 없이 카드만 깐다. 여기서는
  * 제목 · 건수 · 정렬을 한 줄로 두고, 카드는 홈과 같은 `card()` 로 그린다.
+ * 분류 설명(term description)은 그리지 않는다 — 상품 위에 안내문이 길게 깔리면
+ * 사러 온 사람이 먼저 읽어야 할 것이 상품이 아니게 된다. 글은 관리자에 그대로 남는다.
  * 쿼리는 워드프레스 메인 쿼리 그대로다 — 페이지네이션 · 정렬 · 검색이 그대로 돈다.
  *
  * @package Duckhoo\Redesign
@@ -15,7 +17,6 @@ use function Duckhoo\Redesign\Front\{card, icon};
 
 $dha_total = (int) $GLOBALS['wp_query']->found_posts;
 $dha_title = is_search() ? '“' . get_search_query() . '” 검색 결과' : ( is_shop() ? '전체 상품' : (string) woocommerce_page_title( false ) );
-$dha_desc  = is_product_taxonomy() ? (string) term_description() : '';
 $dha_shop  = wc_get_page_permalink( 'shop' );
 $dha_cats  = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 8 ) );
 $dha_cats  = is_wp_error( $dha_cats ) ? array() : $dha_cats;
@@ -38,7 +39,6 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 			<h1><?php echo esc_html( $dha_title ); ?></h1>
 			<?php if ( $dha_total ) : ?><span class="dha-n"><?php echo esc_html( number_format_i18n( $dha_total ) ); ?>종</span><?php endif; ?>
 		</div>
-		<?php if ( '' !== trim( wp_strip_all_tags( $dha_desc ) ) ) : ?><p class="dha-desc"><?php echo wp_kses_post( $dha_desc ); ?></p><?php endif; ?>
 	</header>
 
 	<?php if ( $dha_cats ) : ?>

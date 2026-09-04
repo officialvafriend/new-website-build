@@ -57,8 +57,11 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-result-count{ font-size: 14px; colo
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-ordering select{ min-height: 44px; border-radius: 999px; border: 1.5px solid var(--dh-line-2); padding: 0 2.2rem 0 1rem; font-size: 14px; font-weight: 700; background: var(--dh-surface); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ display: flex; gap: .35rem; justify-content: center; list-style: none; padding: 0; margin: 1.5rem 0; border: 0 !important; flex-wrap: wrap; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li{ border: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); font-weight: 700; padding: 0 .6rem; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination .page-numbers.current{ background: var(--dh-ink); color: #fff; }
+/* `ul.page-numbers` 자신도 클래스가 page-numbers 다. 아래 규칙을 목록에까지 주면
+   페이지 번호 뒤로 흰 알약이 화면 폭만큼 길게 깔린다. 칸(li 안의 링크)에만 준다. */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line, #E1E5E8); font-weight: 700; padding: 0 .6rem; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers.current{ background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ background: none !important; border-radius: 0 !important; min-width: 0 !important; height: auto !important; padding: 0 !important; }
 
 /* 상세: 이미지 · 요약 두 칸, 그 위에 키플의 STEP 옵션은 그대로 */
 html body.dhr.dhr-wrap.dhr-wrap .single-product div.product{ display: grid; gap: 1.2rem; grid-template-columns: 1fr; }

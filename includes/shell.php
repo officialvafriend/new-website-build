@@ -171,13 +171,9 @@ function archive_title(): void {
 	}
 	$title = is_search() ? '“' . get_search_query() . '” 검색 결과' : (string) woocommerce_page_title( false );
 	$total = function_exists( 'wc_get_loop_prop' ) ? (int) wc_get_loop_prop( 'total' ) : 0;
-	$desc  = is_product_taxonomy() ? (string) term_description() : '';
 	echo '<header class="dhr-arch"><h2 class="dhr-arch__t">' . esc_html( $title ) . '</h2>';
 	if ( $total > 0 ) {
 		echo '<span class="dhr-arch__n">' . esc_html( number_format_i18n( $total ) ) . '종</span>';
-	}
-	if ( '' !== trim( wp_strip_all_tags( $desc ) ) ) {
-		echo '<div class="dhr-arch__d">' . wp_kses_post( $desc ) . '</div>';
 	}
 	echo '</header>';
 }

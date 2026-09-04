@@ -122,6 +122,39 @@ function brands(): array {
 }
 
 /**
+ * 주력 브랜드. 이 가게가 미는 다섯 곳이 먼저 나오고, 그 뒤를 상품 수 순으로 채운다.
+ * 이름 앞 `[브랜드]` 로 세기 때문에 "노보" 는 "노보 블랙" 까지 함께 잡힌다.
+ *
+ * 사장님이 미는 브랜드가 바뀌면 필터 한 줄이면 된다:
+ * `add_filter( 'duckhoo_featured_brands', fn() => array( '노보', '디오리퀴드' ) );`
+ *
+ * @param int $limit 최대 개수.
+ * @return string[] 브랜드 이름.
+ */
+function featured_brands( int $limit = 6 ): array {
+	$want = (array) apply_filters( 'duckhoo_featured_brands', array( '노보', '디오리퀴드', '화이트아웃', '펠릭스', '액상덕후' ) );
+	$have = array_keys( brands() );
+	$out  = array();
+	foreach ( $want as $w ) {
+		foreach ( $have as $b ) {
+			if ( $b === $w || str_starts_with( $b, $w ) ) {
+				$out[] = $b;
+				break;
+			}
+		}
+	}
+	foreach ( $have as $b ) {
+		if ( count( $out ) >= $limit ) {
+			break;
+		}
+		if ( ! in_array( $b, $out, true ) ) {
+			$out[] = $b;
+		}
+	}
+	return array_slice( $out, 0, $limit );
+}
+
+/**
  * 병당 가격. 이름에 "5병" 이 있으면 총액을 병 수로 나눈다. 없으면 단품이다.
  *
  * @param \WC_Product $p 상품.
@@ -260,8 +293,10 @@ function card( \WC_Product $p ): string {
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
 		. '<div class="pr">' . $was . $off . $price . '</div>'
 		. $per . '</div>'
-		// 빠른 담기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 보낸다.
-		. ( $p->is_in_stock() ? '<a class="qa" href="' . esc_url( $url ) . '#dhp-buy" aria-label="' . esc_attr( $n['title'] . ' 담으러 가기' ) . '">' . icon( 'plus' ) . '</a>' : '' )
+		// 구매하기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 보낸다.
+		. ( $p->is_in_stock()
+			? '<a class="buy" href="' . esc_url( $url ) . '#dhp-buy" aria-label="' . esc_attr( $n['title'] ) . ' 구매하기">구매하기</a>'
+			: '<span class="buy is-out">품절</span>' )
 		. '</article>';
 }
 
@@ -319,7 +354,7 @@ function header_html(): void {
 	$sale    = cat_by_name( '특가' );
 	$in    = is_user_logged_in();
 	$pts   = signup_points();
-	$cats  = array_values( array_filter( array( $sale, $nonic, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '기기' ) ) ) );
+	$cats  = array_values( array_filter( array( $sale, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ) ) ) );
 	?>
 	<?php if ( ! $in ) : ?>
 	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
@@ -344,7 +379,7 @@ function header_html(): void {
 		</form>
 		<nav class="dnav">
 			<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
-			<?php if ( $nonic ) : ?><a href="<?php echo esc_url( get_term_link( $nonic ) ); ?>">무니코틴</a><?php endif; ?>
+			<?php $mtl = cat_by_name( '입호흡' ); if ( $mtl ) : ?><a href="<?php echo esc_url( get_term_link( $mtl ) ); ?>">입호흡</a><?php endif; ?>
 			<?php if ( $sale ) : ?><a href="<?php echo esc_url( get_term_link( $sale ) ); ?>"><?php echo esc_html( $sale->name ); ?></a><?php endif; ?>
 		</nav>
 		<div class="sp">
@@ -454,7 +489,7 @@ function footer_html(): void {
 	$account = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
 	$cats    = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 	$cats    = is_wp_error( $cats ) ? array() : $cats;
-	$brands  = array_slice( array_keys( brands() ), 0, 6 );
+	$brands  = featured_brands( 6 );
 	?>
 	<footer class="foot"><div class="wrap">
 		<div class="fgrid">
