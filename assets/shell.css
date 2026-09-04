@@ -663,18 +663,42 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-join-body{ max-width: none !important; margi
 
 /* 폼은 흰 카드 한 장 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-box,
-html body.dhr.dhr-wrap.dhr-wrap form.wd-join-form,
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{
+html body.dhr.dhr-wrap.dhr-wrap form.wd-join-form{
   background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
   border-radius: 20px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.7rem) !important;
   box-shadow: 0 1px 2px rgba(16,24,32,.05), 0 16px 34px -24px rgba(16,24,32,.30);
 }
-html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{ display: grid !important; gap: .6rem !important; }
+/* 1단계는 버튼 하나뿐이다. 흰 상자 안에 검은 알약 하나만 든 모양은 비어 보였다 —
+   상자를 걷고 머리판 바로 아래에 버튼만 세운다. */
+html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{
+  display: grid !important; gap: .6rem !important;
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  padding: 0 !important; margin: 1rem 0 0 !important;
+}
 html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn{
-  display: flex !important; align-items: center !important; justify-content: center !important;
-  min-height: 52px !important; border-radius: 999px !important; text-decoration: none !important;
-  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  position: relative; display: flex !important; align-items: center !important; justify-content: center !important;
+  min-height: 60px !important; padding: 0 3.4rem !important; border-radius: 999px !important;
+  text-decoration: none !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
   background: var(--dh-primary, #111) !important; color: #fff !important; border: 0 !important; margin: 0 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 1px 2px rgba(16,24,32,.18), 0 14px 30px -18px rgba(16,24,32,.65);
+  transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s cubic-bezier(.16,1,.3,1);
+}
+/* 오른쪽 화살표 — 글자가 아니라 그림이라 읽어 주는 말에는 섞이지 않는다 */
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn::after{
+  content: ""; position: absolute; right: .8rem; top: 50%; margin-top: -17px;
+  width: 34px; height: 34px; border-radius: 999px; background-color: rgba(255,255,255,.16);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h13M12 6l6 6-6 6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center;
+  transition: transform .3s cubic-bezier(.16,1,.3,1);
+}
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn:hover{
+  background: #000 !important; transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 1px 2px rgba(16,24,32,.18), 0 18px 36px -18px rgba(16,24,32,.75);
+}
+html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn:hover::after{ transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce){
+  html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn,
+  html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn::after{ transition: none; }
 }
 
 /* 약관 동의 */
@@ -819,6 +843,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop{ padding-top: clamp(1rem,.7rem + 1.
 html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop > .wrap{ max-width: 640px; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop .dhr-ah{ margin-bottom: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-authtop--end{ padding: 0 0 2.4rem; }
+/* 로그인으로 돌아가는 줄이 카드에서 한참 떨어져 있었다. 테마가 본문 칸에 380px 최소
+   높이를 줘서 짧은 화면이 억지로 늘어난 탓이다. 가입 화면에서는 풀어 준다. */
+html body.dhr.dhr-wrap.dhr-wrap.dhr-signup #content{ min-height: 0 !important; padding-bottom: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.dhr-signup .dhr-back{ margin-top: 1.1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-title,
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-title{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-register-main,

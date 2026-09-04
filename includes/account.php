@@ -32,7 +32,7 @@ function steps(): array {
 	return (array) apply_filters(
 		'duckhoo_signup_steps',
 		array(
-			'register'  => array( 1, '회원가입', '이메일로 가입합니다. 1분이면 끝납니다.' ),
+			'register'  => array( 1, '회원가입', '' ),
 			'agree'     => array( 2, '약관 동의', '필수 약관에 동의하면 다음으로 넘어갑니다.' ),
 			'join-form' => array( 3, '정보 입력', '휴대폰 본인확인을 먼저 하면 이름 · 연락처 · 생년월일이 저절로 채워집니다.' ),
 		)
@@ -210,8 +210,9 @@ function signup_hero(): void {
 		? array( '만 19세 이상', '본인확인 먼저' )
 		: array( '가입 즉시 ' . number_format_i18n( signup_points() ) . '원 적립', '1분 소요' );
 
+	// 1단계는 제목이 곧 "회원가입" 이라 윗줄까지 같은 말이면 두 번 읽힌다.
 	echo '<div class="dhr-authtop"><div class="wrap">';
-	hero( '회원가입', $title, $sub, $chips, $no );
+	hero( 1 === $no ? '액상덕후 회원' : '회원가입', $title, $sub, $chips, $no );
 	echo '</div></div>';
 }
 add_action( 'wp_body_open', __NAMESPACE__ . '\\signup_hero', 6 );
@@ -240,6 +241,12 @@ add_action( 'wp_footer', __NAMESPACE__ . '\\signup_back', 4 );
 function body_class( array $classes ): array {
 	if ( wraps() && ( is_page( array_keys( steps() ) ) || ( function_exists( 'is_account_page' ) && is_account_page() ) ) ) {
 		$classes[] = 'dhr-auth';
+	}
+	if ( wraps() && is_page( array_keys( steps() ) ) ) {
+		$classes[] = 'dhr-signup';
+	}
+	if ( wraps() && is_page( 'register' ) ) {
+		$classes[] = 'dhr-signup-1';
 	}
 	return $classes;
 }
