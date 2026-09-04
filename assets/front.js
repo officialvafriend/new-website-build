@@ -331,3 +331,105 @@
     el.addEventListener('pointerleave', function(){ el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
   });
 })();
+
+/* 선택창 — 브라우저가 그리는 목록은 CSS 로 바꿀 수 없다. 원본 select 는 값을 쥔 채
+   1px 로 접어 두고(옛 프론트의 .dhx-src 와 같은 방식), 그 위에 우리 목록을 얹는다.
+   **name · value · change 이벤트는 그대로다** — 입금 자동매칭과 PPOM 이 그 경로로 붙어 있다.
+   묶음 상품은 옛 옵션 UI(.dhx)가 이미 같은 일을 하므로 건드리지 않는다. */
+(function(){
+  var form = document.querySelector('.dhp-card--form form.cart') || document.querySelector('form.cart');
+  if(!form) return;
+  var seq = 0;
+
+  /* "브이메이트V4팟 0.7옴(2EA) [+7,000원]" → 이름과 값을 갈라 오른쪽에 값을 세운다 */
+  function split(text){
+    var m = String(text).match(/^(.*?)\s*\[\s*(\+?[\d,]+\s*원?)\s*\]\s*$/);
+    return m ? { name: m[1].trim(), price: m[2].replace(/\s+/g, '') } : { name: String(text).trim(), price: '' };
+  }
+
+  function build(sel){
+    if(sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
+    if(sel.multiple || sel.options.length < 2) return;
+    sel.dataset.dhsOn = '1';
+    var id = 'dhs-' + (++seq);
+
+    var root = document.createElement('div'); root.className = 'dhsel';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'dhsel__btn'; btn.id = id + '-b';
+    btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span class="dhsel__val"></span><span class="dhsel__cost n"></span>'
+      + '<svg class="dhsel__chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+    var list = document.createElement('div');
+    list.className = 'dhsel__list'; list.id = id + '-l'; list.setAttribute('role', 'listbox'); list.hidden = true;
+    var lab = (sel.closest('.ppom-field-wrapper, .form-row') || {}).querySelector
+      ? (sel.closest('.ppom-field-wrapper, .form-row').querySelector('label') || {}).textContent : '';
+    if(lab) btn.setAttribute('aria-label', String(lab).replace(/\*+/g, '').trim());
+    btn.setAttribute('aria-controls', list.id);
+
+    var rows = [];
+    [].forEach.call(sel.options, function(o, i){
+      var d = split(o.textContent);
+      var r = document.createElement('button');
+      r.type = 'button'; r.className = 'dhsel__opt'; r.setAttribute('role', 'option'); r.dataset.i = i;
+      r.innerHTML = '<span class="dhsel__nm"></span>' + (d.price ? '<span class="dhsel__pr n"></span>' : '')
+        + '<svg class="dhsel__tick" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 5 5 9.5-11"/></svg>';
+      r.querySelector('.dhsel__nm').textContent = d.name;
+      if(d.price) r.querySelector('.dhsel__pr').textContent = d.price;
+      if(o.disabled) r.disabled = true;
+      list.appendChild(r); rows.push(r);
+    });
+
+    function paint(){
+      var o = sel.options[sel.selectedIndex] || sel.options[0];
+      var d = split(o ? o.textContent : '');
+      btn.querySelector('.dhsel__val').textContent = d.name;
+      btn.querySelector('.dhsel__cost').textContent = d.price;
+      root.classList.toggle('is-set', sel.selectedIndex > 0);
+      rows.forEach(function(r, i){ var on = i === sel.selectedIndex; r.classList.toggle('on', on); r.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    }
+    function open(){
+      if(!list.hidden) return;
+      list.hidden = false; root.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true');
+      var cur = rows[sel.selectedIndex] || rows[0]; if(cur){ cur.focus(); cur.scrollIntoView({block:'nearest'}); }
+    }
+    function close(back){
+      if(list.hidden) return;
+      list.hidden = true; root.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false');
+      if(back) btn.focus();
+    }
+    function pick(i){
+      if(sel.selectedIndex !== i){
+        sel.selectedIndex = i;
+        /* 값이 바뀌었다는 사실을 원본 경로로 알린다 — PPOM · 테마 계산이 여기에 붙어 있다 */
+        sel.dispatchEvent(new Event('input', {bubbles:true}));
+        sel.dispatchEvent(new Event('change', {bubbles:true}));
+        if(window.jQuery) window.jQuery(sel).trigger('change');
+      }
+      paint(); close(true);
+    }
+
+    btn.addEventListener('click', function(){ list.hidden ? open() : close(true); });
+    btn.addEventListener('keydown', function(e){ if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); open(); } });
+    list.addEventListener('click', function(e){ var r = e.target.closest('.dhsel__opt'); if(r && !r.disabled) pick(+r.dataset.i); });
+    list.addEventListener('keydown', function(e){
+      var at = rows.indexOf(document.activeElement);
+      if(e.key === 'Escape'){ e.preventDefault(); close(true); }
+      else if(e.key === 'ArrowDown'){ e.preventDefault(); (rows[at + 1] || rows[0]).focus(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); (rows[at - 1] || rows[rows.length - 1]).focus(); }
+      else if(e.key === 'Home'){ e.preventDefault(); rows[0].focus(); }
+      else if(e.key === 'End'){ e.preventDefault(); rows[rows.length - 1].focus(); }
+    });
+    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(false); });
+    /* 다른 스크립트가 값을 바꿔도 따라 그린다 */
+    sel.addEventListener('change', paint);
+
+    sel.classList.add('dhsel-src');
+    sel.setAttribute('tabindex', '-1');
+    sel.setAttribute('aria-hidden', 'true');
+    sel.parentNode.insertBefore(root, sel);
+    root.appendChild(btn); root.appendChild(list); root.appendChild(sel);
+    paint();
+  }
+
+  form.querySelectorAll('select.ppom-input, .ppom-field-wrapper select').forEach(build);
+})();
