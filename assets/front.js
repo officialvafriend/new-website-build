@@ -649,3 +649,46 @@
     });
   });
 })();
+
+/* 성인인증 안내 팝업 (#dh-agegate2) — 사장님 Code Snippets 가 그린다. 그 파일은 건드리지
+   않고, 색은 shell.css 가 덮고 여기서는 "오늘 하루 보지 않기" 를 기억하게만 한다.
+
+   스니펫은 0.8초 뒤 팝업을 열면서 html/body 에 dh-ag2-lock 을 붙여 스크롤을 잠근다.
+   그래서 노드를 지워 버리면 팝업만 사라지고 화면은 잠긴 채 남는다. 노드는 그대로 두고
+   (1) 몸통 클래스로 화면에서만 빼고 (2) 열리는 순간 잠금을 도로 푼다.
+
+   막는 것은 이 안내 팝업뿐이다. 진짜 성인 확인 — 가입 때의 휴대폰 본인확인과
+   결제 단계의 회원 확인 — 은 서버 쪽이라 여기서 건드리지 않는다. */
+(function(){
+  var box = document.getElementById('dh-agegate2');
+  if(!box) return;
+
+  var KEY = 'dhr-ag2';
+  var today = (function(){ var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })();
+
+  function read(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function write(){ try{ localStorage.setItem(KEY, today); }catch(e){} }
+  function unlock(){
+    document.documentElement.classList.remove('dh-ag2-lock');
+    document.body.classList.remove('dh-ag2-lock');
+  }
+
+  var later = box.querySelector('.dh-ag2-later');
+  if(later){
+    /* 문구가 하는 일과 맞아야 한다 — 누르면 오늘은 다시 뜨지 않는다 */
+    later.textContent = '오늘 하루 보지 않기';
+    later.addEventListener('click', function(){ write(); }, true);
+  }
+
+  if(read() !== today) return;
+
+  /* 오늘은 이미 닫았다 — 잠깐도 비치지 않게 CSS 로 먼저 빼 두고, 스니펫이 열면 잠금만 푼다 */
+  document.body.classList.add('dhr-ag2-off');
+  box.setAttribute('hidden', '');
+  unlock();
+  new MutationObserver(function(){
+    if(!box.hasAttribute('hidden')) box.setAttribute('hidden', '');
+    unlock();
+  }).observe(box, {attributes: true, attributeFilter: ['hidden']});
+})();
