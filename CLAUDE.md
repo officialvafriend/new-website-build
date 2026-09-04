@@ -324,6 +324,21 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
   `<style>` 로 `#pop6 .bbtn` (1,0,1) 을 쓰므로 우리는 `body.dhr #pop6 .bbtn` (1,1,2) 로 이긴다.
   홈은 `body.dhr` 뿐이라 (dhr-wrap 이 없다) 팝업 규칙은 **front.css** 에 둔다
 
+## 폰 푸터 · 탈퇴 확인 (2026-09-04, 네 번째)
+
+- **푸터 링크 묶음은 폰에서 접힌다** (1,963px → 1,060px). `상품 · 브랜드 · 안내` 는 제목만
+  보이고 눌러서 편다 (`.fcol__t[aria-expanded]`, front.js). **고객센터는 접지 않는다** —
+  전화번호가 푸터까지 내려온 이유다. 데스크톱은 CSS 가 `.fcol__list` 를 늘 펼쳐 둔다
+- 푸터 알약 링크에는 `max-width:100%` 가 필요하다. 긴 링크 하나가 화면 폭을 늘린다
+- **회원탈퇴는 막지 않는다.** 진행 중 주문 · 남은 적립금은 `Front\...\cautions()` 가 안내로
+  보여 주고, 마지막에 확인 창(`[data-leave-confirm]`)이 실제 숫자로 한 번 더 묻는다.
+  예전처럼 막으려면 `duckhoo_membership_cancel_require_clear` 를 true 로
+- `assets/membership-cancel.css` 는 오래 **enqueue 되지 않고 있었다.** 탈퇴 화면의 버튼·입력은
+  front.css 에서 `body.dhr` 로 한 번 더 못 박는다 (테마 규칙이 더 세다)
+- 마이페이지 메뉴에서 `다운로드` 를 뺐다 (`duckhoo_account_menu_hide`)
+- **`documentElement.scrollWidth` 는 잘린 콘텐츠도 센다.** 카루셀이 있는 화면에서 390px 인데
+  564px 로 보고된다. 진짜 가로 스크롤인지는 `scrollTo(600,0)` 뒤 `scrollX` 로 확인한다
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·
