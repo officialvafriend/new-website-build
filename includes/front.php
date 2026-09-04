@@ -136,11 +136,19 @@ function featured_brands( int $limit = 6 ): array {
 	$have = array_keys( brands() );
 	$out  = array();
 	foreach ( $want as $w ) {
-		foreach ( $have as $b ) {
-			if ( $b === $w || str_starts_with( $b, $w ) ) {
-				$out[] = $b;
-				break;
+		// 이름이 그대로 있으면 그것을 쓴다. "노보" 를 물었는데 "노보 블랙" 이
+		// 상품 수에서 앞선다고 그쪽을 내세우면 사장님이 부른 이름과 달라진다.
+		$hit = in_array( $w, $have, true ) ? $w : null;
+		if ( null === $hit ) {
+			foreach ( $have as $b ) {
+				if ( str_starts_with( $b, $w ) ) {
+					$hit = $b;
+					break;
+				}
 			}
+		}
+		if ( null !== $hit && ! in_array( $hit, $out, true ) ) {
+			$out[] = $hit;
 		}
 	}
 	foreach ( $have as $b ) {
@@ -487,8 +495,10 @@ function kakao_url(): string {
  */
 function footer_html(): void {
 	$account = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
-	$cats    = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
-	$cats    = is_wp_error( $cats ) ? array() : $cats;
+	// 헤더 칩과 같은 순서 — 특가 · 입호흡 · 폐호흡 · 무니코틴 · 기기.
+	$cats    = array_values( array_filter( array(
+		cat_by_name( '특가' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '무니코틴' ), cat_by_name( '기기' ), cat_by_name( '랭킹' ),
+	) ) );
 	$brands  = featured_brands( 6 );
 	?>
 	<footer class="foot"><div class="wrap">
