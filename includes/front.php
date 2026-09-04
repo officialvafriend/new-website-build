@@ -132,7 +132,7 @@ function cat_icon( string $name ): string {
 	$map = array(
 		'특가'     => 'tag',
 		'할인'     => 'tag',
-		'적립'     => 'tag',
+		'적립'     => 'coin',
 		'입호흡'   => 'pod',
 		'폐호흡'   => 'cloud',
 		'무니코틴' => 'zero',
@@ -304,6 +304,8 @@ function icon( string $name ): string {
 			'zero'    => '<circle cx="12" cy="12" r="8.4"/><path d="m6.6 17.4 10.8-10.8"/>',
 			'device'  => '<rect x="7" y="2.6" width="10" height="18.8" rx="3.2"/><path d="M10.4 6.4h3.2"/><circle cx="12" cy="16.8" r="1.4"/>',
 			'drop'    => '<path d="M12 3.2c3.6 4.2 6 7.3 6 9.9a6 6 0 0 1-12 0c0-2.6 2.4-5.7 6-9.9z"/>',
+			// 적립금 — 특가와 같은 가격표를 쓰면 두 타일이 같은 것으로 보인다
+			'coin'    => '<circle cx="12" cy="12" r="8.6"/><path d="M10.2 16.2V7.8h2.9a2.3 2.3 0 0 1 0 4.6h-2.9"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';
