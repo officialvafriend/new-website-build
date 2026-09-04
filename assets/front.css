@@ -510,9 +510,14 @@ body.dhr .dh-leave__go[disabled]{background:#8A8A8F;cursor:default;filter:none}
   .dhr .fcol__t[aria-expanded="true"] svg{transform:rotate(-90deg)}
   .dhr .fcol__list{display:none;padding:0 0 .6rem}
   .dhr .fcol__t[aria-expanded="true"] + .fcol__list{display:flex}
-  /* 고객센터는 늘 펼쳐 둔다 */
-  .dhr .fcol--open{padding:.9rem 0 .2rem}
-  .dhr .fcol--open b{display:block;margin-bottom:.2rem}
+  /* 고객센터는 늘 펼쳐 둔다. 전화번호와 시간은 크게, 나머지 링크는 알약으로 접어 붙인다 */
+  .dhr .fcol--open{padding:.9rem 0 .2rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+  .dhr .fcol--open > b,.dhr .fcol--open > .fmuted{flex:0 0 100%;margin:0}
+  .dhr .fcol--open > b{font-size:15px;margin-bottom:.1rem}
+  .dhr .fcol--open > a.n{flex:0 0 100%;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em}
+  .dhr .fcol--open > .fmuted{margin:.1rem 0 .5rem}
+  .dhr .fcol--open > a:not(.n){min-height:44px;padding:0 .85rem;border-radius:999px;
+    border:1px solid #2E2E33;background:#1C1C1E;font-size:14px;font-weight:600;color:#C7CBD1}
   .dhr .fcol a{min-height:44px}
   .dhr .fbank{margin-top:1.2rem;padding:.9rem 1rem;gap:.5rem .7rem}
   .dhr .fbank .fmuted{font-size:13px;line-height:1.5}
