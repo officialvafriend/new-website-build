@@ -362,3 +362,10 @@ body.dhc-open{overflow:hidden}
 .dhr .tick-in i{width:6px;height:6px;border-radius:50%;background:#C2410C;flex:0 0 auto}
 @keyframes dhr-tick{to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.dhr .tick-in{animation:none}}
+/* 가격 줄 — 정가는 위에 작게, 아래 줄에 할인율 + 파는 값. 한 줄에 다 넣으면 좁은 카드에서 접힌다. */
+.dhr .pr{display:flex;flex-wrap:wrap;align-items:baseline;gap:.1rem .4rem;padding-right:48px}
+.dhr .pr s{flex-basis:100%;order:-1;margin:0;font-size:13px;color:#8A8A8F;font-weight:500}
+.dhr .pr b{font-size:19px;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.dhr .pr b small{font-size:13px;font-weight:700;margin-left:1px}
+.dhr .pr .off{font-size:17px}
+.dhr .card .nm{min-height:0}

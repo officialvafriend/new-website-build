@@ -239,11 +239,10 @@ function card( \WC_Product $p ): string {
 		array_unshift( $meta, '<span class="brand">' . esc_html( $n['brand'] ) . '</span>' );
 	}
 
-	// 파는 값이 먼저다. 병당 가격은 묶음일 때만 아래에 덧붙인다.
-	$price = '<b>' . esc_html( number_format_i18n( (float) $p->get_price() ) ) . '</b>';
-	if ( $p->is_on_sale() && (float) $p->get_regular_price() > 0 ) {
-		$price = '<s>' . esc_html( number_format_i18n( (float) $p->get_regular_price() ) ) . '</s>' . $price;
-	}
+	// 파는 값이 먼저다. 정가는 그 위 작은 취소선, 병당 가격은 묶음일 때만 아래 캡션.
+	$price = '<b class="n">' . esc_html( number_format_i18n( (float) $p->get_price() ) ) . '<small>원</small></b>';
+	$was   = ( $p->is_on_sale() && (float) $p->get_regular_price() > 0 )
+		? '<s class="n">' . esc_html( number_format_i18n( (float) $p->get_regular_price() ) ) . '원</s>' : '';
 	$per = $pb['qty'] > 1
 		? '<div class="perb">병당 ' . esc_html( number_format_i18n( $pb['per'] ) ) . '원 · ' . (int) $pb['qty'] . '병</div>'
 		: '';
@@ -259,7 +258,7 @@ function card( \WC_Product $p ): string {
 		. $img . '</a>'
 		. '<div class="bd"><a class="nm" href="' . esc_url( $url ) . '">' . esc_html( $n['title'] ) . '</a>'
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
-		. '<div class="pr">' . $off . '<span class="n">' . $price . '</span><small>원</small></div>'
+		. '<div class="pr">' . $was . $off . $price . '</div>'
 		. $per . '</div>'
 		// 빠른 담기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지의 구매 상자로 보낸다.
 		. ( $p->is_in_stock() ? '<a class="qa" href="' . esc_url( $url ) . '#dhp-buy" aria-label="' . esc_attr( $n['title'] . ' 담으러 가기' ) . '">' . icon( 'plus' ) . '</a>' : '' )
