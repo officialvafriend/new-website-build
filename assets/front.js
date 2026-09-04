@@ -371,13 +371,8 @@
        · 고른 값은 텍스트 노드가 아니라 data-l + CSS content 로 그린다
        · 목록은 열 때만 만들어 document.body 로 띄우고 닫으면 지운다
      읽어 주는 것은 aria-label 이 맡는다. */
-  /* 옛 옵션 UI(.dhx)가 있는 화면 — 묶음 · 이벤트 상품 — 에서는 아예 만들지 않는다.
-     거기서는 .dhx 가 눈에 보이는 UI 를 그리고 우리 선택창은 34px 로 찌그러져 보이지도
-     않았다. 보이지도 않으면서 칸 이름 판정만 어긋나게 했다. */
-  var legacy = !!document.querySelector('.dhx');
-
   function build(sel){
-    if(legacy || sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
+    if(sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
     if(sel.multiple || sel.options.length < 2) return;
     sel.dataset.dhsOn = '1';
     var id = 'dhs-' + (++seq);
@@ -501,7 +496,17 @@
     paint();
   }
 
-  form.querySelectorAll('select.ppom-input, .ppom-field-wrapper select').forEach(build);
+  /* 옛 옵션 UI(.dhx)가 있는 화면 — 묶음 · 이벤트 상품 — 에서는 아예 만들지 않는다.
+     거기서는 .dhx 가 눈에 보이는 UI 를 그리고 우리 선택창은 34px 로 찌그러져 보이지도
+     않았다. 보이지도 않으면서 칸 이름 판정만 어긋나게 했다.
+     .dhx 는 그쪽 스크립트가 DOMContentLoaded 에서 만든다 — 우리는 푸터에서 그보다 먼저
+     돌기 때문에, 그때 찾으면 늘 없다. **load 까지 기다렸다가** 본다. */
+  function init(){
+    if(document.querySelector('.dhx')) return;
+    form.querySelectorAll('select.ppom-input, .ppom-field-wrapper select').forEach(build);
+  }
+  if(document.readyState === 'complete') init();
+  else addEventListener('load', init);
 })();
 
 /* 묶음 "다시 누르면 해지" — 옛 옵션 UI(dh-option-ui)의 안내대로 동작하지 않았다.
