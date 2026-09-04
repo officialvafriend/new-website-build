@@ -392,14 +392,21 @@
 
     var list = null, rows = [];
 
+    /* 고정 위치라 화면 밖으로 나가지 않게 가둔다 — 선택창이 접힌 칸 안에 있거나
+       화면 아래쪽에 있을 때 목록이 보이지 않는 자리에 떨어졌다. */
     function place(){
       if(!list) return;
       var r = trig.getBoundingClientRect();
-      list.style.left = r.left + 'px';
-      list.style.width = r.width + 'px';
-      var below = innerHeight - r.bottom - 12;
-      if(below < 200 && r.top > below){ list.style.top = ''; list.style.bottom = (innerHeight - r.top + 6) + 'px'; }
-      else { list.style.bottom = ''; list.style.top = (r.bottom + 6) + 'px'; }
+      var w = Math.max(r.width, 220);
+      list.style.width = w + 'px';
+      list.style.left = Math.round(Math.min(Math.max(8, r.left), innerWidth - w - 8)) + 'px';
+      list.style.top = '0px';
+      var h = list.offsetHeight;
+      var below = innerHeight - r.bottom - 10, above = r.top - 10, top;
+      if(h <= below) top = r.bottom + 6;
+      else if(h <= above) top = r.top - 6 - h;
+      else top = Math.min(Math.max(8, r.bottom + 6), Math.max(8, innerHeight - h - 8));
+      list.style.top = Math.round(Math.max(8, top)) + 'px';
     }
 
     function make(){
