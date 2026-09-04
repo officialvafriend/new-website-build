@@ -446,3 +446,6 @@ body.dhr #pop6 .bar button{min-height:50px!important;border-radius:999px!importa
 body.dhr #pop6 .btn-today{background:#fff!important;color:#4E565F!important;border:1.5px solid #C9CFD4!important}
 body.dhr #pop6 .btn-today:hover{border-color:#111!important;color:#111!important}
 body.dhr #pop6 .btn-close{background:#111!important;color:#fff!important;border:0!important}
+/* 팝업을 한 장만 띄울 때 — 칩 줄은 필요 없다 (front.js 가 .dhr-single 을 붙인다) */
+body.dhr #pop6.dhr-single .buttons{display:none!important}
+body.dhr #pop6.dhr-single .bar{padding:.9rem!important}

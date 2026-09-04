@@ -727,6 +727,9 @@ function js_config( array $extra = array() ): string {
 		// 플러그인이 서버에서 적용한다. 규칙이 바뀌면 이 필터 한 줄이면 된다:
 		// add_filter( 'duckhoo_auto_discount', fn() => array( array( 'min' => 100000, 'amount' => 10000 ) ) );
 		'discount' => array_values( (array) apply_filters( 'duckhoo_auto_discount', array( array( 'min' => 100000, 'amount' => 10000 ) ) ) ),
+		// 사장님 홈 팝업(#pop6)에서 남길 탭 하나. 나머지 칩은 감춘다.
+		// 끄려면 빈 문자열: add_filter( 'duckhoo_popup_tab', '__return_empty_string' );
+		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '고객 안내' ),
 		'loggedIn' => is_user_logged_in(),
 		'nonce'    => wp_create_nonce( 'wc_store_api' ),
 		'freeShip' => (int) apply_filters( 'duckhoo_free_shipping_min', 30000 ),

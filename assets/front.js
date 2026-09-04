@@ -523,3 +523,23 @@
   mo.observe(host, {childList: true, subtree: true, characterData: true});
   setTimeout(function(){ mo.disconnect(); write(); }, 8000);
 })();
+
+/* 홈 팝업 — 여러 장을 칩으로 넘겨 보게 돼 있는데, 사장님이 "4월 24일 이전 생산품" 안내
+   한 장만 띄우기로 했다. 스니펫의 칩을 우리가 대신 눌러 그 장을 띄우고 칩 줄을 감춘다.
+   이미지 주소를 우리가 박지 않는다 — 스니펫이 바꾸면 그대로 따라간다. */
+(function(){
+  var want = (window.DHR && window.DHR.popupTab) || '';
+  if(!want) return;
+  var tries = 0;
+  (function go(){
+    var pop = document.querySelector('#pop6');
+    var btns = pop && pop.querySelector('.buttons');
+    if(!btns){ if(tries++ < 30) return setTimeout(go, 200); return; }
+    var chips = [].slice.call(btns.querySelectorAll('.bbtn'));
+    var hit = chips.filter(function(b){ return b.textContent.trim() === want; })[0]
+      || chips.filter(function(b){ return b.textContent.indexOf(want) > -1; })[0];
+    if(!hit){ if(tries++ < 30) return setTimeout(go, 200); return; }
+    if(!hit.classList.contains('active')) hit.click();
+    pop.classList.add('dhr-single');
+  })();
+})();
