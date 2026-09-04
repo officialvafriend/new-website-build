@@ -1263,3 +1263,104 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct, html body.dhr.dhr-wr
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct:hover, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-edit:hover{ border-color: var(--dh-ink, #111) !important; }
+
+/* ══ 마이페이지 — 상자 하나가 아니라 카드 여러 장 ═══════════════════════════
+   `.woocommerce-MyAccount-content` 를 흰 상자로 만들어 두고 뒤에서 padding 을 0 으로
+   덮는 바람에, 글이 상자 가장자리에 붙었다. 바깥은 투명한 통으로 두고 그 안의
+   블록마다 카드가 되게 한다 — 사이트의 다른 화면과 같은 규칙이다. */
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-account .woocommerce-MyAccount-content,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-account.logged-in .woocommerce-MyAccount-content{
+  background: transparent !important; border: 0 !important; border-radius: 0 !important;
+  padding: 0 !important; display: grid !important; gap: .8rem !important;
+  align-content: start; font-size: 16px; line-height: 1.7; color: var(--dh-ink-2, #4E565F);
+}
+/* 안내 문단 하나짜리도 카드로 — 회색 바탕에 글만 떠 있지 않게 */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content > p{
+  margin: 0 !important; padding: 1.1rem 1.2rem; background: var(--dh-surface, #fff); border-radius: 16px;
+  font-size: 15px; color: var(--dh-ink-2, #4E565F); word-break: keep-all;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+/* 빈 화면(주문 없음 · 다운로드 없음)도 카드로 */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-info,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-message{
+  margin: 0 !important; padding: 1.4rem 1.2rem !important; background: var(--dh-surface, #fff) !important;
+  border: 0 !important; border-radius: 16px !important; color: var(--dh-ink-2, #4E565F) !important;
+  font-size: 15px !important; display: flex !important; flex-wrap: wrap; align-items: center; gap: .8rem;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-info::before,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-message::before{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-info .button,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-message .button{
+  margin-left: auto; min-height: 44px; padding: 0 1.2rem !important; border-radius: 999px !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important;
+  display: inline-flex !important; align-items: center; box-shadow: none !important;
+}
+/* 대시보드 카드 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-acc{
+  background: var(--dh-surface, #fff); border-radius: 18px; padding: clamp(1.2rem,.9rem + 1.2vw,1.7rem);
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+/* 계정 정보 폼 · 주소 폼 */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form{
+  background: var(--dh-surface, #fff); border-radius: 18px; padding: clamp(1.2rem,.9rem + 1.2vw,1.7rem); margin: 0 !important;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form fieldset{
+  border: 0 !important; margin: 1.6rem 0 0 !important; padding: 1.4rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form legend{
+  padding: 0 !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-form-row,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content p.form-row{ margin: 0 0 1rem !important; padding: 0 !important; float: none !important; width: auto !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .form-row-first,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .form-row-last{ width: auto !important; }
+@media (min-width:640px){
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form > *{ grid-column: 1 / -1; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form > .form-row-first{ grid-column: 1; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form > .form-row-last{ grid-column: 2; }
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content label{
+  display: block !important; margin: 0 0 .4rem !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink-2, #4E565F) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content span.required{ color: var(--dh-status-check, #B42318); }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content em{ display: block; margin-top: .35rem; font-size: 13px; font-style: normal; color: var(--dh-ink-3, #616870); }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content button[type="submit"],
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-Button{
+  min-height: 52px !important; padding: 0 1.6rem !important; border-radius: 999px !important; border: 0 !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 16px !important; font-weight: 800 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 8px 20px -8px rgba(17,17,17,.55) !important;
+}
+/* 주소 — 두 칸 카드 */
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Addresses{ display: grid !important; grid-template-columns: 1fr !important; gap: .8rem !important; margin: 0 !important; }
+@media (min-width:720px){ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Addresses{ grid-template-columns: 1fr 1fr !important; } }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address{
+  width: auto !important; float: none !important; margin: 0 !important;
+  background: var(--dh-surface, #fff); border-radius: 18px; padding: clamp(1.2rem,.9rem + 1.2vw,1.6rem);
+  box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22);
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title{ display: flex !important; align-items: center; justify-content: space-between; gap: .8rem; margin: 0 0 .8rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h2,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h3{ margin: 0 !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title .edit{
+  min-height: 40px; padding: 0 .95rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 700 !important;
+  border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; color: var(--dh-ink, #111) !important; text-decoration: none !important;
+  display: inline-flex !important; align-items: center; white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address address{ font-style: normal; font-size: 15px; line-height: 1.7; color: var(--dh-ink-2, #4E565F); margin: 0; word-break: keep-all; }
+/* 모바일 메뉴는 가로로 미는 알약 줄 — 세로로 세우면 화면 하나를 다 먹는다 */
+@media (max-width:899px){
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation{ background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{
+    display: flex !important; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding: .2rem 0 .9rem !important; margin: 0 !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul::-webkit-scrollbar{ display: none; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li{ flex: 0 0 auto; }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{
+    min-height: 42px; padding: 0 .95rem !important; border-radius: 999px; white-space: nowrap;
+    background: var(--dh-surface, #fff) !important; border: 1.5px solid var(--dh-line, #E1E5E8);
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-primary, #111) !important; border-color: var(--dh-primary, #111); }
+}
