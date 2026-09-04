@@ -414,10 +414,11 @@
       if(rows[i] && rows[i].classList.contains('is-off')) return;
       if(sel.selectedIndex !== i){
         sel.selectedIndex = i;
-        /* 값이 바뀌었다는 사실을 원본 경로로 알린다 — PPOM · 테마 계산이 여기에 붙어 있다 */
+        /* 값이 바뀌었다는 사실을 원본 경로로 알린다 — PPOM · 테마 계산이 여기에 붙어 있다.
+           change 는 **한 번만** 쏜다. jQuery 로 한 번 더 쏘면 테마가 같은 옵션을 두 번
+           담아 수량이 2가 된다 (jQuery 위임 핸들러는 네이티브 이벤트로도 깨어난다). */
         sel.dispatchEvent(new Event('input', {bubbles: true}));
         sel.dispatchEvent(new Event('change', {bubbles: true}));
-        if(window.jQuery) window.jQuery(sel).trigger('change');
       }
       paint(); close(true);
       /* 테마(wd-option-builder)는 고른 것을 아래 목록에 카드로 쌓고 50ms 뒤 선택창을
