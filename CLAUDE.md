@@ -306,7 +306,10 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
   로 색을 나눈다 (on-hold = 손님이 아직 할 일이 있는 상태라 주황). 왼쪽 메뉴는 데스크톱에서
   sticky 사이드바. 마크업은 그대로다 — 보기 · 취소 링크가 거기 걸려 있다
 - **구매 버튼 호버는 우리 것으로 못 박았다.** 테마 쪽 색 그림자가 분홍으로 번지는데 규칙을
-  하나씩 찾는 대신 `filter · text-shadow · outline · box-shadow` 를 통째로 덮는다
+  하나씩 찾는 대신 `filter · text-shadow · outline · box-shadow` 를 통째로 덮는다.
+  **그 줄(`.vf-drawer-actions`)은 버튼과 높이가 똑같은데 `overflow: hidden` 이었다** —
+  호버로 1px 떠오르는 순간 버튼 윗변과 그림자가 잘려 "위가 가려진" 것처럼 보였다.
+  `overflow: visible !important` 로 푼다 (2026-09-04)
 
 ## 장바구니 · 팝업 (2026-09-04, 세 번째)
 
