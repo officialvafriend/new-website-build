@@ -139,7 +139,7 @@ function cat_icon( string $name ): string {
 		'기기'     => 'device',
 		'팟'       => 'device',
 		'코일'     => 'device',
-		'노보'     => 'pod',
+		'노보'     => 'drop',
 	);
 	foreach ( $map as $needle => $ic ) {
 		if ( false !== mb_strpos( $name, $needle ) ) {
@@ -303,6 +303,7 @@ function icon( string $name ): string {
 			'cloud'   => '<path d="M7.2 18.5h9.4a3.6 3.6 0 0 0 .5-7.2 5.2 5.2 0 0 0-9.9-1.3 3.9 3.9 0 0 0 0 8.5z"/>',
 			'zero'    => '<circle cx="12" cy="12" r="8.4"/><path d="m6.6 17.4 10.8-10.8"/>',
 			'device'  => '<rect x="7" y="2.6" width="10" height="18.8" rx="3.2"/><path d="M10.4 6.4h3.2"/><circle cx="12" cy="16.8" r="1.4"/>',
+			'drop'    => '<path d="M12 3.2c3.6 4.2 6 7.3 6 9.9a6 6 0 0 1-12 0c0-2.6 2.4-5.7 6-9.9z"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';
