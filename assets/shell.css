@@ -908,8 +908,10 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order{ display: flex !important; flex-di
   html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > .wd-cpg__title, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > #coupon-auto-notice, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > .woocommerce-notices-wrapper{ grid-column: 1 / -1; }
   html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form{ display: contents; }
   html body.dhr.dhr-wrap.dhr-wrap .wd-cpg > form.wd-cpg-form > *{ grid-column: 1; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary{ grid-column: 2 !important; grid-row: 3 / span 8; position: sticky; top: 84px; margin: 0 !important; align-self: start; }
-  html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order{ grid-column: 2 !important; grid-row: 11; }
+  /* 합계 + 주문 버튼은 한 덩어리(front.js 가 form 안에서 묶는다)로 오른쪽에 따라온다 */
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside{ grid-column: 2 !important; grid-row: 1 / -1; position: sticky; top: 92px; align-self: start; display: grid; gap: .8rem; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside .wd-cpg-summary{ margin: 0 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside .wd-cpg-order{ margin: 0 !important; }
 }
 
 /* ══ 주문서 — 두 칸 ═════════════════════════════════════════════════════════ */
@@ -1222,3 +1224,38 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .b
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button:hover{ border-color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button.cancel{ border-color: #E4C3BF !important; color: var(--dh-status-check, #B42318) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button.view{ background: var(--dh-primary, #111) !important; color: #fff !important; border-color: var(--dh-primary, #111) !important; }
+
+/* ══ 장바구니 — 남은 손질 ═══════════════════════════════════════════════════ */
+/* 제목 옆 개수 — 형광 분홍이었다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg__count{
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 15px !important; font-weight: 800 !important;
+  min-width: 30px; height: 30px; padding: 0 .5rem !important; border-radius: 999px !important; display: inline-flex !important;
+  align-items: center; justify-content: center; vertical-align: 4px; margin-left: .4rem !important; font-variant-numeric: tabular-nums;
+}
+/* 자동 할인 안내 두 개 — 인라인 style 로 분홍 그라데이션이 박혀 있어 !important 가 필요하다 */
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice,
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
+  background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
+  border-left: 4px solid var(--dh-accent-warm, #C2410C) !important; border-radius: 14px !important;
+  padding: .95rem 1.15rem !important; margin: 0 0 1rem !important; gap: .2rem !important; color: var(--dh-ink, #111) !important;
+  display: flex !important; flex-direction: column !important; align-items: flex-start !important;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.03), 0 6px 16px -12px rgba(17,17,17,.3) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice b{ font-size: 13px !important; font-weight: 800 !important; color: var(--dh-accent-warm, #C2410C) !important; letter-spacing: .01em; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice .n{ font-size: 15px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice *{ color: var(--dh-ink, #111) !important; font-size: 14.5px !important; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice strong{ font-weight: 800 !important; color: var(--dh-accent-warm, #C2410C) !important; }
+/* 함께 구매하면 좋은 상품 — 썸네일이 상자를 꽉 채운다 (테마가 6px 안쪽 여백을 준다) */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb{ padding: 0 !important; background: var(--dh-surface-2, #EDF0F2) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; padding: 0 !important; margin: 0 !important; border-radius: 0 !important; }
+/* 비어 있는 위시리스트가 233px 를 먹는다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist.is-empty{ display: none !important; }
+/* 옵션 줄의 필수 · 선택 배지 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ background: var(--dh-ink, #111) !important; color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option:has(.wd-cpg-option__badge) .wd-cpg-option__badge{ letter-spacing: -.01em; }
+/* 바로구매 · 옵션 변경 — 회색 위 회색이던 것을 또렷하게 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-edit{
+  min-height: 40px !important; padding: 0 .9rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 700 !important;
+  background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct:hover, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-edit:hover{ border-color: var(--dh-ink, #111) !important; }

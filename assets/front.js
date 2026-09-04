@@ -480,3 +480,33 @@
     })();
   }, true);
 })();
+
+/* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
+   1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
+      주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
+      **감싸는 상자는 form 안에 만든다** — 주문 버튼이 submit 이라 폼 밖으로 나가면 안 된다.
+   2) 비어 있는 위시리스트가 233px 를 먹는다. 비었으면 접는다.
+   3) 금액대별 자동 할인 안내를 지금 규칙으로 고쳐 쓴다 (window.DHR.discount). */
+(function(){
+  var cpg = document.querySelector('.wd-cpg'); if(!cpg) return;
+  var form = cpg.querySelector('form.wd-cpg-form');
+  var sum = cpg.querySelector('.wd-cpg-summary'), order = cpg.querySelector('.wd-cpg-order');
+  if(form && sum && order && sum.parentElement === order.parentElement && !document.querySelector('.dhr-cartside')){
+    var side = document.createElement('div'); side.className = 'dhr-cartside';
+    sum.parentNode.insertBefore(side, sum);
+    side.appendChild(sum); side.appendChild(order);
+  }
+  var wl = cpg.querySelector('.wd-cpg-wishlist');
+  if(wl && !wl.querySelector('a[href*="/product/"], .wd-cpg-recom__item, li')) wl.classList.add('is-empty');
+
+  var tiers = (window.DHR && window.DHR.discount) || [];
+  var note = document.querySelector('#coupon-auto-notice');
+  if(note && tiers.length){
+    var won = function(v){ return Number(v).toLocaleString('ko-KR'); };
+    var lines = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ');
+    note.textContent = '';
+    var b = document.createElement('b'); b.textContent = '금액대별 자동 할인';
+    var d = document.createElement('span'); d.className = 'n'; d.textContent = lines + ' 자동 할인';
+    note.appendChild(b); note.appendChild(d);
+  }
+})();

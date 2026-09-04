@@ -186,8 +186,8 @@ $month = (int) wp_date( 'n' );
 
 	<?php if ( $newest ) : ?>
 	<section class="sec">
-		<?php section_head( '새로 들어온', '이번 주 신상', '방금 들어온 맛부터 먼저', add_query_arg( 'orderby', 'date', $shop_url ) ); ?>
-		<?php carousel( $newest, '이번 주 신상' ); ?></section>
+		<?php section_head( '새로 들어온', '신제품', '방금 들어온 맛부터 먼저', add_query_arg( 'orderby', 'date', $shop_url ) ); ?>
+		<?php carousel( $newest, '신제품' ); ?></section>
 	<?php endif; ?>
 
 	<?php if ( $picks ) : ?>

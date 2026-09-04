@@ -723,6 +723,10 @@ function libs(): void {
  */
 function js_config( array $extra = array() ): string {
 	$cfg = array(
+		// 금액대별 자동 할인 — 장바구니 안내 문구가 이 값을 읽는다. 실제 할인은 쿠폰
+		// 플러그인이 서버에서 적용한다. 규칙이 바뀌면 이 필터 한 줄이면 된다:
+		// add_filter( 'duckhoo_auto_discount', fn() => array( array( 'min' => 100000, 'amount' => 10000 ) ) );
+		'discount' => array_values( (array) apply_filters( 'duckhoo_auto_discount', array( array( 'min' => 100000, 'amount' => 10000 ) ) ) ),
 		'loggedIn' => is_user_logged_in(),
 		'nonce'    => wp_create_nonce( 'wc_store_api' ),
 		'freeShip' => (int) apply_filters( 'duckhoo_free_shipping_min', 30000 ),

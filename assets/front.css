@@ -422,3 +422,27 @@ body.dhc-open{overflow:hidden}
 .dhr .scb,.dhr .dhs-nav{box-shadow:var(--lift-0)}
 .dhr .scb:hover,.dhr .dhs-nav:hover{box-shadow:var(--lift-1)}
 @media(prefers-reduced-motion:reduce){.dhr .card,.dhr .bcard,.dhr .qcats a,.dhr .hcard-b{transform:none!important}}
+
+/* ══ 사장님 팝업(#pop6) — 테마에 맞춘다 ═══════════════════════════════════════
+   스니펫이 인라인 <style> 로 형광 분홍(#FF0066)과 blur 를 쓴다. 우리 규칙은
+   `body.dhr #pop6 …` (1,1,2) 라 스니펫의 `#pop6 …` (1,0,1) 보다 앞선다.
+   팝업을 끄는 것은 스니펫 쪽 일이다 — 여기서는 모양만 맞춘다. */
+body.dhr #pop-dim{background:rgba(17,17,17,.62)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body.dhr #pop6 .panel{border-radius:22px!important;overflow:hidden!important;background:#fff!important;
+  box-shadow:0 0 0 1px rgba(17,17,17,.06),0 4px 10px rgba(17,17,17,.09),0 44px 80px -30px rgba(17,17,17,.5)!important}
+body.dhr #pop6 .hero-media img{display:block!important;width:100%!important;height:auto!important}
+body.dhr #pop6 .x{width:44px!important;height:44px!important;border-radius:999px!important;background:#fff!important;
+  border:1px solid #E2E4E8!important;box-shadow:0 2px 8px rgba(17,17,17,.14)!important;display:flex!important;align-items:center;justify-content:center}
+body.dhr #pop6 .buttons{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.4rem!important;padding:.9rem!important;background:#fff!important;border:0!important}
+@media(min-width:520px){body.dhr #pop6 .buttons{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+body.dhr #pop6 .bbtn{min-height:44px!important;padding:0 .7rem!important;border-radius:999px!important;
+  background:#fff!important;color:#4E565F!important;border:1.5px solid #E2E4E8!important;
+  font-family:inherit!important;font-size:13.5px!important;font-weight:700!important;letter-spacing:-.01em!important;
+  box-shadow:none!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .2s,color .2s}
+body.dhr #pop6 .bbtn:hover{border-color:#111!important;color:#111!important}
+body.dhr #pop6 .bbtn.active{background:#111!important;border-color:#111!important;color:#fff!important}
+body.dhr #pop6 .bar{display:grid!important;grid-template-columns:1fr 1fr!important;gap:.5rem!important;padding:0 .9rem .9rem!important;background:#fff!important;border:0!important}
+body.dhr #pop6 .bar button{min-height:50px!important;border-radius:999px!important;font-family:inherit!important;font-size:15px!important;font-weight:800!important;letter-spacing:-.01em!important;box-shadow:none!important}
+body.dhr #pop6 .btn-today{background:#fff!important;color:#4E565F!important;border:1.5px solid #C9CFD4!important}
+body.dhr #pop6 .btn-today:hover{border-color:#111!important;color:#111!important}
+body.dhr #pop6 .btn-close{background:#111!important;color:#fff!important;border:0!important}
