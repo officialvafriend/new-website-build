@@ -1,0 +1,282 @@
+<title>액상덕후 소프트 카루셀</title>
+<!--
+  액상덕후 — 라운디드 카드 카루셀 + 스크롤 등장 + 하단 플로팅 구매 바
+  · Swiper 11 (카루셀) · GSAP 3 + ScrollTrigger (등장) — 둘 다 cdnjs
+  · 워드프레스에 넣을 때: 이 파일의 <style> · 마크업 · <script> 를 그대로 옮기고,
+    카드의 그림 자리(.sc-fig)에 실제 썸네일 <img> 를, '+' 버튼의 data-add 에
+    상품 주소를 넣으면 된다. 테마가 Pretendard 를 이미 싣고 있어 폰트 링크는 필요 없다.
+  · 모든 규칙은 .dh-sc 안에서만 산다 — 테마 스타일과 섞이지 않는다.
+-->
+<style>
+/* ── 토큰 ─────────────────────────────────────────────────────────────── */
+:root{
+  --sc-ground:#F5F5F7;   /* 섹션 바탕 — 아치형 라이트 그레이 */
+  --sc-card:#FFFFFF;     /* 카드 */
+  --sc-ink:#111111;
+  --sc-ink-2:#6E6E73;    /* 브랜드명 · 캡션 — 흰 카드 위 4.9:1 */
+  --sc-ink-3:#8A8A8F;    /* 정가 취소선 */
+  --sc-line:rgba(0,0,0,.06);
+  --sc-accent:#C2410C;   /* 할인율 · 특가 — 번트 오렌지 */
+  --sc-shadow:0 12px 32px rgba(0,0,0,.04);
+  --sc-shadow-up:0 24px 48px rgba(0,0,0,.08);
+  --sc-glass:rgba(255,255,255,.74);
+  --sc-glass-line:rgba(255,255,255,.7);
+  --sc-ease:cubic-bezier(.16,1,.3,1);
+  --sc-ease-2:cubic-bezier(.25,1,.5,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sc-ground:#0F1012; --sc-card:#1A1B1E; --sc-ink:#F5F5F7; --sc-ink-2:#A1A1A6; --sc-ink-3:#6E6E73;
+    --sc-line:rgba(255,255,255,.08); --sc-accent:#F0764A; --sc-shadow:0 12px 32px rgba(0,0,0,.35); --sc-shadow-up:0 24px 48px rgba(0,0,0,.5);
+    --sc-glass:rgba(26,27,30,.74); --sc-glass-line:rgba(255,255,255,.12);
+  }
+}
+:root[data-theme="dark"]{
+  --sc-ground:#0F1012; --sc-card:#1A1B1E; --sc-ink:#F5F5F7; --sc-ink-2:#A1A1A6; --sc-ink-3:#6E6E73;
+  --sc-line:rgba(255,255,255,.08); --sc-accent:#F0764A; --sc-shadow:0 12px 32px rgba(0,0,0,.35); --sc-shadow-up:0 24px 48px rgba(0,0,0,.5);
+  --sc-glass:rgba(26,27,30,.74); --sc-glass-line:rgba(255,255,255,.12);
+}
+
+/* ── 데모 껍데기 (워드프레스에서는 필요 없다) ───────────────────────────── */
+body{background:var(--sc-ground);color:var(--sc-ink);font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+.demo-intro{max-width:1200px;margin:0 auto;padding:clamp(2.4rem,4vw,4.5rem) clamp(1.1rem,4vw,2.5rem) 0}
+.demo-intro p{font-size:14px;font-weight:700;color:var(--sc-accent);letter-spacing:.02em;margin:0 0 .6rem}
+.demo-intro h1{font-size:clamp(2rem,1.3rem + 3.2vw,3.6rem);font-weight:800;letter-spacing:-.045em;line-height:1.08;margin:0;text-wrap:balance;max-width:16ch}
+.demo-intro .lead{font-size:clamp(15px,1rem + .2vw,17px);font-weight:500;color:var(--sc-ink-2);line-height:1.6;margin:1rem 0 0;max-width:34rem;letter-spacing:0}
+.demo-foot{max-width:1200px;margin:0 auto;padding:1rem clamp(1.1rem,4vw,2.5rem) 9rem;font-size:13px;color:var(--sc-ink-3);text-align:center}
+
+/* ── 섹션 ─────────────────────────────────────────────────────────────── */
+.dh-sc{position:relative;padding:clamp(2.4rem,4vw,4rem) 0;overflow:hidden;font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;color:var(--sc-ink)}
+.dh-sc *,.dh-sc *::before,.dh-sc *::after{box-sizing:border-box}
+.dh-sc .sc-wrap{max-width:1200px;margin:0 auto;padding:0 clamp(1.1rem,4vw,2.5rem)}
+.dh-sc .sc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:clamp(1.2rem,2vw,1.8rem)}
+.dh-sc .sc-eyebrow{display:inline-flex;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:var(--sc-accent);letter-spacing:.02em;margin:0 0 .5rem}
+.dh-sc .sc-eyebrow i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.dh-sc h2{font-size:clamp(1.5rem,1.1rem + 1.6vw,2.2rem);font-weight:800;letter-spacing:-.04em;line-height:1.15;margin:0;text-wrap:balance}
+.dh-sc .sc-sub{font-size:15px;font-weight:500;color:var(--sc-ink-2);margin:.55rem 0 0;line-height:1.5}
+.dh-sc .sc-nav{display:none;gap:.5rem;flex:0 0 auto}
+@media (min-width:880px){.dh-sc .sc-nav{display:flex}}
+.dh-sc .sc-nav button{width:48px;height:48px;border-radius:50%;border:0;background:var(--sc-card);color:var(--sc-ink);box-shadow:var(--sc-shadow);cursor:pointer;display:grid;place-items:center;padding:0;transition:transform .5s var(--sc-ease),box-shadow .5s var(--sc-ease),opacity .3s}
+.dh-sc .sc-nav button:hover{transform:translateY(-3px);box-shadow:var(--sc-shadow-up)}
+.dh-sc .sc-nav button:active{transform:scale(.94)}
+.dh-sc .sc-nav button.swiper-button-disabled{opacity:.35;cursor:default;transform:none;box-shadow:var(--sc-shadow)}
+.dh-sc .sc-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Swiper 핵심 규칙 — swiper-bundle.css 없이 이만큼이면 돈다 */
+.dh-sc .swiper{position:relative;overflow:visible;list-style:none;padding:.6rem 0 1.4rem;margin:0;z-index:1}
+.dh-sc .swiper-wrapper{position:relative;display:flex;width:100%;height:100%;box-sizing:content-box;transition-property:transform;transition-timing-function:var(--sc-ease-2)}
+.dh-sc .swiper-slide{flex-shrink:0;position:relative;width:min(72vw,286px);height:auto}
+@media (min-width:640px){.dh-sc .swiper-slide{width:286px}}
+.dh-sc .swiper.swiper-grab{cursor:grab}
+.dh-sc .swiper-wrapper:active{cursor:grabbing}
+
+/* ── 카드 ─────────────────────────────────────────────────────────────── */
+.dh-sc .sc-card{position:relative;display:flex;flex-direction:column;height:100%;background:var(--sc-card);border-radius:24px;padding:.6rem .6rem 1.1rem;box-shadow:var(--sc-shadow);transition:transform .5s var(--sc-ease),box-shadow .5s var(--sc-ease);will-change:transform}
+@media (hover:hover){.dh-sc .sc-card:hover{transform:translateY(-8px);box-shadow:var(--sc-shadow-up)}}
+.dh-sc .sc-fig{position:relative;display:block;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:var(--sc-ground);isolation:isolate}
+.dh-sc .sc-fig img,.dh-sc .sc-fig svg{width:100%;height:100%;display:block;object-fit:cover;transition:transform .8s var(--sc-ease)}
+@media (hover:hover){.dh-sc .sc-card:hover .sc-fig img,.dh-sc .sc-card:hover .sc-fig svg{transform:scale(1.05)}}
+.dh-sc .sc-badge{position:absolute;top:.75rem;left:.75rem;z-index:2;font-size:13px;font-weight:800;letter-spacing:-.01em;color:#fff;background:var(--sc-ink);padding:.3rem .6rem;border-radius:999px}
+.dh-sc .sc-badge.is-hot{background:var(--sc-accent)}
+.dh-sc .sc-body{padding:.95rem .5rem 0;display:flex;flex-direction:column;gap:.2rem;flex:1 1 auto}
+.dh-sc .sc-brand{font-size:13px;font-weight:600;color:var(--sc-ink-2);letter-spacing:.01em}
+.dh-sc .sc-name{font-size:16px;font-weight:700;line-height:1.35;letter-spacing:-.02em;color:var(--sc-ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
+.dh-sc .sc-name::after{content:"";position:absolute;inset:0;border-radius:24px}  /* 카드 전체가 링크 */
+.dh-sc .sc-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:.35rem .45rem;margin-top:.5rem;font-variant-numeric:tabular-nums;padding-right:56px}
+.dh-sc .sc-off{font-size:17px;font-weight:800;color:var(--sc-accent);letter-spacing:-.02em}
+.dh-sc .sc-now{font-size:19px;font-weight:800;letter-spacing:-.03em}
+.dh-sc .sc-now small{font-size:14px;font-weight:700;margin-left:1px}
+.dh-sc .sc-was{font-size:13.5px;font-weight:500;color:var(--sc-ink-3);text-decoration:line-through}
+.dh-sc .sc-per{font-size:13px;font-weight:500;color:var(--sc-ink-2);flex-basis:100%}
+/* '+' 빠른 담기 — 카드 우측 하단에 떠 있다. 링크 덮개(.sc-name::after)보다 위. */
+.dh-sc .sc-add{position:absolute;right:.9rem;bottom:.9rem;z-index:3;width:44px;height:44px;border-radius:50%;border:0;background:var(--sc-card);color:var(--sc-ink);box-shadow:0 8px 20px rgba(0,0,0,.10),0 0 0 1px var(--sc-line);cursor:pointer;display:grid;place-items:center;padding:0;transition:transform .5s var(--sc-ease),background .35s var(--sc-ease-2),color .35s,box-shadow .5s var(--sc-ease)}
+.dh-sc .sc-add svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s var(--sc-ease)}
+.dh-sc .sc-add:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 14px 28px rgba(0,0,0,.14),0 0 0 1px var(--sc-line)}
+.dh-sc .sc-add:active{transform:scale(.92)}
+.dh-sc .sc-add.is-on{background:var(--sc-ink);color:var(--sc-card)}
+.dh-sc .sc-add.is-on .sc-plus{display:none}
+.dh-sc .sc-add .sc-check{display:none}
+.dh-sc .sc-add.is-on .sc-check{display:block;animation:sc-pop .6s var(--sc-ease)}
+@keyframes sc-pop{0%{transform:scale(.4) rotate(-30deg)}100%{transform:none}}
+.dh-sc :focus-visible{outline:2px solid var(--sc-ink);outline-offset:3px;border-radius:999px}
+
+/* 모바일: 마지막 카드가 오른쪽에서 살짝 보이게 (오른쪽 여백을 두지 않는다) */
+@media (max-width:879px){.dh-sc .sc-wrap.sc-track{padding-right:0}}
+
+/* ── 하단 플로팅 구매 바 (글래스) ──────────────────────────────────────── */
+.sc-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));z-index:80;width:min(calc(100% - 24px),560px);transform:translate(-50%,calc(100% + 40px));opacity:0;display:flex;align-items:center;gap:.75rem;padding:.55rem .55rem .55rem .7rem;border-radius:50px;background:var(--sc-glass);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:0 20px 50px rgba(0,0,0,.14),inset 0 0 0 1px var(--sc-glass-line);color:var(--sc-ink);font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;transition:transform .7s var(--sc-ease),opacity .5s var(--sc-ease-2);pointer-events:none}
+.sc-bar.is-in{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+@supports not (backdrop-filter:blur(1px)){.sc-bar{background:var(--sc-card)}}
+.sc-bar__img{flex:0 0 46px;width:46px;height:46px;border-radius:50%;overflow:hidden;background:var(--sc-ground);box-shadow:inset 0 0 0 1px var(--sc-line)}
+.sc-bar__img img,.sc-bar__img svg{width:100%;height:100%;display:block;object-fit:cover}
+.sc-bar__img.is-pop{animation:sc-bump .6s var(--sc-ease)}
+@keyframes sc-bump{30%{transform:scale(1.18)}100%{transform:none}}
+.sc-bar__tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.sc-bar__nm{font-size:14px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-bar__pr{display:flex;align-items:baseline;gap:.35rem;font-variant-numeric:tabular-nums}
+.sc-bar__pr b{font-size:16px;font-weight:800;letter-spacing:-.03em}
+.sc-bar__pr em{font-style:normal;font-size:13px;font-weight:800;color:var(--sc-accent)}
+.sc-bar__pr s{font-size:12.5px;color:var(--sc-ink-3);font-weight:500}
+.sc-bar__btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:.35rem;min-height:46px;padding:0 1.15rem;border-radius:999px;border:0;background:var(--sc-ink);color:var(--sc-card);font:inherit;font-size:15px;font-weight:800;letter-spacing:-.01em;text-decoration:none;cursor:pointer;white-space:nowrap;transition:transform .5s var(--sc-ease),filter .3s}
+.sc-bar__btn:hover{transform:translateY(-2px);filter:brightness(1.15)}
+.sc-bar__btn:active{transform:scale(.96)}
+.sc-bar__btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sc-bar__n{position:absolute;top:-4px;left:34px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--sc-accent);color:#fff;font-size:12px;font-weight:800;display:none;place-items:center;font-variant-numeric:tabular-nums}
+.sc-bar__n.is-on{display:grid;animation:sc-pop .5s var(--sc-ease)}
+@media (max-width:479px){.sc-bar__pr s{display:none}.sc-bar__btn{padding:0 .95rem;font-size:14px}}
+
+/* 토스트 */
+.sc-toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:81;transform:translate(-50%,12px);opacity:0;background:var(--sc-ink);color:var(--sc-card);font-size:14px;font-weight:700;padding:.6rem 1rem;border-radius:999px;pointer-events:none;transition:transform .5s var(--sc-ease),opacity .3s}
+.sc-toast.is-in{transform:translate(-50%,0);opacity:1}
+
+@media (prefers-reduced-motion:reduce){
+  .dh-sc *,.sc-bar,.sc-toast{transition-duration:.01ms!important;animation:none!important}
+}
+</style>
+
+<!-- 데모 도입부 — 섹션이 스크롤 뒤에 오게 하려고 둔 것. 워드프레스에서는 뺀다. -->
+<section class="demo-intro">
+  <p>9월 특가</p>
+  <h1>묶음으로 담을수록 병당 가격이 내려갑니다</h1>
+  <p class="lead">5병 · 10병 단위로 고르면 정가의 절반 아래로. 평일 오후 4시 전에 입금이 확인되면 그날 우체국택배로 나갑니다.</p>
+</section>
+
+<!-- ══ 카루셀 섹션 ═══════════════════════════════════════════════════════ -->
+<section class="dh-sc" id="dh-sc" aria-labelledby="dh-sc-title">
+  <div class="sc-wrap sc-head">
+    <div>
+      <p class="sc-eyebrow"><i></i>이번 주 가장 많이 담긴 묶음</p>
+      <h2 id="dh-sc-title">지금 고르면 병당 가격이 가장 낮습니다</h2>
+      <p class="sc-sub">30,000원 이상 무료배송 · 오른쪽으로 넘겨 보세요</p>
+    </div>
+    <div class="sc-nav">
+      <button type="button" class="sc-prev" aria-label="이전"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+      <button type="button" class="sc-next" aria-label="다음"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <div class="sc-wrap sc-track">
+    <div class="swiper" id="dh-sc-swiper">
+      <div class="swiper-wrapper" id="dh-sc-list"><!-- 카드는 아래 스크립트가 데이터로 찍는다 (워드프레스에서는 PHP 루프로) --></div>
+    </div>
+  </div>
+</section>
+
+<!-- 데모: 섹션 아래 내용 (바가 뜨는 걸 보려면 스크롤할 거리가 있어야 한다) -->
+<section class="demo-intro" style="padding-top:2rem">
+  <p>사는 방법</p>
+  <h1 style="font-size:clamp(1.4rem,1rem + 1.4vw,2rem)">무통장입금 하나로 끝. 입금자명만 주문자명과 같게.</h1>
+  <p class="lead">입금자명이 주문자명과 같으면 입금이 자동으로 확인됩니다. 다르면 사람이 확인하느라 하루쯤 늦어질 수 있어요.</p>
+</section>
+<p class="demo-foot">19세 미만 청소년에게 판매하지 않습니다 · 구매 시 휴대폰 본인확인이 필요합니다</p>
+
+<!-- 하단 플로팅 구매 바 — 스크롤이 섹션에 닿으면 올라온다 -->
+<div class="sc-bar" id="sc-bar" role="region" aria-label="바로 구매">
+  <span class="sc-bar__img" id="sc-bar-img"></span><span class="sc-bar__n" id="sc-bar-n">0</span>
+  <div class="sc-bar__tx">
+    <span class="sc-bar__nm" id="sc-bar-nm"></span>
+    <span class="sc-bar__pr"><em id="sc-bar-off"></em><b id="sc-bar-now"></b><s id="sc-bar-was"></s></span>
+  </div>
+  <a class="sc-bar__btn" id="sc-bar-btn" href="#">지금 구매하기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div>
+<div class="sc-toast" id="sc-toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.2.10/swiper-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  /* ── 데이터 — 스테이징의 실제 특가 상품 8종 (2026-09-04). 워드프레스에서는 PHP 가 같은 모양으로 찍는다.
+     img 가 비어 있으면 브랜드 색으로 병 실루엣을 그린다. 실제로는 상품 썸네일 URL. */
+  var ITEMS = [
+    {id:3560, brand:'펠릭스',      name:'더블 라임+라임 알로에 5병 묶음 이벤트', was:100000, now:89000,  n:5,  hue:152, badge:'재구매 1위', hot:true},
+    {id:3537, brand:'디오리퀴드',  name:'5+5 묶음 이벤트',                      was:149000, now:75000,  n:10, hue:214, badge:'10병'},
+    {id:384,  brand:'빌런',        name:'맛돌이 액상 빌런 5병 EVENT',           was:74500,  now:27000,  n:5,  hue:12,  badge:'64% 할인', hot:true},
+    {id:390,  brand:'제로닉 무무', name:'무니코틴 제로닉 무무 5병 EVENT',       was:44000,  now:39000,  n:5,  hue:268, badge:'무니코틴'},
+    {id:139,  brand:'화이트아웃',  name:'화이트아웃 액상 10병 묶음 할인',        was:149000, now:79000,  n:10, hue:196},
+    {id:123,  brand:'액상덕후',    name:'덕후 액상 10병 묶음 할인',             was:88000,  now:50000,  n:10, hue:38},
+    {id:2913, brand:'디오리퀴드',  name:'3+1 묶음 이벤트',                      was:59600,  now:32000,  n:4,  hue:330},
+    {id:3048, brand:'액상덕후',    name:'포도 덕후 PICK! 5병 세트',             was:60500,  now:35000,  n:5,  hue:285, badge:'신상'}
+  ];
+  var won = function(v){ return v.toLocaleString('ko-KR'); };
+  var off = function(it){ return Math.round((1 - it.now / it.was) * 100); };
+  var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  /* 병 실루엣 — 실제 사이트에서는 <img> 로 바뀐다 */
+  var bottle = function(it, big){
+    var h = it.hue, s = big ? 1 : .9;
+    return '<svg viewBox="0 0 200 200" role="img" aria-label="' + esc(it.brand) + '">'
+      + '<defs><linearGradient id="g' + it.id + (big?'b':'') + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(' + h + ' 70% 92%)"/><stop offset="1" stop-color="hsl(' + h + ' 55% 78%)"/></linearGradient></defs>'
+      + '<rect width="200" height="200" fill="url(#g' + it.id + (big?'b':'') + ')"/>'
+      + '<g transform="translate(100 108) scale(' + s + ') translate(-100 -108)">'
+      + '<rect x="84" y="28" width="32" height="18" rx="4" fill="hsl(' + h + ' 30% 22%)"/>'
+      + '<path d="M78 48h44l6 18v92a12 12 0 0 1-12 12H84a12 12 0 0 1-12-12V66z" fill="#fff" opacity=".92"/>'
+      + '<rect x="78" y="88" width="44" height="56" rx="6" fill="hsl(' + h + ' 60% 46%)"/>'
+      + '<text x="100" y="124" text-anchor="middle" font-family="Pretendard,system-ui,sans-serif" font-weight="800" font-size="22" fill="#fff">' + esc(it.brand.slice(0,1)) + '</text>'
+      + '</g></svg>';
+  };
+  var card = function(it){
+    var per = Math.round(it.now / it.n);
+    return '<div class="swiper-slide"><article class="sc-card" data-id="' + it.id + '">'
+      + '<figure class="sc-fig" style="margin:0">' + bottle(it) + (it.badge ? '<span class="sc-badge' + (it.hot ? ' is-hot' : '') + '">' + esc(it.badge) + '</span>' : '') + '</figure>'
+      + '<div class="sc-body"><span class="sc-brand">' + esc(it.brand) + '</span>'
+      + '<a class="sc-name" href="/?p=' + it.id + '">' + esc(it.name) + '</a>'
+      + '<div class="sc-price"><span class="sc-off">' + off(it) + '%</span><span class="sc-now">' + won(it.now) + '<small>원</small></span><s class="sc-was">' + won(it.was) + '원</s>'
+      + '<span class="sc-per">병당 ' + won(per) + '원 · ' + it.n + '병</span></div></div>'
+      + '<button type="button" class="sc-add" data-add="' + it.id + '" aria-label="' + esc(it.name) + ' 담기">'
+      + '<svg class="sc-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><svg class="sc-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>'
+      + '</article></div>';
+  };
+  document.getElementById('dh-sc-list').innerHTML = ITEMS.map(card).join('');
+
+  /* ── Swiper ── 카드 폭은 CSS 가 정한다(slidesPerView:'auto'). 넘김은 길고 부드럽게. */
+  var sw = new Swiper('#dh-sc-swiper', {
+    slidesPerView: 'auto', spaceBetween: 16, speed: 750, grabCursor: true,
+    keyboard: { enabled: true, onlyInViewport: true },
+    navigation: { nextEl: '.dh-sc .sc-next', prevEl: '.dh-sc .sc-prev' },
+    breakpoints: { 880: { spaceBetween: 20 } }
+  });
+
+  /* ── 등장 — 아래에서 위로, 쫀득한 expo.out (≈ cubic-bezier(.16,1,.3,1)). 동작 줄이기면 그대로 보인다. */
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', function(){
+      gsap.from('.dh-sc .sc-head > *', { y: 28, opacity: 0, duration: 1, ease: 'expo.out', stagger: .1,
+        scrollTrigger: { trigger: '.dh-sc', start: 'top 85%', once: true } });
+      gsap.from('.dh-sc .sc-card', { y: 56, opacity: 0, duration: 1.2, ease: 'expo.out', stagger: .08,
+        scrollTrigger: { trigger: '.dh-sc .sc-track', start: 'top 88%', once: true },
+        onComplete: function(){ gsap.set('.dh-sc .sc-card', { clearProps: 'transform,opacity' }); } });
+    });
+  }
+
+  /* ── 하단 구매 바 — 대표 상품(첫 카드)을 비춘다. 카루셀이 화면에 들어오면 올라오고, 맨 위로 돌아가면 내려간다. */
+  var bar = document.getElementById('sc-bar'), sec = document.getElementById('dh-sc'), lead = ITEMS[0];
+  document.getElementById('sc-bar-img').innerHTML = bottle(lead, true);
+  document.getElementById('sc-bar-nm').textContent = '[' + lead.brand + '] ' + lead.name;
+  document.getElementById('sc-bar-off').textContent = off(lead) + '%';
+  document.getElementById('sc-bar-now').textContent = won(lead.now) + '원';
+  document.getElementById('sc-bar-was').textContent = won(lead.was) + '원';
+  document.getElementById('sc-bar-btn').href = '/?p=' + lead.id;
+  var ticking = false;
+  function paint(){
+    ticking = false;
+    var top = sec.getBoundingClientRect().top + window.scrollY;
+    bar.classList.toggle('is-in', window.scrollY > top - window.innerHeight * .45);
+  }
+  window.addEventListener('scroll', function(){ if(!ticking){ ticking = true; requestAnimationFrame(paint); } }, { passive: true });
+  window.addEventListener('resize', paint); paint();
+
+  /* ── 빠른 담기 — 데모에서는 개수만 센다. 워드프레스에서는 data-add 의 상품을
+     `?add-to-cart=ID` (단품) 로 넣거나, 옵션이 있는 묶음은 상품 페이지로 보낸다. */
+  var count = 0, toast = document.getElementById('sc-toast'), tt;
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.sc-add'); if(!b) return;
+    e.preventDefault();
+    var on = b.classList.toggle('is-on'); count += on ? 1 : -1;
+    var n = document.getElementById('sc-bar-n'); n.textContent = count; n.classList.toggle('is-on', count > 0);
+    var im = document.getElementById('sc-bar-img'); im.classList.remove('is-pop'); void im.offsetWidth; im.classList.add('is-pop');
+    bar.classList.add('is-in');
+    toast.textContent = on ? '장바구니에 담았습니다 · ' + count + '개' : '장바구니에서 뺐습니다';
+    toast.classList.add('is-in'); clearTimeout(tt); tt = setTimeout(function(){ toast.classList.remove('is-in'); }, 1800);
+  });
+})();
+</script>
