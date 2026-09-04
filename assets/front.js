@@ -371,8 +371,13 @@
        · 고른 값은 텍스트 노드가 아니라 data-l + CSS content 로 그린다
        · 목록은 열 때만 만들어 document.body 로 띄우고 닫으면 지운다
      읽어 주는 것은 aria-label 이 맡는다. */
+  /* 옛 옵션 UI(.dhx)가 있는 화면 — 묶음 · 이벤트 상품 — 에서는 아예 만들지 않는다.
+     거기서는 .dhx 가 눈에 보이는 UI 를 그리고 우리 선택창은 34px 로 찌그러져 보이지도
+     않았다. 보이지도 않으면서 칸 이름 판정만 어긋나게 했다. */
+  var legacy = !!document.querySelector('.dhx');
+
   function build(sel){
-    if(sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
+    if(legacy || sel.closest('.dhx-src') || sel.closest('.dhx') || sel.dataset.dhsOn) return;
     if(sel.multiple || sel.options.length < 2) return;
     sel.dataset.dhsOn = '1';
     var id = 'dhs-' + (++seq);
