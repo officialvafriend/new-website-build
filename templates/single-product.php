@@ -103,12 +103,28 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 					}
 					?>
 				</section>
-				<section class="dhp-card dhp-card--form" id="dhp-buy">
-					<?php
-					// 구매 폼 — 워드커머스 · PPOM · 키플 옵션 UI 가 그린다. 손대지 않는다.
-					woocommerce_template_single_add_to_cart();
-					?>
-				</section>
+				<?php
+				// 데스크톱에서 상세를 내려 읽는 동안에도 주문할 수 있게, 구매 카드가 화면
+				// 밖으로 나가면 오른쪽 서랍으로 따라붙는다. 폼을 복제하지 않고 **그 카드 자체**를
+				// 고정으로 바꾼다 — PPOM · 키플 옵션이 붙어 있는 진짜 폼이라 복제하면 값이 갈린다.
+				// 자리 무너짐을 막으려고 바깥 wrap 이 그 높이를 기억한다.
+				?>
+				<div class="dhp-dockwrap" data-dockwrap>
+					<section class="dhp-card dhp-card--form" id="dhp-buy" data-dock>
+						<header class="dhp-dock__head">
+							<div class="dhp-dock__tx">
+								<b><?php echo esc_html( $dhp_name['title'] ); ?></b>
+								<span class="n"><?php echo wp_kses_post( $product->get_price_html() ); ?></span>
+							</div>
+							<button type="button" class="dhp-dock__x" data-dock-close aria-label="구매 서랍 닫기">×</button>
+						</header>
+						<?php
+						// 구매 폼 — 워드커머스 · PPOM · 키플 옵션 UI 가 그린다. 손대지 않는다.
+						woocommerce_template_single_add_to_cart();
+						?>
+					</section>
+				</div>
+				<button type="button" class="dhp-dock__open" data-dock-open hidden>구매하기 <?php echo icon( 'chev' ); // phpcs:ignore ?></button>
 				<section class="dhp-card dhp-card--trust"><?php trust(); ?></section>
 			</div>
 		</div>

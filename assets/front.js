@@ -274,3 +274,60 @@
     ScrollTrigger.refresh();
   });
 })();
+
+/* 구매 서랍 (데스크톱) — 상세가 길어서 주문하려면 맨 위로 돌아가야 했다.
+   구매 카드가 화면 밖으로 나가면 그 카드 자체를 오른쪽 고정 서랍으로 바꾼다.
+   폼을 복제하지 않는다 — PPOM · 키플 옵션이 붙은 진짜 폼이라 복제하면 값이 갈린다.
+   자리는 바깥 wrap 이 그 높이를 기억해 메운다. 닫으면 작은 '구매하기' 알약만 남는다. */
+(function(){
+  var card = document.querySelector('[data-dock]'), wrap = document.querySelector('[data-dockwrap]');
+  var open = document.querySelector('[data-dock-open]');
+  if(!card || !wrap || !open) return;
+  var wide = window.matchMedia('(min-width: 900px)'), shut = false, docked = false;
+
+  function undock(){
+    if(!docked) return; docked = false;
+    card.classList.remove('is-docked'); wrap.style.minHeight = ''; open.hidden = true;
+  }
+  function dock(){
+    if(docked || shut || !wide.matches) return;
+    wrap.style.minHeight = wrap.getBoundingClientRect().height + 'px';
+    docked = true; card.classList.add('is-docked');
+  }
+  function paint(){
+    if(!wide.matches){ undock(); return; }
+    /* 카드가 놓인 자리(wrap)가 화면 위로 지나갔으면 서랍으로 */
+    var r = wrap.getBoundingClientRect();
+    var gone = r.bottom < 140;
+    if(gone && !shut) dock();
+    else if(!gone){ undock(); shut = false; }
+    else if(gone && shut){ open.hidden = false; }
+  }
+  var tick = false;
+  window.addEventListener('scroll', function(){ if(!tick){ tick = true; requestAnimationFrame(function(){ tick = false; paint(); }); } }, {passive:true});
+  window.addEventListener('resize', function(){ undock(); paint(); });
+  card.querySelector('[data-dock-close]').addEventListener('click', function(){ shut = true; undock(); open.hidden = false; });
+  open.addEventListener('click', function(){ shut = false; open.hidden = true; dock(); card.querySelector('select, button, input') && card.querySelector('select, button, input').focus(); });
+  paint();
+})();
+
+/* 입체감 — 카드가 마우스를 따라 아주 조금 기운다. 3.2도를 넘기지 않는다:
+   그 이상은 상품 사진이 찌그러져 보인다. transform 만 건드려 그리기 비용이 없고,
+   손가락 화면·동작 줄이기에서는 아예 걸지 않는다. */
+(function(){
+  if(!window.matchMedia) return;
+  if(!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var MAX = 3.2;
+  document.querySelectorAll('.dhr .card, .dhr .bcard, .dhr .qcats a, .dhr .hcard-b').forEach(function(el){
+    var raf = null, rx = 0, ry = 0;
+    el.addEventListener('pointermove', function(e){
+      var r = el.getBoundingClientRect();
+      ry = ((e.clientX - r.left) / r.width - .5) * MAX * 2;
+      rx = -((e.clientY - r.top) / r.height - .5) * MAX * 2;
+      if(raf) return;
+      raf = requestAnimationFrame(function(){ raf = null; el.style.setProperty('--rx', rx.toFixed(2) + 'deg'); el.style.setProperty('--ry', ry.toFixed(2) + 'deg'); });
+    });
+    el.addEventListener('pointerleave', function(){ el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
+  });
+})();

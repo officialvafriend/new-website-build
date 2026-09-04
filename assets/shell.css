@@ -1027,3 +1027,48 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--info ul.dhp-ben{ margin-bottom: 0 !im
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--info .dhp-short{ margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--dh-line, #E1E5E8); }
 /* 테마 템플릿 경로(우리 템플릿을 끈 경우)에도 같은 사고가 나지 않게 */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary{ height: auto !important; max-height: none !important; position: static !important; float: none !important; }
+
+/* ══ 구매 서랍 (데스크톱) ═══════════════════════════════════════════════════
+   상세가 길어 주문하려면 맨 위로 돌아가야 했다. 구매 카드가 화면 밖으로 나가면
+   그 카드 **자체**가 오른쪽 서랍이 된다 — 폼을 복제하지 않으므로 고른 옵션이 그대로다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__head{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{
+  position: fixed !important; right: 24px; left: auto; bottom: 24px; top: auto; z-index: 45;
+  width: min(400px, calc(100vw - 48px)); max-height: calc(100dvh - 120px); overflow-y: auto; overscroll-behavior: contain;
+  border-radius: 20px; padding-top: 0;
+  box-shadow: 0 0 0 1px rgba(17,17,17,.06), 0 4px 10px rgba(17,17,17,.09), 0 44px 80px -30px rgba(17,17,17,.5);
+  animation: dhp-dock-in .42s cubic-bezier(.16,1,.3,1);
+}
+@keyframes dhp-dock-in{ from{ transform: translate(20px, 14px); opacity: 0; } }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhp-dock__head{
+  display: flex; align-items: center; gap: .8rem; position: sticky; top: 0; z-index: 3;
+  margin: 0 -1.2rem .9rem; padding: .9rem 1.2rem; background: var(--dh-surface, #fff);
+  border-bottom: 1px solid var(--dh-line, #E1E5E8); border-radius: 20px 20px 0 0;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx{ min-width: 0; flex: 1 1 auto; display: grid; gap: .1rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx b{ font-size: 14px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n{ font-size: 15px; font-weight: 800; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n del{ font-size: 12.5px; font-weight: 500; color: var(--dh-ink-3, #616870); margin-right: .3rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n ins{ text-decoration: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__x{
+  flex: 0 0 40px; width: 40px; height: 40px; border-radius: 999px; border: 0; background: none; cursor: pointer;
+  font-size: 24px; line-height: 1; color: var(--dh-ink-2, #4E565F); display: flex; align-items: center; justify-content: center;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__x:hover{ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink, #111); }
+/* 닫으면 알약 하나만 남는다 — 다시 누르면 서랍이 돌아온다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__open{
+  position: fixed; right: 24px; bottom: 24px; z-index: 45; min-height: 52px; padding: 0 1.4rem; border: 0; border-radius: 999px;
+  background: var(--dh-primary, #111); color: #fff !important; font-size: 16px; font-weight: 800; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 10px 28px -10px rgba(17,17,17,.7);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__open[hidden]{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__open svg{ width: 18px; height: 18px; transform: rotate(-90deg); }
+@media (max-width: 899px){
+  html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{ position: static !important; width: auto; max-height: none; animation: none; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__open{ display: none !important; }
+}
+@media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{ animation: none; } }
+/* 상세 카드도 같은 두 겹 그림자로 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal{ box-shadow: 0 0 0 1px rgba(17,17,17,.045), 0 1px 2px rgba(17,17,17,.05), 0 10px 24px -14px rgba(17,17,17,.22); border-color: transparent; }
