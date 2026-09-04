@@ -495,6 +495,20 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
 검증: `scratchpad/live/sheet.mjs`(단품) · `sheet3.mjs`(묶음 — 2,600px 내려간 뒤 시트만으로
 10병을 채워 버튼이 열리는지).
 
+## 상품 추천 카드 (2026-09-04, 열 번째)
+
+상세 아래 `이런 상품은 어떠세요?` 는 Product Recommendations 플러그인이 `<ul class="products">`
+로 그리고, 그 안의 카드만 우리 `content-product.php` 다.
+
+- **카드 뒤에 회색 사각형이 하나 더 보였다.** 테마가 `li.product` 마다 각진 1px 테두리
+  (`#EBEBEB`)를 그리는데 안의 카드는 둥글어서 네 귀퉁이로 삐져나온 것이다.
+  `li` 는 자리만 잡게 두고 테두리 · 여백 · 배경 · `::before/::after` 를 모두 없앤다
+- **카드 크기가 제각각이었다.** 줄마다 높이가 따로 정해져서 이름이 긴 줄과 짧은 줄이
+  다르게 보였다 → `grid-auto-rows: 1fr`. 카드는 칸을 꽉 채우고(`height:100%`),
+  `구매하기` 는 `margin-top:auto` 로 언제나 맨 아래에 붙는다 (확인: 네 장 모두 401px,
+  버튼이 카드 바닥에서 14px)
+- 목록 · 홈 · 장바구니는 우리 격자라 `li.product` 자체가 없다 — 이 문제는 상세 추천에만 있었다
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·
