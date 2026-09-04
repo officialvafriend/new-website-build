@@ -86,18 +86,30 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 				<?php endif; ?>
 			</div>
 
-			<div class="summary entry-summary dhp-buy">
-				<?php
-				head();
-				price();
-				\Duckhoo\Redesign\Product\benefits();
-				if ( '' !== $dhp_short ) {
-					echo '<div class="dhp-short">' . wp_kses_post( wpautop( $dhp_short ) ) . '</div>';
-				}
-				// 구매 폼 — 워드커머스 · PPOM · 키플 옵션 UI 가 그린다. 손대지 않는다.
-				woocommerce_template_single_add_to_cart();
-				trust();
-				?>
+			<?php
+			// 구매 영역 — 카드 세 장(고른다 · 산다 · 사는 방법)으로 나눈다. 한 상자에 다 담으면
+			// 테마 스크립트가 `.summary` 에 인라인 height(사진 높이)를 박아 넣어 그보다 긴 내용이
+			// 상자 밖으로 흘러넘친다. 그래서 클래스 `summary`/`entry-summary` 를 쓰지 않는다 —
+			// 각 카드는 자기 내용만큼만 높이를 갖고, 무엇도 밖으로 새지 않는다.
+			?>
+			<div class="dhp-buy">
+				<section class="dhp-card dhp-card--info">
+					<?php
+					head();
+					price();
+					\Duckhoo\Redesign\Product\benefits();
+					if ( '' !== $dhp_short ) {
+						echo '<div class="dhp-short">' . wp_kses_post( wpautop( $dhp_short ) ) . '</div>';
+					}
+					?>
+				</section>
+				<section class="dhp-card dhp-card--form" id="dhp-buy">
+					<?php
+					// 구매 폼 — 워드커머스 · PPOM · 키플 옵션 UI 가 그린다. 손대지 않는다.
+					woocommerce_template_single_add_to_cart();
+					?>
+				</section>
+				<section class="dhp-card dhp-card--trust"><?php trust(); ?></section>
 			</div>
 		</div>
 

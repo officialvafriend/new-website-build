@@ -90,7 +90,7 @@
   var prod = document.querySelector('.single-product div.product');
   if(!prod) return;
   var moved = [];
-  prod.querySelectorAll('.summary .wc-prl-recommendations, .summary .related, .summary .upsells').forEach(function(el){ moved.push(el); });
+  prod.querySelectorAll('.dhp-buy .wc-prl-recommendations, .dhp-buy .related, .dhp-buy .upsells, .summary .wc-prl-recommendations, .summary .related, .summary .upsells').forEach(function(el){ moved.push(el); });
   moved.forEach(function(el){ prod.appendChild(el); });
 })();
 

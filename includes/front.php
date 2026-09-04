@@ -114,11 +114,71 @@ function brands(): array {
 		if ( '' === $b || preg_match( '/이벤트|할인|특가|초특가/u', $b ) ) {
 			continue;
 		}
-		$out[ $b ] = ( $out[ $b ] ?? 0 ) + 1;
+		$b           = brand_aliases()[ $b ] ?? $b;
+		$out[ $b ]   = ( $out[ $b ] ?? 0 ) + 1;
 	}
 	arsort( $out );
 	set_transient( 'dhr_brands', $out, 10 * MINUTE_IN_SECONDS );
 	return $out;
+}
+
+/**
+ * 분류 타일 아이콘. 이름으로 고른다 — 분류 이름이 달마다 바뀌어도 따라간다.
+ *
+ * @param string $name 분류 이름.
+ * @return string 아이콘 이름.
+ */
+function cat_icon( string $name ): string {
+	$map = array(
+		'특가'     => 'tag',
+		'할인'     => 'tag',
+		'적립'     => 'tag',
+		'입호흡'   => 'pod',
+		'폐호흡'   => 'cloud',
+		'무니코틴' => 'zero',
+		'기기'     => 'device',
+		'팟'       => 'device',
+		'코일'     => 'device',
+		'노보'     => 'pod',
+	);
+	foreach ( $map as $needle => $ic ) {
+		if ( false !== mb_strpos( $name, $needle ) ) {
+			return $ic;
+		}
+	}
+	return 'grid';
+}
+
+/**
+ * 브랜드 이름을 하나로 묶는 표. 시리즈가 갈라져 있어도 손님에게는 한 브랜드다 —
+ * "노보 블랙" 은 노보의 시리즈이지 다른 브랜드가 아니다.
+ *
+ * @return array<string,string> 갈라진 이름 => 묶을 이름.
+ */
+function brand_aliases(): array {
+	return (array) apply_filters( 'duckhoo_brand_aliases', array( '노보 블랙' => '노보' ) );
+}
+
+/**
+ * 브랜드로 가는 주소. 대괄호 없이 이름으로 찾는다 — 그래야 `[노보]` 와 `[노보 블랙]` 이
+ * 함께 나온다. 검색 결과 제목도 "노보" 로 읽힌다.
+ *
+ * @param string $brand 브랜드.
+ * @return string
+ */
+function brand_url( string $brand ): string {
+	return add_query_arg( array( 's' => $brand, 'post_type' => 'product' ), home_url( '/' ) );
+}
+
+/**
+ * 브랜드의 상품.
+ *
+ * @param string $brand 브랜드.
+ * @param int    $limit 개수.
+ * @return \WC_Product[]
+ */
+function brand_products( string $brand, int $limit = 4 ): array {
+	return products( array( 's' => $brand, 'limit' => $limit, 'orderby' => 'popularity', 'stock_status' => 'instock' ) );
 }
 
 /**
@@ -237,6 +297,12 @@ function icon( string $name ): string {
 			'truck'   => '<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
 			'shield'  => '<path d="M12 3.2 19 6v5.6c0 4.8-3.3 7.7-7 8.9-3.7-1.2-7-4.1-7-8.9V6z"/>',
 			'plus'    => '<path d="M12 5v14M5 12h14"/>',
+			// 분류 타일 — 글자 대신
+			'tag'     => '<path d="M11.5 3H4.5a1.5 1.5 0 0 0-1.5 1.5v7l9.4 9.4a1.6 1.6 0 0 0 2.2 0l6.8-6.8a1.6 1.6 0 0 0 0-2.2z"/><circle cx="7.6" cy="7.6" r="1.3"/>',
+			'pod'     => '<path d="M10 2.8h4v3.4l1.6 2.2v10.8a2 2 0 0 1-2 2h-3.2a2 2 0 0 1-2-2V8.4z"/><path d="M8.4 12.4h7.2"/>',
+			'cloud'   => '<path d="M7.2 18.5h9.4a3.6 3.6 0 0 0 .5-7.2 5.2 5.2 0 0 0-9.9-1.3 3.9 3.9 0 0 0 0 8.5z"/>',
+			'zero'    => '<circle cx="12" cy="12" r="8.4"/><path d="m6.6 17.4 10.8-10.8"/>',
+			'device'  => '<rect x="7" y="2.6" width="10" height="18.8" rx="3.2"/><path d="M10.4 6.4h3.2"/><circle cx="12" cy="16.8" r="1.4"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';
@@ -507,7 +573,7 @@ function footer_html(): void {
 				<p>전자담배 액상 전문몰. 카드결제 없이 계좌이체로만 받고, 입금자명이 주문자명과 같으면 자동으로 확인됩니다.</p>
 				<div class="fkakao"><div><b>카카오톡 문의</b><span>입금 확인 · 배송 · 교환은 여기로</span></div><a class="btn btn-p btn-sm" href="<?php echo esc_url( kakao_url() ); ?>"<?php echo kakao_url() === home_url( '/inquiries/' ) ? '' : ' target="_blank" rel="noopener"'; ?>>문의하기</a></div></div>
 			<div class="fcol"><b>상품</b><?php foreach ( $cats as $c ) : ?><a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( $c->name ); ?></a><?php endforeach; ?></div>
-			<div class="fcol"><b>브랜드</b><?php foreach ( $brands as $b ) : ?><a href="<?php echo esc_url( add_query_arg( array( 's' => '[' . $b . ']', 'post_type' => 'product' ), home_url( '/' ) ) ); ?>"><?php echo esc_html( $b ); ?></a><?php endforeach; ?></div>
+			<div class="fcol"><b>브랜드</b><?php foreach ( $brands as $b ) : ?><a href="<?php echo esc_url( brand_url( $b ) ); ?>"><?php echo esc_html( $b ); ?></a><?php endforeach; ?></div>
 			<div class="fcol"><b>안내</b>
 				<a href="<?php echo esc_url( home_url( '/shipping/' ) ); ?>">배송 · 교환 · 환불</a>
 				<a href="<?php echo esc_url( home_url( '/register/' ) ); ?>">회원가입</a>

@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -69,7 +69,7 @@ $brand_list = array_slice( $featured, 0, 3 );
 $picks      = array();
 $seen_pick  = array();
 foreach ( $featured as $fb ) {
-	foreach ( products( array( 's' => '[' . $fb . ']', 'limit' => 3, 'orderby' => 'popularity', 'stock_status' => 'instock' ) ) as $fp ) {
+	foreach ( brand_products( $fb, 3 ) as $fp ) {
 		if ( ! isset( $seen_pick[ $fp->get_id() ] ) ) {
 			$seen_pick[ $fp->get_id() ] = true;
 			$picks[]                    = $fp;
@@ -148,16 +148,13 @@ $month = (int) wp_date( 'n' );
 
 	<?php
 	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
-	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), $rank_cat ) ) );
+	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), cat_by_name( '노보' ) ) ) );
 	if ( $qc ) : ?>
 	<nav class="qcats" aria-label="분류 바로 가기">
-		<?php foreach ( $qc as $c ) :
-			$tid = (int) get_term_meta( $c->term_id, 'thumbnail_id', true );
-			$lbl = short_cat( $c->name );
-			$ini = mb_substr( preg_replace( '/^이달\s*/u', '', $lbl ), 0, 1 ); ?>
+		<?php foreach ( $qc as $c ) : ?>
 		<a href="<?php echo esc_url( get_term_link( $c ) ); ?>">
-			<span class="qcats__ic"><?php echo $tid ? wp_get_attachment_image( $tid, 'woocommerce_gallery_thumbnail' ) : '<b>' . esc_html( $ini ) . '</b>'; // phpcs:ignore ?></span>
-			<span><?php echo esc_html( $lbl ); ?></span>
+			<span class="qcats__ic"><?php echo icon( cat_icon( $c->name ) ); // phpcs:ignore ?></span>
+			<span><?php echo esc_html( short_cat( $c->name ) ); ?></span>
 		</a>
 		<?php endforeach; ?>
 	</nav>
@@ -200,10 +197,10 @@ $month = (int) wp_date( 'n' );
 	<section class="sec">
 		<?php section_head( '많이 찾는 라인', '브랜드로 둘러보기', '', '' ); ?>
 		<div class="bgrid"><?php foreach ( $brand_list as $b ) :
-			$bp = products( array( 's' => '[' . $b . ']', 'limit' => 4, 'orderby' => 'popularity' ) );
+			$bp = brand_products( $b, 4 );
 			if ( ! $bp ) { continue; }
 			$bcount = brands()[ $b ] ?? count( $bp );
-			$burl = add_query_arg( array( 's' => '[' . $b . ']', 'post_type' => 'product' ), home_url( '/' ) ); ?>
+			$burl = brand_url( $b ); ?>
 			<article class="bcard"><div class="bhead"><span class="blogo"><?php echo esc_html( mb_substr( $b, 0, 1 ) ); ?></span>
 				<div><b><?php echo esc_html( $b ); ?></b>
 					<span class="bsub"><?php echo (int) $bcount; ?>종</span></div>

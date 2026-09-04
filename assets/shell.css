@@ -1007,3 +1007,23 @@ html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-d, html body.dhr.dhr-wrap.dhr-wrap .dh
 html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-o{ color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off, html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off svg{ color: var(--dh-ink-3, #616870) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ color: #fff !important; }
+
+/* ══ 구매 영역 — 카드 세 장 ══════════════════════════════════════════════════
+   한 상자에 제목 · 가격 · 옵션 · 버튼 · 안내를 다 담았더니, 테마 스크립트가 그 상자
+   (`.summary`)에 사진 높이만큼 인라인 height 를 박아 넣어 그보다 긴 내용이 상자 밖으로
+   흘러 상세 설명 위에 겹쳤다. 인라인 스타일은 선택자로 못 이긴다.
+   그래서 상자를 나눴다 — 카드마다 자기 내용만큼만 높이를 갖는다. 넘칠 상자가 없다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-buy{ display: grid; gap: .8rem; align-content: start; min-width: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card{
+  background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8); border-radius: 18px;
+  padding: clamp(1.1rem,.8rem + 1.2vw,1.6rem); min-width: 0;
+  /* 어떤 이유로도 내용이 카드 밖으로 나가지 않는다 */
+  height: auto !important; max-height: none !important; overflow: visible; position: static !important;
+}
+/* 사는 방법 카드는 그 자체가 구획이라 안쪽에 선을 또 긋지 않는다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--trust ul.dhp-trust{ margin: 0 !important; padding: 0 !important; border-top: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form form.cart{ margin: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--info ul.dhp-ben{ margin-bottom: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--info .dhp-short{ margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--dh-line, #E1E5E8); }
+/* 테마 템플릿 경로(우리 템플릿을 끈 경우)에도 같은 사고가 나지 않게 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary{ height: auto !important; max-height: none !important; position: static !important; float: none !important; }
