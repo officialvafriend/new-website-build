@@ -184,15 +184,24 @@ add_action( 'woocommerce_account_navigation', __NAMESPACE__ . '\\account_hero', 
  * @return string
  */
 function signup_content( string $html ): string {
-	if ( ! wraps() || ! is_main_query() || ! in_the_loop() || ! is_page() ) {
+	static $done = false;
+	if ( $done || ! wraps() || ! is_main_query() ) {
 		return $html;
 	}
-	$slug  = (string) get_post_field( 'post_name', get_the_ID() );
-	$steps = steps();
-	if ( ! isset( $steps[ $slug ] ) ) {
+	// 슬러그를 직접 읽으면 테마가 어떤 루프에서 본문을 그리느냐에 따라 어긋난다.
+	// is_page() 는 지금 보고 있는 페이지 자체를 본다.
+	$hit = null;
+	foreach ( steps() as $slug => $step ) {
+		if ( is_page( $slug ) ) {
+			$hit = $step;
+			break;
+		}
+	}
+	if ( null === $hit ) {
 		return $html;
 	}
-	list( $no, $title, $sub ) = $steps[ $slug ];
+	$done                     = true;
+	list( $no, $title, $sub ) = $hit;
 
 	// 영문 제목이 화면마다 다른 뜻으로 붙어 있었다 — 가입 화면인데 "Sign In" 이다.
 	$html = str_replace(
