@@ -660,9 +660,6 @@
    막는 것은 이 안내 팝업뿐이다. 진짜 성인 확인 — 가입 때의 휴대폰 본인확인과
    결제 단계의 회원 확인 — 은 서버 쪽이라 여기서 건드리지 않는다. */
 (function(){
-  var box = document.getElementById('dh-agegate2');
-  if(!box) return;
-
   var KEY = 'dhr-ag2';
   var today = (function(){ var d = new Date();
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })();
@@ -674,23 +671,36 @@
     document.body.classList.remove('dh-ag2-lock');
   }
 
-  var later = box.querySelector('.dh-ag2-later');
-  if(later){
-    /* 문구가 하는 일과 맞아야 한다 — 누르면 오늘은 다시 뜨지 않는다 */
-    later.textContent = '오늘 하루 보지 않기';
-    later.addEventListener('click', function(){ write(); }, true);
+  /* 팝업 마크업은 우리 스크립트보다 뒤에 찍힌다 — 바로 찾으면 늘 없다.
+     DOM 이 다 그려진 뒤에 보고, 그래도 없으면 load 에서 한 번 더 본다. */
+  function init(){
+    var box = document.getElementById('dh-agegate2');
+    if(!box || box.dataset.dhrAg2) return !!box;
+    box.dataset.dhrAg2 = '1';
+
+    var later = box.querySelector('.dh-ag2-later');
+    if(later){
+      /* 문구가 하는 일과 맞아야 한다 — 누르면 오늘은 다시 뜨지 않는다 */
+      later.textContent = '오늘 하루 보지 않기';
+      later.addEventListener('click', function(){ write(); }, true);
+    }
+
+    if(read() !== today) return true;
+
+    /* 오늘은 이미 닫았다 — 잠깐도 비치지 않게 CSS 로 먼저 빼 두고, 스니펫이 열면 잠금만 푼다 */
+    document.body.classList.add('dhr-ag2-off');
+    box.setAttribute('hidden', '');
+    unlock();
+    new MutationObserver(function(){
+      if(!box.hasAttribute('hidden')) box.setAttribute('hidden', '');
+      unlock();
+    }).observe(box, {attributes: true, attributeFilter: ['hidden']});
+    return true;
   }
 
-  if(read() !== today) return;
-
-  /* 오늘은 이미 닫았다 — 잠깐도 비치지 않게 CSS 로 먼저 빼 두고, 스니펫이 열면 잠금만 푼다 */
-  document.body.classList.add('dhr-ag2-off');
-  box.setAttribute('hidden', '');
-  unlock();
-  new MutationObserver(function(){
-    if(!box.hasAttribute('hidden')) box.setAttribute('hidden', '');
-    unlock();
-  }).observe(box, {attributes: true, attributeFilter: ['hidden']});
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+  addEventListener('load', init);
 })();
 
 /* 계좌번호 복사 — 계좌이체만 받는 가게라 이 열한 자리를 손으로 옮겨 적는다.
