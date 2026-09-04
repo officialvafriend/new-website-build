@@ -689,6 +689,13 @@ function assets(): void {
 	$css = DIR . 'assets/front.css';
 	$js  = DIR . 'assets/front.js';
 	wp_enqueue_style( 'duckhoo-front', plugins_url( 'assets/front.css', DIR . 'duckhoo-redesign.php' ), array( 'duckhoo-tokens' ), (string) filemtime( $css ) );
+	// 회원탈퇴 화면은 자기 스타일시트가 따로 있다 — 안 실으면 버튼이 맨 글자로 나온다.
+	if ( is_page( 'membership-cancel' ) ) {
+		$leave = DIR . 'assets/membership-cancel.css';
+		if ( file_exists( $leave ) ) {
+			wp_enqueue_style( 'duckhoo-leave', plugins_url( 'assets/membership-cancel.css', DIR . 'duckhoo-redesign.php' ), array( 'duckhoo-front' ), (string) filemtime( $leave ) );
+		}
+	}
 	libs();
 	wp_enqueue_script( 'duckhoo-front', plugins_url( 'assets/front.js', DIR . 'duckhoo-redesign.php' ), array( 'duckhoo-swiper', 'duckhoo-gsap-st' ), (string) filemtime( $js ), true );
 	// 이번 달 마지막 날 23:59:59 (사이트 시간대) — 특가 마감 카운트다운
