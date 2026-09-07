@@ -435,7 +435,7 @@ function header_html(): void {
 	$in    = is_user_logged_in();
 	$pts   = signup_points();
 	// 가입하면 8,800원을 주면서 그 돈을 쓸 곳으로 가는 길이 어디에도 없었다.
-	$cats  = array_values( array_filter( array( $sale, cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
+	$cats  = array_values( array_filter( array( $sale, cat_by_name( '노보' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
 	?>
 	<?php if ( ! $in ) : ?>
 	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
