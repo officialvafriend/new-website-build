@@ -595,6 +595,112 @@
   }, true);
 })();
 
+/* 값이 붙지 않는 선택은 세트 수만큼만 ─────────────────────────────────────
+   "젤로크리스탈 기기 + 액상 5병 증정" 상품의 3번 카드는 기기 **색**을 고르는 칸이다
+   (실버 · 블랙, 둘 다 +0원). 그런데 수량을 3까지 올릴 수 있었고 총액은 69,000원 그대로였다 —
+   기기 두 대를 공짜로 담을 수 있었다는 뜻이다. 사장님 게이트 스니펫은 맛(addon_1)이
+   세트당 5개인지만 보고 그 뒤 칸에는 상한이 없다.
+   테마 · 옛 옵션 UI 는 건드리지 않고, + 를 capture 단계에서 가로챈다.
+   값(+N원)이 붙은 줄이 하나라도 있는 카드는 **돈을 더 내고 사는 추가 구매**이므로 그대로 둔다
+   (팟 · 코일 · 기기 함께 구매). 상한은 세트당 1개 — 필터 `duckhoo_free_choice_per_set`.
+   안내 글자는 `data-l` + CSS 로 그린다. 폼 안에 텍스트 노드를 더하면 구매 게이트가 읽는
+   칸 이름이 바뀔 수 있어서다 (한 번 그렇게 막혔다). */
+(function(){
+  var PER = window.DHR && window.DHR.freeChoicePerSet != null ? Number(window.DHR.freeChoicePerSet) : 1;
+  if(!PER) return;
+  var SWAP = false;
+
+  function num(row){ var n = row.querySelector('.dhx-qty__n'); return n ? (parseInt(n.textContent, 10) || 0) : 0; }
+
+  /* 세트 수 — 테마가 쥔 값이 정답이다. 못 읽으면 1번 카드의 숫자를 센다. */
+  function sets(){
+    var i = document.querySelector('form.cart input[name="wd_option_builder_json"]');
+    if(i && i.value){
+      try{
+        var n = 0;
+        JSON.parse(i.value).forEach(function(r){ if(r && r.type === 'required') n += parseInt(r.qty, 10) || 0; });
+        if(n > 0) return n;
+      }catch(err){}
+    }
+    var d = 0;
+    document.querySelectorAll('.dhx-bundle').forEach(function(r){ d += num(r); });
+    return d;
+  }
+
+  /* 줄마다 값이 안 붙은 카드 = 고르는 칸(색상 · 구성). 하나라도 값이 붙으면 유료 추가다. */
+  function isChoice(card){
+    var rows = card.querySelectorAll('.dhx-row');
+    if(!rows.length) return false;
+    for(var i = 0; i < rows.length; i++){ if(rows[i].querySelector('.dhx-row__price')) return false; }
+    return true;
+  }
+  function total(card){
+    var t = 0;
+    card.querySelectorAll('.dhx-row').forEach(function(r){ t += num(r); });
+    return t;
+  }
+  function cap(){ return Math.max(1, sets()) * PER; }
+  function title(card){ var t = card.querySelector('.dhx-card__title'); return t ? t.textContent.trim() : '이 항목'; }
+
+  function say(card, max){
+    var inner = card.querySelector('.dhx-card__inner') || card;
+    var n = inner.querySelector('.dhr-onenote');
+    if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); inner.appendChild(n); }
+    n.setAttribute('data-l', '세트당 ' + max + '개까지 고를 수 있습니다. 바꾸려면 고른 것을 − 로 내려주세요.');
+    n.classList.add('is-on');
+    clearTimeout(n._t);
+    n._t = setTimeout(function(){ n.classList.remove('is-on'); }, 4000);
+  }
+
+  /* 색을 바꾸는 것이므로 차 있는 줄을 0까지 내리고 이쪽을 올린다.
+     내리는 것은 그쪽 스크립트가 하게 두고 우리는 − 를 눌러 줄 뿐이다. */
+  function swap(card, row){
+    SWAP = true;
+    var guard = 0;
+    (function step(){
+      if(guard++ > 40){ SWAP = false; return; }
+      var busy = null;
+      card.querySelectorAll('.dhx-row').forEach(function(r){ if(!busy && r !== row && num(r) > 0) busy = r; });
+      if(busy){ busy.querySelector('.dhx-qty button').click(); setTimeout(step, 300); return; }
+      var plus = row.querySelector('.dhx-qty button:last-child');
+      if(plus) plus.click();
+      setTimeout(function(){ SWAP = false; }, 500);
+    })();
+  }
+
+  document.addEventListener('click', function(e){
+    if(SWAP) return;
+    var btn = e.target.closest && e.target.closest('.dhx-row .dhx-qty button');
+    if(!btn || btn !== btn.parentElement.lastElementChild) return;   /* + 만 */
+    var card = btn.closest('.dhx-card');
+    if(!card || !isChoice(card)) return;
+    var max = cap();
+    if(total(card) < max) return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+    var row = btn.closest('.dhx-row');
+    if(num(row) > 0 || max > 1){ say(card, max); return; }
+    swap(card, row);
+  }, true);
+
+  /* 마지막 빗장 — 어떤 경로로든 상한을 넘긴 채 담기까지 가지 않게 한다.
+     담는 데이터에는 손대지 않는다. 무엇을 고쳐야 하는지만 말하고 멈춘다. */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.single_add_to_cart_button, .wd-direct-checkout-btn');
+    if(!b) return;
+    var max = cap(), bad = null;
+    document.querySelectorAll('.dhx-card').forEach(function(c){
+      if(!bad && isChoice(c) && total(c) > max) bad = c;
+    });
+    if(!bad) return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+    say(bad, max);
+    alert(title(bad) + ' 은(는) ' + max + '개까지만 고를 수 있습니다. (현재 ' + total(bad) + '개)');
+  }, true);
+})();
+
+
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
    1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
       주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
