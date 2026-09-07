@@ -147,3 +147,44 @@ function swap(): void {
 	add_action( 'woocommerce_single_product_summary', __NAMESPACE__ . '\\trust', 45 );
 }
 add_action( 'wp', __NAMESPACE__ . '\\swap' );
+
+/**
+ * 상품 구조화 데이터(Product JSON-LD)를 붙입니다.
+ *
+ * **왜 필요한가.** 워드커머스는 `woocommerce_single_product_summary` 훅이 돌 때
+ * 상품의 가격 · 재고 · 브랜드를 검색엔진용 데이터로 만든다. 우리 상세 템플릿은
+ * 화면을 직접 그리느라 그 훅을 쏘지 않는다 — 그래서 상품 페이지에 `Product` 가
+ * 통째로 빠져 있었다 (2026-09-07 확인: `BreadcrumbList` · `ItemPage` ·
+ * `Organization` · `WebSite` 뿐). 검색엔진이 가격을 읽지 못하니 상품 페이지가
+ * 검색 경쟁에 아예 못 들어갔다.
+ *
+ * 훅을 그대로 쏘면 테마의 제목 · 가격 · 구매 버튼이 한 벌 더 그려지므로,
+ * 데이터를 만드는 쪽만 직접 부른다. **화면은 하나도 바뀌지 않는다.**
+ * 출력은 워드커머스가 `wp_footer` 에서 알아서 한다.
+ *
+ * 목록 화면에는 붙이지 않는다 — 카드가 수십 장인 분류 페이지에 Product 를 수십 개
+ * 싣는 것은 얻는 것에 비해 무겁다. 필요해지면 그때는 ItemList 로 따로 짠다.
+ *
+ * @param \WC_Product|null $product 상품. 없으면 전역.
+ * @return void
+ */
+function schema( $product = null ): void {
+	if ( ! apply_filters( 'duckhoo_product_schema', true, $product ) || ! function_exists( 'WC' ) ) {
+		return;
+	}
+
+	$wc = WC();
+	if ( ! isset( $wc->structured_data ) || ! is_object( $wc->structured_data )
+		|| ! method_exists( $wc->structured_data, 'generate_product_data' ) ) {
+		return;
+	}
+
+	if ( ! $product instanceof \WC_Product ) {
+		$product = $GLOBALS['product'] ?? null;
+	}
+	if ( ! $product instanceof \WC_Product ) {
+		return;
+	}
+
+	$wc->structured_data->generate_product_data( $product );
+}

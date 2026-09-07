@@ -156,7 +156,13 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 		<?php endif; ?>
 	</div>
 
-	<?php do_action( 'woocommerce_after_single_product' ); ?>
+	<?php
+	do_action( 'woocommerce_after_single_product' );
+	// 가격 · 재고 · 브랜드를 검색엔진이 읽을 수 있게 한다. 화면에는 아무것도 그리지 않고,
+	// 출력은 워드커머스가 wp_footer 에서 한다. 우리 템플릿이 summary 훅을 쏘지 않아
+	// 이 데이터가 통째로 빠져 있었다.
+	\Duckhoo\Redesign\Product\schema( $product );
+	?>
 </div>
 </main>
 <?php // 시트가 열렸을 때 뒤를 덮는 막. 불투명 카드 뒤라 여기서는 반투명이어도 글을 읽지 않는다 ?>
