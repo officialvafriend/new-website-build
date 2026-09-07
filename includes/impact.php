@@ -21,9 +21,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 const SLUG = 'duckhoo-impact';
 
-/** 리디자인이 프로덕션에서 켜진 날. 필터로 바꿀 수 있다. */
-function live_date(): string {
-	return (string) apply_filters( 'duckhoo_impact_live_date', '2026-09-04' );
+/**
+ * 구간을 가르는 두 날.
+ *
+ * 이 가게에는 손을 댄 일이 **두 번** 있었고 날짜가 다르다. 하나로 뭉뜽그리면
+ * 어느 쪽이 한 일인지 알 수 없다.
+ *
+ *   ~ 08-15  아무것도 안 한 기간 (기준선)
+ *   08-16 ~  SEO 문구 작업 (사장님 확인)
+ *   09-04 ~  SEO + 리디자인 (프로덕션 활성화)
+ *
+ * @return array{seo:string, live:string}
+ */
+function marks(): array {
+	return (array) apply_filters( 'duckhoo_impact_marks', array(
+		'seo'  => '2026-08-16',
+		'live' => '2026-09-04',
+	) );
 }
 
 /**
@@ -217,24 +231,6 @@ function signups( string $from, string $to ): array {
 }
 
 /**
- * 하루 평균으로 두 기간을 견줍니다.
- *
- * @param array $a   앞 기간 합계.
- * @param array $b   뒤 기간 합계.
- * @param int   $da  앞 기간 일수.
- * @param int   $db  뒤 기간 일수.
- * @param string $key 항목.
- * @return string
- */
-function per_day( array $a, array $b, int $da, int $db, string $key ): string {
-	$x = $da > 0 ? $a[ $key ] / $da : 0;
-	$y = $db > 0 ? $b[ $key ] / $db : 0;
-	$d = ( $x > 0 ) ? ( ( $y - $x ) / $x * 100 ) : 0;
-
-	return sprintf( '%12s → %12s  (%+.1f%%)', number_format( $x, 1 ), number_format( $y, 1 ), $d );
-}
-
-/**
  * 화면.
  *
  * @return void
@@ -244,7 +240,9 @@ function screen(): void {
 		wp_die( esc_html__( '권한이 없습니다.', 'duckhoo-redesign' ) );
 	}
 
-	$live  = live_date();
+	$mk    = marks();
+	$live  = (string) $mk['live'];
+	$seg_tot = array();
 	$weeks = isset( $_GET['dhr_weeks'] ) ? max( 4, min( 26, absint( wp_unslash( $_GET['dhr_weeks'] ) ) ) ) : 10; // phpcs:ignore WordPress.Security.NonceVerification
 	$today = current_time( 'Y-m-d' );
 	$start = gmdate( 'Y-m-d', strtotime( $today . ' -' . ( $weeks * 7 ) . ' days' ) );
@@ -253,7 +251,8 @@ function screen(): void {
 	$regs = signups( $start, $today );
 
 	$r   = array();
-	$r[] = '### 기간: ' . $start . ' ~ ' . $today . ' (' . $weeks . '주) · 리디자인 프로덕션 적용일 ' . $live;
+	$r[] = '### 기간: ' . $start . ' ~ ' . $today . ' (' . $weeks . '주)';
+	$r[] = '### 기준일: SEO 작업 시작 ' . $mk['seo'] . ' · 리디자인 프로덕션 적용 ' . $live;
 	$r[] = '주문 ' . count( $rows ) . '건을 읽었습니다.';
 	$r[] = '';
 
@@ -284,54 +283,79 @@ function screen(): void {
 			$t['cancelled'], $reg, $t['points_n'], $t['novo_n'] );
 	}
 
-	// 전후.
-	$before = array();
-	$after  = array();
-	foreach ( $rows as $row ) {
-		if ( '' === $row['date'] ) {
-			continue;
-		}
-		if ( $row['date'] < $live ) {
-			$before[] = $row;
-		} else {
-			$after[] = $row;
-		}
-	}
-	$da = max( 1, (int) round( ( strtotime( $live ) - strtotime( $start ) ) / 86400 ) );
-	$db = max( 1, (int) round( ( strtotime( $today ) - strtotime( $live ) ) / 86400 ) + 1 );
-	$ta = totals( $before );
-	$tb = totals( $after );
+	// 세 구간 — 기준선 / SEO 만 / SEO + 리디자인.
+	$m    = marks();
+	$seo  = (string) $m['seo'];
+	$live = (string) $m['live'];
+
+	$seg = array(
+		'기준선 (손 안 댄 기간)' => array( $start, gmdate( 'Y-m-d', strtotime( $seo . ' -1 day' ) ) ),
+		'SEO 작업만'             => array( $seo, gmdate( 'Y-m-d', strtotime( $live . ' -1 day' ) ) ),
+		'SEO + 리디자인'         => array( $live, $today ),
+	);
 
 	$r[] = '';
-	$r[] = '### 리디자인 전 · 후 (하루 평균)';
-	$r[] = sprintf( '전: %s ~ %s (%d일, 주문 %d건) / 후: %s ~ %s (%d일, 주문 %d건)',
-		$start, gmdate( 'Y-m-d', strtotime( $live . ' -1 day' ) ), $da, $ta['n'], $live, $today, $db, $tb['n'] );
-	$r[] = '  주문 건수   ' . per_day( $ta, $tb, $da, $db, 'n' );
-	$r[] = '  유효 주문   ' . per_day( $ta, $tb, $da, $db, 'paid' );
-	$r[] = '  매출        ' . per_day( $ta, $tb, $da, $db, 'sales' );
-	$r[] = '  취소 건수   ' . per_day( $ta, $tb, $da, $db, 'cancelled' );
-	$r[] = '  적립금 사용 ' . per_day( $ta, $tb, $da, $db, 'points_n' );
-	$r[] = '  노보 주문   ' . per_day( $ta, $tb, $da, $db, 'novo_n' );
-	$r[] = sprintf( '  평균 주문액 %12s → %12s',
-		$ta['paid'] ? number_format( $ta['sales'] / $ta['paid'] ) : '0',
-		$tb['paid'] ? number_format( $tb['sales'] / $tb['paid'] ) : '0' );
-	$r[] = sprintf( '  취소율      %11.1f%% → %11.1f%%',
-		$ta['n'] ? $ta['cancelled'] / $ta['n'] * 100 : 0,
-		$tb['n'] ? $tb['cancelled'] / $tb['n'] * 100 : 0 );
-	$r[] = sprintf( '  비회원 주문 %12d → %12d', $ta['guest'], $tb['guest'] );
+	$r[] = '### 구간별 (하루 평균) — SEO 시작 ' . $seo . ' · 리디자인 적용 ' . $live;
+	$r[] = sprintf( '%-24s %10s %8s %8s %12s %10s %8s %8s %8s',
+		'구간', '기간', '일수', '주문/일', '매출/일', '평균주문액', '취소율', '가입/일', '노보/일' );
 
-	$ra = 0;
-	$rb = 0;
-	foreach ( $regs as $d => $c ) {
-		if ( $d < $live ) {
-			$ra += $c;
-		} else {
-			$rb += $c;
+	foreach ( $seg as $label => $range ) {
+		list( $a, $b ) = $range;
+		if ( $b < $a ) {
+			continue;
+		}
+		$days = max( 1, (int) round( ( strtotime( $b ) - strtotime( $a ) ) / 86400 ) + 1 );
+		$list = array();
+		foreach ( $rows as $row ) {
+			if ( '' !== $row['date'] && $row['date'] >= $a && $row['date'] <= $b ) {
+				$list[] = $row;
+			}
+		}
+		$t   = totals( $list );
+		$reg = 0;
+		foreach ( $regs as $d => $c ) {
+			if ( $d >= $a && $d <= $b ) {
+				$reg += $c;
+			}
+		}
+		$r[] = sprintf( '%-24s %10s %8d %8s %12s %10s %7.1f%% %8s %8s',
+			$label,
+			substr( $a, 5 ) . '~' . substr( $b, 5 ),
+			$days,
+			number_format( $t['n'] / $days, 1 ),
+			number_format( $t['sales'] / $days ),
+			$t['paid'] ? number_format( $t['sales'] / $t['paid'] ) : '0',
+			$t['n'] ? $t['cancelled'] / $t['n'] * 100 : 0,
+			number_format( $reg / $days, 1 ),
+			number_format( $t['novo_n'] / $days, 1 )
+		);
+		$seg_tot[ $label ] = array( 't' => $t, 'days' => $days, 'reg' => $reg );
+	}
+
+	// 기준선 대비 변화율.
+	$base = $seg_tot['기준선 (손 안 댄 기간)'] ?? null;
+	if ( $base ) {
+		$r[] = '';
+		$r[] = '### 기준선 대비 (하루 평균 기준)';
+		foreach ( array( 'SEO 작업만', 'SEO + 리디자인' ) as $label ) {
+			if ( empty( $seg_tot[ $label ] ) ) {
+				continue;
+			}
+			$c  = $seg_tot[ $label ];
+			$pc = function ( $key ) use ( $base, $c ) {
+				$x = $base['t'][ $key ] / $base['days'];
+				$y = $c['t'][ $key ] / $c['days'];
+				return $x > 0 ? sprintf( '%+.1f%%', ( $y - $x ) / $x * 100 ) : '—';
+			};
+			$rx = $base['reg'] / $base['days'];
+			$ry = $c['reg'] / $c['days'];
+			$r[] = sprintf( '  %-16s 주문 %8s · 매출 %8s · 가입 %8s · 노보주문 %8s',
+				$label, $pc( 'n' ), $pc( 'sales' ), $rx > 0 ? sprintf( '%+.1f%%', ( $ry - $rx ) / $rx * 100 ) : '—', $pc( 'novo_n' ) );
 		}
 	}
-	$r[] = sprintf( '  신규 가입   %12s → %12s  (%+.1f%%)',
-		number_format( $ra / $da, 1 ), number_format( $rb / $db, 1 ),
-		$ra ? ( ( $rb / $db ) - ( $ra / $da ) ) / ( $ra / $da ) * 100 : 0 );
+
+	$ta = totals( array_filter( $rows, function ( $row ) use ( $live ) { return '' !== $row['date'] && $row['date'] < $live; } ) );
+	$tb = totals( array_filter( $rows, function ( $row ) use ( $live ) { return '' !== $row['date'] && $row['date'] >= $live; } ) );
 
 	// 노보 기여.
 	$r[] = '';
