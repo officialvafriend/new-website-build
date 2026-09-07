@@ -542,6 +542,31 @@ undici(`EnvHttpProxyAgent` + CA 번들)로 대신 받아 `fulfill` 하는 방식
   **로그인 없이 물어볼 수 있는 유일한 창구**라 상품 상세의 링크 줄에서 `1:1 문의`(회원 전용)
   보다 앞에 둔다. 밖으로 나가는 주소는 `Front\is_external()` 이 보고 새 창으로 연다
 
+## 프로덕션 배포 (2026-09-04)
+
+duck-hoo.com 에 GitHub Deployments 를 연결하고 첫 배포 · 활성화까지 마쳤다.
+
+- 저장소 `officialvafriend/new-website-build` · 브랜치 `claude/ui-ux-design-refresh-p5czcx` ·
+  대상 `/wp-content/plugins/new-website-build` · 자동 배포 켬
+- **연결만으로는 배포되지 않는다.** 자동 배포는 다음 push 부터다 — 첫 배포는 `배포 실행` 을 손으로 누른다
+- 파일이 올라가도 화면은 안 바뀐다. **플러그인 활성화가 따로 있다** (플러그인 52개 → 53개)
+- 되돌리기: 플러그인 비활성화 한 번. 주문 · 회원 · 적립금은 어느 단계에서도 안 건드린다
+- 활성화 때 `/shipping/` `/terms/` `/privacy/` 세 페이지가 실제로 생성됐다 (프로덕션에 없었다).
+  비활성화해도 페이지는 남는다
+- 프로덕션에만 있는 것: 사장님 공지 띠(`dh-ann`)가 우리 띠 위에 하나 더 있어 **검은 줄이 두 겹**이다.
+  끄려면 우리 `.promo` 를 빼거나 스니펫 쪽 띠를 끈다
+- 프로덕션 첫 화면은 `home blog` (정적 페이지가 아니라 블로그). `is_front_page()` 라 그대로 잡힌다
+
+## 옛 옵션 UI 의 수량 스테퍼가 잘렸다 (아이폰)
+
+`.dhx-qty` 는 `margin-left: auto` 로 줄 오른쪽 끝에 붙는데, 바깥 `.dhx-card__inner` 가
+`overflow: hidden` 이라 줄이 1~2px 만 넓어져도 `+` 버튼이 잘려 나갔다. **크로미움에서는
+재현되지 않는다** (390 · 360px 에서 13px 여유). 아이폰 사파리의 글자 폭 차이로 보인다.
+
+- `.dhx-card__inner{ overflow: visible }` — 자르는 것 자체를 없앤다
+- 줄에 `flex-wrap: wrap` — 그래도 안 들어가면 잘리는 대신 아랫줄로 내려간다
+- 이름(`.dhx-bundle__pick` 등)에 `min-width: 0` — 줄어들 자리를 준다
+
 ## 안내 페이지
 
 `includes/pages.php` 가 없는 페이지를 만든다 — `/terms/`(이용약관) · `/privacy/`(개인정보처리방침) ·
