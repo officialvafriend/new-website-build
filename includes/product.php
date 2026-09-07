@@ -188,3 +188,38 @@ function schema( $product = null ): void {
 
 	$wc->structured_data->generate_product_data( $product );
 }
+
+/**
+ * 구조화 데이터에 브랜드를 채웁니다.
+ *
+ * 이 사이트에는 브랜드 분류(taxonomy)가 없다. 브랜드는 상품 이름 앞 `[노보]` 로만
+ * 구분되고, 화면의 카드 · 상세 제목이 이미 그것을 브랜드로 그린다. 그래서
+ * 검색엔진에게도 같은 값을 준다 — 화면에 보이는 것과 데이터가 어긋나지 않는다.
+ *
+ * 노보 · 디오리퀴드 같은 브랜드 이름이 이 가게가 실제로 순위를 먹고 있는 축이라
+ * 비워 두면 아까운 자리다.
+ *
+ * @param array            $data    워드커머스가 만든 상품 데이터.
+ * @param \WC_Product|null $product 상품.
+ * @return array
+ */
+function schema_brand( $data, $product = null ): array {
+	$data = (array) $data;
+
+	if ( ! $product instanceof \WC_Product || ! empty( $data['brand'] ) ) {
+		return $data;
+	}
+
+	$brand = \Duckhoo\Redesign\Front\split_name( $product )['brand'];
+	if ( '' === $brand ) {
+		return $data;
+	}
+
+	$data['brand'] = array(
+		'@type' => 'Brand',
+		'name'  => $brand,
+	);
+
+	return $data;
+}
+add_filter( 'woocommerce_structured_data_product', __NAMESPACE__ . '\\schema_brand', 10, 2 );
