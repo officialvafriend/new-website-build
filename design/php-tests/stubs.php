@@ -79,6 +79,34 @@ if(!function_exists('get_terms')) { function get_terms($a){ return []; } } if(!f
 if(!function_exists('get_theme_mod')) { function get_theme_mod($k){ return 0; } } if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image(...$a){ return ''; } } if(!function_exists('get_bloginfo')) { function get_bloginfo($k){ return '액상덕후'; } }
 if(!function_exists('get_search_query')) { function get_search_query(){ return ''; } } if(!function_exists('language_attributes')) { function language_attributes(){} } if(!function_exists('body_class')) { function body_class(){} } if(!function_exists('wp_head')) { function wp_head(){} } if(!function_exists('wp_footer')) { function wp_footer(){} } if(!function_exists('wp_body_open')) { function wp_body_open(){} }
 if(!function_exists('get_privacy_policy_url')) { function get_privacy_policy_url(){ return ''; } } if(!function_exists('wp_date')) { function wp_date($f){ return date($f); } } if(!function_exists('has_term')) { function has_term(...$a){ return false; } } if(!function_exists('get_permalink_stub')) { function get_permalink_stub(){ } }
+
+/* ── 적립금 주문 스텁 ────────────────────────────────────────────────────
+   points.php 는 WC_Order 의 몇 가지 메서드만 쓴다. 그만큼만 흉내 낸다. */
+class DhrFakeItem {
+  public function __construct(public string $n='', public float $t=0.0, public string $c='', public float $d=0.0){}
+  public function get_name(){ return $this->n; }
+  public function get_total(){ return $this->t; }
+  public function get_code(){ return $this->c; }
+  public function get_discount(){ return $this->d; }
+}
+class DhrFakeMeta {
+  public function __construct(public string $k, public $v){}
+  public function get_data(){ return ['key'=>$this->k, 'value'=>$this->v]; }
+}
+class DhrFakeOrder {
+  public array $notes = [];
+  public function __construct(public int $id=1, public array $meta=[], public array $fees=[], public array $coupons=[], public string $status='on-hold'){}
+  public function get_id(){ return $this->id; }
+  public function get_meta($k, $single=true){ return $this->meta[$k] ?? ''; }
+  public function update_meta_data($k,$v){ $this->meta[$k]=$v; }
+  public function save(){ }
+  public function get_meta_data(){ $o=[]; foreach($this->meta as $k=>$v) $o[]=new DhrFakeMeta($k,$v); return $o; }
+  public function get_items($type='line_item'){ return $type==='fee' ? $this->fees : ($type==='coupon' ? $this->coupons : []); }
+  public function has_status($s){ return in_array($this->status, (array)$s, true); }
+  public function add_order_note($t){ $this->notes[]=$t; }
+}
+if(!function_exists('wc_get_order')) { function wc_get_order($id){ return $GLOBALS['__order_by_id'][$id] ?? null; } }
+
 // 메인 플러그인 파일을 그대로 읽으면 includes/ 도 따라 읽힌다. front.php 는 wc_get_products 없이도 정의만 된다.
 $src = file_get_contents(dirname(__DIR__, 2).'/duckhoo-redesign.php');
 $src = str_replace("require_once plugin_dir_path( __FILE__ ) . 'includes/membership-cancel.php';", '', $src); // 이미 읽었다

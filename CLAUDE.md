@@ -627,6 +627,41 @@ duck-hoo.com 에 GitHub Deployments 를 연결하고 첫 배포 · 활성화까�
 검증: `scratchpad/live/dev5.mjs`(상한 · 바꾸기 · 정상 담기) · `dev6.mjs`(유료 팟은
 3개까지 그대로) · `dev7.mjs`(세트 2개 → 2개까지).
 
+## 적립금을 쓴 주문을 취소하면 적립금이 사라진다 (2026-09-07)
+
+사장님 확인: **적립금을 써서 주문한 뒤 취소하면 그 적립금이 돌아오지 않는다.**
+
+- 적립금을 빼는 쪽은 테마다. 결제 화면의 입력칸이 `#wd_point_discount` 이고
+  (`assets/js/wd-checkout-custom.js`), 주문 합계에는 `적립금 할인` 줄로 붙는다.
+  **되돌리는 코드는 확인할 수 없다** — 테마 · keyple-customer 의 PHP 는 이 저장소에 없고
+  스테이징 관리자 계정도 없다
+- **우리가 만든 문제는 아니다.** 다만 `woocommerce_valid_order_statuses_for_cancel` 로
+  입금전(on-hold)에 취소 버튼을 연 것이 우리라, 손님이 스스로 눌러 적립금을 잃는
+  길을 만든 것도 우리다
+- **적립금을 여기서 직접 돌려주지 않는다.** keyple-customer 는 잔액만이 아니라 적립금
+  **내역(원장)**을 쌓는다. 회원 메타에 숫자만 더하면 내역에 없는 돈이 생겨 정산이
+  어긋난다. 저장 키도 모른다
+
+`includes/points.php` 가 하는 일은 세 가지뿐이다.
+
+1. `used( $order )` — 그 주문이 적립금을 얼마나 썼는지 **읽는다**. 지정 메타
+   (`_wd_point_discount` 등) → 수수료 줄(음수) → 쿠폰 줄 → 이름이 `적립…사용/할인` 인
+   메타 순. **적립(earn) 기록은 세지 않는다** — 잘못 세면 취소를 괜히 막는다
+2. 적립금을 쓴 주문은 손님이 혼자 취소하지 못하게 하고 (`우리가 연 상태만` 닫는다 —
+   워드커머스 기본 pending·failed 는 그대로) 그 자리에 `취소 문의` 버튼을 세운다
+   (`woocommerce_my_account_my_orders_actions`)
+3. 그래도 취소·환불로 넘어가면 **주문 메모**를 한 번 남긴다 — 얼마를 돌려줘야 하는지
+
+필터: `duckhoo_order_points_used`(사용액 못 박기) · `duckhoo_order_points_meta_keys` ·
+`duckhoo_block_cancel_with_points`(false 면 도로 열린다).
+
+**아직 못 한 것 — 자동 반환.** 하려면 둘 중 하나가 필요하다: (가) 적립금을 더하는
+keyple/테마 함수 이름, (나) 스테이징 관리자 계정. 그때 `woocommerce_order_status_cancelled`
+에서 그 함수를 부르고 `_duckhoo_points_note` 자리에 반환 표시를 남기면 된다
+(두 번 돌려주지 않게).
+
+검증: `php design/php-tests/run.php` — 34개 항목 (적립금 관련 12개).
+
 ## 저장소 구조
 
 ```

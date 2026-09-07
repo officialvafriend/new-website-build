@@ -93,5 +93,49 @@ $allowed = \Duckhoo\Redesign\allow_cancel_before_deposit( ['pending','failed'] )
 $ok(in_array('on-hold',$allowed,true) && in_array('pending',$allowed,true), 'on-hold 가 취소 가능 목록에 들어간다');
 $ok(!in_array('payment-confirmed',$allowed,true) && !in_array('keyple-shipping',$allowed,true), '입금확인·배송중은 열리지 않는다');
 
+
+/* ── 16~ 적립금을 쓴 주문의 취소 (includes/points.php) ─────────────────── */
+$P = 'Duckhoo\\Redesign\\Points\\';
+
+// 16. 주문 메타로 사용액을 읽는다
+$o = new DhrFakeOrder(101, ['_wd_point_discount' => '3000']);
+$ok(($P.'used')($o) === 3000.0, '주문 메타 _wd_point_discount 로 사용액을 읽는다');
+
+// 17. 수수료 줄(음수)로도 읽는다
+$o2 = new DhrFakeOrder(102, [], [new DhrFakeItem('적립금 할인', -2500.0)]);
+$ok(($P.'used')($o2) === 2500.0, '수수료 줄 "적립금 할인 -2,500" 을 읽는다');
+
+// 18. 적립(earn) 기록은 사용으로 세지 않는다 — 취소를 괜히 막으면 안 된다
+$o3 = new DhrFakeOrder(103, ['_points_earned' => '880', '_wd_reward_note' => '1200']);
+$ok(($P.'used')($o3) === 0.0, '적립 기록(_points_earned)은 사용으로 읽지 않는다');
+
+// 19. 적립금을 안 쓴 주문은 취소 버튼이 그대로다
+$plain = new DhrFakeOrder(104);
+$st = ($P.'close_cancel_for_point_orders')(['pending','failed','on-hold'], $plain);
+$ok(in_array('on-hold',$st,true), '적립금을 안 쓴 주문은 on-hold 취소가 열린 채다');
+
+// 20. 적립금을 쓴 주문은 우리가 연 상태만 닫힌다 (기본 pending·failed 는 그대로)
+$st2 = ($P.'close_cancel_for_point_orders')(['pending','failed','on-hold'], $o);
+$ok(!in_array('on-hold',$st2,true), '적립금을 쓴 주문은 on-hold 취소가 닫힌다');
+$ok(in_array('pending',$st2,true) && in_array('failed',$st2,true), '워드커머스 기본 취소 상태는 뺏지 않는다');
+
+// 21. 필터로 끄면 도로 열린다
+add_filter('duckhoo_block_cancel_with_points', fn($v)=>false);
+$ok(in_array('on-hold', ($P.'close_cancel_for_point_orders')(['pending','on-hold'], $o), true), '필터로 끄면 취소가 다시 열린다');
+$GLOBALS['__filters']['duckhoo_block_cancel_with_points'] = [];
+
+// 22. 취소 버튼 자리에 문의 버튼이 선다
+$acts = ($P.'inquiry_action')([], $o);
+$ok(isset($acts['duckhoo-cancel-ask']), '취소 버튼이 없어진 자리에 문의 버튼이 선다');
+$ok(!isset(($P.'inquiry_action')([], $plain)['duckhoo-cancel-ask']), '적립금을 안 쓴 주문에는 문의 버튼을 더하지 않는다');
+$ok(!isset(($P.'inquiry_action')(['cancel'=>[]], $o)['duckhoo-cancel-ask']), '취소 버튼이 살아 있으면 문의 버튼은 안 세운다');
+
+// 23. 취소되면 주문 메모가 한 번 남는다
+$GLOBALS['__order_by_id'][101] = $o;
+($P.'note_on_cancel')(101, $o);
+($P.'note_on_cancel')(101, $o);
+$ok(count($o->notes) === 1 && str_contains($o->notes[0],'3,000'), '취소되면 적립금 3,000원 메모가 한 번만 남는다');
+$ok(($P.'used')($plain) === 0.0 && ($P.'note_on_cancel')(104, $plain) === null && $plain->notes === [], '적립금을 안 쓴 주문에는 메모를 남기지 않는다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

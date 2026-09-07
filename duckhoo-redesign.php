@@ -41,6 +41,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/product.php';
 // 계정 · 회원가입 화면 — 머리판과 가입 단계.
 require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
 
+// 적립금을 쓴 주문의 취소 — 되돌아오지 않는 적립금을 손님이 혼자 잃지 않게.
+require_once plugin_dir_path( __FILE__ ) . 'includes/points.php';
+
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\Pages\\ensure' );
 
 /**
