@@ -705,9 +705,29 @@ curl -sS "https://duck-hoo.com/?nocache=$RANDOM" | grep -o 'const slides = \[.*\
 정확히 집어냈다. `_wd_point_discount_applied`(값 1) 를 금액으로 읽지 않도록 `_applied` 로
 끝나는 칸은 뺀다.
 
-**아직 확인 못 한 것**: 취소 훅에 무엇이 걸려 있는지. 첫 진단의 훅 목록이 깨져 나왔다 —
-`$wp_filter[$hook]` 은 배열이 아니라 **WP_Hook 객체**라, 배열로 캐스팅하면 콜백이 아니라
-객체 속성(`callbacks` · `priorities` · `nesting_level`)이 나온다. `->callbacks` 로 고쳤다.
+**취소 훅에는 적립금을 되돌리는 것이 하나도 없었다** (2차 진단으로 확인).
+`woocommerce_order_status_cancelled` 에 걸린 것은 쿠폰 사용횟수 · 재고 · 기프트카드뿐이고,
+`_changed` 의 `wd_award_purchase_points_on_delivery` 는 **배송완료 때 1% 적립**하는 쪽이다.
+반환은 애초에 아무도 안 한다.
+
+**그래서 `Points\return_points()` 가 그 자리를 채운다.** 테마가 결제 때 빼는 방식
+(`functions.php:3235-3237`)을 그대로 뒤집는다:
+
+```php
+$before = (int) get_user_meta( $uid, '_keyple_points', true );
+update_user_meta( $uid, '_keyple_points', $before + $amount );
+wd_log_keyple_points_change( $uid, $amount, '주문 #N 취소 적립금 반환' );
+```
+
+- **잔액과 원장을 둘 다** 건드린다. 하나만 하면 정산이 어긋난다
+- 가입 적립금 몫(`_wd_signup_point_balance`)은 주문에 기록이 없다 → **주머니에서 비어 있는
+  만큼만** 되돌린다 (`min(사용액, 지급액 − 현재)`). 실제 두 경우로 맞는 것을 확인했다:
+  가입 적립금 8,800 을 쓴 주문은 8,800 이 돌아오고, 일반 적립금 5,000 을 쓴 주문은 0
+- 한 번만 (`_duckhoo_points_returned`). `_wd_point_discount_applied` 가 없는 주문
+  (잔액에서 빠진 적이 없다)은 건너뛴다. 비회원 주문도 건너뛴다
+- **취소 차단은 스스로 풀린다** — `blocks_cancel()` 기본값이 `! can_return()` 이라,
+  테마 함수가 있으면 손님이 다시 스스로 취소할 수 있고 적립금은 돌아온다.
+  테마가 바뀌어 함수가 사라지면 다시 막고 메모만 남긴다
 
 ## 적립금 진단 화면 (2026-09-07)
 

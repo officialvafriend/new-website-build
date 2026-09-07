@@ -118,7 +118,9 @@ $plain = new DhrFakeOrder(104);
 $st = ($P.'close_cancel_for_point_orders')(['pending','failed','on-hold'], $plain);
 $ok(in_array('on-hold',$st,true), '적립금을 안 쓴 주문은 on-hold 취소가 열린 채다');
 
-// 20. 적립금을 쓴 주문은 우리가 연 상태만 닫힌다 (기본 pending·failed 는 그대로)
+// 20. 돌려줄 수 없을 때만 닫는다. 우리가 연 상태만 — 기본 pending·failed 는 그대로
+$ok(in_array('on-hold', ($P.'close_cancel_for_point_orders')(['pending','on-hold'], $o), true), '돌려줄 수 있으면 적립금 주문도 취소가 열려 있다');
+$GLOBALS['__keyple_on'] = false;
 $st2 = ($P.'close_cancel_for_point_orders')(['pending','failed','on-hold'], $o);
 $ok(!in_array('on-hold',$st2,true), '적립금을 쓴 주문은 on-hold 취소가 닫힌다');
 $ok(in_array('pending',$st2,true) && in_array('failed',$st2,true), '워드커머스 기본 취소 상태는 뺏지 않는다');
@@ -128,18 +130,73 @@ add_filter('duckhoo_block_cancel_with_points', fn($v)=>false);
 $ok(in_array('on-hold', ($P.'close_cancel_for_point_orders')(['pending','on-hold'], $o), true), '필터로 끄면 취소가 다시 열린다');
 $GLOBALS['__filters']['duckhoo_block_cancel_with_points'] = [];
 
-// 22. 취소 버튼 자리에 문의 버튼이 선다
+// 22. 취소 버튼 자리에 문의 버튼이 선다 (막고 있을 때만)
+$GLOBALS['__keyple_on'] = false;
 $acts = ($P.'inquiry_action')([], $o);
 $ok(isset($acts['duckhoo-cancel-ask']), '취소 버튼이 없어진 자리에 문의 버튼이 선다');
 $ok(!isset(($P.'inquiry_action')([], $plain)['duckhoo-cancel-ask']), '적립금을 안 쓴 주문에는 문의 버튼을 더하지 않는다');
 $ok(!isset(($P.'inquiry_action')(['cancel'=>[]], $o)['duckhoo-cancel-ask']), '취소 버튼이 살아 있으면 문의 버튼은 안 세운다');
+$GLOBALS['__keyple_on'] = true;
+$ok(!isset(($P.'inquiry_action')([], $o)['duckhoo-cancel-ask']), '돌려줄 수 있으면 문의 버튼도 안 세운다');
 
-// 23. 취소되면 주문 메모가 한 번 남는다
+// 23. 취소되면 주문 메모가 한 번 남는다 (돌려줄 수 없을 때)
+$GLOBALS['__keyple_on'] = false;
 $GLOBALS['__order_by_id'][101] = $o;
-($P.'note_on_cancel')(101, $o);
-($P.'note_on_cancel')(101, $o);
-$ok(count($o->notes) === 1 && str_contains($o->notes[0],'3,000'), '취소되면 적립금 3,000원 메모가 한 번만 남는다');
-$ok(($P.'used')($plain) === 0.0 && ($P.'note_on_cancel')(104, $plain) === null && $plain->notes === [], '적립금을 안 쓴 주문에는 메모를 남기지 않는다');
+($P.'on_cancel')(101, $o);
+($P.'on_cancel')(101, $o);
+$ok(count($o->notes) === 1 && str_contains($o->notes[0],'3,000'), '못 돌려주면 적립금 3,000원 메모가 한 번만 남는다');
+$ok(($P.'used')($plain) === 0.0 && ($P.'on_cancel')(104, $plain) === null && $plain->notes === [], '적립금을 안 쓴 주문에는 메모를 남기지 않는다');
+
+/* ── 24~ 자동 반환 (테마 함수가 있을 때) ──────────────────────────────── */
+$GLOBALS['__keyple_on'] = true;
+$GLOBALS['__ledger'] = [];
+
+// 24. 돌려줄 수 있으면 취소를 막지 않는다
+$ok(($P.'can_return')() === true, '테마 함수가 있으면 돌려줄 수 있다고 본다');
+$ok(($P.'blocks_cancel')() === false, '돌려줄 수 있으면 취소를 막지 않는다');
+$GLOBALS['__keyple_on'] = false;
+$ok(($P.'blocks_cancel')() === true, '못 돌려주면 다시 막는다');
+$GLOBALS['__keyple_on'] = true;
+
+// 25. 가입 적립금 8,800 을 쓴 주문 — 잔액 · 원장 · 가입 주머니가 모두 돌아온다
+$GLOBALS['__usermeta'][900] = ['_keyple_points' => '0', '_wd_signup_point_balance' => '0'];
+$r = new DhrFakeOrder(4220, ['_wd_point_discount'=>'8800','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$r->uid = 900;
+$back = ($P.'return_points')($r);
+$ok($back === 8800, '8,800원을 돌려준다');
+$ok((int)$GLOBALS['__usermeta'][900]['_keyple_points'] === 8800, '잔액 _keyple_points 가 8,800 이 된다');
+$ok((int)$GLOBALS['__usermeta'][900]['_wd_signup_point_balance'] === 8800, '가입 적립금 주머니도 8,800 으로 돌아온다');
+$ok(count($GLOBALS['__ledger']) === 1 && $GLOBALS['__ledger'][0] === [900, 8800, '주문 #4220 취소 적립금 반환'], '원장에 +8,800 한 줄이 남는다');
+$ok(count($r->notes) === 1 && str_contains($r->notes[0],'8,800'), '주문 메모로 반환을 알린다');
+
+// 26. 두 번 돌려주지 않는다
+$ok(($P.'return_points')($r) === 0 && count($GLOBALS['__ledger']) === 1, '같은 주문을 두 번 돌려주지 않는다');
+
+// 27. 일반 적립금 5,000 을 쓴 주문 — 가입 주머니는 이미 차 있으므로 건드리지 않는다
+$GLOBALS['__ledger'] = [];
+$GLOBALS['__usermeta'][901] = ['_keyple_points' => '8800', '_wd_signup_point_balance' => '8800'];
+$r2 = new DhrFakeOrder(4225, ['_wd_point_discount'=>'5000','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$r2->uid = 901;
+$ok(($P.'return_points')($r2) === 5000, '5,000원을 돌려준다');
+$ok((int)$GLOBALS['__usermeta'][901]['_keyple_points'] === 13800, '잔액이 8,800 → 13,800');
+$ok((int)$GLOBALS['__usermeta'][901]['_wd_signup_point_balance'] === 8800, '가입 주머니는 지급액을 넘지 않는다 (8,800 그대로)');
+
+// 28. 잔액에서 빠진 적이 없는 주문은 건드리지 않는다
+$GLOBALS['__usermeta'][902] = ['_keyple_points' => '100'];
+$r3 = new DhrFakeOrder(4300, ['_wd_point_discount'=>'3000'], [], [], 'cancelled'); // _applied 없음
+$r3->uid = 902;
+$ok(($P.'return_points')($r3) === 0 && (int)$GLOBALS['__usermeta'][902]['_keyple_points'] === 100, '_applied 가 없으면 돌려주지 않는다');
+
+// 29. 비회원 주문은 돌려줄 곳이 없다
+$r4 = new DhrFakeOrder(4301, ['_wd_point_discount'=>'3000','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$ok(($P.'return_points')($r4) === 0, '비회원 주문은 건너뛴다');
+
+// 30. on_cancel 은 돌려줬으면 "못 돌려준다" 메모를 남기지 않는다
+$GLOBALS['__usermeta'][903] = ['_keyple_points' => '0', '_wd_signup_point_balance' => '0'];
+$r5 = new DhrFakeOrder(4400, ['_wd_point_discount'=>'8800','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$r5->uid = 903;
+($P.'on_cancel')(4400, $r5);
+$ok(count($r5->notes) === 1 && !str_contains($r5->notes[0],'자동으로 돌아가지 않습니다'), '돌려준 뒤에는 경고 메모를 남기지 않는다');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

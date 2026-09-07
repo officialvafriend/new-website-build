@@ -95,8 +95,11 @@ class DhrFakeMeta {
 }
 class DhrFakeOrder {
   public array $notes = [];
+  public int $uid = 0;
   public function __construct(public int $id=1, public array $meta=[], public array $fees=[], public array $coupons=[], public string $status='on-hold'){}
   public function get_id(){ return $this->id; }
+  public function get_order_number(){ return (string)$this->id; }
+  public function get_customer_id(){ return $this->uid; }
   public function get_meta($k, $single=true){ return $this->meta[$k] ?? ''; }
   public function update_meta_data($k,$v){ $this->meta[$k]=$v; }
   public function save(){ }
@@ -106,6 +109,13 @@ class DhrFakeOrder {
   public function add_order_note($t){ $this->notes[]=$t; }
 }
 if(!function_exists('wc_get_order')) { function wc_get_order($id){ return $GLOBALS['__order_by_id'][$id] ?? null; } }
+
+/* 테마(키플_액상덕후 functions.php)의 적립금 함수 — 있는 것처럼 흉내만 낸다 */
+$GLOBALS['__keyple_on'] = true;
+$GLOBALS['__ledger'] = [];
+function wd_is_keyple_crm_active(){ return (bool)$GLOBALS['__keyple_on']; }
+function wd_log_keyple_points_change($uid,$delta,$desc=''){ $GLOBALS['__ledger'][] = [$uid,$delta,$desc]; }
+function wd_signup_point_amount(){ return 8800; }
 
 // 메인 플러그인 파일을 그대로 읽으면 includes/ 도 따라 읽힌다. front.php 는 wc_get_products 없이도 정의만 된다.
 $src = file_get_contents(dirname(__DIR__, 2).'/duckhoo-redesign.php');

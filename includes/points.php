@@ -11,19 +11,22 @@
  * 취소 버튼을 연 것이 우리**라, 손님이 스스로 눌러 적립금을 잃을 수 있는 길을
  * 만든 것도 우리다. 그 길을 막는다.
  *
- * 여기서 적립금을 **직접 돌려주지 않는다.** keyple-customer 는 잔액만이 아니라
- * 적립금 내역(원장)을 따로 쌓는다. 우리가 회원 메타에 숫자만 더하면 내역에 없는
- * 돈이 생겨 정산이 어긋난다. 저장 키도 공개돼 있지 않다. 그래서 이 파일은
+ * **어디에 저장되는지는 2026-09-07 사이트 진단으로 확인했다** (도구 → 적립금 진단):
+ *
+ *   잔액   회원 메타 `_keyple_points` (가입 적립분 몫은 `_wd_signup_point_balance`)
+ *   원장   표 `wp_keyple_points_log` — `wd_log_keyple_points_change()` 가 줄을 넣는다
+ *   사용액 주문 메타 `_wd_point_discount` (+ 실제로 빠졌다는 표시 `_wd_point_discount_applied`)
+ *
+ * 그리고 `woocommerce_order_status_cancelled` · `_refunded` 에 걸린 것을 다 세어 봤는데
+ * **적립금을 되돌리는 것이 하나도 없었다** (쿠폰 사용횟수 · 재고 · 기프트카드뿐).
+ * 그래서 이 파일이 그 자리를 채운다:
  *
  *   1. 그 주문이 적립금을 얼마나 썼는지 **읽고**,
- *   2. 적립금을 쓴 주문은 손님이 혼자 취소하지 못하게 막고 문의로 보내며,
- *   3. 그래도 취소·환불로 넘어가면 **주문 메모**를 남겨 사람이 놓치지 않게 한다.
+ *   2. 취소·환불되면 잔액과 원장에 **둘 다** 되돌려 놓고 (`return_points()`),
+ *   3. 되돌릴 수 없는 상태(테마 함수가 없다)면 취소를 막고 **주문 메모**를 남긴다.
  *
- * 정확한 저장 키를 알게 되면 한 줄로 못 박는다:
- *
- *   add_filter( 'duckhoo_order_points_used', fn( $v, $o ) => (float) $o->get_meta( '<키>' ), 10, 2 );
- *
- * 자동 반환까지 켜려면 그때 keyple 쪽 적립 함수를 부르는 코드를 여기 더한다.
+ * 잔액만 늘리면 내역에 없는 돈이 생기고, 원장만 남기면 회원 화면의 숫자가 안 바뀐다.
+ * 그래서 테마가 결제 때 빼는 방식(`functions.php:3235-3237`)을 그대로 뒤집는다.
  *
  * @package Duckhoo\Redesign
  */
@@ -160,7 +163,24 @@ function is_points_label( string $label ): bool {
  * @return bool
  */
 function blocks_cancel(): bool {
-	return (bool) apply_filters( 'duckhoo_block_cancel_with_points', true );
+	return (bool) apply_filters( 'duckhoo_block_cancel_with_points', ! can_return() );
+}
+
+/**
+ * 적립금을 돌려줄 수 있는 상태인가.
+ *
+ * 테마가 쓰는 두 가지가 다 있어야 한다 — 잔액의 단일 소스가 `_keyple_points` 라는 것
+ * (`wd_is_keyple_crm_active()`)과, 원장에 줄을 남기는 함수(`wd_log_keyple_points_change()`).
+ * 하나라도 없으면 우리는 손대지 않고, 대신 취소를 막고 주문 메모만 남긴다.
+ *
+ * @return bool
+ */
+function can_return(): bool {
+	$ok = function_exists( 'wd_log_keyple_points_change' )
+		&& function_exists( 'wd_is_keyple_crm_active' )
+		&& wd_is_keyple_crm_active();
+
+	return (bool) apply_filters( 'duckhoo_can_return_points', $ok );
 }
 
 /**
@@ -265,5 +285,98 @@ function note_on_cancel( $order_id, $order = null ): void {
 		$order->save();
 	}
 }
-add_action( 'woocommerce_order_status_cancelled', __NAMESPACE__ . '\\note_on_cancel', 10, 2 );
-add_action( 'woocommerce_order_status_refunded', __NAMESPACE__ . '\\note_on_cancel', 10, 2 );
+/**
+ * 취소·환불된 주문이 쓴 적립금을 회원에게 돌려줍니다.
+ *
+ * 테마가 결제 때 빼는 방식을 **그대로 뒤집는다** (`functions.php:3235-3237`):
+ *
+ *     $current = (int) get_user_meta( $uid, '_keyple_points', true );
+ *     update_user_meta( $uid, '_keyple_points', max( 0, $current - $used ) );
+ *     wd_log_keyple_points_change( $uid, -$used, $label );
+ *
+ * 잔액(`_keyple_points`)과 원장(`wp_keyple_points_log`)을 **둘 다** 건드린다. 하나만
+ * 고치면 정산이 어긋난다 — 잔액만 늘리면 내역에 없는 돈이 생기고, 원장만 남기면
+ * 회원 화면의 숫자가 안 바뀐다.
+ *
+ * 가입 적립금 몫(`_wd_signup_point_balance`)은 주문에 기록이 남지 않는다. 그래서
+ * **가입 적립금 주머니에서 비어 있는 만큼만** 되돌린다 — 지급액을 넘지 않으므로
+ * 쓰지 않은 몫이 부풀지 않는다. 실제 두 경우로 확인했다: 8,800 을 가입 적립금으로
+ * 쓴 주문은 8,800 이 그대로 돌아오고, 일반 적립금 5,000 을 쓴 주문은 0 이 돌아온다.
+ *
+ * 한 번만 돌려준다 (`_duckhoo_points_returned`). 실제로 빠진 적이 없는 주문
+ * (`_wd_point_discount_applied` 가 없다)은 건너뛴다.
+ *
+ * @param \WC_Order|mixed $order 주문.
+ * @return int 돌려준 금액. 0 이면 아무것도 하지 않았다.
+ */
+function return_points( $order ): int {
+	if ( ! is_object( $order ) || ! method_exists( $order, 'get_meta' ) || ! can_return() ) {
+		return 0;
+	}
+	if ( $order->get_meta( '_duckhoo_points_returned', true ) ) {
+		return 0; // 이미 돌려줬다.
+	}
+	if ( ! $order->get_meta( '_wd_point_discount_applied', true ) ) {
+		return 0; // 잔액에서 빠진 적이 없는 주문이다.
+	}
+
+	$amount = (int) round( used( $order ) );
+	$uid    = method_exists( $order, 'get_customer_id' ) ? (int) $order->get_customer_id() : 0;
+	if ( $amount <= 0 || $uid <= 0 ) {
+		return 0;
+	}
+
+	$number = method_exists( $order, 'get_order_number' ) ? (string) $order->get_order_number() : (string) $order->get_id();
+	$label  = sprintf(
+		/* translators: %s: 주문 번호 */
+		__( '주문 #%s 취소 적립금 반환', 'duckhoo-redesign' ),
+		$number
+	);
+
+	$before = (int) get_user_meta( $uid, '_keyple_points', true );
+	update_user_meta( $uid, '_keyple_points', $before + $amount );
+	wd_log_keyple_points_change( $uid, $amount, $label );
+
+	// 가입 적립금 주머니 — 비어 있는 만큼만, 지급액을 넘지 않게.
+	$grant = function_exists( 'wd_signup_point_amount' ) ? (int) wd_signup_point_amount() : 8800;
+	$pot   = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
+	$back  = max( 0, min( $amount, $grant - $pot ) );
+	if ( $back > 0 ) {
+		update_user_meta( $uid, '_wd_signup_point_balance', $pot + $back );
+	}
+
+	$order->update_meta_data( '_duckhoo_points_returned', $amount );
+	$order->update_meta_data( '_duckhoo_points_returned_at', current_time( 'mysql' ) );
+	$order->add_order_note( sprintf(
+		/* translators: 1: 반환 금액, 2: 이전 잔액, 3: 새 잔액 */
+		__( '적립금 %1$s원을 회원에게 돌려주었습니다. (잔액 %2$s원 → %3$s원)', 'duckhoo-redesign' ),
+		number_format_i18n( $amount ),
+		number_format_i18n( $before ),
+		number_format_i18n( $before + $amount )
+	) );
+	$order->save();
+
+	return $amount;
+}
+
+/**
+ * 취소·환불 때 도는 자리. 돌려줄 수 있으면 돌려주고, 못 하면 메모만 남깁니다.
+ *
+ * @param int             $order_id 주문 번호.
+ * @param \WC_Order|mixed $order    주문.
+ * @return void
+ */
+function on_cancel( $order_id, $order = null ): void {
+	if ( ( null === $order || ! is_object( $order ) ) && function_exists( 'wc_get_order' ) ) {
+		$order = wc_get_order( $order_id );
+	}
+	if ( ! is_object( $order ) ) {
+		return;
+	}
+	if ( return_points( $order ) > 0 ) {
+		return;
+	}
+	note_on_cancel( $order_id, $order );
+}
+add_action( 'woocommerce_order_status_cancelled', __NAMESPACE__ . '\\on_cancel', 10, 2 );
+add_action( 'woocommerce_order_status_refunded', __NAMESPACE__ . '\\on_cancel', 10, 2 );
