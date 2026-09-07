@@ -2007,21 +2007,67 @@ html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on .dhp-bar{ display: none !important;
 html body.dhr.dhr-wrap.dhr-wrap.dhp-sheet-on{ overflow: hidden !important; }
 
 /* ── 옛 옵션 UI 의 수량 스테퍼가 줄 밖으로 잘렸다 ─────────────────────────
-   `.dhx-qty` 에 `margin-left: 112px` 가 박혀 있어 줄의 오른쪽으로 밀려나고,
-   바깥 카드가 `overflow: hidden` 이라 `+` 버튼이 잘려 나갔다 (폰에서 특히).
-   고정 여백을 auto 로 바꿔 오른쪽 끝에 붙이고, 그래도 좁으면 잘리는 대신
-   아랫줄로 내려가게 한다. 이름은 줄어들 수 있어야 자리가 난다. */
+   앞선 시도(줄바꿈 허용 + `.dhx-card__inner{overflow:visible}`)는 되레 나빴다.
+   그 카드는 `grid-template-rows: 0fr → 1fr` 로 접히는 아코디언이고, 접힌 상태를
+   실제로 감추는 것이 안쪽의 `overflow:hidden` 이다. 그것을 풀자 닫힌 카드의
+   행들이 서로 겹쳐 흘러나왔다. 되돌린다.
+
+   진짜 원인은 폭이다. 스테퍼가 38+38+38 = 114px 로 고정이라 좁은 폰에서
+   이름 · 가격과 함께 한 줄에 들어가지 못한다. 줄을 접는 대신 스테퍼를 줄인다.
+   덤으로 버튼만 44px 이고 가운데 숫자칸은 36px 이라 위아래가 어긋나 보였다 —
+   같은 높이로 맞춘다. */
+/* 줄바꿈을 허용하면 flexbox 는 줄이기 전에 먼저 넘긴다 — 긴 이름 하나가 첫 줄을
+   다 먹고 스테퍼가 둘째 줄로 떨어져 줄 높이가 89px 로 뛰었다. 한 줄로 못 박고
+   이름 쪽이 줄어들게 한다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row,
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip{
-  flex-wrap: wrap !important; align-items: center !important; row-gap: .4rem !important;
-}
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty{
-  margin: 0 0 0 auto !important; flex: 0 0 auto !important; max-width: 100% !important;
-}
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__pick,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip{ flex-wrap: nowrap !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__pick{ flex: 1 1 auto !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__name,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__name,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip__pick{ min-width: 0 !important; }
-/* 잘림을 막는 마지막 안전장치 — 카드 안쪽이 가로로 자르지 않게 */
-html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-card__inner{ overflow: visible !important; }
+@media (max-width:899px){
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty{ flex: 0 0 auto !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button{
+    flex: 0 0 36px !important; width: 36px !important; height: 44px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty__n{
+    flex: 0 0 32px !important; width: 32px !important; height: 44px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini button{
+    flex: 0 0 30px !important; width: 30px !important; height: 40px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini .dhx-qty__n{
+    flex: 0 0 22px !important; width: 22px !important; height: 40px !important;
+  }
+  /* 그래도 폰에서는 한 줄에 이름 · 가격 · 스테퍼가 다 들어가지 않는다. 카드 안쪽
+     폭이 252px 뿐이라(바깥 여백이 네 겹이다) 이름 자리가 60px 밖에 안 남아
+     `브이메이트...` 처럼 잘려 무엇을 고르는지 알 수 없었다. 두 줄로 나눈다 —
+     이름 한 줄, 그 아래 가격(왼쪽) · 스테퍼(오른쪽). 우연히 접히는 것이 아니라
+     칸을 정해 두므로 잘릴 자리가 없다. */
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row{
+    display: grid !important; grid-template-columns: minmax(0,1fr) auto;
+    align-items: center !important; column-gap: 8px !important; row-gap: 6px !important;
+    padding: 10px 2px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__name{
+    grid-column: 1 / -1 !important; white-space: normal !important;
+    overflow: visible !important; text-overflow: clip !important;
+    word-break: keep-all; line-height: 1.35 !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row__price{
+    grid-column: 1 !important; justify-self: start !important; font-size: 13px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-row > .dhx-qty{
+    grid-column: 2 !important; justify-self: end !important;
+  }
+  /* 묶음 줄도 같은 셈 — 이름을 네 줄로 접는 것보다 아래에 스테퍼를 두는 편이 낫다 */
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle{
+    display: grid !important; grid-template-columns: minmax(0,1fr) auto;
+    align-items: center !important; column-gap: 8px !important; row-gap: 8px !important;
+  }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__pick{ grid-column: 1 / -1 !important; }
+  html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle > .dhx-qty{
+    grid-column: 2 !important; justify-self: end !important; margin: 0 !important;
+  }
+}
