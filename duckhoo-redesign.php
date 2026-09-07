@@ -44,6 +44,12 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
 // 적립금을 쓴 주문의 취소 — 되돌아오지 않는 적립금을 손님이 혼자 잃지 않게.
 require_once plugin_dir_path( __FILE__ ) . 'includes/points.php';
 
+// 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
+// 보고서를 쓰고 나면 이 줄과 파일을 지운다.
+if ( is_admin() ) {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/impact.php';
+}
+
 
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\Pages\\ensure' );
 
