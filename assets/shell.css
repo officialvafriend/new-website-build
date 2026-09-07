@@ -2082,3 +2082,15 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote{
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote.is-on{ max-height: 6rem; opacity: 1; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote::before{ content: attr(data-l); }
+
+/* 폰 검색창 — 테마 화면에서도 같게. 테마의 입력칸 리셋이 이 칸을 잡지 않게 못 박는다
+   (위 규칙이 `input[type="search"]:not(.hs input)` 이라 이 칸에 걸린다). */
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch__in{
+  width: auto !important; min-height: 48px !important; padding: 0 !important;
+  border: 0 !important; border-radius: 0 !important; background: none !important;
+  box-shadow: none !important; font-size: 16px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch__form:focus-within{ box-shadow: inset 0 0 0 2px #111 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch{ z-index: 70 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch__go{ color: #fff !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch__cats a{ color: var(--dh-ink, #111) !important; text-decoration: none !important; }

@@ -289,6 +289,7 @@ function icon( string $name ): string {
 			'receipt' => '<path d="M5.5 3h13v18l-2.6-1.6L13.3 21l-2.6-1.6L8.1 21l-2.6-1.6z"/><path d="M9 8.5h6M9 12.5h6"/>',
 			'user'    => '<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>',
 			'search'  => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+			'close'   => '<path d="M6 6 18 18M18 6 6 18"/>',
 			'chev'    => '<path d="m9 5 7 7-7 7"/>',
 			'check'   => '<path d="m4.5 12.5 5 5 10-11"/>',
 			'heart'   => '<path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 7.5 2.5c0 5.4-7.5 10-7.5 10z"/>',
@@ -464,7 +465,9 @@ function header_html(): void {
 			<?php if ( $sale ) : ?><a href="<?php echo esc_url( get_term_link( $sale ) ); ?>"><?php echo esc_html( short_cat( $sale->name ) ); ?></a><?php endif; ?>
 		</nav>
 		<div class="sp">
-			<a class="gi msearch-btn" href="<?php echo esc_url( add_query_arg( array( 'post_type' => 'product' ), home_url( '/' ) ) ); ?>#dhr-search" aria-label="상품 검색"><?php echo icon( 'search' ); // phpcs:ignore ?></a>
+			<?php // 폰에는 헤더 검색창이 안 들어간다. 이 버튼이 검색창을 연다.
+			// JS 가 죽어도 목록으로는 가도록 진짜 링크로 둔다 (예전에는 없는 앵커 #dhr-search 로 가서 아무 일도 안 났다). ?>
+			<a class="gi msearch-btn" href="<?php echo esc_url( $shop ); ?>" data-search-open aria-label="상품 검색" aria-haspopup="dialog" aria-expanded="false" aria-controls="dhr-search"><?php echo icon( 'search' ); // phpcs:ignore ?></a>
 			<a class="gi wide" href="<?php echo esc_url( $cart ); ?>" aria-label="장바구니"><?php echo icon( 'bag' ); // phpcs:ignore ?><span class="lbl"><?php echo $cart_n ? esc_html( $cart_n . '개' ) : '장바구니'; ?></span><span class="b n" <?php echo $cart_n ? '' : 'style="display:none"'; ?>><?php echo (int) $cart_n; ?></span></a>
 			<a class="who <?php echo $initial ? 'in' : ''; ?>" href="<?php echo esc_url( $account ); ?>" aria-label="<?php echo $initial ? '마이페이지' : '로그인'; ?>"><?php echo $initial ? esc_html( $initial ) : icon( 'user' ); // phpcs:ignore ?></a>
 		</div>
@@ -475,6 +478,53 @@ function header_html(): void {
 		<?php if ( ! $in ) : ?><a class="bnav__hi" href="<?php echo esc_url( home_url( '/register/' ) ); ?>">첫 가입 <?php echo esc_html( number_format_i18n( $pts ) ); ?>원</a><?php endif; ?>
 	</div></nav>
 	</header>
+	<?php
+	search_panel_html( $cats, $shop );
+}
+
+/**
+ * 폰에서 여는 검색창.
+ *
+ * 폰에는 헤더 검색창(`.hs`)이 880px 아래에서 숨겨져 있고, 검색 버튼은 없는 앵커
+ * (`#dhr-search`)를 가리키고 있었다. 그래서 **폰에서는 검색을 할 방법이 아예 없었다.**
+ *
+ * 폼의 필드 이름은 데스크톱 검색창과 똑같다 (`s` · `post_type=product`) — 검색이
+ * 도는 길은 건드리지 않는다. 화면만 하나 더 얹는 것이다.
+ *
+ * 빈 채로 닫히지 않게 분류 칩을 같이 둔다. 검색어가 떠오르지 않는 사람에게
+ * 빈 입력칸만 주면 그대로 나간다.
+ *
+ * @param array  $cats 분류 목록.
+ * @param string $shop 전체 상품 주소.
+ * @return void
+ */
+function search_panel_html( array $cats, string $shop ): void {
+	?>
+	<div class="dhsearch" id="dhr-search" role="dialog" aria-modal="true" aria-label="상품 검색" hidden>
+		<div class="dhsearch__dim" data-search-close></div>
+		<div class="dhsearch__panel">
+			<form class="dhsearch__form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<span class="dhsearch__ic"><?php echo icon( 'search' ); // phpcs:ignore ?></span>
+				<input class="dhsearch__in" type="search" name="s" placeholder="‘샤인머스캣’ 처럼 찾아보세요"
+					aria-label="상품 검색" autocomplete="off" enterkeyhint="search"
+					value="<?php echo esc_attr( get_search_query() ); ?>">
+				<input type="hidden" name="post_type" value="product">
+				<button class="dhsearch__go" type="submit">검색</button>
+			</form>
+			<button class="dhsearch__x" type="button" data-search-close aria-label="검색 닫기">
+				<?php echo icon( 'close' ); // phpcs:ignore ?>
+			</button>
+			<div class="dhsearch__body">
+				<p class="dhsearch__t">분류로 찾기</p>
+				<div class="dhsearch__cats">
+					<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
+					<?php foreach ( $cats as $c ) : ?>
+						<a href="<?php echo esc_url( get_term_link( $c ) ); ?>"><?php echo esc_html( short_cat( $c->name ) ); ?></a>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</div>
+	</div>
 	<?php
 }
 

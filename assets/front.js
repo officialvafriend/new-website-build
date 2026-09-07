@@ -906,3 +906,59 @@
     }
   });
 })();
+
+/* 폰 검색창 ─────────────────────────────────────────────────────────────
+   폰에는 헤더 검색창이 880px 아래에서 숨겨져 있고, 검색 버튼은 없는 앵커를
+   가리키고 있었다. **폰에서는 검색을 할 방법이 아예 없었다.**
+   여기서 여는 창은 데스크톱 검색창과 필드 이름이 같다 (s · post_type) —
+   검색이 도는 길은 그대로다. */
+(function(){
+  var panel = document.getElementById('dhr-search');
+  if(!panel) return;
+  var input = panel.querySelector('.dhsearch__in');
+  var last = null;
+
+  function open(e){
+    if(e){ e.preventDefault(); }
+    last = document.activeElement;
+    panel.hidden = false;
+    document.body.classList.add('dhr-search-on');
+    /* 여는 버튼이 여럿이다 — 헤더 아이콘과 홈의 검색 알약 */
+    document.querySelectorAll('[data-search-open]').forEach(function(b){ b.setAttribute('aria-expanded','true'); });
+    requestAnimationFrame(function(){
+      panel.classList.add('is-on');
+      if(input){ input.focus(); input.select(); }
+    });
+  }
+
+  function close(){
+    panel.classList.remove('is-on');
+    document.body.classList.remove('dhr-search-on');
+    document.querySelectorAll('[data-search-open]').forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+    setTimeout(function(){ panel.hidden = true; }, 180);
+    if(last && last.focus){ last.focus(); }
+  }
+
+  document.addEventListener('click', function(e){
+    var o = e.target.closest && e.target.closest('[data-search-open]');
+    if(o){ open(e); return; }
+    var c = e.target.closest && e.target.closest('[data-search-close]');
+    if(c && panel.contains(c)){ e.preventDefault(); close(); }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !panel.hidden){ close(); }
+  });
+
+  /* 빈 검색은 보내지 않는다 — 결과 0건 화면으로 가면 손님은 그냥 나간다 */
+  var form = panel.querySelector('.dhsearch__form');
+  if(form){
+    form.addEventListener('submit', function(e){
+      if(!input || input.value.trim()) return;
+      e.preventDefault();
+      input.focus();
+      panel.classList.add('is-empty');
+      setTimeout(function(){ panel.classList.remove('is-empty'); }, 900);
+    });
+  }
+})();

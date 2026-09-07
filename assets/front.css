@@ -552,3 +552,45 @@ body.dhr .dh-leave__go[disabled]{background:#8A8A8F;cursor:default;filter:none}
 body.dhr #pop-dim{position:fixed!important;inset:0!important;width:100%!important;max-width:100vw!important;overflow:hidden auto!important}
 body.dhr #pop6{max-width:min(480px,calc(100vw - 1.6rem))!important;width:calc(100vw - 1.6rem)!important}
 body.dhr #pop6 .panel{max-width:100%!important;width:100%!important}
+
+/* 폰 검색창 — 헤더 아이콘과 홈 검색 알약이 연다.
+   불투명이다. 이 사이트는 반투명 표면을 쓰지 않는다 (막만 어둡게 깐다). */
+.dhr .dhsearch{position:fixed;inset:0;z-index:70}
+.dhr .dhsearch[hidden]{display:none}
+.dhr .dhsearch__dim{position:absolute;inset:0;background:rgba(17,17,17,.5);opacity:0;transition:opacity .18s ease}
+.dhr .dhsearch.is-on .dhsearch__dim{opacity:1}
+.dhr .dhsearch__panel{position:absolute;top:0;left:0;right:0;background:#fff;border-radius:0 0 18px 18px;
+  padding:.9rem 1rem 1.1rem;box-shadow:0 18px 40px -18px rgba(0,0,0,.45);
+  transform:translateY(-14px);opacity:0;transition:transform .2s cubic-bezier(.2,0,.2,1),opacity .18s ease;
+  padding-top:calc(.9rem + env(safe-area-inset-top))}
+.dhr .dhsearch.is-on .dhsearch__panel{transform:none;opacity:1}
+.dhr .dhsearch__form{display:flex;align-items:center;gap:.5rem;background:#ECEDF0;border-radius:999px;
+  min-height:52px;padding:0 .45rem 0 .9rem;margin-inline-end:52px}
+.dhr .dhsearch__form:focus-within{background:#fff;box-shadow:inset 0 0 0 2px #111}
+.dhr .dhsearch__ic{display:flex;color:#5F6770;flex:0 0 auto}
+.dhr .dhsearch__ic svg{width:21px;height:21px}
+.dhr .dhsearch__in{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:16px;
+  font-weight:500;color:#111;min-height:48px;padding:0}
+.dhr .dhsearch__in:focus{outline:none}
+.dhr .dhsearch__go{flex:0 0 auto;min-height:44px;padding:0 1.05rem;border-radius:999px;background:#111;
+  color:#fff;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.dhr .dhsearch__x{position:absolute;top:calc(.9rem + env(safe-area-inset-top));right:1rem;width:52px;height:52px;
+  display:flex;align-items:center;justify-content:center;border-radius:999px;color:#111}
+.dhr .dhsearch__x svg{width:22px;height:22px}
+.dhr .dhsearch__body{margin-top:1rem}
+.dhr .dhsearch__t{margin:0 0 .55rem;font-size:13px;font-weight:700;color:#616870}
+.dhr .dhsearch__cats{display:flex;flex-wrap:wrap;gap:.45rem}
+.dhr .dhsearch__cats a{display:inline-flex;align-items:center;min-height:40px;padding:0 .95rem;
+  border-radius:999px;background:#F4F6F7;color:#111;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.dhr .dhsearch.is-empty .dhsearch__form{box-shadow:inset 0 0 0 2px #C2410C}
+.dhr.dhr-search-on{overflow:hidden}
+/* 관리 바가 있으면 그만큼 내린다 */
+body.admin-bar .dhsearch__panel{top:46px}
+@media(min-width:783px){body.admin-bar .dhsearch__panel{top:32px}}
+/* 880px 위에는 헤더에 진짜 검색창이 있다 — 창은 안 쓰지만 열리면 가운데로 */
+@media(min-width:880px){
+  .dhr .dhsearch__panel{max-width:640px;margin:0 auto;border-radius:18px;top:12vh;left:1rem;right:1rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .dhr .dhsearch__panel,.dhr .dhsearch__dim{transition:none}
+}

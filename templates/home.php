@@ -102,7 +102,8 @@ $month = (int) wp_date( 'n' );
 <main id="content" class="dhr-main">
 <div class="wrap">
 
-	<a class="msearch" href="<?php echo esc_url( add_query_arg( array( 's' => '', 'post_type' => 'product' ), home_url( '/' ) ) ); ?>"><?php echo icon( 'search' ); // phpcs:ignore ?><span>‘샤인머스캣’ 처럼 찾아보세요</span></a>
+	<?php // 눌러서 검색창을 연다. 예전에는 빈 검색(?s=) 으로 보내 결과가 0건인 화면이 나왔다. ?>
+	<a class="msearch" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" data-search-open aria-haspopup="dialog" aria-expanded="false" aria-controls="dhr-search"><?php echo icon( 'search' ); // phpcs:ignore ?><span>‘샤인머스캣’ 처럼 찾아보세요</span></a>
 
 	<section class="hero2">
 		<?php if ( $heroes ) : ?>
