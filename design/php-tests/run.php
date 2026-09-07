@@ -109,6 +109,10 @@ $ok(($P.'used')($o2) === 2500.0, '수수료 줄 "적립금 할인 -2,500" 을 �
 $o3 = new DhrFakeOrder(103, ['_points_earned' => '880', '_wd_reward_note' => '1200']);
 $ok(($P.'used')($o3) === 0.0, '적립 기록(_points_earned)은 사용으로 읽지 않는다');
 
+// 18-b. 켜짐/꺼짐 칸(_applied)은 금액으로 읽지 않는다 — 실제 사이트에 그 칸이 있다
+$o3b = new DhrFakeOrder(105, ['_wd_point_discount_applied' => '1']);
+$ok(($P.'used')($o3b) === 0.0, '_wd_point_discount_applied 는 금액이 아니다');
+
 // 19. 적립금을 안 쓴 주문은 취소 버튼이 그대로다
 $plain = new DhrFakeOrder(104);
 $st = ($P.'close_cancel_for_point_orders')(['pending','failed','on-hold'], $plain);

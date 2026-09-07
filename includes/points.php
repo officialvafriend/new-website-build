@@ -129,6 +129,11 @@ function used( $order ): float {
 			if ( ! preg_match( '/(use[ds]?|used|discount|사용|할인)/i', $key ) ) {
 				continue;
 			}
+			// `_wd_point_discount_applied` 처럼 켜짐/꺼짐만 담은 칸은 금액이 아니다.
+			// 그것을 금액으로 읽으면 사용액이 1원이 된다.
+			if ( preg_match( '/(applied|flag|enabled|_at)$/i', $key ) ) {
+				continue;
+			}
 			return abs( (float) $val );
 		}
 	}

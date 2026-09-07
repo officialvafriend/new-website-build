@@ -683,6 +683,32 @@ curl -sS "https://duck-hoo.com/?nocache=$RANDOM" | grep -o 'const slides = \[.*\
 우리 front.js 는 `window.DHR.popupTab`(기본 `고객 안내`) 하나만 남기고 나머지 칩을
 감춘다 — 그래서 탭이 여섯이어도 버튼 줄이 비어 보이고 첫 장(여름 세일)이 그려진다.
 
+## 적립금이 어디에 사는지 (2026-09-07, 진단 결과)
+
+사장님이 `도구 → 적립금 진단` 을 돌려 준 결과로 확인된 것.
+
+| | |
+|---|---|
+| 잔액 | 회원 메타 **`_keyple_points`** (가입 적립분은 `_wd_signup_point_balance`) |
+| 원장 | 표 **`wp_keyple_points_log`** |
+| 주문의 사용액 | 주문 메타 **`_wd_point_discount`** (+ 켜짐 표시 `_wd_point_discount_applied = 1`) |
+| 주문 합계 | 수수료 줄 `적립금 할인 = -8800` |
+
+관련 함수는 전부 테마의 `wd_*` 다:
+`wd_apply_point_discount_fee`(결제에서 할인 줄을 붙인다) · **`wd_log_keyple_points_change`**(원장에 기록) ·
+`wd_get_keyple_points_log_table` · `wd_get_keyple_points_log_columns` · `wd_get_myaccount_user_points` ·
+`wd_award_purchase_points_on_delivery`(배송완료 때 적립) · `wd_get_user_point_history` ·
+`wd_migrate_user_points_to_mycred_once`. keyple 쪽은 `Keyple_CRM_Ajax::handle_points_adjust` ·
+`handle_delete_point_log` (관리자 화면에서 손으로 조정하는 자리).
+
+**`used()` 는 이미 맞게 읽는다** — 진단이 최근 주문 4건의 사용액(8800 · 5000 · 8800 · 8800)을
+정확히 집어냈다. `_wd_point_discount_applied`(값 1) 를 금액으로 읽지 않도록 `_applied` 로
+끝나는 칸은 뺀다.
+
+**아직 확인 못 한 것**: 취소 훅에 무엇이 걸려 있는지. 첫 진단의 훅 목록이 깨져 나왔다 —
+`$wp_filter[$hook]` 은 배열이 아니라 **WP_Hook 객체**라, 배열로 캐스팅하면 콜백이 아니라
+객체 속성(`callbacks` · `priorities` · `nesting_level`)이 나온다. `->callbacks` 로 고쳤다.
+
 ## 적립금 진단 화면 (2026-09-07)
 
 `includes/points-doctor.php` · 도구 → **적립금 진단**. 관리자 전용, **읽기만 한다.**

@@ -77,7 +77,12 @@ function callbacks_on( string $hook ): array {
 		return $out;
 	}
 
-	foreach ( (array) $wp_filter[ $hook ] as $priority => $entries ) {
+	// `$wp_filter[$hook]` 는 WP_Hook **객체**다. 배열로 캐스팅하면 콜백이 아니라
+	// 그 객체의 속성(callbacks · priorities · nesting_level …)이 나온다. 한 번 그렇게 헛돌았다.
+	$hooked = $wp_filter[ $hook ];
+	$groups = ( $hooked instanceof \WP_Hook || isset( $hooked->callbacks ) ) ? (array) $hooked->callbacks : (array) $hooked;
+
+	foreach ( $groups as $priority => $entries ) {
 		foreach ( (array) $entries as $entry ) {
 			$fn = $entry['function'] ?? null;
 			if ( is_string( $fn ) ) {
@@ -248,6 +253,173 @@ function user_point_meta( int $user_id ): array {
 	return $out;
 }
 
+
+/**
+ * 있으면 부르고, 터지면 삼킨다. 남의 함수를 진단하려고 부르는 자리라 그렇다.
+ *
+ * @param string $fn   함수 이름.
+ * @param mixed  ...$a 인자.
+ * @return string 결과를 사람이 읽을 수 있게.
+ */
+function safe_call( string $fn, ...$a ): string {
+	if ( ! function_exists( $fn ) ) {
+		return '(없음)';
+	}
+	try {
+		return (string) wp_json_encode( $fn( ...$a ), JSON_UNESCAPED_UNICODE );
+	} catch ( \Throwable $e ) { // phpcs:ignore
+		return '(호출 실패: ' . $e->getMessage() . ')';
+	}
+}
+
+/**
+ * 들여다볼 함수들. 2026-09-07 진단으로 이름이 확인된 것만 적는다 —
+ * 아무 함수나 찍어 내지 않기 위해서다.
+ *
+ * @return string[]
+ */
+function target_functions(): array {
+	return (array) apply_filters( 'duckhoo_points_doctor_functions', array(
+		'wd_log_keyple_points_change',
+		'wd_get_keyple_points_log_table',
+		'wd_get_keyple_points_log_columns',
+		'wd_apply_point_discount_fee',
+		'wd_get_myaccount_user_points',
+		'wd_award_purchase_points_on_delivery',
+		'wd_get_user_point_history',
+	) );
+}
+
+/**
+ * 함수 하나의 원본 코드. 없으면 빈 문자열.
+ *
+ * 사이트에 이미 돌고 있는 코드를 읽기만 한다. 이름은 위 목록에 있는 것만 받는다.
+ *
+ * @param string $fn    함수 이름.
+ * @param int    $limit 몇 줄까지.
+ * @return string
+ */
+function function_source( string $fn, int $limit = 160 ): string {
+	if ( ! in_array( $fn, target_functions(), true ) || ! function_exists( $fn ) ) {
+		return '';
+	}
+	try {
+		$r    = new \ReflectionFunction( $fn );
+		$file = (string) $r->getFileName();
+		if ( '' === $file || ! is_readable( $file ) ) {
+			return '';
+		}
+		$lines = file( $file );
+		if ( ! is_array( $lines ) ) {
+			return '';
+		}
+		$start = max( 0, $r->getStartLine() - 1 );
+		$end   = min( count( $lines ), $r->getEndLine() );
+		$body  = array_slice( $lines, $start, min( $limit, $end - $start ) );
+
+		return '--- ' . $fn . '()  ' . basename( $file ) . ':' . $r->getStartLine() . '-' . $r->getEndLine() . "\n"
+			. rtrim( implode( '', $body ) );
+	} catch ( \Throwable $e ) { // phpcs:ignore
+		return '';
+	}
+}
+
+/**
+ * 적립금 함수가 사는 파일에서 잔액 · 취소를 건드리는 줄만 뽑습니다.
+ *
+ * 파일 전체를 옮기지 않는다 — 어디서 잔액을 읽고 쓰는지, 취소에 무엇이 걸려 있는지만 본다.
+ *
+ * @param int $limit 몇 줄까지.
+ * @return string[]
+ */
+function balance_lines( int $limit = 120 ): array {
+	$out   = array();
+	$files = array();
+
+	foreach ( target_functions() as $fn ) {
+		if ( ! function_exists( $fn ) ) {
+			continue;
+		}
+		try {
+			$f = ( new \ReflectionFunction( $fn ) )->getFileName();
+			if ( $f && is_readable( $f ) ) {
+				$files[ $f ] = true;
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore
+			continue;
+		}
+	}
+
+	foreach ( array_keys( $files ) as $file ) {
+		$lines = file( $file );
+		if ( ! is_array( $lines ) ) {
+			continue;
+		}
+		$out[] = '--- ' . basename( $file ) . ' (' . count( $lines ) . '줄)';
+		foreach ( $lines as $i => $line ) {
+			if ( ! preg_match( "/_keyple_points|keyple_points_log|point_discount|order_status_(cancel|refund|changed)|add_action\\s*\\(\\s*['\"]woocommerce_order/i", $line ) ) {
+				continue;
+			}
+			$out[] = sprintf( '%5d  %s', $i + 1, rtrim( $line ) );
+			if ( count( $out ) > $limit ) {
+				$out[] = '  … (여기까지)';
+				return $out;
+			}
+		}
+	}
+
+	return $out;
+}
+
+/**
+ * 적립금 원장(wp_keyple_points_log)의 칸 이름과 최근 줄.
+ *
+ * @param int[] $user_ids 이 회원들 것만. 비우면 최근 것 전부.
+ * @param int   $limit    몇 줄까지.
+ * @return string[]
+ */
+function ledger( array $user_ids = array(), int $limit = 30 ): array {
+	global $wpdb;
+	$out = array();
+
+	$table = '';
+	try {
+		$table = function_exists( 'wd_get_keyple_points_log_table' ) ? (string) wd_get_keyple_points_log_table() : '';
+	} catch ( \Throwable $e ) { // phpcs:ignore
+		$table = '';
+	}
+	if ( '' === $table ) {
+		$table = $wpdb->prefix . 'keyple_points_log';
+	}
+	$out[] = '표 이름: ' . $table;
+
+	if ( function_exists( 'wd_get_keyple_points_log_columns' ) ) {
+		$out[] = '칸 매핑: ' . safe_call( 'wd_get_keyple_points_log_columns' );
+	}
+
+	$cols = (array) $wpdb->get_results( 'SHOW COLUMNS FROM `' . esc_sql( $table ) . '`' ); // phpcs:ignore WordPress.DB
+	if ( ! $cols ) {
+		$out[] = '(표를 읽지 못했다)';
+		return $out;
+	}
+	$names = array();
+	foreach ( $cols as $c ) {
+		$names[] = $c->Field . ' ' . $c->Type; // phpcs:ignore WordPress.NamingConventions
+	}
+	$out[] = '칸: ' . implode( ' | ', $names );
+
+	$rows = (array) $wpdb->get_results( 'SELECT * FROM `' . esc_sql( $table ) . '` ORDER BY 1 DESC LIMIT ' . absint( $limit ), ARRAY_A ); // phpcs:ignore WordPress.DB
+	foreach ( $rows as $row ) {
+		$bits = array();
+		foreach ( (array) $row as $k => $v ) {
+			$bits[] = $k . '=' . ( is_scalar( $v ) ? (string) $v : '' );
+		}
+		$out[] = '  ' . implode( ' · ', $bits );
+	}
+
+	return $out;
+}
+
 /**
  * 화면.
  *
@@ -300,9 +472,43 @@ function screen(): void {
 	}
 
 	$report[] = '';
-	$report[] = '### 회원 ' . $user . ' 의 적립금스러운 메타';
-	foreach ( user_point_meta( $user ) as $m ) {
-		$report[] = '  ' . $m;
+	$report[] = '### 적립금을 쓴 주문의 회원 잔액';
+	$seen = array();
+	foreach ( $orders as $o ) {
+		$uid = (int) $o['user'];
+		if ( $uid <= 0 || isset( $seen[ $uid ] ) ) {
+			continue;
+		}
+		$seen[ $uid ] = true;
+		$report[]     = '  회원 ' . $uid . ' (주문 #' . $o['id'] . ' [' . $o['status'] . '] 사용 ' . $o['used'] . ')';
+		foreach ( user_point_meta( $uid ) as $m ) {
+			$report[] = '      ' . $m;
+		}
+		if ( function_exists( 'wd_get_myaccount_user_points' ) ) {
+			$report[] = '      wd_get_myaccount_user_points() = ' . safe_call( 'wd_get_myaccount_user_points', $uid );
+		}
+	}
+
+	$report[] = '';
+	$report[] = '### 적립금 원장';
+	foreach ( ledger( array_keys( $seen ) ) as $l ) {
+		$report[] = $l;
+	}
+
+	$report[] = '';
+	$report[] = '### 적립금을 더하고 빼는 코드';
+	foreach ( target_functions() as $fn ) {
+		$src = function_source( $fn );
+		if ( '' !== $src ) {
+			$report[] = '';
+			$report[] = $src;
+		}
+	}
+
+	$report[] = '';
+	$report[] = '### 잔액 · 취소를 건드리는 줄';
+	foreach ( balance_lines() as $l ) {
+		$report[] = $l;
 	}
 
 	$text = implode( "\n", $report );
