@@ -555,29 +555,29 @@ body.dhr #pop6 .panel{max-width:100%!important;width:100%!important}
 
 /* 폰 검색창 — 헤더 아이콘과 홈 검색 알약이 연다.
    불투명이다. 이 사이트는 반투명 표면을 쓰지 않는다 (막만 어둡게 깐다). */
-.dhr .dhsearch{position:fixed;inset:0;z-index:70}
+.dhr .dhsearch{position:fixed;inset:0;z-index:120}
 .dhr .dhsearch[hidden]{display:none}
 .dhr .dhsearch__dim{position:absolute;inset:0;background:rgba(17,17,17,.5);opacity:0;transition:opacity .18s ease}
 .dhr .dhsearch.is-on .dhsearch__dim{opacity:1}
 .dhr .dhsearch__panel{position:absolute;top:0;left:0;right:0;background:#fff;border-radius:0 0 18px 18px;
-  padding:.9rem 1rem 1.1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.2rem;box-shadow:0 18px 40px -18px rgba(0,0,0,.45);
+  padding:1.1rem 1rem 1.2rem;display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;gap:.2rem;box-shadow:0 18px 40px -18px rgba(0,0,0,.45);
   transform:translateY(-14px);opacity:0;transition:transform .2s cubic-bezier(.2,0,.2,1),opacity .18s ease;
-  padding-top:calc(.9rem + env(safe-area-inset-top))}
+  padding-top:calc(1.1rem + env(safe-area-inset-top))}
 .dhr .dhsearch.is-on .dhsearch__panel{transform:none;opacity:1}
 .dhr .dhsearch__form{display:flex;align-items:center;gap:.15rem;background:#F1F3F5;border-radius:999px;
-  min-height:52px;padding:0 .9rem 0 .35rem;flex:1 1 auto;min-width:0}
+  min-height:52px;padding:0 .9rem 0 .35rem;min-width:0}
 .dhr .dhsearch__form:focus-within{background:#fff;box-shadow:inset 0 0 0 2px #111}
 .dhr .dhsearch__ic{flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
   border-radius:999px;color:#111}
 .dhr .dhsearch__ic svg{width:21px;height:21px}
-.dhr .dhsearch__in{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:16px;
+.dhr .dhsearch__in{flex:1 1 auto;width:0;min-width:0;border:0;background:none;font:inherit;font-size:16px;
   font-weight:500;color:#111;min-height:48px;padding:0}
 .dhr .dhsearch__in:focus{outline:none}
 .dhr .dhsearch__in::placeholder{color:#7A828A}
-.dhr .dhsearch__x{flex:0 0 auto;min-height:44px;padding:0 .5rem 0 .85rem;color:#4E565F;
+.dhr .dhsearch__x{min-height:44px;padding:0 .5rem 0 .85rem;color:#4E565F;
   font-size:15.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
 .dhr .dhsearch__x:hover{color:#111}
-.dhr .dhsearch__body{margin-top:1rem;flex:1 1 100%;min-width:0}
+.dhr .dhsearch__body{margin-top:1rem;grid-column:1/-1;min-width:0}
 .dhr .dhsearch__t{margin:0 0 .55rem;font-size:13px;font-weight:700;color:#616870}
 .dhr .dhsearch__cats{display:flex;flex-wrap:wrap;gap:.45rem}
 .dhr .dhsearch__cats a{display:inline-flex;align-items:center;min-height:40px;padding:0 .95rem;
