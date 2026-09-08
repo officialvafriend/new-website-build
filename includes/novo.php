@@ -957,10 +957,9 @@ function cart_money(): array {
  * @return void
  */
 function adjust_fees(): void {
-	// **기본 꺼짐.** 프로덕션 결제 요약이 「총 주문금액 0원」으로 나온 뒤, 돈에 손대는
-	// 코드를 먼저 물린다. 원인이 이쪽이 아닌 것이 확인되면 true 로 되돌린다:
-	// `add_filter( 'duckhoo_novo_exclude_from_discount', '__return_true' );`
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) || ! function_exists( 'WC' ) ) {
+	// 한때 이 코드를 의심해 꺼 두었다. 「총 주문금액 0원」의 원인은 테마 결제
+	// 스크립트가 `$` 로 죽은 것이었고(shell.php 의 jquery_alias), 이쪽은 무관했다.
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) || ! function_exists( 'WC' ) ) {
 		return;
 	}
 	$wc = WC();
@@ -1005,7 +1004,7 @@ function adjust_fees(): void {
  * @return string
  */
 function discount_except( $ex ): string {
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) ) {
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
 		return (string) $ex;
 	}
 	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
