@@ -773,6 +773,38 @@ wd_log_keyple_points_change( $uid, $amount, '주문 #N 취소 적립금 반환' 
   카드에는 필터 `duckhoo_card_extra`, 상세에는 가격 바로 아래 액션
   `duckhoo_product_after_price` 를 새로 뒀다 (확인함: 칸 이름 `팟, 코일 *` 그대로)
 
+### 담기만 막아서는 샌다 (2026-09-08)
+
+사장님 신고: 11병인데 결제가 됐다. 프로덕션에서 재현했다.
+
+```
+POST /wc/store/v1/cart/add-item     수량 11  → 400 (막힘)
+POST /wc/store/v1/cart/update-item  10 → 11  → 200 (통과)   ← 여기로 샜다
+```
+
+이 사이트의 장바구니(`옵션/수량 변경`)는 수량을 **Store API `update-item`** 으로 고치는데
+그 길에는 `woocommerce_add_to_cart_validation` 이 걸리지 않는다. 빗장을 세 개 더 건다.
+
+- `woocommerce_store_api_product_quantity_maximum` — 상한을 남은 만큼으로 낮춘다.
+  **고치는 중인 줄은 빼고 세야 한다** (`max_units( $p, $cart_item_key )`) — 자기 자신과
+  겨루면 상한이 0 이 되어 이미 담긴 장바구니가 아예 열리지 않는다. 어느 줄인지 모르면
+  손대지 않는다
+- `woocommerce_store_api_validate_cart_items` — Store API 가 장바구니를 검사할 때.
+  `RouteException` 이 있으면 그것으로, 없으면 평범한 예외로 던진다
+- `woocommerce_checkout_create_order` — **마지막 빗장.** 어느 길로 왔든 주문은 여기를
+  지난다. 던진 예외를 워드커머스가 잡아 결제 화면의 오류로 보여 준다
+
+**교훈: 이 사이트에서 수량이 바뀌는 길은 담기 말고도 있다.** 새 제한을 만들 때는
+`add-item` 과 `update-item` 을 둘 다 눌러 봐야 한다.
+
+### 노보 배너
+
+노보 분류 목록 맨 위(`duckhoo_archive_before_grid` → `Novo\banner()`). `도구 → 노보
+이벤트` 에서 이미지를 고르면 그 이미지를(옵션 `duckhoo_novo_banner_img`, 폰용은
+`_m`), 비워 두면 플러그인이 그린 글자판을 쓴다. 글자판 문구는 필터
+`duckhoo_novo_banner`. 색은 상품의 브랜드 색(감청 `#12328F` · 노랑 `#FFE02E`)이다 —
+우리 하늘색을 얹으면 노보 병 옆에서 두 브랜드가 싸운다.
+
 ### 테마가 거절 안내를 삼킨다
 
 한도를 넘겨 담아 보니 서버는 막았는데 화면에는 아무 일도 없었다. 테마의
@@ -785,7 +817,7 @@ wd_log_keyple_points_change( $uid, $amount, '주문 #N 취소 적립금 반환' 
 인라인 style 을 이겨야 한다) `:has()` 로 토스트를 끈다. 워드커머스가 안내에 포커스를
 옮기므로 포커스 링은 남기되 색만 상자의 것으로 바꾼다.
 
-검증: `php design/php-tests/run.php` (노보 36개) · `scratchpad/live/novo1.mjs`(안내 ·
+검증: `php design/php-tests/run.php` (노보 46개) · `scratchpad/live/novo1.mjs`(안내 ·
 카드 · 칸 이름) · `novo6.mjs`(12병 거절 → 안내가 읽히는지).
 
 ## 저장소 구조
