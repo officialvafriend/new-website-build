@@ -328,7 +328,8 @@ $threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = t
 $ok(!$threw, '한도 안이면 주문이 그대로 만들어진다');
 $GLOBALS['__cart']->items = [];
 
-// 41-c. 금액대별 자동 할인 — 노보 금액은 기준에서 뺀다
+// 41-c. 금액대별 자동 할인 — 노보 금액은 기준에서 뺀다 (지금은 기본 꺼짐)
+add_filter('duckhoo_novo_exclude_from_discount', fn() => true);
 $F = 'Duckhoo\\Redesign\\Front\\';
 $ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '10만원부터 1만원 할인');
 
@@ -367,6 +368,11 @@ $ok(count($GLOBALS['__cart']->fees) === 2 && (int)$GLOBALS['__cart']->fees[1]->a
 $ok((int)$GLOBALS['__cart']->fees[0]->amount === 0, '할인 줄만 0 으로 내린다');
 
 $ok(str_contains(apply_filters('duckhoo_auto_discount_except', ''), '노보'), '안내 문구에 노보 제외가 붙는다');
+$GLOBALS['__filters']['duckhoo_novo_exclude_from_discount'] = [];
+$GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10]];
+$GLOBALS['__cart']->fees = [new DhrFakeFee('🎁 금액 자동 할인', -10000.0)];
+($N.'adjust_fees')();
+$ok((int)$GLOBALS['__cart']->fees[0]->amount === -10000, '기본값은 꺼짐 — 할인 줄을 건드리지 않는다');
 $GLOBALS['__cart']->items = []; $GLOBALS['__cart']->fees = [];
 
 // 41-d. 나눠 사도 합쳐서 센다 — 5병씩 계속 살 수 없다

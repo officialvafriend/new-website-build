@@ -964,3 +964,57 @@
     });
   }
 })();
+
+/* ── 노보 하루 한도를 고르는 자리에서 막는다 ────────────────────────────────
+   서버는 이미 담기 · 주문에서 막는다. 하지만 손님은 다 고르고 나서야 거절을 만난다.
+   테마 옵션 UI 의 수량 `+` 를 capture 단계에서 가로채, 오늘 살 수 있는 만큼에서 멈춘다.
+
+   **담기는 값에는 손대지 않는다** — 누르지 못하게 할 뿐이다. 안내 글자는 `data-l` +
+   CSS `content` 로 그린다 (폼 안에 텍스트 노드를 더하면 구매 게이트가 읽는 칸 이름이
+   바뀐다). 세는 단위는 서버와 같다: 단품이면 병, 10+1 이면 세트. */
+(function(){
+  var N = window.DHR && window.DHR.novo;
+  if(!N || !(N.max >= 0)) return;
+
+  function count(){
+    /* 테마가 쥔 값이 정답이다 — form.cart 의 quantity 가 아니라 옵션 JSON 이다. */
+    var i = document.querySelector('form.cart input[name="wd_option_builder_json"]');
+    if(i && i.value){
+      try{
+        var n = 0;
+        JSON.parse(i.value).forEach(function(r){ if(r && r.type === 'required') n += parseInt(r.qty, 10) || 0; });
+        return n;
+      }catch(err){}
+    }
+    var d = 0;
+    document.querySelectorAll('.dhx-bundle .dhx-qty__n').forEach(function(e){ d += parseInt(e.textContent, 10) || 0; });
+    return d;
+  }
+
+  function say(near){
+    var host = near.closest('.dhx-card__inner') || near.closest('.dhx-card') || near.parentElement;
+    if(!host) return;
+    var n = host.querySelector('.dhr-onenote');
+    if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); host.appendChild(n); }
+    n.setAttribute('data-l', N.max > 0
+      ? '노보는 하루 ' + N.limit + '병까지입니다. 오늘은 ' + N.max + N.unit + '까지 담으실 수 있습니다.'
+      : '오늘 살 수 있는 노보 수량을 이미 다 담으셨습니다. 내일 다시 담아 주세요.');
+    n.classList.add('is-on');
+    clearTimeout(n._t);
+    n._t = setTimeout(function(){ n.classList.remove('is-on'); }, 5000);
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('.dhx-bundle .dhx-qty button, .wd-option-plus');
+    if(!btn) return;
+    /* 내리는 버튼은 언제나 놔둔다 */
+    var isPlus = btn.classList.contains('wd-option-plus') || btn === btn.parentElement.lastElementChild;
+    if(!isPlus) return;
+    if(count() + 1 > N.max){
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      say(btn);
+    }
+  }, true);
+})();

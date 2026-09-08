@@ -899,6 +899,8 @@ function js_config( array $extra = array() ): string {
 		'cartUrl'  => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
 		'shopUrl'  => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 	);
+	// 다른 파일이 값을 더할 자리 (노보 이벤트가 남은 수량을 넣는다).
+	$cfg = (array) apply_filters( 'duckhoo_js_config', $cfg );
 	return 'window.DHR=' . wp_json_encode( array_merge( $cfg, $extra ) ) . ';';
 }
 

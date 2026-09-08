@@ -662,7 +662,7 @@ function product_notice( $p = null ): void {
 	if ( null !== $stock ) {
 		echo '<div class="dhp-novo__row"><span>남은 재고</span><b>' . (int) $stock . '개</b></div>';
 	}
-	if ( apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
+	if ( apply_filters( 'duckhoo_novo_exclude_from_discount', false ) ) {
 		// 장바구니에 가서야 알면 늦다. 여기서 미리 말한다.
 		echo '<div class="dhp-novo__row"><span>금액대별 자동 할인</span><b>제외</b></div>';
 	}
@@ -674,6 +674,33 @@ function product_notice( $p = null ): void {
 	echo '</div></div>';
 }
 add_action( 'duckhoo_product_after_price', __NAMESPACE__ . '\\product_notice' );
+
+/**
+ * 화면 쪽에 오늘 남은 수량을 알려 준다. 상품 상세에서 고르는 순간 막기 위해서다.
+ *
+ * @param array<string,mixed> $cfg 여태 값.
+ * @return array<string,mixed>
+ */
+function js_config( array $cfg ): array {
+	if ( ! on() || ! function_exists( 'is_product' ) || ! is_product() ) {
+		return $cfg;
+	}
+	$p = $GLOBALS['product'] ?? null;
+	if ( ! is_novo( $p ) ) {
+		return $cfg;
+	}
+	$each = max( 1, paid( $p ) );
+	$cfg['novo'] = array(
+		'limit' => limit(),
+		'left'  => left( line( $p ) ),
+		'each'  => $each,
+		// 이 상품을 지금 몇 개까지 고를 수 있나 (단품이면 병 수, 묶음이면 세트 수).
+		'max'   => (int) floor( left( line( $p ) ) / $each ),
+		'unit'  => $each > 1 ? '세트' : '병',
+	);
+	return $cfg;
+}
+add_filter( 'duckhoo_js_config', __NAMESPACE__ . '\\js_config' );
 
 /**
  * 목록 카드 — 남은 재고가 알려진 노보 상품에만 한 줄.
@@ -832,7 +859,10 @@ function cart_money(): array {
  * @return void
  */
 function adjust_fees(): void {
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) || ! function_exists( 'WC' ) ) {
+	// **기본 꺼짐.** 프로덕션 결제 요약이 「총 주문금액 0원」으로 나온 뒤, 돈에 손대는
+	// 코드를 먼저 물린다. 원인이 이쪽이 아닌 것이 확인되면 true 로 되돌린다:
+	// `add_filter( 'duckhoo_novo_exclude_from_discount', '__return_true' );`
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) || ! function_exists( 'WC' ) ) {
 		return;
 	}
 	$wc = WC();
@@ -877,7 +907,7 @@ function adjust_fees(): void {
  * @return string
  */
 function discount_except( $ex ): string {
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) ) {
 		return (string) $ex;
 	}
 	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
