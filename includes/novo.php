@@ -476,22 +476,14 @@ function guard_order(): void {
 }
 
 /**
- * Store API(장바구니 서랍 · 수량 변경)가 장바구니를 검사할 때.
+ * **여기서 예외를 던지지 않는다.**
  *
- * @throws \Exception 한도를 넘었을 때.
- * @return void
+ * `woocommerce_store_api_validate_cart_items` 는 장바구니를 **읽을 때도** 돈다.
+ * 한도를 넘은 장바구니에서 예외를 던졌더니 `GET /wc/store/v1/cart` 가 통째로
+ * 실패했고, 테마의 결제 요약 스크립트가 금액을 못 읽어 **총 주문금액 0원**을 그렸다
+ * (프로덕션에서 사장님이 보셨다). 막는 것은 상한(`store_max`)과 주문 만들기 직전
+ * (`guard_order`)이 한다 — 그 둘은 읽기를 깨뜨리지 않는다.
  */
-function store_validate(): void {
-	$over = over_messages();
-	if ( ! $over ) {
-		return;
-	}
-	$cls = 'Automattic\\WooCommerce\\StoreApi\\Exceptions\\RouteException';
-	if ( class_exists( $cls ) ) {
-		throw new $cls( 'duckhoo_novo_limit', $over[0], 409 );
-	}
-	throw new \Exception( esc_html( $over[0] ) );
-}
 
 /**
  * Store API 가 이 상품의 최대 수량을 물을 때. 수량 변경(`update-item`)이 여기를 지난다.
@@ -521,7 +513,6 @@ if ( function_exists( 'add_filter' ) ) {
 	add_action( 'woocommerce_checkout_process', __NAMESPACE__ . '\\check_cart' );
 	// 수량 변경은 담기 검증을 지나지 않는다 — Store API 쪽에도 같은 상한을 준다.
 	add_filter( 'woocommerce_store_api_product_quantity_maximum', __NAMESPACE__ . '\\store_max', 10, 3 );
-	add_action( 'woocommerce_store_api_validate_cart_items', __NAMESPACE__ . '\\store_validate' );
 	// 어느 길로 왔든 주문은 여기를 지난다.
 	add_action( 'woocommerce_checkout_create_order', __NAMESPACE__ . '\\guard_order', 5 );
 }
@@ -761,40 +752,22 @@ function adjust_fees(): void {
 		return;
 	}
 
-	$want    = \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) );
-	$keep    = array();
-	$changed = false;
+	$want = \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) );
 
+	// **줄을 지웠다 다시 붙이지 않는다.** `remove_all_fees()` + `add_fee()` 는 쿠폰
+	// 플러그인이 그 줄에 달아 둔 값을 잃는다. 금액만 제자리에서 고친다 —
+	// 워드커머스는 합계를 낼 때 `amount` 를 읽는다.
 	foreach ( $fees as $fee ) {
 		if ( ! is_auto_discount( $fee ) ) {
-			$keep[] = $fee;
 			continue;
 		}
-		if ( $want > 0 ) {
-			if ( (int) round( abs( (float) $fee->amount ) ) !== $want ) {
-				$fee->amount = -1 * (float) $want;
-				$changed     = true;
+		$new = -1 * (float) $want;
+		if ( (float) $fee->amount !== $new ) {
+			$fee->amount = $new;
+			if ( property_exists( $fee, 'total' ) ) {
+				$fee->total = $new;
 			}
-			$keep[] = $fee;
-			continue;
 		}
-		$changed = true; // 기준에 못 미친다 — 이 줄을 뺀다.
-	}
-
-	if ( ! $changed ) {
-		return;
-	}
-
-	$api->remove_all_fees();
-	foreach ( $keep as $fee ) {
-		$api->add_fee(
-			array(
-				'name'      => (string) $fee->name,
-				'amount'    => (float) $fee->amount,
-				'taxable'   => ! empty( $fee->taxable ),
-				'tax_class' => (string) ( $fee->tax_class ?? '' ),
-			)
-		);
 	}
 }
 
