@@ -454,6 +454,25 @@ $GLOBALS['__cart']->items = [];
 $ok(str_contains(apply_filters('duckhoo_card_extra', '', $lowst), '하루') === false, '낱병 카드에는 한도 문구가 없다');
 $ok(str_contains(($N.'rule')(), '낱병은 제한이 없습니다'), '안내가 낱병은 제한이 없다고 말한다');
 
+// 41-h. 취소한 주문은 어떤 상태 이름이든 한도를 놓아 준다
+$singlesOn();
+$GLOBALS['__cart']->items = []; $GLOBALS['__logged_in'] = 300;
+foreach (['cancelled','refunded','failed','keyple-cancel','trash'] as $st) {
+  $o = new DhrFakeOrder(8000 + crc32($st) % 900, [], [], [], $st);
+  $o->lines = [new DhrFakeLine($plain, 10)];
+  $GLOBALS['__orders'] = [$o];
+  $GLOBALS['__logged_in'] = ++$uid;
+  $ok(($N.'left')('plain', $uid) === 10, "상태 '$st' 인 주문은 한도를 잡지 않는다");
+}
+// 질의가 걸러 주지 않아도 우리가 한 번 더 본다
+$o = new DhrFakeOrder(8999, [], [], [], 'cancelled');
+$o->lines = [new DhrFakeLine($plain, 10)];
+$GLOBALS['__orders'] = [$o];
+$GLOBALS['__logged_in'] = ++$uid;
+$ok(($N.'left')('plain', $uid) === 10, '질의를 통과해 들어와도 상태를 다시 보고 뺀다');
+$GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
+$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';

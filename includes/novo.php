@@ -338,7 +338,11 @@ function day_start(): int {
  * @return string[]
  */
 function free_statuses(): array {
-	return (array) apply_filters( 'duckhoo_novo_free_statuses', array( 'cancelled', 'refunded', 'failed', 'checkout-draft', 'trash' ) );
+	return (array) apply_filters(
+		'duckhoo_novo_free_statuses',
+		// 취소 · 환불 · 실패는 물량을 잡아 두지 않는다. 이 가게의 키플 상태 이름도 함께 본다.
+		array( 'cancelled', 'refunded', 'failed', 'checkout-draft', 'trash', 'keyple-cancel', 'keyple-refund', 'cancel', 'refund' )
+	);
 }
 
 /**
@@ -383,21 +387,34 @@ function tally_orders( int $uid ): array {
 		}
 	}
 
-	$orders = wc_get_orders(
-		array(
-			'customer_id'  => 1 === count( $who ) ? $who[0] : $who,
-			'limit'        => 60 * count( $who ),
-			'status'       => $statuses ? $statuses : 'any',
-			'date_created' => '>=' . day_start(),
-			'return'       => 'objects',
-		)
-	);
-	if ( ! is_array( $orders ) ) {
-		return $out;
+	// **회원 한 명씩 따로 묻는다.** `customer_id` 에 배열을 주면 워드커머스가 그대로
+	// 걸러 주지 않는다 — 조용히 남의 주문까지 세거나 하나도 못 셀 수 있다.
+	$orders = array();
+	foreach ( $who as $one ) {
+		$got = wc_get_orders(
+			array(
+				'customer_id'  => (int) $one,
+				'limit'        => 60,
+				'status'       => $statuses ? $statuses : 'any',
+				'date_created' => '>=' . day_start(),
+				'return'       => 'objects',
+			)
+		);
+		foreach ( (array) $got as $o ) {
+			// 같은 주문을 두 번 세지 않는다.
+			$id = is_object( $o ) && method_exists( $o, 'get_id' ) ? (int) $o->get_id() : 0;
+			$orders[ $id > 0 ? $id : count( $orders ) + 1000000 ] = $o;
+		}
 	}
 
+	$free = free_statuses();
 	foreach ( $orders as $order ) {
 		if ( ! is_object( $order ) || ! method_exists( $order, 'get_items' ) ) {
+			continue;
+		}
+		// **상태를 여기서 한 번 더 본다.** 질의만 믿지 않는다 — 취소한 주문이 한도를
+		// 계속 잡고 있으면 손님은 다시 살 수 없고, 왜 그런지도 알 수 없다.
+		if ( method_exists( $order, 'get_status' ) && in_array( (string) $order->get_status(), $free, true ) ) {
 			continue;
 		}
 		foreach ( $order->get_items() as $item ) {
@@ -955,41 +972,6 @@ function cart_money(): array {
 }
 
 /**
- * 합계에서 노보 금액을 뺀 값. 수수료를 셈하는 동안에만 걸린다.
- *
- * @param mixed $value 여태 값.
- * @return float
- */
-function mask_total( $value ): float {
-	return max( 0.0, (float) $value - cart_money()['novo'] );
-}
-
-/**
- * 수수료를 셈하기 직전 — 기준 금액에서 노보를 감춘다.
- *
- * @return void
- */
-function mask_on(): void {
-	if ( ! on() || ! excluding() || cart_money()['novo'] <= 0 ) {
-		return;
-	}
-	add_filter( 'woocommerce_cart_get_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
-	add_filter( 'woocommerce_cart_get_cart_contents_total', __NAMESPACE__ . '\\mask_total', 99 );
-	add_filter( 'woocommerce_cart_get_displayed_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
-}
-
-/**
- * 다 셈했으면 곧바로 되돌린다. 화면의 다른 금액은 손대지 않는다.
- *
- * @return void
- */
-function mask_off(): void {
-	remove_filter( 'woocommerce_cart_get_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
-	remove_filter( 'woocommerce_cart_get_cart_contents_total', __NAMESPACE__ . '\\mask_total', 99 );
-	remove_filter( 'woocommerce_cart_get_displayed_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
-}
-
-/**
  * 장바구니 안내 문구에 붙는 예외 표시.
  *
  * @param string $ex 여태 값.
@@ -1003,7 +985,5 @@ function discount_except( $ex ): string {
 }
 
 if ( function_exists( 'add_action' ) ) {
-	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\mask_on', 0 );
-	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\mask_off', PHP_INT_MAX );
 	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
 }
