@@ -100,6 +100,30 @@ function assets(): void {
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\assets', 110 );
 
 /**
+ * 테마 결제 스크립트가 `$` 로 죽는 것을 막는다.
+ *
+ * `테마/assets/js/wd-checkout-custom.js:185` 가 `jQuery(function($){…})` 래퍼 **밖에서**
+ * `$` 를 쓴다. 워드프레스는 `jQuery` 만 주므로 거기서 `$ is not a function` 이 나고,
+ * 그 줄부터 아래가 통째로 안 돈다. 실제로 벌어지는 일:
+ *
+ * - 결제 화면 **총 주문금액이 0원**으로 그려진다 (합계를 내는 코드가 그 아래에 있다)
+ * - 쿠폰 카드 체크박스가 아무 일도 하지 않는다
+ *
+ * 테마 파일은 건드리지 않는다. jQuery 바로 뒤에 별칭 한 줄을 놓아 준다 —
+ * 이미 `$` 가 있으면 손대지 않으므로 다른 스크립트를 밀어내지 않는다.
+ * 끄려면: `add_filter( 'duckhoo_jquery_alias', '__return_false' );`
+ *
+ * @return void
+ */
+function jquery_alias(): void {
+	if ( is_admin() || ! apply_filters( 'duckhoo_jquery_alias', true ) ) {
+		return;
+	}
+	wp_add_inline_script( 'jquery-core', 'if(window.jQuery&&typeof window.$!=="function"){window.$=window.jQuery;}', 'after' );
+}
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\jquery_alias', 1 );
+
+/**
  * 옛 프론트(duckhoo-front)가 얹어 둔 껍데기 CSS 를 뺀다.
  *
  * `dh-shell` 은 body 에 파스텔 그라데이션을, `#page` 에 1240px 둥근 흰 카드와 216px 사이드
