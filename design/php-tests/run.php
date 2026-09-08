@@ -480,7 +480,7 @@ $oi = new DhrFakeLine($plain, 1);
 $ok(($N.'units_in_order_item')($oi) === 1, '메타가 없으면 1');
 
 // 41-g. 기본값 — 낱병은 제한하지 않는다 (사장님 결정)
-$singlesOn();
+$GLOBALS['__filters']['duckhoo_novo_event'] = [];
 $GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
 $ok(($N.'limited')($plain) === false && ($N.'limited')($black) === false, '낱병은 한도가 걸리지 않는다');
 $ok(($N.'limited')($bundle) === true && ($N.'limited')($ten) === true, '묶음은 한도가 걸린다');
@@ -506,6 +506,7 @@ $ok(($A.'target_price')($ten) === 0, '10병 묶음은 이벤트 대상이 아니
 $ok(($A.'target_price')($other) === 0, '노보가 아니면 대상이 아니다');
 
 // 43. 이벤트를 끄면 한도가 걸리지 않는다
+$singlesOn();
 add_filter('duckhoo_novo_event', function($c){ $c['on'] = false; return $c; });
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 5]];
 $ok(($N.'validate_add')(true, 238, 99) === true, '이벤트를 끄면 막지 않는다');

@@ -813,7 +813,7 @@ function card_note( string $extra, $p = null ): string {
 		$parts[] = '<b>남은 수량 ' . (int) $stock . '개</b>';
 	}
 	if ( limited( $p ) ) {
-		$parts[] = '하루 한 세트';
+		$parts[] = bottles( $p ) > 1 ? '하루 한 세트' : '하루 ' . limit() . '병까지';
 	}
 	return $parts ? $extra . '<div class="nlimit">' . implode( ' · ', $parts ) . '</div>' : $extra;
 }
