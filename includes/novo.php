@@ -957,9 +957,17 @@ function cart_money(): array {
  * @return void
  */
 function adjust_fees(): void {
-	// 한때 이 코드를 의심해 꺼 두었다. 「총 주문금액 0원」의 원인은 테마 결제
-	// 스크립트가 `$` 로 죽은 것이었고(shell.php 의 jquery_alias), 이쪽은 무관했다.
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) || ! function_exists( 'WC' ) ) {
+	// **기본 꺼짐 — 켜면 결제 화면이 깨진다.** 0원의 원인은 둘이었다: 테마 스크립트가
+	// `$` 로 죽은 것(shell.php 의 jquery_alias 로 고쳤다)과, 이 코드다. `$` 를 고친 뒤
+	// 로그인 상태에서 A/B 로 확인했다 (135,000원 노보만 담은 장바구니):
+	//
+	//     꺼짐 → 총 주문금액 125,000원 · 할인 -0원        (정상)
+	//     켜짐 → 총 주문금액 0원 · 할인 - -10,000원        (깨짐)
+	//
+	// 이 가게의 자동 할인은 수수료 줄로도, 쿠폰으로도 걸린다. 수수료 줄만 0 으로
+	// 내리면 두 값이 어긋나 테마 요약이 무너진다. **노보를 자동 할인에서 빼려면
+	// 쿠폰 플러그인 설정(대상 분류에서 노보 제외)에서 해야 한다.**
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) || ! function_exists( 'WC' ) ) {
 		return;
 	}
 	$wc = WC();
@@ -1004,7 +1012,7 @@ function adjust_fees(): void {
  * @return string
  */
 function discount_except( $ex ): string {
-	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', false ) ) {
 		return (string) $ex;
 	}
 	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
