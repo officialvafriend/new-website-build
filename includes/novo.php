@@ -896,23 +896,145 @@ function banner(): void {
 }
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
 
-/* ── 노보를 자동 할인에서 빼는 일은 쿠폰 플러그인 쪽에서 해야 한다 ───────────
-   사장님 요청: 낱병이든 세트든 노보에는 할인이 붙으면 안 된다.
+/* ── 노보는 금액대별 자동 할인에서 뺀다 ────────────────────────────────────
+   9월 이벤트는 **10만원 이상 10,000원** 한 단계이고, **노보는 대상이 아니다**
+   (사장님 2026-09-08).
 
-   **우리 플러그인에서는 못 한다.** 두 가지를 다 해 봤고 둘 다 결제 화면을 깨뜨렸다
-   (로그인 상태에서 확인, 노보만 135,000원 담은 장바구니):
+   할인은 사장님 Code Snippets 가 `woocommerce_cart_calculate_fees` 에서
+   수수료 줄(`🎁 금액 자동 할인`, 음수)로 붙인다. 우리는 그 뒤(우선순위 99)에
+   **노보를 뺀 금액**으로 다시 판정해, 기준에 못 미치면 그 줄을 걷어낸다.
 
-       수수료 줄의 값을 0 으로   → 총 주문금액 0원 · 할인 - -10,000원
-       수수료 줄을 통째로 걷어냄 → 총 주문금액 0원 · 「금액 자동 할인 -10,000원」 줄은 그대로
+   **줄의 값을 0 으로 내리지 않는다** — 한 번 그렇게 했더니 결제 요약이 무너졌다.
+   노보를 빼도 기준을 넘으면 할인은 그대로 둔다: 노보 한 병 담았다고 다른 상품의
+   할인까지 사라지면 손님에게 벌을 주는 것이다.
 
-   두 번째가 결정적이다. 줄을 걷어냈는데도 화면에는 남는다 — **쿠폰 플러그인이 그
-   줄을 워드커머스 수수료가 아니라 자기 상태로 그린다.** 우리가 워드커머스 쪽에서
-   빼면 화면과 계산이 갈라지고, 테마 요약이 그 어긋남에서 무너진다.
+   **결제 요약은 AJAX(`?wc-ajax=update_order_review`)로 다시 계산된다.** 시험 스위치를
+   주소(`?...`)에 두면 그 요청에는 따라가지 않아 첫 계산과 AJAX 계산이 갈리고,
+   그 어긋남이 「총 주문금액 0원」으로 나온다. 그래서 스위치는 **쿠키**에 둔다. */
 
-   그래서 이 자리에는 코드를 두지 않는다. 규칙이 사는 곳에서 고쳐야 한다:
-   **쿠폰 플러그인(keyple-coupon-manager)의 자동 할인 설정에서 `노보 액상` 분류를
-   대상에서 뺀다.** 그 설정이 없으면 플러그인 쪽에 물어야 한다.
+/**
+ * 지금 이 요청에서 노보를 할인에서 빼는가.
+ *
+ * @return bool
+ */
+function excluding(): bool {
+	// 시험용 쿠키 — AJAX 요청에도 따라간다. 켜지는 쪽이 할인이 **빠지는** 방향이라
+	// 손님이 이 쿠키로 이득을 볼 여지는 없다.
+	if ( isset( $_COOKIE['dhr_novo_nodisc'] ) ) {
+		return '1' === (string) $_COOKIE['dhr_novo_nodisc'];
+	}
+	return (bool) apply_filters( 'duckhoo_novo_exclude_from_discount', false );
+}
 
-   되돌아와서 다시 시도하려면 커밋 `04fdf24` 에 두 방식이 다 들어 있다. */
+/**
+ * 이 수수료 줄이 금액대별 자동 할인인가.
+ *
+ * @param object $fee 수수료 줄.
+ * @return bool
+ */
+function is_auto_discount( $fee ): bool {
+	$name = (string) ( $fee->name ?? '' );
+	return (float) ( $fee->amount ?? 0 ) < 0
+		&& (bool) preg_match( (string) apply_filters( 'duckhoo_auto_discount_fee', '/자동\s*할인/u' ), $name );
+}
+
+/**
+ * 장바구니의 노보 금액과 전체 금액.
+ *
+ * @return array{novo:float,all:float}
+ */
+function cart_money(): array {
+	$out = array( 'novo' => 0.0, 'all' => 0.0 );
+	if ( ! function_exists( 'WC' ) ) {
+		return $out;
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'get_cart' ) ) {
+		return $out;
+	}
+	foreach ( (array) $wc->cart->get_cart() as $item ) {
+		$p = $item['data'] ?? null;
+		if ( ! $p instanceof \WC_Product ) {
+			continue;
+		}
+		$line = (float) $p->get_price() * max( 1, (int) ( $item['quantity'] ?? 0 ) );
+		$out['all'] += $line;
+		if ( is_novo( $p ) ) {
+			$out['novo'] += $line;
+		}
+	}
+	return $out;
+}
+
+/**
+ * 노보를 뺀 금액으로 다시 판정해, 기준에 못 미치면 할인 줄을 걷어낸다.
+ *
+ * @return void
+ */
+function adjust_fees(): void {
+	if ( ! on() || ! excluding() || ! function_exists( 'WC' ) ) {
+		return;
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'fees_api' ) ) {
+		return;
+	}
+	$money = cart_money();
+	if ( $money['novo'] <= 0 ) {
+		return; // 노보가 없으면 손댈 것이 없다.
+	}
+	$api  = $wc->cart->fees_api();
+	$fees = $api->get_fees();
+	if ( ! $fees ) {
+		return;
+	}
+	if ( \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) ) > 0 ) {
+		return; // 노보를 빼도 기준을 넘는다 — 할인은 그대로.
+	}
+
+	$keep    = array();
+	$dropped = false;
+	foreach ( $fees as $fee ) {
+		if ( is_auto_discount( $fee ) ) {
+			$dropped = true;
+			continue;
+		}
+		$keep[] = $fee;
+	}
+	if ( ! $dropped ) {
+		return;
+	}
+	$api->remove_all_fees();
+	foreach ( $keep as $fee ) {
+		$api->add_fee(
+			array(
+				'name'      => (string) $fee->name,
+				'amount'    => (float) $fee->amount,
+				'taxable'   => ! empty( $fee->taxable ),
+				'tax_class' => (string) ( $fee->tax_class ?? '' ),
+			)
+		);
+	}
+}
+
+/**
+ * 장바구니 안내 문구에 붙는 예외 표시.
+ *
+ * @param string $ex 여태 값.
+ * @return string
+ */
+function discount_except( $ex ): string {
+	if ( ! on() || ! excluding() ) {
+		return (string) $ex;
+	}
+	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
+}
+
+if ( function_exists( 'add_action' ) ) {
+	// 사장님 스니펫이 줄을 붙인 뒤에 본다.
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\adjust_fees', 99 );
+	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
+}
+
 
 
