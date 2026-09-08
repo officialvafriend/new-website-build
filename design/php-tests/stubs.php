@@ -69,7 +69,15 @@ function wc_get_order_statuses(){
     'wc-keyple-ready'=>'배송준비중','wc-keyple-shipping'=>'배송중','wc-keyple-done'=>'배송완료',
   ];
 }
-function wc_get_orders($args){ return $GLOBALS['__orders']; }
+function wc_get_orders($args){
+  $out = $GLOBALS['__orders'];
+  // 상태 거르기 — 취소·환불된 주문이 한도에서 빠지는지 실제로 재려면 이게 있어야 한다.
+  if (!empty($args['status']) && is_array($args['status'])) {
+    $want = array_map(fn($s) => ltrim((string)$s, 'wc-'), $args['status']);
+    $out = array_values(array_filter($out, fn($o) => !is_object($o) || !property_exists($o,'status') || in_array($o->status, $want, true)));
+  }
+  return $out;
+}
 
 if(!function_exists('plugin_dir_path')) { function plugin_dir_path($f){ return dirname($f).'/'; } }
 if(!function_exists('plugin_dir_url')) { function plugin_dir_url($f){ return 'https://example.test/wp-content/plugins/new-website-build/'; } }

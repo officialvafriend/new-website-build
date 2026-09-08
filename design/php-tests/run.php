@@ -361,6 +361,32 @@ $ok(count($GLOBALS['__cart']->fees) === 1 && $GLOBALS['__cart']->fees[0]->name =
 $ok(str_contains(apply_filters('duckhoo_auto_discount_except', ''), '노보'), '안내 문구에 노보 제외가 붙는다');
 $GLOBALS['__cart']->items = []; $GLOBALS['__cart']->fees = [];
 
+// 41-d. 나눠 사도 합쳐서 센다 — 5병씩 계속 살 수 없다
+$GLOBALS['__cart']->items = [];
+$mkorder = function(int $n, string $st = 'on-hold') use ($plain) {
+  $o = new DhrFakeOrder(rand(1, 99999), [], [], [], $st);
+  $o->lines = [new DhrFakeLine($plain, $n)];
+  return $o;
+};
+// tally_orders 는 한 요청 안에서 회원별로 한 번만 조회한다 — 경우마다 다른 회원으로 잰다.
+$uid = 200;
+$rest = function(array $orders) use (&$uid, $N) {
+  ++$uid; $GLOBALS['__logged_in'] = $uid; $GLOBALS['__orders'] = $orders;
+  return ($N.'left')('plain');
+};
+$ok($rest([$mkorder(5)]) === 5, '오늘 5병 주문했으면 5병 남는다');
+$ok($rest([$mkorder(5), $mkorder(5)]) === 0, '5병씩 두 번이면 그날치가 끝난다');
+$ok($rest([$mkorder(3), $mkorder(3), $mkorder(3)]) === 1, '3병씩 세 번이면 1병만 남는다');
+$GLOBALS['__notices'] = [];
+$ok(($N.'validate_add')(true, 238, 3) === false, '1병 남았는데 3병은 못 담는다');
+$ok(($N.'validate_add')(true, 238, 1) === true, '1병은 담긴다');
+// 취소한 주문은 자리를 돌려준다
+$ok($rest([$mkorder(5), $mkorder(5, 'cancelled')]) === 5, '취소한 주문은 한도에서 빠진다');
+// 묶음 주문 한 건도 그날치를 다 쓴다
+$bo = new DhrFakeOrder(555, [], [], [], 'on-hold'); $bo->lines = [new DhrFakeLine($bundle, 1)];
+$ok($rest([$bo]) === 0, '10+1 세트를 주문했으면 그날치가 끝난다');
+$GLOBALS['__logged_in'] = 0; $GLOBALS['__orders'] = [];
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';
