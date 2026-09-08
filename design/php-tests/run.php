@@ -335,7 +335,9 @@ $GLOBALS['__cart']->items = [];
 
 // 41-c. 금액대별 자동 할인 규칙은 그대로 읽는다 (노보 제외는 쿠폰 플러그인 쪽 일이다)
 $F = 'Duckhoo\\Redesign\\Front\\';
-$ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '10만원부터 1만원 할인');
+$ok(($F.'discount_for')(49999.0) === 0 && ($F.'discount_for')(50000.0) === 3000, '5만원부터 3,000원');
+$ok(($F.'discount_for')(80000.0) === 5000 && ($F.'discount_for')(99999.0) === 5000, '8만원부터 5,000원');
+$ok(($F.'discount_for')(100000.0) === 10000 && ($F.'discount_for')(500000.0) === 10000, '10만원부터 10,000원');
 $GLOBALS['__cart']->items = []; $GLOBALS['__cart']->fees = [];
 
 // 41-d. 나눠 사도 합쳐서 센다 — 5병씩 계속 살 수 없다

@@ -225,15 +225,26 @@ function featured_brands( int $limit = 6 ): array {
 /**
  * 금액대별 자동 할인 규칙. 안내 문구와 서버 쪽 계산이 같은 값을 본다.
  *
- * 실제 할인은 쿠폰 플러그인이 수수료 줄(`🎁 금액 자동 할인`)로 붙인다. 여기 값은
- * 그 규칙을 우리가 아는 만큼 적어 둔 것이다. 규칙이 바뀌면 이 필터 한 줄이면 된다:
+ * 실제 할인은 **사장님 Code Snippets** 가 수수료 줄(`🎁 금액 자동 할인`)로 붙인다.
+ * 여기 값은 그 규칙을 우리가 아는 만큼 적어 둔 것이고, 장바구니 안내 문구가 이것을 읽는다.
+ *
+ * **세 단계를 다 적어야 한다.** 한때 10만원 한 줄만 적어 두는 바람에, 우리가 안내
+ * 문구를 다시 쓰면서 5만 · 8만 단계를 손님 눈에서 지우고 있었다 (스니펫 원문:
+ * `5만원 이상 3,000원 / 8만원 이상 5,000원 / 10만원 이상 10,000원 자동 할인`).
+ *
+ * 규칙이 바뀌면 이 필터 한 줄이면 된다:
  * `add_filter( 'duckhoo_auto_discount', fn() => array( array( 'min' => 100000, 'amount' => 10000 ) ) );`
  *
  * @return array<int,array{min:int,amount:int}>
  */
 function discount_tiers(): array {
 	$out = array();
-	foreach ( (array) apply_filters( 'duckhoo_auto_discount', array( array( 'min' => 100000, 'amount' => 10000 ) ) ) as $t ) {
+	$rule = array(
+		array( 'min' => 50000, 'amount' => 3000 ),
+		array( 'min' => 80000, 'amount' => 5000 ),
+		array( 'min' => 100000, 'amount' => 10000 ),
+	);
+	foreach ( (array) apply_filters( 'duckhoo_auto_discount', $rule ) as $t ) {
 		$out[] = array( 'min' => (int) ( $t['min'] ?? 0 ), 'amount' => (int) ( $t['amount'] ?? 0 ) );
 	}
 	usort( $out, static fn( $a, $b ) => $a['min'] <=> $b['min'] );
