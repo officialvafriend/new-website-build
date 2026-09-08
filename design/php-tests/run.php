@@ -202,6 +202,11 @@ $ok(count($r5->notes) === 1 && !str_contains($r5->notes[0],'자동으로 돌아�
 /* ── 31~ 노보 물량 이벤트 (includes/novo.php) ────────────────────────────── */
 $N = 'Duckhoo\\Redesign\\Novo\\';
 
+// 기본값은 **낱병 제한 없음**(묶음만). 아래 항목들은 낱병까지 세는 경우도 함께 재려고
+// 켜 두고, 기본값은 마지막에 따로 확인한다.
+$singlesOn = function(){ $GLOBALS['__filters']['duckhoo_novo_event'] = [fn($c) => ['singles' => true] + $c]; };
+$singlesOn();
+
 $mk = function(int $id, string $name, float $price = 9900.0, bool $stock = true, bool $manage = false, ?int $left = null) {
   $p = new WC_Product($id, $name, $price, $stock, $manage, $left);
   $GLOBALS['__products'][$id] = $p;
@@ -294,7 +299,7 @@ add_filter('duckhoo_novo_event', function($c){ $c['scope'] = 'line'; return $c; 
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
 $ok(($N.'left')('black') === 10, '라인별로 세면 블랙은 그대로 10병 남는다');
 $ok(($N.'left')('plain') === 0, '라인별로 세도 일반은 다 썼다');
-$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+$singlesOn();
 
 // 40. 남은 재고는 재고 관리가 켜진 상품만
 $ok(($N.'stock_left')($lowst) === 4 && ($N.'stock_left')($plain) === null, '재고 관리가 켜진 상품만 남은 수량이 있다');
@@ -473,6 +478,23 @@ $GLOBALS['__cart']->items = [];
 // 주문 줄의 메타에서도 읽는다
 $oi = new DhrFakeLine($plain, 1);
 $ok(($N.'units_in_order_item')($oi) === 1, '메타가 없으면 1');
+
+// 41-g. 기본값 — 낱병은 제한하지 않는다 (사장님 결정)
+$singlesOn();
+$GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
+$ok(($N.'limited')($plain) === false && ($N.'limited')($black) === false, '낱병은 한도가 걸리지 않는다');
+$ok(($N.'limited')($bundle) === true && ($N.'limited')($ten) === true, '묶음은 한도가 걸린다');
+$ok(($N.'paid')($plain) === 0 && ($N.'paid')($bundle) === 10, '낱병은 세지 않고 묶음만 센다');
+$GLOBALS['__notices'] = [];
+$ok(($N.'validate_add')(true, 238, 99) === true, '낱병은 99병도 담긴다');
+$GLOBALS['__cart']->items = ['a' => ['data' => $plain, 'quantity' => 50]];
+$ok(($N.'validate_add')(true, 600, 1) === true, '낱병을 아무리 담아도 묶음 한 세트는 담긴다');
+$GLOBALS['__cart']->items = ['a' => ['data' => $bundle, 'quantity' => 1]];
+$ok(($N.'validate_add')(true, 600, 1) === false, '묶음 두 세트는 여전히 막힌다');
+$ok(($N.'validate_add')(true, 238, 20) === true, '묶음을 담은 뒤에도 낱병은 담긴다');
+$GLOBALS['__cart']->items = [];
+$ok(str_contains(apply_filters('duckhoo_card_extra', '', $lowst), '하루') === false, '낱병 카드에는 한도 문구가 없다');
+$ok(str_contains(($N.'rule')(), '낱병은 제한이 없습니다'), '안내가 낱병은 제한이 없다고 말한다');
 
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';

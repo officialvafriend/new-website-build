@@ -997,8 +997,8 @@
     var n = host.querySelector('.dhr-onenote');
     if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); host.appendChild(n); }
     n.setAttribute('data-l', N.max > 0
-      ? '노보는 하루 ' + N.limit + '병까지입니다. 오늘은 ' + N.max + N.unit + '까지 담으실 수 있습니다.'
-      : '오늘 살 수 있는 노보 수량을 이미 다 담으셨습니다. 내일 다시 담아 주세요.');
+      ? '노보 10+1 묶음은 하루 ' + N.max + N.unit + '까지 담으실 수 있습니다. 낱병은 제한이 없습니다.'
+      : '오늘 담을 수 있는 10+1 묶음을 이미 다 담으셨습니다. 낱병은 제한 없이 담으실 수 있습니다.');
     n.classList.add('is-on');
     clearTimeout(n._t);
     n._t = setTimeout(function(){ n.classList.remove('is-on'); }, 5000);

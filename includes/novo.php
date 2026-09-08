@@ -42,8 +42,11 @@ function config(): array {
 			'on'    => true,
 			'cat'   => 'novo-liquid',
 			// 한 사람이 하루에 살 수 있는 병 수 — **값을 치르는 병**만 센다.
-			// 낱병 10병도, 10+1 묶음 한 세트도 똑같이 10이다 (사은품 1병은 세지 않는다).
+			// 10+1 한 세트가 딱 10이라, 세트는 하루 한 번이 된다.
 			'limit' => 10,
+			// **낱병은 제한하지 않는다** (사장님 결정 2026-09-08). 묶음만 센다.
+			// 낱병도 막으려면 true — 그러면 낱병은 하루 10병까지가 된다.
+			'singles' => false,
 			// 'all' = 노보 전체를 합쳐 10병. 'line' = 일반 10병 · 블랙 10병 따로.
 			'scope' => 'all',
 			// 묶음 한 세트가 실제로 받는 병 수 (10+1). 가격 대조에 쓴다.
@@ -131,6 +134,24 @@ function bottles( $p ): int {
 }
 
 /**
+ * 한도가 걸리는 상품인가.
+ *
+ * 낱병은 풀어 두었다 (`singles` = false) — 묶음(10+1)만 하루 한 세트로 막는다.
+ *
+ * @param \WC_Product|null $p 상품.
+ * @return bool
+ */
+function limited( $p ): bool {
+	if ( ! is_novo( $p ) ) {
+		return false;
+	}
+	if ( empty( config()['singles'] ) && bottles( $p ) <= 1 ) {
+		return false;
+	}
+	return true;
+}
+
+/**
  * 한도를 셀 때의 병 수 — **값을 치르는 병**만 센다.
  *
  * `10+1` 은 10병 값을 내고 11병을 받는다. 사은품 1병까지 세면 낱병 10병을 산 손님과
@@ -143,7 +164,7 @@ function bottles( $p ): int {
  * @return int
  */
 function paid( $p ): int {
-	if ( ! is_novo( $p ) ) {
+	if ( ! limited( $p ) ) {
 		return 0;
 	}
 	$name = (string) $p->get_name();
@@ -501,6 +522,9 @@ function left( string $line = '', ?int $uid = null, bool $cart = true ): int {
  * @return string
  */
 function rule(): string {
+	if ( empty( config()['singles'] ) ) {
+		return '노보 10+1 묶음은 물량이 넉넉하지 않아 한 분당 하루 한 세트까지 사실 수 있습니다. 낱병은 제한이 없습니다.';
+	}
 	return sprintf(
 		'노보 액상은 물량이 넉넉하지 않아 한 분당 하루 %d병까지 살 수 있습니다 (10+1 묶음은 한 세트가 하루치이고, 사은품 1병은 세지 않습니다).',
 		limit()
@@ -708,32 +732,37 @@ function product_notice( $p = null ): void {
 	if ( ! on() || ! is_novo( $p ) ) {
 		return;
 	}
-	$lim   = limit();
 	$stock = stock_left( $p );
-	$each  = bottles( $p );
-	$cost  = paid( $p );
+	$cap   = limited( $p );
+	if ( ! $cap && null === $stock ) {
+		return; // 낱병이고 재고 숫자도 없으면 할 말이 없다.
+	}
+	$each = bottles( $p );
+	$cost = paid( $p );
 
 	echo '<div class="dhp-novo">';
-	echo '<b class="dhp-novo__t">노보 하루 구매 한도 <span>' . (int) $lim . '병</span></b>';
-	echo '<p class="dhp-novo__p">물량이 넉넉하지 않습니다. 낱병은 하루 ' . (int) $lim . '병까지, 10+1 묶음은 한 세트까지 사실 수 있습니다.</p>';
+	if ( $cap ) {
+		echo '<b class="dhp-novo__t">노보 10+1 <span>하루 한 세트</span></b>';
+		echo '<p class="dhp-novo__p">물량이 넉넉하지 않습니다. 묶음은 한 분이 하루에 한 세트까지 사실 수 있습니다. 낱병은 제한이 없습니다.</p>';
+	} else {
+		echo '<b class="dhp-novo__t">노보 낱병 <span>수량 제한 없음</span></b>';
+		echo '<p class="dhp-novo__p">10+1 묶음만 하루 한 세트로 제한됩니다.</p>';
+	}
 
 	echo '<div class="dhp-novo__rows">';
-	if ( function_exists( 'is_user_logged_in' ) && is_user_logged_in() ) {
-		echo '<div class="dhp-novo__row"><span>오늘 남은 구매 가능</span><b>' . (int) left( line( $p ) ) . '병</b></div>';
-	} else {
-		echo '<div class="dhp-novo__row"><span>오늘 남은 구매 가능</span><b>로그인 후 확인</b></div>';
+	if ( $cap ) {
+		if ( function_exists( 'is_user_logged_in' ) && is_user_logged_in() ) {
+			$sets = $cost > 0 ? (int) floor( left( line( $p ) ) / $cost ) : 0;
+			echo '<div class="dhp-novo__row"><span>오늘 남은 구매 가능</span><b>' . (int) $sets . '세트</b></div>';
+		} else {
+			echo '<div class="dhp-novo__row"><span>오늘 남은 구매 가능</span><b>로그인 후 확인</b></div>';
+		}
 	}
 	if ( null !== $stock ) {
 		echo '<div class="dhp-novo__row"><span>남은 재고</span><b>' . (int) $stock . '개</b></div>';
 	}
-	if ( apply_filters( 'duckhoo_novo_exclude_from_discount', false ) ) {
-		// 장바구니에 가서야 알면 늦다. 여기서 미리 말한다.
-		echo '<div class="dhp-novo__row"><span>금액대별 자동 할인</span><b>제외</b></div>';
-	}
 	if ( $each > 1 ) {
-		// 10+1 은 11병을 받고 10병으로 센다. 손님이 계산기를 두드리지 않게 둘 다 적는다.
-		echo '<div class="dhp-novo__row"><span>이 상품 한 세트</span><b>' . (int) $each . '병'
-			. ( $cost !== $each ? ' <em>(' . (int) $cost . '병으로 셈)</em>' : '' ) . '</b></div>';
+		echo '<div class="dhp-novo__row"><span>이 상품 한 세트</span><b>' . (int) $each . '병</b></div>';
 	}
 	echo '</div></div>';
 }
@@ -750,12 +779,13 @@ function js_config( array $cfg ): array {
 		return $cfg;
 	}
 	$p = $GLOBALS['product'] ?? null;
-	if ( ! is_novo( $p ) ) {
-		return $cfg;
+	if ( ! limited( $p ) ) {
+		return $cfg; // 낱병은 고르는 자리에서 막지 않는다.
 	}
 	$each = max( 1, paid( $p ) );
 	$cfg['novo'] = array(
 		'limit' => limit(),
+		'set'   => true,
 		'left'  => left( line( $p ) ),
 		'each'  => $each,
 		// 이 상품을 지금 몇 개까지 고를 수 있나 (단품이면 병 수, 묶음이면 세트 수).
@@ -777,11 +807,15 @@ function card_note( string $extra, $p = null ): string {
 	if ( ! on() || ! is_novo( $p ) || ! $p->is_in_stock() ) {
 		return $extra;
 	}
-	$cap   = bottles( $p ) > 1 ? '하루 한 세트' : '하루 ' . limit() . '병까지';
 	$stock = stock_left( $p );
-	return $extra . '<div class="nlimit">'
-		. ( null === $stock ? '' : '<b>남은 수량 ' . (int) $stock . '개</b> · ' )
-		. esc_html( $cap ) . '</div>';
+	$parts = array();
+	if ( null !== $stock ) {
+		$parts[] = '<b>남은 수량 ' . (int) $stock . '개</b>';
+	}
+	if ( limited( $p ) ) {
+		$parts[] = '하루 한 세트';
+	}
+	return $parts ? $extra . '<div class="nlimit">' . implode( ' · ', $parts ) . '</div>' : $extra;
 }
 add_filter( 'duckhoo_card_extra', __NAMESPACE__ . '\\card_note', 10, 2 );
 
