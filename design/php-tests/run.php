@@ -423,6 +423,8 @@ $ok(($N.'units_from_json')($J(12)) === 12, '옵션 JSON 의 required 수량을 �
 $ok(($N.'units_from_json')($J(3,'addon')) === 1, 'addon 줄은 기본 단위가 아니다');
 $ok(($N.'units_from_json')('') === 1 && ($N.'units_from_json')('그냥 글자') === 1, 'JSON 이 없으면 1');
 $ok(($N.'units_in')(['data'=>$plain,'quantity'=>1,'wd_option_builder_json'=>$J(12)]) === 12, '장바구니 줄에서 찾아 읽는다');
+// 워드프레스는 $_POST 의 값에 역슬래시를 붙인다 — 그대로 해독하면 실패한다
+$ok(($N.'units_from_json')(addslashes($J(12))) === 12, '역슬래시가 붙어 와도 읽는다');
 
 // 장바구니 수량이 1 이어도 옵션이 12 면 12병으로 센다
 $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;

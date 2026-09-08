@@ -184,6 +184,11 @@ function units_from_json( string $json ): int {
 	}
 	$rows = json_decode( $json, true );
 	if ( ! is_array( $rows ) ) {
+		// **워드프레스는 $_POST 의 모든 값에 역슬래시를 붙인다.** 그대로 해독하면
+		// 실패해서 12병이 1병으로 보였다 (프로덕션에서 그대로 통과했다).
+		$rows = json_decode( stripslashes( $json ), true );
+	}
+	if ( ! is_array( $rows ) ) {
 		return 1;
 	}
 	$n = 0;
