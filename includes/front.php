@@ -503,17 +503,17 @@ function search_panel_html( array $cats, string $shop ): void {
 	<div class="dhsearch" id="dhr-search" role="dialog" aria-modal="true" aria-label="상품 검색" hidden>
 		<div class="dhsearch__dim" data-search-close></div>
 		<div class="dhsearch__panel">
+			<?php // 돋보기가 곧 검색 버튼이다. 알약 안에 검은 「검색」 블록을 또 넣으니
+			// 두 덩어리가 서로 싸워 어색했다. 오른쪽은 「취소」 — 폰 검색창의 관례다.
+			// 키보드의 확인 키에도 「검색」이 뜬다 (enterkeyhint). ?>
 			<form class="dhsearch__form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
-				<span class="dhsearch__ic"><?php echo icon( 'search' ); // phpcs:ignore ?></span>
+				<button class="dhsearch__ic" type="submit" aria-label="검색"><?php echo icon( 'search' ); // phpcs:ignore ?></button>
 				<input class="dhsearch__in" type="search" name="s" placeholder="‘샤인머스캣’ 처럼 찾아보세요"
 					aria-label="상품 검색" autocomplete="off" enterkeyhint="search"
 					value="<?php echo esc_attr( get_search_query() ); ?>">
 				<input type="hidden" name="post_type" value="product">
-				<button class="dhsearch__go" type="submit">검색</button>
 			</form>
-			<button class="dhsearch__x" type="button" data-search-close aria-label="검색 닫기">
-				<?php echo icon( 'close' ); // phpcs:ignore ?>
-			</button>
+			<button class="dhsearch__x" type="button" data-search-close>취소</button>
 			<div class="dhsearch__body">
 				<p class="dhsearch__t">분류로 찾기</p>
 				<div class="dhsearch__cats">
