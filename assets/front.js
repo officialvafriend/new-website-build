@@ -1005,11 +1005,13 @@
   }
 
   document.addEventListener('click', function(e){
-    var btn = e.target.closest && e.target.closest('.dhx-bundle .dhx-qty button, .wd-option-plus');
+    /* **세트 수를 올리는 버튼만 본다.** 한때 테마의 `.wd-option-plus` 를 통째로 잡았는데,
+       묶음 상품에서는 맛 선택의 `+` 도 같은 클래스라 그것까지 죽었다 — 손님이 맛을
+       한 병도 고르지 못했다. 세는 것은 세트 수뿐이므로 세트 줄만 막으면 된다. */
+    var btn = e.target.closest && e.target.closest('.dhx-bundle .dhx-qty button');
     if(!btn) return;
     /* 내리는 버튼은 언제나 놔둔다 */
-    var isPlus = btn.classList.contains('wd-option-plus') || btn === btn.parentElement.lastElementChild;
-    if(!isPlus) return;
+    if(btn !== btn.parentElement.lastElementChild) return;
     if(count() + 1 > N.max){
       e.preventDefault();
       e.stopPropagation();
