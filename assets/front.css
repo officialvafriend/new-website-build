@@ -688,4 +688,15 @@ html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; colo
 .dhr .nvb__notes{list-style:none;margin:.15rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:13px;line-height:1.5;color:#B8C6EE;word-break:keep-all}
 .dhr .nvb__notes li{position:relative;padding-left:.85rem}
 .dhr .nvb__notes li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:#FFE02E}
-@media(min-width:880px){.dhr .nvb{gap:1rem}}
+/* 데스크톱에서는 두 칸으로 편다. 한 칸으로 두면 1,120px 띠의 오른쪽 절반이 비어
+   글이 왼쪽으로 몰린 것처럼 보였다. 왼쪽이 「무엇을」, 오른쪽이 「왜 · 어떻게」다. */
+@media(min-width:900px){
+  .dhr .nvb{gap:1rem clamp(1.6rem,3vw,3.4rem);align-items:start;
+    grid-template-columns:minmax(0,1fr) minmax(0,.72fr);
+    grid-template-areas:"eb lead" "h lead" "set notes"}
+  .dhr .nvb__eb{grid-area:eb}
+  .dhr .nvb__h{grid-area:h}
+  .dhr .nvb__set{grid-area:set;margin:0;align-self:center}
+  .dhr .nvb__p{grid-area:lead;align-self:end;font-size:17px;margin-bottom:.2rem}
+  .dhr .nvb__notes{grid-area:notes;align-self:center;flex-direction:column;gap:.45rem;font-size:13.5px}
+}
