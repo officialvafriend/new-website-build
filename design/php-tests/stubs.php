@@ -212,3 +212,5 @@ if(!function_exists('wp_safe_redirect')) { function wp_safe_redirect($u){ $GLOBA
 if(!function_exists('add_query_arg')) { function add_query_arg($k,$v,$u){ return $u.'?'.$k.'='.$v; } }
 if(!function_exists('remove_query_arg')) { function remove_query_arg($k,$u){ return $u; } }
 if(!function_exists('sanitize_text_field')) { function sanitize_text_field($v){ return trim((string)$v); } }
+
+if(!function_exists('is_checkout')) { function is_checkout(){ return (bool)($GLOBALS['__is_checkout'] ?? false); } }

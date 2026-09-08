@@ -521,7 +521,7 @@ function over_messages(): array {
 }
 
 /**
- * 장바구니 화면 · 결제 화면에서 다시 본다. 수량을 손으로 고칠 수 있기 때문이다.
+ * 안내를 남긴다.
  *
  * @return void
  */
@@ -532,6 +532,26 @@ function check_cart(): void {
 	foreach ( over_messages() as $m ) {
 		wc_add_notice( $m, 'error' );
 	}
+}
+
+/**
+ * **결제 화면을 그리는 중에는 안내를 넣지 않는다.**
+ *
+ * `woocommerce_check_cart_items` 는 장바구니 화면과 결제 화면 양쪽에서 돈다.
+ * 결제 화면을 그리는 도중 오류 안내를 더했더니 테마의 주문 요약이 그 상태에서
+ * 계산을 못 하고 **「총 주문금액 0원」**을 그렸다 (프로덕션에서 사장님이 보셨다).
+ *
+ * 그래서 안내는 장바구니 화면에만 남기고, 결제는 **누를 때**
+ * (`woocommerce_checkout_process`) 와 **주문이 만들어지기 직전**
+ * (`woocommerce_checkout_create_order`) 에 막는다. 화면을 그리는 일에는 끼어들지 않는다.
+ *
+ * @return void
+ */
+function check_cart_page(): void {
+	if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+		return;
+	}
+	check_cart();
 }
 
 /**
@@ -588,7 +608,7 @@ function store_max( $max, $product = null, $cart_item = null ) {
 
 if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'woocommerce_add_to_cart_validation', __NAMESPACE__ . '\\validate_add', 20, 3 );
-	add_action( 'woocommerce_check_cart_items', __NAMESPACE__ . '\\check_cart' );
+	add_action( 'woocommerce_check_cart_items', __NAMESPACE__ . '\\check_cart_page' );
 	add_action( 'woocommerce_checkout_process', __NAMESPACE__ . '\\check_cart' );
 	// 수량 변경은 담기 검증을 지나지 않는다 — Store API 쪽에도 같은 상한을 준다.
 	add_filter( 'woocommerce_store_api_product_quantity_maximum', __NAMESPACE__ . '\\store_max', 10, 3 );

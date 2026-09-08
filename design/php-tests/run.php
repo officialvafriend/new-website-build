@@ -277,6 +277,13 @@ $GLOBALS['__notices'] = [];
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 2]];
 ($N.'check_cart')();
 $ok(count($GLOBALS['__notices']) === 1, '장바구니가 한도를 넘으면 안내를 남긴다');
+// 결제 화면을 그리는 중에는 안내를 넣지 않는다 — 테마 요약이 0원이 된다
+$GLOBALS['__notices'] = []; $GLOBALS['__is_checkout'] = true;
+($N.'check_cart_page')();
+$ok(count($GLOBALS['__notices']) === 0, '결제 화면을 그릴 때는 안내를 넣지 않는다');
+$GLOBALS['__is_checkout'] = false;
+($N.'check_cart_page')();
+$ok(count($GLOBALS['__notices']) === 1, '장바구니 화면에서는 남긴다');
 $GLOBALS['__notices'] = [];
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
 ($N.'check_cart')();
