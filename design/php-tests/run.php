@@ -345,7 +345,7 @@ $other = $mk(702, '[펠릭스] 더블 라임 5병 묶음', 89000);
 $GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10]];
 $GLOBALS['__cart']->fees = $fee();
 ($N.'adjust_fees')();
-$ok((int)$GLOBALS['__cart']->fees[0]->amount === 0, '노보만 담으면 자동 할인이 0 이 된다');
+$ok(count($GLOBALS['__cart']->fees) === 0, '노보만 담으면 자동 할인 줄이 빠진다');
 
 // (나) 노보 + 다른 상품 178,000 → 기준 금액 178,000 → 할인 그대로
 $GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10], 'b' => ['data' => $other, 'quantity' => 2]];
@@ -357,7 +357,7 @@ $ok(count($GLOBALS['__cart']->fees) === 1 && (int)$GLOBALS['__cart']->fees[0]->a
 $GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10], 'b' => ['data' => $other, 'quantity' => 1]];
 $GLOBALS['__cart']->fees = $fee();
 ($N.'adjust_fees')();
-$ok((int)$GLOBALS['__cart']->fees[0]->amount === 0, '노보를 빼면 기준에 못 미쳐 할인이 0 이 된다');
+$ok(count($GLOBALS['__cart']->fees) === 0, '노보를 빼면 기준에 못 미쳐 할인 줄이 빠진다');
 
 // (라) 노보가 없으면 아무것도 건드리지 않는다
 $GLOBALS['__cart']->items = ['b' => ['data' => $other, 'quantity' => 2]];
@@ -369,8 +369,7 @@ $ok(count($GLOBALS['__cart']->fees) === 1, '노보가 없으면 할인 줄을 �
 $GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10]];
 $GLOBALS['__cart']->fees = [new DhrFakeFee('🎁 금액 자동 할인', -10000.0), new DhrFakeFee('포장비', 2000.0)];
 ($N.'adjust_fees')();
-$ok(count($GLOBALS['__cart']->fees) === 2 && (int)$GLOBALS['__cart']->fees[1]->amount === 2000, '할인이 아닌 수수료 줄은 그대로 둔다');
-$ok((int)$GLOBALS['__cart']->fees[0]->amount === 0, '할인 줄만 0 으로 내린다');
+$ok(count($GLOBALS['__cart']->fees) === 1 && $GLOBALS['__cart']->fees[0]->name === '포장비', '할인 줄만 걷고 다른 수수료는 남긴다');
 
 $ok(str_contains(apply_filters('duckhoo_auto_discount_except', ''), '노보'), '안내 문구에 노보 제외가 붙는다');
 $GLOBALS['__filters']['duckhoo_novo_exclude_from_discount'] = [];
