@@ -104,7 +104,9 @@ class DhrFakeOrder {
   public function update_meta_data($k,$v){ $this->meta[$k]=$v; }
   public function save(){ }
   public function get_meta_data(){ $o=[]; foreach($this->meta as $k=>$v) $o[]=new DhrFakeMeta($k,$v); return $o; }
-  public function get_items($type='line_item'){ return $type==='fee' ? $this->fees : ($type==='coupon' ? $this->coupons : []); }
+  public array $lines = [];
+  public function get_items($type='line_item'){ return $type==='fee' ? $this->fees : ($type==='coupon' ? $this->coupons : $this->lines); }
+  public function get_date_created(){ return null; }
   public function has_status($s){ return in_array($this->status, (array)$s, true); }
   public function add_order_note($t){ $this->notes[]=$t; }
 }
@@ -122,3 +124,46 @@ $src = file_get_contents(dirname(__DIR__, 2).'/duckhoo-redesign.php');
 $src = str_replace("require_once plugin_dir_path( __FILE__ ) . 'includes/membership-cancel.php';", '', $src); // 이미 읽었다
 $src = preg_replace('/^<\?php\s*/', '', $src, 1);
 file_put_contents(dirname(__DIR__, 2).'/.dhr-main-test.php', "<?php\n".$src);
+
+
+/* ── 노보 이벤트 스텁 ────────────────────────────────────────────────────
+   novo.php 는 WC_Product 의 몇 가지 메서드와 장바구니만 쓴다. 그만큼만 흉내 낸다. */
+class WC_Product {
+  public function __construct(
+    public int $id = 1, public string $name = '', public float $price = 0.0,
+    public bool $in_stock = true, public bool $manage = false, public ?int $stock = null,
+    public float $regular = 0.0, public string $sale = ''
+  ){ if ($this->regular === 0.0) { $this->regular = $this->price; } }
+  public function get_id(){ return $this->id; }
+  public function get_name(){ return $this->name; }
+  public function get_price(){ return $this->price; }
+  public function get_regular_price(){ return (string)$this->regular; }
+  public function get_sale_price(){ return $this->sale; }
+  public function set_regular_price($v){ $this->regular = (float)$v; $this->price = (float)$v; }
+  public function set_sale_price($v){ $this->sale = (string)$v; }
+  public function is_on_sale(){ return $this->sale !== ''; }
+  public function is_in_stock(){ return $this->in_stock; }
+  public function managing_stock(){ return $this->manage; }
+  public function get_stock_quantity(){ return $this->stock; }
+  public function get_average_rating(){ return 0.0; }
+  public function get_meta($k, $single = true){ return $GLOBALS['__pmeta'][$this->id][$k] ?? ''; }
+  public function update_meta_data($k,$v){ $GLOBALS['__pmeta'][$this->id][$k] = $v; }
+  public function delete_meta_data($k){ unset($GLOBALS['__pmeta'][$this->id][$k]); }
+  public function save(){ }
+}
+class DhrFakeLine {
+  public function __construct(public ?WC_Product $p = null, public int $q = 1){}
+  public function get_product(){ return $this->p; }
+  public function get_quantity(){ return $this->q; }
+}
+class DhrFakeCart {
+  public array $items = [];
+  public function get_cart(){ return $this->items; }
+}
+$GLOBALS['__pmeta'] = [];
+$GLOBALS['__products'] = [];
+$GLOBALS['__notices'] = [];
+$GLOBALS['__cart'] = new DhrFakeCart();
+if(!function_exists('wc_get_product')) { function wc_get_product($id){ return $GLOBALS['__products'][(int)$id] ?? null; } }
+if(!function_exists('wc_add_notice')) { function wc_add_notice($m,$t='success'){ $GLOBALS['__notices'][] = [$t,$m]; } }
+if(!function_exists('WC')) { function WC(){ return (object)['cart' => $GLOBALS['__cart']]; } }

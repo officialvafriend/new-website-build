@@ -97,6 +97,9 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 					<?php
 					head();
 					price();
+					// 가격 바로 아래 한 줄이 더 필요할 때 쓰는 자리. `form.cart` 바깥이라
+					// 구매 게이트가 읽는 칸 이름이 바뀌지 않는다.
+					do_action( 'duckhoo_product_after_price', $product );
 					\Duckhoo\Redesign\Product\benefits();
 					if ( '' !== $dhp_short ) {
 						echo '<div class="dhp-short">' . wp_kses_post( wpautop( $dhp_short ) ) . '</div>';

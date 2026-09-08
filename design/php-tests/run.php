@@ -198,5 +198,111 @@ $r5->uid = 903;
 ($P.'on_cancel')(4400, $r5);
 $ok(count($r5->notes) === 1 && !str_contains($r5->notes[0],'자동으로 돌아가지 않습니다'), '돌려준 뒤에는 경고 메모를 남기지 않는다');
 
+
+/* ── 31~ 노보 물량 이벤트 (includes/novo.php) ────────────────────────────── */
+$N = 'Duckhoo\\Redesign\\Novo\\';
+
+$mk = function(int $id, string $name, float $price = 9900.0, bool $stock = true, bool $manage = false, ?int $left = null) {
+  $p = new WC_Product($id, $name, $price, $stock, $manage, $left);
+  $GLOBALS['__products'][$id] = $p;
+  return $p;
+};
+$plain  = $mk(238, '[노보] 블랙멘솔 (9.8mg / 30ml)', 13000);
+$black  = $mk(249, '[노보 블랙] 블랙멘솔 (9.8mg / 30ml)', 13500);
+$bundle = $mk(600, '[노보] 10+1 묶음', 120000);
+$ten    = $mk(146, '[초특가] 노보 10병 병당 8,000원 / 금액 80,000원', 80000);
+$other  = $mk(700, '[얼려먹구싶오] 청포도 (9.8mg / 30ml)', 9900);
+$lowst  = $mk(701, '[노보] 그린펀치 (9.8mg / 30ml)', 13000, true, true, 4);
+
+// 31. 라인 가르기 — 블랙을 먼저 보지 않으면 "노보 블랙" 이 "노보" 로 잡힌다
+$ok(($N.'line')($black) === 'black' && ($N.'line')($plain) === 'plain' && ($N.'line')($other) === '', '노보 블랙 · 노보 · 그 밖을 가른다');
+
+// 32. 병 수는 이름에서 읽는다
+$ok(($N.'bottles')($plain) === 1, '단품은 1병');
+$ok(($N.'bottles')($bundle) === 11, '"10+1" 은 11병');
+$ok(($N.'bottles')($ten) === 10, '"10병" 은 10병');
+$ok(($N.'bottles')($other) === 0, '노보가 아니면 0병');
+
+// 33. 장바구니 집계
+$GLOBALS['__orders'] = [];
+$GLOBALS['__logged_in'] = 0;
+$GLOBALS['__cart']->items = [
+  ['data' => $plain, 'quantity' => 3],
+  ['data' => $other, 'quantity' => 9],
+];
+$t = ($N.'tally_cart')();
+$ok($t['plain'] === 3 && $t['black'] === 0, '장바구니에서 노보만 센다');
+
+// 34. 남은 수량 = 한도 − 장바구니
+$ok(($N.'left')('plain') === 8, '11병 한도에서 3병을 담았으면 8병 남는다');
+
+// 35. 담기 검증 — 한도 안이면 통과, 넘으면 막는다
+$GLOBALS['__notices'] = [];
+$ok(($N.'validate_add')(true, 238, 8) === true, '8병은 담긴다 (합계 11병)');
+$ok(($N.'validate_add')(true, 238, 9) === false, '9병은 막힌다 (합계 12병)');
+$ok(($N.'validate_add')(true, 700, 50) === true, '노보가 아닌 상품은 한도와 무관하다');
+$ok(count($GLOBALS['__notices']) === 1 && $GLOBALS['__notices'][0][0] === 'error', '막을 때 안내를 남긴다');
+
+// 36. 묶음 하나가 하루치를 다 쓴다
+$GLOBALS['__cart']->items = [];
+$ok(($N.'validate_add')(true, 600, 1) === true, '10+1 한 세트는 담긴다');
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
+$ok(($N.'validate_add')(true, 238, 1) === false, '10+1 을 담은 뒤에는 한 병도 더 담기지 않는다');
+
+// 37. 오늘 주문한 것도 함께 센다
+$GLOBALS['__cart']->items = [];
+$o = new DhrFakeOrder(9001, [], [], [], 'on-hold');
+$o->lines = [new DhrFakeLine($plain, 6)];
+$GLOBALS['__orders'] = [$o];
+$ok(($N.'left')('plain', 5, false) === 5, '오늘 6병을 주문했으면 5병 남는다');
+$GLOBALS['__logged_in'] = 5; // 로그인한 손님이라야 오늘 주문분을 셀 수 있다
+$ok(($N.'validate_add')(true, 238, 6) === false, '오늘 주문분을 합쳐 한도를 넘으면 막힌다');
+$ok(($N.'validate_add')(true, 238, 5) === true, '남은 5병은 담긴다');
+$GLOBALS['__logged_in'] = 0;
+$GLOBALS['__orders'] = [];
+
+// 38. 장바구니 화면의 다시 보기
+$GLOBALS['__notices'] = [];
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 2]];
+$GLOBALS['__orders'] = [];
+($N.'check_cart')();
+$ok(count($GLOBALS['__notices']) === 1, '장바구니가 한도를 넘으면 안내를 남긴다');
+$GLOBALS['__notices'] = [];
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
+($N.'check_cart')();
+$ok(count($GLOBALS['__notices']) === 0, '한도 안이면 조용하다');
+
+// 39. 라인별로 세는 설정
+add_filter('duckhoo_novo_event', function($c){ $c['scope'] = 'line'; return $c; });
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
+$ok(($N.'left')('black') === 11, '라인별로 세면 블랙은 그대로 11병 남는다');
+$ok(($N.'left')('plain') === 0, '라인별로 세도 일반은 다 썼다');
+$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+
+// 40. 남은 재고는 재고 관리가 켜진 상품만
+$ok(($N.'stock_left')($lowst) === 4 && ($N.'stock_left')($plain) === null, '재고 관리가 켜진 상품만 남은 수량이 있다');
+
+// 41. 카드 한 줄
+$GLOBALS['__cart']->items = [];
+$note = apply_filters('duckhoo_card_extra', '', $lowst);
+$ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 11병'), '카드에 남은 재고와 하루 한도를 적는다');
+$ok(apply_filters('duckhoo_card_extra', '', $other) === '', '노보가 아닌 카드에는 붙지 않는다');
+
+// 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
+require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
+$A = 'Duckhoo\\Redesign\\Novo\\Admin\\';
+$ok(($A.'target_price')($plain) === 13000, '노보 일반 1병은 13,000원');
+$ok(($A.'target_price')($black) === 13500, '노보 블랙 1병은 13,500원');
+$ok(($A.'target_price')($bundle) === 120000, '노보 일반 10+1 은 120,000원');
+$ok(($A.'target_price')($ten) === 0, '10병 묶음은 이벤트 대상이 아니다');
+$ok(($A.'target_price')($other) === 0, '노보가 아니면 대상이 아니다');
+
+// 43. 이벤트를 끄면 한도가 걸리지 않는다
+add_filter('duckhoo_novo_event', function($c){ $c['on'] = false; return $c; });
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 5]];
+$ok(($N.'validate_add')(true, 238, 99) === true, '이벤트를 끄면 막지 않는다');
+$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+$GLOBALS['__cart']->items = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

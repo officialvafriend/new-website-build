@@ -670,3 +670,7 @@ html body.dhr.dhr.dhr .fbank__note b{ color: #fff !important; }
 html body.dhr.dhr.dhr .fbank__copy{ color: #111 !important; background: #fff !important; }
 html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; color: #0B2434 !important; }
 
+
+/* 노보 카드 한 줄 — 남은 재고 · 하루 한도. 홈과 목록 양쪽에 걸린다 (.dhr 하나면 된다). */
+.dhr .nlimit{margin-top:.3rem;font-size:13px;line-height:1.4;color:#4E565F;word-break:keep-all;font-variant-numeric:tabular-nums}
+.dhr .nlimit b{color:#C2410C;font-weight:800}

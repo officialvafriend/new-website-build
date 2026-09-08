@@ -2033,3 +2033,18 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsearch__cats a{ color: var(--dh-ink, #111) !i
 html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title .dhp-title__b{
   color: var(--dh-ink-2, #4E565F); font-weight: 700; white-space: nowrap;
 }
+
+/* ══ 노보 물량 이벤트 — 하루 한도 · 남은 수량 ══════════════════════════════
+   가격 바로 아래, `form.cart` 바깥이다. 폼 안에 글자를 더하면 구매 게이트가 읽는
+   칸 이름이 바뀐다. 반투명은 쓰지 않는다 — 불투명 면에 왼쪽 굵은 선 하나. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo{
+  margin: .9rem 0 0; padding: .8rem .9rem .75rem 1rem; background: var(--dh-ground, #F4F6F7);
+  border-radius: 12px; border-left: 4px solid var(--dh-accent-warm, #C2410C);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t{ display: block; font-size: 15px; font-weight: 800; color: var(--dh-ink, #111); letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t span{ color: var(--dh-accent-warm, #C2410C); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__p{ margin: .25rem 0 0 !important; font-size: 13.5px; line-height: 1.55; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__rows{ margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .3rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row{ display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; font-size: 14px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row span{ color: var(--dh-ink-2, #4E565F); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink, #111); font-weight: 800; font-variant-numeric: tabular-nums; }

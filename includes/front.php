@@ -370,7 +370,10 @@ function card( \WC_Product $p ): string {
 		. '<div class="bd"><a class="nm" href="' . esc_url( $url ) . '">' . esc_html( $n['title'] ) . '</a>'
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
 		. '<div class="pr">' . $was . $off . $price . '</div>'
-		. $per . '</div>'
+		. $per
+		// 카드에 한 줄 더 붙일 자리. 지금은 노보 이벤트(남은 재고 · 하루 한도)가 쓴다.
+		. (string) apply_filters( 'duckhoo_card_extra', '', $p )
+		. '</div>'
 		// 구매하기 — 이 가게의 상품은 거의 다 옵션(구성 · 맛)이 필수라 상품 페이지로 보낸다.
 		// **`#dhp-buy` 같은 조각을 붙이지 않는다** — 브라우저가 그 자리로 뛰어내려서
 		// 페이지가 한가운데(폰 940px · 데스크톱 611px)부터 열렸다. 맨 위에서 사진 · 가격을

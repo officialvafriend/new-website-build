@@ -44,10 +44,15 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
 // 적립금을 쓴 주문의 취소 — 되돌아오지 않는 적립금을 손님이 혼자 잃지 않게.
 require_once plugin_dir_path( __FILE__ ) . 'includes/points.php';
 
+// 노보 물량 이벤트 — 하루 구매 한도 · 남은 수량 · 이벤트 기준 가격.
+require_once plugin_dir_path( __FILE__ ) . 'includes/novo.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/impact.php';
+	// 노보 이벤트 — 기준 가격 대조 · 적용(관리자).
+	require_once plugin_dir_path( __FILE__ ) . 'includes/novo-admin.php';
 }
 
 
