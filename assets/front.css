@@ -700,3 +700,7 @@ html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; colo
   .dhr .nvb__p{grid-area:lead;align-self:end;font-size:17px;margin-bottom:.2rem}
   .dhr .nvb__notes{grid-area:notes;align-self:center;flex-direction:column;gap:.45rem;font-size:13.5px}
 }
+/* 사장님이 올린 배너 이미지를 쓸 때. 띠 자리를 그대로 차지한다. */
+.dhr .nvb-img{margin:0 0 1.4rem;display:block}
+.dhr .nvb-img img{display:block;width:100%;height:auto;border-radius:20px}
+.dhr .nvb-img__cap{margin:.55rem .2rem 0;font-size:13px;line-height:1.5;color:#4E565F;word-break:keep-all}

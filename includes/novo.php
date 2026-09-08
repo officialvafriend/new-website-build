@@ -241,9 +241,10 @@ function tally_orders( int $uid ): array {
 /**
  * 지금 장바구니에 담긴 노보 병 수 — 라인별.
  *
+ * @param string $skip_key 빼고 셀 장바구니 줄 (수량 변경 중인 줄).
  * @return array<string,int>
  */
-function tally_cart(): array {
+function tally_cart( string $skip_key = '' ): array {
 	$out = array( 'plain' => 0, 'black' => 0 );
 	if ( ! function_exists( 'WC' ) ) {
 		return $out;
@@ -252,7 +253,10 @@ function tally_cart(): array {
 	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'get_cart' ) ) {
 		return $out;
 	}
-	foreach ( (array) $wc->cart->get_cart() as $item ) {
+	foreach ( (array) $wc->cart->get_cart() as $ck => $item ) {
+		if ( '' !== $skip_key && (string) $ck === $skip_key ) {
+			continue; // 수량을 고치는 중인 줄은 빼고 센다 — 자기 자신과 겨루면 안 된다.
+		}
 		$p = $item['data'] ?? null;
 		$n = paid( $p );
 		if ( $n > 0 ) {
@@ -275,6 +279,37 @@ function add_tally( array $a, array $b ): array {
 		$a[ $k ] = ( $a[ $k ] ?? 0 ) + (int) $v;
 	}
 	return $a;
+}
+
+/**
+ * 지금까지 쓴 양 — 오늘 주문 + 장바구니. scope 에 따라 합계 또는 라인별.
+ *
+ * @param string $line     라인.
+ * @param string $skip_key 빼고 셀 장바구니 줄.
+ * @return int
+ */
+function used_now( string $line = '', string $skip_key = '' ): int {
+	$uid   = function_exists( 'get_current_user_id' ) ? (int) get_current_user_id() : 0;
+	$tally = add_tally( tally_orders( $uid ), tally_cart( $skip_key ) );
+	return 'line' === (string) config()['scope'] && '' !== $line
+		? (int) ( $tally[ $line ] ?? 0 )
+		: (int) array_sum( $tally );
+}
+
+/**
+ * 이 상품을 지금 몇 개까지 담을 수 있나. 노보가 아니면 -1 (우리가 정할 것이 없다).
+ *
+ * @param \WC_Product|null $product  상품.
+ * @param string           $skip_key 빼고 셀 장바구니 줄.
+ * @return int
+ */
+function max_units( $product, string $skip_key = '' ): int {
+	$each = paid( $product );
+	if ( $each <= 0 ) {
+		return -1;
+	}
+	$room = max( 0, limit() - used_now( line( $product ), $skip_key ) );
+	return (int) floor( $room / $each );
 }
 
 /**
@@ -365,45 +400,117 @@ function validate_add( $passed, $pid = 0, $qty = 1 ): bool {
 }
 
 /**
+ * 지금 한도를 넘었는가. 넘었으면 할 말을 돌려준다.
+ *
+ * @return string[]
+ */
+function over_messages(): array {
+	if ( ! on() ) {
+		return array();
+	}
+	$out = array();
+	$lim = limit();
+
+	if ( 'line' === (string) config()['scope'] ) {
+		foreach ( config()['lines'] as $key => $meta ) {
+			$used = used_now( (string) $key );
+			if ( $used > $lim ) {
+				$out[] = sprintf( '%s 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', (string) $meta['label'], $lim, $used );
+			}
+		}
+		return $out;
+	}
+
+	$used = used_now();
+	if ( $used > $lim ) {
+		$out[] = sprintf( '노보 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', $lim, $used );
+	}
+	return $out;
+}
+
+/**
  * 장바구니 화면 · 결제 화면에서 다시 본다. 수량을 손으로 고칠 수 있기 때문이다.
  *
  * @return void
  */
 function check_cart(): void {
-	if ( ! on() || ! function_exists( 'wc_add_notice' ) ) {
+	if ( ! function_exists( 'wc_add_notice' ) ) {
 		return;
 	}
-	$uid   = function_exists( 'get_current_user_id' ) ? (int) get_current_user_id() : 0;
-	$tally = add_tally( tally_orders( $uid ), tally_cart() );
-	$lim   = limit();
+	foreach ( over_messages() as $m ) {
+		wc_add_notice( $m, 'error' );
+	}
+}
 
-	if ( 'line' === (string) config()['scope'] ) {
-		foreach ( config()['lines'] as $key => $meta ) {
-			$used = (int) ( $tally[ $key ] ?? 0 );
-			if ( $used > $lim ) {
-				wc_add_notice(
-					sprintf( '%s 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', (string) $meta['label'], $lim, $used ),
-					'error'
-				);
-			}
-		}
+/**
+ * **마지막 빗장 — 주문이 만들어지기 직전.**
+ *
+ * 담기만 막아서는 새지 않을 수가 없다. 이 사이트의 장바구니는 수량을 Store API
+ * `update-item` 으로 고치는데, 그 길에는 `woocommerce_add_to_cart_validation` 이
+ * 걸리지 않는다 (실제로 10 → 11 이 통과했다). 어느 길로 왔든 주문은 여기를 지난다.
+ *
+ * 던진 예외는 워드커머스가 잡아 결제 화면의 오류로 보여 준다. **담기는 데이터에는
+ * 손대지 않는다** — 무엇이 얼마인지만 말하고 멈춘다.
+ *
+ * @throws \Exception 한도를 넘었을 때.
+ * @return void
+ */
+function guard_order(): void {
+	$over = over_messages();
+	if ( $over ) {
+		throw new \Exception( esc_html( $over[0] ) );
+	}
+}
+
+/**
+ * Store API(장바구니 서랍 · 수량 변경)가 장바구니를 검사할 때.
+ *
+ * @throws \Exception 한도를 넘었을 때.
+ * @return void
+ */
+function store_validate(): void {
+	$over = over_messages();
+	if ( ! $over ) {
 		return;
 	}
-
-	$used = (int) array_sum( $tally );
-	if ( $used > $lim ) {
-		wc_add_notice(
-			sprintf( '노보 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', $lim, $used ),
-			'error'
-		);
+	$cls = 'Automattic\\WooCommerce\\StoreApi\\Exceptions\\RouteException';
+	if ( class_exists( $cls ) ) {
+		throw new $cls( 'duckhoo_novo_limit', $over[0], 409 );
 	}
+	throw new \Exception( esc_html( $over[0] ) );
+}
+
+/**
+ * Store API 가 이 상품의 최대 수량을 물을 때. 수량 변경(`update-item`)이 여기를 지난다.
+ *
+ * 지금 고치는 줄은 빼고 세야 자기 자신과 겨루지 않는다. 그 줄을 알 수 없으면
+ * 손대지 않는다 — 이미 담긴 수량보다 낮은 상한을 돌려주면 장바구니가 열리지 않는다.
+ *
+ * @param mixed $max       여태 상한.
+ * @param mixed $product   상품.
+ * @param mixed $cart_item 장바구니 줄.
+ * @return mixed
+ */
+function store_max( $max, $product = null, $cart_item = null ) {
+	if ( ! on() || ! $product instanceof \WC_Product || ! is_array( $cart_item ) || empty( $cart_item['key'] ) ) {
+		return $max;
+	}
+	$mine = max_units( $product, (string) $cart_item['key'] );
+	if ( $mine < 0 ) {
+		return $max;
+	}
+	return null === $max || '' === $max ? $mine : min( (int) $max, $mine );
 }
 
 if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'woocommerce_add_to_cart_validation', __NAMESPACE__ . '\\validate_add', 20, 3 );
 	add_action( 'woocommerce_check_cart_items', __NAMESPACE__ . '\\check_cart' );
-	// 마지막 빗장. 담는 데이터에는 손대지 않고 넘치면 멈춘다.
 	add_action( 'woocommerce_checkout_process', __NAMESPACE__ . '\\check_cart' );
+	// 수량 변경은 담기 검증을 지나지 않는다 — Store API 쪽에도 같은 상한을 준다.
+	add_filter( 'woocommerce_store_api_product_quantity_maximum', __NAMESPACE__ . '\\store_max', 10, 3 );
+	add_action( 'woocommerce_store_api_validate_cart_items', __NAMESPACE__ . '\\store_validate' );
+	// 어느 길로 왔든 주문은 여기를 지난다.
+	add_action( 'woocommerce_checkout_create_order', __NAMESPACE__ . '\\guard_order', 5 );
 }
 
 /* ── 화면 ─────────────────────────────────────────────────────────────────
@@ -508,6 +615,26 @@ function banner(): void {
 			'notes' => array( '동일 본인인증 정보 기준', '주문일 기준 (취소 시 복구)', '초과 주문은 확인 후 취소 · 환불될 수 있습니다' ),
 		)
 	);
+
+	// 사장님이 만든 이미지가 있으면 그것을 그린다. 없으면 아래 글자판이 대신한다.
+	$img = (string) apply_filters( 'duckhoo_novo_banner_image', (string) get_option( 'duckhoo_novo_banner_img', '' ) );
+	$imm = (string) apply_filters( 'duckhoo_novo_banner_image_mobile', (string) get_option( 'duckhoo_novo_banner_img_m', '' ) );
+	if ( '' !== $img ) {
+		$alt = trim( (string) $b['eb'] . ' — ' . (string) $b['head'][0] . (string) ( $b['head'][1] ?? '' ) . '. ' . implode( ' · ', (array) $b['set'] ) . '. ' . (string) $b['lead'] );
+		echo '<figure class="nvb-img">';
+		if ( '' !== $imm ) {
+			echo '<picture>'
+				. '<source media="(max-width: 899px)" srcset="' . esc_url( $imm ) . '">'
+				. '<img src="' . esc_url( $img ) . '" alt="' . esc_attr( $alt ) . '" loading="eager" decoding="async">'
+				. '</picture>';
+		} else {
+			echo '<img src="' . esc_url( $img ) . '" alt="' . esc_attr( $alt ) . '" loading="eager" decoding="async">';
+		}
+		// 이미지 속 글자는 화면에만 있다. 읽어 주는 기계와 검색엔진을 위해 같은 말을 남긴다.
+		echo '<figcaption class="nvb-img__cap">' . esc_html( implode( ' · ', (array) $b['notes'] ) ) . '</figcaption>';
+		echo '</figure>';
+		return;
+	}
 
 	echo '<section class="nvb" aria-labelledby="nvb-h">';
 	if ( '' !== (string) $b['eb'] ) {

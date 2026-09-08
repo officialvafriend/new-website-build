@@ -299,6 +299,28 @@ $ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 10�
 $ok(str_contains(apply_filters('duckhoo_card_extra', '', $bundle), '하루 한 세트'), '묶음 카드는 "하루 한 세트" 라고 적는다');
 $ok(apply_filters('duckhoo_card_extra', '', $other) === '', '노보가 아닌 카드에는 붙지 않는다');
 
+// 41-b. 수량 변경 · 주문 만들기의 빗장 — 담기만 막아서는 샌다
+$GLOBALS['__cart']->items = [];
+$ok(($N.'max_units')($plain) === 10, '빈 장바구니에서 낱병은 10개까지');
+$ok(($N.'max_units')($bundle) === 1, '빈 장바구니에서 10+1 은 한 세트까지');
+$ok(($N.'max_units')($other) === -1, '노보가 아니면 우리가 정할 것이 없다');
+// 고치는 중인 줄은 빼고 센다 — 자기 자신과 겨루면 상한이 0 이 된다
+$GLOBALS['__cart']->items = ['abc' => ['data' => $plain, 'quantity' => 10]];
+$ok(($N.'max_units')($plain, 'abc') === 10, '수량을 고치는 줄은 빼고 세어 상한이 10 이다');
+$ok(($N.'max_units')($plain) === 0, '그 줄까지 세면 0 — 그래서 반드시 빼야 한다');
+// Store API 상한 필터
+$ok(($N.'store_max')(9999, $plain, ['key' => 'abc']) === 10, 'Store API 상한을 10 으로 낮춘다');
+$ok(($N.'store_max')(9999, $plain, null) === 9999, '어느 줄인지 모르면 손대지 않는다');
+$ok(($N.'store_max')(3, $plain, ['key' => 'abc']) === 3, '재고가 더 적으면 그쪽이 이긴다');
+// 주문 만들기 직전
+$GLOBALS['__cart']->items = ['abc' => ['data' => $plain, 'quantity' => 11]];
+$threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = str_contains($e->getMessage(), '하루 한도'); }
+$ok($threw, '한도를 넘은 장바구니는 주문이 만들어지지 않는다');
+$GLOBALS['__cart']->items = ['abc' => ['data' => $plain, 'quantity' => 10]];
+$threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = true; }
+$ok(!$threw, '한도 안이면 주문이 그대로 만들어진다');
+$GLOBALS['__cart']->items = [];
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';

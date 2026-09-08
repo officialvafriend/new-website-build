@@ -181,12 +181,20 @@ function screen(): void {
 	if ( ! may() ) {
 		wp_die( '권한이 없습니다.' );
 	}
+	// 배너 이미지 고르기 — 워드프레스 미디어 창을 쓴다.
+	wp_enqueue_media();
 
 	$result = null;
+	$saved  = false;
 	$mode   = isset( $_POST['dhr_novo_mode'] ) ? sanitize_key( wp_unslash( $_POST['dhr_novo_mode'] ) ) : '';
 	if ( in_array( $mode, array( 'apply', 'revert' ), true ) ) {
 		check_admin_referer( 'dhr-novo' );
 		$result = run( $mode );
+	} elseif ( 'banner' === $mode ) {
+		check_admin_referer( 'dhr-novo' );
+		update_option( 'duckhoo_novo_banner_img', esc_url_raw( wp_unslash( $_POST['dhr_novo_img'] ?? '' ) ) );
+		update_option( 'duckhoo_novo_banner_img_m', esc_url_raw( wp_unslash( $_POST['dhr_novo_img_m'] ?? '' ) ) );
+		$saved = true;
 	}
 
 	$c    = config();
@@ -267,6 +275,48 @@ function screen(): void {
 	);
 	echo '<button class="button" name="dhr_novo_mode" value="revert" onclick="return confirm(\'바꾸기 전 가격으로 되돌립니다. 계속할까요?\')">이전 가격으로 되돌리기</button>';
 	echo '</form>';
+
+	$dhr_img  = (string) get_option( 'duckhoo_novo_banner_img', '' );
+	$dhr_imgm = (string) get_option( 'duckhoo_novo_banner_img_m', '' );
+
+	echo '<h2>노보 분류 배너</h2>';
+	if ( $saved ) {
+		echo '<div class="notice notice-success"><p>배너를 저장했습니다.</p></div>';
+	}
+	echo '<p>노보 분류 목록 맨 위에 그립니다. 이미지를 고르면 그 이미지를, 비워 두면 플러그인이 그린 글자판을 씁니다. '
+		. '<a href="' . esc_url( (string) get_term_link( (string) $c['cat'], 'product_cat' ) ) . '" target="_blank" rel="noopener">화면 보기</a></p>';
+	echo '<form method="post" style="margin:0 0 2em">';
+	wp_nonce_field( 'dhr-novo' );
+	echo '<table class="form-table" role="presentation"><tbody>';
+	printf(
+		'<tr><th scope="row"><label for="dhr_novo_img">배너 이미지</label></th><td>'
+		. '<input type="url" class="regular-text code" id="dhr_novo_img" name="dhr_novo_img" value="%s" placeholder="https://…">'
+		. ' <button type="button" class="button dhr-pick" data-target="dhr_novo_img">미디어에서 고르기</button>'
+		. '<p class="description">가로로 긴 이미지를 권합니다 (예: 2000×740). 폭에 맞춰 줄어듭니다.</p>'
+		. '%s</td></tr>',
+		esc_attr( $dhr_img ),
+		$dhr_img ? '<p><img src="' . esc_url( $dhr_img ) . '" alt="" style="max-width:520px;height:auto;border-radius:10px"></p>' : ''
+	);
+	printf(
+		'<tr><th scope="row"><label for="dhr_novo_img_m">폰용 이미지 (선택)</label></th><td>'
+		. '<input type="url" class="regular-text code" id="dhr_novo_img_m" name="dhr_novo_img_m" value="%s" placeholder="비워 두면 위 이미지를 씁니다">'
+		. ' <button type="button" class="button dhr-pick" data-target="dhr_novo_img_m">미디어에서 고르기</button>'
+		. '<p class="description">가로로 긴 이미지는 폰에서 글자가 작아집니다. 세로로 조금 긴 판을 따로 두면 읽기 좋습니다.</p>'
+		. '%s</td></tr>',
+		esc_attr( $dhr_imgm ),
+		$dhr_imgm ? '<p><img src="' . esc_url( $dhr_imgm ) . '" alt="" style="max-width:320px;height:auto;border-radius:10px"></p>' : ''
+	);
+	echo '</tbody></table>';
+	echo '<button class="button button-primary" name="dhr_novo_mode" value="banner">배너 저장</button>';
+	echo '</form>';
+	echo '<script>
+jQuery(function($){ $(".dhr-pick").on("click", function(e){ e.preventDefault();
+  var id = $(this).data("target");
+  var f = wp.media({ title: "배너 이미지 고르기", library: { type: "image" }, button: { text: "이 이미지 쓰기" }, multiple: false })
+    .on("select", function(){ var a = f.state().get("selection").first().toJSON(); $("#" + id).val(a.url); })
+    .open();
+}); });
+</script>';
 
 	echo '<h2>남은 수량이 안 보인다면</h2>'
 		. '<p>남은 수량은 워드커머스 <b>재고 관리</b>가 켜진 상품에만 나옵니다. 위 표의 <b>재고 관리</b>가 <b>꺼짐</b>인 상품은 '
