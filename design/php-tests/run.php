@@ -217,11 +217,11 @@ $lowst  = $mk(701, '[노보] 그린펀치 (9.8mg / 30ml)', 13000, true, true, 4)
 // 31. 라인 가르기 — 블랙을 먼저 보지 않으면 "노보 블랙" 이 "노보" 로 잡힌다
 $ok(($N.'line')($black) === 'black' && ($N.'line')($plain) === 'plain' && ($N.'line')($other) === '', '노보 블랙 · 노보 · 그 밖을 가른다');
 
-// 32. 병 수는 이름에서 읽는다
-$ok(($N.'bottles')($plain) === 1, '단품은 1병');
-$ok(($N.'bottles')($bundle) === 11, '"10+1" 은 11병');
-$ok(($N.'bottles')($ten) === 10, '"10병" 은 10병');
-$ok(($N.'bottles')($other) === 0, '노보가 아니면 0병');
+// 32. 병 수는 이름에서 읽는다 — 받는 병(bottles)과 한도로 세는 병(paid)은 다르다
+$ok(($N.'bottles')($plain) === 1 && ($N.'paid')($plain) === 1, '단품은 1병, 1병으로 센다');
+$ok(($N.'bottles')($bundle) === 11 && ($N.'paid')($bundle) === 10, '"10+1" 은 11병을 받고 10병으로 센다');
+$ok(($N.'bottles')($ten) === 10 && ($N.'paid')($ten) === 10, '"10병" 은 10병');
+$ok(($N.'bottles')($other) === 0 && ($N.'paid')($other) === 0, '노보가 아니면 0병');
 
 // 33. 장바구니 집계
 $GLOBALS['__orders'] = [];
@@ -234,37 +234,47 @@ $t = ($N.'tally_cart')();
 $ok($t['plain'] === 3 && $t['black'] === 0, '장바구니에서 노보만 센다');
 
 // 34. 남은 수량 = 한도 − 장바구니
-$ok(($N.'left')('plain') === 8, '11병 한도에서 3병을 담았으면 8병 남는다');
+$ok(($N.'left')('plain') === 7, '10병 한도에서 3병을 담았으면 7병 남는다');
 
-// 35. 담기 검증 — 한도 안이면 통과, 넘으면 막는다
+// 35. 낱병은 하루 10병까지
 $GLOBALS['__notices'] = [];
-$ok(($N.'validate_add')(true, 238, 8) === true, '8병은 담긴다 (합계 11병)');
-$ok(($N.'validate_add')(true, 238, 9) === false, '9병은 막힌다 (합계 12병)');
+$ok(($N.'validate_add')(true, 238, 7) === true, '낱병 7병은 담긴다 (합계 10병)');
+$ok(($N.'validate_add')(true, 238, 8) === false, '낱병 8병은 막힌다 (합계 11병)');
 $ok(($N.'validate_add')(true, 700, 50) === true, '노보가 아닌 상품은 한도와 무관하다');
 $ok(count($GLOBALS['__notices']) === 1 && $GLOBALS['__notices'][0][0] === 'error', '막을 때 안내를 남긴다');
 
-// 36. 묶음 하나가 하루치를 다 쓴다
+// 35-b. 빈 장바구니에서 낱병 10병은 되고 11병은 안 된다
 $GLOBALS['__cart']->items = [];
+$ok(($N.'validate_add')(true, 238, 10) === true, '낱병 10병은 담긴다');
+$ok(($N.'validate_add')(true, 238, 11) === false, '낱병 11병은 막힌다');
+
+// 36. 10+1 묶음 한 세트가 하루치다 — 사은품 1병은 세지 않으므로 낱병 10병과 같다
 $ok(($N.'validate_add')(true, 600, 1) === true, '10+1 한 세트는 담긴다');
+$ok(($N.'validate_add')(true, 600, 2) === false, '10+1 두 세트는 막힌다');
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
-$ok(($N.'validate_add')(true, 238, 1) === false, '10+1 을 담은 뒤에는 한 병도 더 담기지 않는다');
+$ok(($N.'left')('plain') === 0, '한 세트를 담으면 그날치가 다 찬다');
+$ok(($N.'validate_add')(true, 238, 1) === false, '한 세트를 담은 뒤에는 낱병도 더 담기지 않는다');
+
+// 36-b. 낱병을 조금 담아 두면 그만큼만 남는다 — 세트는 10병이 필요하다
+$GLOBALS['__cart']->items = [['data' => $plain, 'quantity' => 4]];
+$ok(($N.'left')('plain') === 6, '낱병 4병을 담았으면 6병 남는다');
+$ok(($N.'validate_add')(true, 600, 1) === false, '6병만 남았으면 10+1 세트는 담기지 않는다');
 
 // 37. 오늘 주문한 것도 함께 센다
 $GLOBALS['__cart']->items = [];
 $o = new DhrFakeOrder(9001, [], [], [], 'on-hold');
 $o->lines = [new DhrFakeLine($plain, 6)];
 $GLOBALS['__orders'] = [$o];
-$ok(($N.'left')('plain', 5, false) === 5, '오늘 6병을 주문했으면 5병 남는다');
+$ok(($N.'left')('plain', 5, false) === 4, '오늘 6병을 주문했으면 4병 남는다');
 $GLOBALS['__logged_in'] = 5; // 로그인한 손님이라야 오늘 주문분을 셀 수 있다
-$ok(($N.'validate_add')(true, 238, 6) === false, '오늘 주문분을 합쳐 한도를 넘으면 막힌다');
-$ok(($N.'validate_add')(true, 238, 5) === true, '남은 5병은 담긴다');
+$ok(($N.'validate_add')(true, 238, 5) === false, '오늘 주문분을 합쳐 한도를 넘으면 막힌다');
+$ok(($N.'validate_add')(true, 238, 4) === true, '남은 4병은 담긴다');
 $GLOBALS['__logged_in'] = 0;
 $GLOBALS['__orders'] = [];
 
 // 38. 장바구니 화면의 다시 보기
 $GLOBALS['__notices'] = [];
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 2]];
-$GLOBALS['__orders'] = [];
 ($N.'check_cart')();
 $ok(count($GLOBALS['__notices']) === 1, '장바구니가 한도를 넘으면 안내를 남긴다');
 $GLOBALS['__notices'] = [];
@@ -275,7 +285,7 @@ $ok(count($GLOBALS['__notices']) === 0, '한도 안이면 조용하다');
 // 39. 라인별로 세는 설정
 add_filter('duckhoo_novo_event', function($c){ $c['scope'] = 'line'; return $c; });
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 1]];
-$ok(($N.'left')('black') === 11, '라인별로 세면 블랙은 그대로 11병 남는다');
+$ok(($N.'left')('black') === 10, '라인별로 세면 블랙은 그대로 10병 남는다');
 $ok(($N.'left')('plain') === 0, '라인별로 세도 일반은 다 썼다');
 $GLOBALS['__filters']['duckhoo_novo_event'] = [];
 
@@ -285,7 +295,8 @@ $ok(($N.'stock_left')($lowst) === 4 && ($N.'stock_left')($plain) === null, '재�
 // 41. 카드 한 줄
 $GLOBALS['__cart']->items = [];
 $note = apply_filters('duckhoo_card_extra', '', $lowst);
-$ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 11병'), '카드에 남은 재고와 하루 한도를 적는다');
+$ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 10병'), '낱병 카드에 남은 재고와 하루 한도를 적는다');
+$ok(str_contains(apply_filters('duckhoo_card_extra', '', $bundle), '하루 한 세트'), '묶음 카드는 "하루 한 세트" 라고 적는다');
 $ok(apply_filters('duckhoo_card_extra', '', $other) === '', '노보가 아닌 카드에는 붙지 않는다');
 
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)

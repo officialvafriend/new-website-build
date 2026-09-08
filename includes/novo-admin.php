@@ -18,7 +18,7 @@ declare( strict_types = 1 );
 
 namespace Duckhoo\Redesign\Novo\Admin;
 
-use function Duckhoo\Redesign\Novo\{config, is_novo, line, bottles, stock_left, limit, on};
+use function Duckhoo\Redesign\Novo\{config, line, bottles, paid, stock_left, limit, on};
 
 defined( 'ABSPATH' ) || exit;
 
@@ -197,7 +197,11 @@ function screen(): void {
 		. '판매가는 언제나 워드커머스가 쥔 값입니다 — 이 화면은 그 값을 대조하고, 눌렀을 때만 바꿉니다.</p>';
 
 	echo '<table class="widefat" style="max-width:760px;margin:1em 0"><tbody>';
-	printf( '<tr><th style="width:220px">하루 구매 한도</th><td><b>%d병</b> (10+1) · %s</td></tr>', (int) limit(), 'all' === (string) $c['scope'] ? '노보 전체 합산' : '라인별 따로' );
+	printf(
+		'<tr><th style="width:220px">하루 구매 한도</th><td>낱병 <b>%d병</b>까지 · 10+1 묶음 <b>한 세트</b>까지 (사은품 1병은 세지 않습니다) · %s</td></tr>',
+		(int) limit(),
+		'all' === (string) $c['scope'] ? '노보 전체 합산' : '라인별 따로'
+	);
 	foreach ( (array) $c['lines'] as $meta ) {
 		printf(
 			'<tr><th>%s 기준 가격</th><td>1병 <b>%s원</b> · 10+1 <b>%s원</b></td></tr>',
@@ -241,11 +245,11 @@ function screen(): void {
 		}
 
 		printf(
-			'<tr><td><a href="%s">%s</a></td><td>%s</td><td>%d</td><td>%s원</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+			'<tr><td><a href="%s">%s</a></td><td>%s</td><td>%s</td><td>%s원</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 			esc_url( (string) get_edit_post_link( $p->get_id() ) ),
 			esc_html( $p->get_name() ),
 			esc_html( $label ),
-			(int) bottles( $p ),
+			esc_html( bottles( $p ) === paid( $p ) ? (string) bottles( $p ) : bottles( $p ) . ' (' . paid( $p ) . ')' ),
 			esc_html( number_format( $now ) ),
 			$want > 0 ? esc_html( number_format( $want ) ) . '원' : '—',
 			$p->managing_stock() ? '켜짐' : '<span style="color:#B42318">꺼짐</span>',
