@@ -436,6 +436,15 @@ $ok(($N.'units_from_json')($J(12)) === 12, '옵션 JSON 의 required 수량을 �
 $ok(($N.'units_from_json')($J(3,'addon')) === 1, 'addon 줄은 기본 단위가 아니다');
 $ok(($N.'units_from_json')('') === 1 && ($N.'units_from_json')('그냥 글자') === 1, 'JSON 이 없으면 1');
 $ok(($N.'units_in')(['data'=>$plain,'quantity'=>1,'wd_option_builder_json'=>$J(12)]) === 12, '장바구니 줄에서 찾아 읽는다');
+// 담긴 뒤에는 이미 풀어 놓은 배열로 들어 있다 — 문자열만 찾으면 10병이 1병이 된다
+$rows = [['group_key'=>'required_main','label'=>'노보','qty'=>10,'type'=>'required']];
+$ok(($N.'units_in')(['data'=>$plain,'quantity'=>1,'wd_options'=>$rows]) === 10, '배열로 들어 있어도 읽는다');
+$ok(($N.'units_in')(['data'=>$plain,'quantity'=>1,'x'=>['y'=>$rows]]) === 10, '한 겹 더 들어 있어도 읽는다');
+// 옵션을 아예 못 읽어도 값으로 되짚는다 (수량 1 · 135,000원 = 13,500 × 10)
+$GLOBALS['__products'][249] = new WC_Product(249, '[노보 블랙] 블랙멘솔 (9.8mg / 30ml)', 13500);
+$inCart = new WC_Product(249, '[노보 블랙] 블랙멘솔 (9.8mg / 30ml)', 135000);
+$ok(($N.'units_of_item')(['data'=>$inCart,'product_id'=>249,'quantity'=>1]) === 10, '옵션을 못 읽으면 값의 비율로 센다');
+$ok(($N.'units_of_item')(['data'=>$GLOBALS['__products'][249],'product_id'=>249,'quantity'=>1]) === 1, '평범한 한 병은 1');
 // 워드프레스는 $_POST 의 값에 역슬래시를 붙인다 — 그대로 해독하면 실패한다
 $ok(($N.'units_from_json')(addslashes($J(12))) === 12, '역슬래시가 붙어 와도 읽는다');
 

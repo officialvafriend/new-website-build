@@ -201,20 +201,84 @@ function units_from_json( string $json ): int {
 }
 
 /**
- * 배열(장바구니 줄 · POST) 안에서 옵션 JSON 을 찾아 개수를 읽는다.
+ * 옵션 줄 목록(배열)에서 기본 단위 개수를 센다.
  *
- * 키 이름을 못 박지 않는다 — 테마가 바꾸면 조용히 틀리기 때문이다. 값의 생김새로 찾는다.
+ * @param array<mixed> $rows 줄 목록.
+ * @return int 못 세면 0.
+ */
+function units_from_rows( array $rows ): int {
+	$n = 0;
+	foreach ( $rows as $r ) {
+		if ( is_array( $r ) && isset( $r['type'] ) && 'required' === $r['type'] ) {
+			$n += (int) ( $r['qty'] ?? 0 );
+		}
+	}
+	return $n;
+}
+
+/**
+ * 배열(장바구니 줄 · POST) 안에서 옵션 개수를 찾는다.
  *
- * @param array<mixed> $bag 장바구니 줄 또는 $_POST.
+ * 테마가 **문자열 JSON 으로 넣기도 하고 이미 풀어 놓은 배열로 넣기도 한다.** 담을 때는
+ * `$_POST` 에 문자열로 오지만, 장바구니에 담긴 뒤에는 배열로 들어 있어 문자열만 찾던
+ * 코드가 10병을 1병으로 셌다 (프로덕션에서 남은 수량이 0 이 아니라 9 로 나왔다).
+ * 키 이름을 못 박지 않고 생김새로 찾는다.
+ *
+ * @param array<mixed> $bag   장바구니 줄 또는 $_POST.
+ * @param int          $depth 남은 깊이.
  * @return int 1 이상.
  */
-function units_in( array $bag ): int {
+function units_in( array $bag, int $depth = 3 ): int {
 	foreach ( $bag as $v ) {
 		if ( is_string( $v ) && false !== strpos( $v, 'group_key' ) ) {
 			return units_from_json( $v );
 		}
+		if ( is_array( $v ) ) {
+			$n = units_from_rows( $v );
+			if ( $n > 0 ) {
+				return $n;
+			}
+			if ( $depth > 0 ) {
+				$n = units_in( $v, $depth - 1 );
+				if ( $n > 1 ) {
+					return $n;
+				}
+			}
+		}
 	}
 	return 1;
+}
+
+/**
+ * 장바구니 줄이 몇 개인가 — 옵션에서 못 찾으면 **값으로** 되짚는다.
+ *
+ * 테마는 옵션 수량만큼 곱한 값을 장바구니 줄의 상품 값으로 박는다 (수량 1 · 135,000원
+ * = 13,500 × 10). 저장 방식이 바뀌어 옵션을 못 읽더라도 이 비율은 남는다.
+ *
+ * @param array<mixed> $item 장바구니 줄.
+ * @return int 1 이상.
+ */
+function units_of_item( array $item ): int {
+	$n = units_in( $item );
+	if ( $n > 1 ) {
+		return $n;
+	}
+	$p = $item['data'] ?? null;
+	$id = (int) ( $item['product_id'] ?? 0 );
+	if ( ! $p instanceof \WC_Product || $id <= 0 || ! function_exists( 'wc_get_product' ) ) {
+		return $n;
+	}
+	$fresh = wc_get_product( $id );
+	if ( ! $fresh instanceof \WC_Product ) {
+		return $n;
+	}
+	$unit = (float) $fresh->get_price();
+	$line = (float) $p->get_price();
+	if ( $unit <= 0 || $line <= $unit ) {
+		return $n;
+	}
+	$mult = $line / $unit;
+	return ( abs( $mult - round( $mult ) ) < 0.001 && round( $mult ) <= 500 ) ? (int) round( $mult ) : $n;
 }
 
 /**
@@ -351,7 +415,7 @@ function tally_cart( string $skip_key = '' ): array {
 		$n = paid( $p );
 		if ( $n > 0 ) {
 			$k = line( $p );
-			$out[ '' !== $k ? $k : 'plain' ] += $n * units_in( (array) $item ) * max( 1, (int) ( $item['quantity'] ?? 0 ) );
+			$out[ '' !== $k ? $k : 'plain' ] += $n * units_of_item( (array) $item ) * max( 1, (int) ( $item['quantity'] ?? 0 ) );
 		}
 	}
 	return $out;
