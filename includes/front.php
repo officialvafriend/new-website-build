@@ -223,6 +223,40 @@ function featured_brands( int $limit = 6 ): array {
 }
 
 /**
+ * 금액대별 자동 할인 규칙. 안내 문구와 서버 쪽 계산이 같은 값을 본다.
+ *
+ * 실제 할인은 쿠폰 플러그인이 수수료 줄(`🎁 금액 자동 할인`)로 붙인다. 여기 값은
+ * 그 규칙을 우리가 아는 만큼 적어 둔 것이다. 규칙이 바뀌면 이 필터 한 줄이면 된다:
+ * `add_filter( 'duckhoo_auto_discount', fn() => array( array( 'min' => 100000, 'amount' => 10000 ) ) );`
+ *
+ * @return array<int,array{min:int,amount:int}>
+ */
+function discount_tiers(): array {
+	$out = array();
+	foreach ( (array) apply_filters( 'duckhoo_auto_discount', array( array( 'min' => 100000, 'amount' => 10000 ) ) ) as $t ) {
+		$out[] = array( 'min' => (int) ( $t['min'] ?? 0 ), 'amount' => (int) ( $t['amount'] ?? 0 ) );
+	}
+	usort( $out, static fn( $a, $b ) => $a['min'] <=> $b['min'] );
+	return $out;
+}
+
+/**
+ * 이 금액에 붙는 자동 할인액. 해당 없으면 0.
+ *
+ * @param float $amount 기준 금액.
+ * @return int
+ */
+function discount_for( float $amount ): int {
+	$hit = 0;
+	foreach ( discount_tiers() as $t ) {
+		if ( $amount >= $t['min'] ) {
+			$hit = $t['amount'];
+		}
+	}
+	return $hit;
+}
+
+/**
  * 병당 가격. 이름에 "5병" 이 있으면 총액을 병 수로 나눈다. 없으면 단품이다.
  *
  * @param \WC_Product $p 상품.
@@ -850,7 +884,9 @@ function js_config( array $extra = array() ): string {
 		// 금액대별 자동 할인 — 장바구니 안내 문구가 이 값을 읽는다. 실제 할인은 쿠폰
 		// 플러그인이 서버에서 적용한다. 규칙이 바뀌면 이 필터 한 줄이면 된다:
 		// add_filter( 'duckhoo_auto_discount', fn() => array( array( 'min' => 100000, 'amount' => 10000 ) ) );
-		'discount' => array_values( (array) apply_filters( 'duckhoo_auto_discount', array( array( 'min' => 100000, 'amount' => 10000 ) ) ) ),
+		'discount' => discount_tiers(),
+		// 자동 할인에서 빠지는 것이 있으면 안내 문구에 괄호로 붙는다 (노보 이벤트가 쓴다).
+		'discountEx' => (string) apply_filters( 'duckhoo_auto_discount_except', '' ),
 		// 사장님 홈 팝업(#pop6)에서 남길 탭 하나. 나머지 칩은 감춘다.
 		// 끄려면 빈 문자열: add_filter( 'duckhoo_popup_tab', '__return_empty_string' );
 		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '고객 안내' ),

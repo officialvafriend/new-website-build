@@ -727,7 +727,9 @@
   var tiers = (window.DHR && window.DHR.discount) || [];
   if(!tiers.length) return;
   var won = function(v){ return Number(v).toLocaleString('ko-KR'); };
-  var line = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ') + ' 자동 할인';
+  var ex = (window.DHR && window.DHR.discountEx) || '';
+  var line = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ')
+    + ' 자동 할인' + (ex ? ' (' + ex + ')' : '');
   function write(){
     var note = document.querySelector('#coupon-auto-notice');
     if(!note || note.dataset.dhr === line) return;

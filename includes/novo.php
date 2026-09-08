@@ -559,6 +559,10 @@ function product_notice( $p = null ): void {
 	if ( null !== $stock ) {
 		echo '<div class="dhp-novo__row"><span>남은 재고</span><b>' . (int) $stock . '개</b></div>';
 	}
+	if ( apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
+		// 장바구니에 가서야 알면 늦다. 여기서 미리 말한다.
+		echo '<div class="dhp-novo__row"><span>금액대별 자동 할인</span><b>제외</b></div>';
+	}
 	if ( $each > 1 ) {
 		// 10+1 은 11병을 받고 10병으로 센다. 손님이 계산기를 두드리지 않게 둘 다 적는다.
 		echo '<div class="dhp-novo__row"><span>이 상품 한 세트</span><b>' . (int) $each . '병'
@@ -663,3 +667,139 @@ function banner(): void {
 	echo '</section>';
 }
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
+
+/* ── 금액대별 자동 할인에서 노보를 뺀다 ───────────────────────────────────────
+   노보는 물량이 모자라 값을 올린 상품이다. 거기에 10만원↑ 1만원 할인까지 얹히면
+   한 사람이 싸게 쓸어 가는 것을 우리가 거들게 된다.
+
+   **할인 자체를 없애지 않는다.** 노보 금액만 기준에서 빼고, 나머지 상품 금액이
+   기준을 넘으면 할인은 그대로 붙는다. 노보 한 병 담았다고 다른 상품의 할인까지
+   사라지면 그건 손님에게 벌을 주는 것이다.
+
+   할인은 쿠폰 플러그인이 수수료 줄(`🎁 금액 자동 할인`, 음수)로 붙인다. 우리는
+   그 줄을 뒤늦게(우선순위 99) 다시 셈해 고치거나 뺀다. 담기는 상품 데이터에는
+   손대지 않는다 — 금액 줄 하나만 만진다. */
+
+/**
+ * 이 수수료 줄이 금액대별 자동 할인인가.
+ *
+ * @param object $fee 수수료 줄.
+ * @return bool
+ */
+function is_auto_discount( $fee ): bool {
+	$name = (string) ( $fee->name ?? '' );
+	$amt  = (float) ( $fee->amount ?? 0 );
+	return $amt < 0 && (bool) preg_match( (string) apply_filters( 'duckhoo_auto_discount_fee', '/자동\s*할인/u' ), $name );
+}
+
+/**
+ * 장바구니의 노보 금액과 전체 금액.
+ *
+ * 수수료를 셈하는 시점에는 `line_subtotal` 이 아직 없을 수 있어 판매가 × 수량으로 센다.
+ *
+ * @return array{novo:float,all:float}
+ */
+function cart_money(): array {
+	$novo = 0.0;
+	$all  = 0.0;
+	if ( ! function_exists( 'WC' ) ) {
+		return array( 'novo' => 0.0, 'all' => 0.0 );
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'get_cart' ) ) {
+		return array( 'novo' => 0.0, 'all' => 0.0 );
+	}
+	foreach ( (array) $wc->cart->get_cart() as $item ) {
+		$p = $item['data'] ?? null;
+		if ( ! $p instanceof \WC_Product ) {
+			continue;
+		}
+		$line = (float) $p->get_price() * (int) ( $item['quantity'] ?? 0 );
+		$all += $line;
+		if ( is_novo( $p ) ) {
+			$novo += $line;
+		}
+	}
+	return array( 'novo' => $novo, 'all' => $all );
+}
+
+/**
+ * 자동 할인을 노보 뺀 금액으로 다시 셈한다.
+ *
+ * @return void
+ */
+function adjust_fees(): void {
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) || ! function_exists( 'WC' ) ) {
+		return;
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'fees_api' ) ) {
+		return;
+	}
+
+	$money = cart_money();
+	if ( $money['novo'] <= 0 ) {
+		return; // 노보가 없으면 우리가 손댈 것이 없다.
+	}
+
+	$api  = $wc->cart->fees_api();
+	$fees = $api->get_fees();
+	if ( ! $fees ) {
+		return;
+	}
+
+	$want    = \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) );
+	$keep    = array();
+	$changed = false;
+
+	foreach ( $fees as $fee ) {
+		if ( ! is_auto_discount( $fee ) ) {
+			$keep[] = $fee;
+			continue;
+		}
+		if ( $want > 0 ) {
+			if ( (int) round( abs( (float) $fee->amount ) ) !== $want ) {
+				$fee->amount = -1 * (float) $want;
+				$changed     = true;
+			}
+			$keep[] = $fee;
+			continue;
+		}
+		$changed = true; // 기준에 못 미친다 — 이 줄을 뺀다.
+	}
+
+	if ( ! $changed ) {
+		return;
+	}
+
+	$api->remove_all_fees();
+	foreach ( $keep as $fee ) {
+		$api->add_fee(
+			array(
+				'name'      => (string) $fee->name,
+				'amount'    => (float) $fee->amount,
+				'taxable'   => ! empty( $fee->taxable ),
+				'tax_class' => (string) ( $fee->tax_class ?? '' ),
+			)
+		);
+	}
+}
+
+/**
+ * 장바구니 안내 문구에 붙는 예외 표시.
+ *
+ * @param string $ex 여태 값.
+ * @return string
+ */
+function discount_except( $ex ): string {
+	if ( ! on() || ! apply_filters( 'duckhoo_novo_exclude_from_discount', true ) ) {
+		return (string) $ex;
+	}
+	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
+}
+
+if ( function_exists( 'add_action' ) ) {
+	// 쿠폰 플러그인이 줄을 붙인 뒤에 본다.
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\adjust_fees', 99 );
+	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
+}

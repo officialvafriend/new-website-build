@@ -321,6 +321,46 @@ $threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = t
 $ok(!$threw, '한도 안이면 주문이 그대로 만들어진다');
 $GLOBALS['__cart']->items = [];
 
+// 41-c. 금액대별 자동 할인 — 노보 금액은 기준에서 뺀다
+$F = 'Duckhoo\\Redesign\\Front\\';
+$ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '10만원부터 1만원 할인');
+
+$fee = fn() => [new DhrFakeFee('🎁 금액 자동 할인', -10000.0)];
+$other = $mk(702, '[펠릭스] 더블 라임 5병 묶음', 89000);
+
+// (가) 노보만 13,500 × 10 = 135,000 → 기준 금액 0 → 할인 없음
+$GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10]];
+$GLOBALS['__cart']->fees = $fee();
+($N.'adjust_fees')();
+$ok(count($GLOBALS['__cart']->fees) === 0, '노보만 담으면 자동 할인이 빠진다');
+
+// (나) 노보 + 다른 상품 178,000 → 기준 금액 178,000 → 할인 그대로
+$GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10], 'b' => ['data' => $other, 'quantity' => 2]];
+$GLOBALS['__cart']->fees = $fee();
+($N.'adjust_fees')();
+$ok(count($GLOBALS['__cart']->fees) === 1 && (int)$GLOBALS['__cart']->fees[0]->amount === -10000, '노보를 빼도 기준을 넘으면 할인은 그대로다');
+
+// (다) 노보 + 다른 상품 89,000 → 기준 금액 89,000 → 할인 없음
+$GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10], 'b' => ['data' => $other, 'quantity' => 1]];
+$GLOBALS['__cart']->fees = $fee();
+($N.'adjust_fees')();
+$ok(count($GLOBALS['__cart']->fees) === 0, '노보를 빼면 기준에 못 미쳐 할인이 빠진다');
+
+// (라) 노보가 없으면 아무것도 건드리지 않는다
+$GLOBALS['__cart']->items = ['b' => ['data' => $other, 'quantity' => 2]];
+$GLOBALS['__cart']->fees = $fee();
+($N.'adjust_fees')();
+$ok(count($GLOBALS['__cart']->fees) === 1, '노보가 없으면 할인 줄을 건드리지 않는다');
+
+// (마) 배송비 같은 다른 수수료 줄은 그대로 둔다
+$GLOBALS['__cart']->items = ['a' => ['data' => $black, 'quantity' => 10]];
+$GLOBALS['__cart']->fees = [new DhrFakeFee('🎁 금액 자동 할인', -10000.0), new DhrFakeFee('포장비', 2000.0)];
+($N.'adjust_fees')();
+$ok(count($GLOBALS['__cart']->fees) === 1 && $GLOBALS['__cart']->fees[0]->name === '포장비', '할인이 아닌 수수료 줄은 남는다');
+
+$ok(str_contains(apply_filters('duckhoo_auto_discount_except', ''), '노보'), '안내 문구에 노보 제외가 붙는다');
+$GLOBALS['__cart']->items = []; $GLOBALS['__cart']->fees = [];
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';

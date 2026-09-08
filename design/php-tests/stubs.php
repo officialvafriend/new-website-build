@@ -156,9 +156,20 @@ class DhrFakeLine {
   public function get_product(){ return $this->p; }
   public function get_quantity(){ return $this->q; }
 }
+class DhrFakeFee {
+  public function __construct(public string $name='', public float $amount=0.0, public bool $taxable=false, public string $tax_class=''){}
+}
+class DhrFakeFeesApi {
+  public function __construct(private DhrFakeCart $c){}
+  public function get_fees(){ return $this->c->fees; }
+  public function remove_all_fees(){ $this->c->fees = []; }
+  public function add_fee($a){ $this->c->fees[] = new DhrFakeFee((string)$a['name'], (float)$a['amount'], !empty($a['taxable']), (string)($a['tax_class'] ?? '')); }
+}
 class DhrFakeCart {
   public array $items = [];
+  public array $fees = [];
   public function get_cart(){ return $this->items; }
+  public function fees_api(){ return new DhrFakeFeesApi($this); }
 }
 $GLOBALS['__pmeta'] = [];
 $GLOBALS['__products'] = [];
