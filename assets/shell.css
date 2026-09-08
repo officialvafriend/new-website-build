@@ -2049,16 +2049,22 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row{ display: flex; align-items: base
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row span{ color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink, #111); font-weight: 800; font-variant-numeric: tabular-nums; }
 
-/* 담기가 막혔을 때의 안내 — 노보 하루 한도처럼 서버가 멈춘 경우다. 불투명 면에
-   왼쪽 굵은 선 하나. 워드커머스 기본 목록 표시와 아이콘은 걷는다. */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error,
-html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error{
-  list-style: none !important; background: #FFF4F2 !important; border: 1px solid #F2C6C0 !important;
-  border-left: 4px solid #B42318 !important; border-radius: 12px !important; color: #7A1C12 !important;
-  padding: .85rem 1rem !important; margin: 1rem 0 0 !important; font-size: 14px !important;
-  line-height: 1.6 !important; word-break: keep-all;
+/* ── 담기가 거절됐을 때 ────────────────────────────────────────────────────
+   테마는 워드커머스 안내를 자기 토스트(#wd-coupon-toast)로 옮기고 원본에 인라인
+   `display:none` 을 박는다. 「장바구니에 담았습니다」 같은 한 줄에는 맞는 방식이지만,
+   노보 하루 한도처럼 **왜 안 됐는지**를 설명하는 두 줄은 한 줄 토스트에서 잘리고
+   몇 초 뒤 사라진다. 게다가 테마는 거절도 `success` 로 칠한다.
+
+   그래서 거절(`.woocommerce-error`)일 때만 원본을 도로 세우고 토스트를 끈다.
+   인라인 style 을 이기려면 `!important` 가 필요하다. `:has()` 가 없는 브라우저에서는
+   둘 다 보일 뿐 읽는 데는 지장이 없다. */
+html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error{
+  display: block !important; list-style: none !important; background: #FFF4F2 !important;
+  border: 1px solid #F2C6C0 !important; border-left: 4px solid #B42318 !important;
+  border-radius: 12px !important; color: #7A1C12 !important; padding: .85rem 1rem !important;
+  margin: 1rem 0 0 !important; font-size: 14px !important; line-height: 1.6 !important; word-break: keep-all;
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error li,
-html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error li{ margin: 0 !important; padding: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error::before,
-html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error::before{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error li{ margin: 0 !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error::before,
+html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error li::before{ display: none !important; content: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap:has(ul.woocommerce-error) #wd-coupon-toast{ display: none !important; }

@@ -47,12 +47,6 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 <div class="wrap">
 	<?php do_action( 'woocommerce_before_single_product' ); ?>
 
-	<?php
-	// 담기가 막혔을 때(예: 노보 하루 한도) 왜 막혔는지 여기서 말한다. 이 줄이 없으면
-	// 손님은 아무 일도 일어나지 않은 것으로 본다.
-	wc_print_notices();
-	?>
-
 	<nav class="dhp-crumb" aria-label="현재 위치">
 		<a href="<?php echo esc_url( home_url( '/' ) ); ?>">홈</a>
 		<a href="<?php echo esc_url( $dhp_shop ); ?>">상품</a>
