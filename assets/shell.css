@@ -2094,3 +2094,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsearch__form:focus-within{ box-shadow: inset 
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch{ z-index: 70 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch__go{ color: #fff !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch__cats a{ color: var(--dh-ink, #111) !important; text-decoration: none !important; }
+
+/* 상품 제목 안의 브랜드 — 윗줄 회색 라벨로 빼 놨더니 `노보 데저트` 와
+   `노보 블랙 데저트` 가 화면에서 둘 다 그냥 `데저트` 로 보였다. 제목 안에 두되
+   본 이름보다는 한 단계 약하게 — 읽는 순서는 브랜드 → 이름이다. */
+html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title .dhp-title__b{
+  color: var(--dh-ink-2, #4E565F); font-weight: 700; white-space: nowrap;
+}

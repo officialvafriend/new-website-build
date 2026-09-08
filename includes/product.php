@@ -45,15 +45,20 @@ function head(): void {
 	}
 	$n  = split_name( $product );
 	$eb = eyebrow( $product );
-	echo '<div class="dhp-eb">';
-	if ( '' !== $n['brand'] ) {
-		echo '<span class="dhp-brand">' . esc_html( $n['brand'] ) . '</span>';
-	}
+
 	if ( $eb ) {
-		echo '<span class="dhp-badge dhp-badge--' . esc_attr( $eb[1] ) . '">' . esc_html( $eb[0] ) . '</span>';
+		echo '<div class="dhp-eb"><span class="dhp-badge dhp-badge--' . esc_attr( $eb[1] ) . '">' . esc_html( $eb[0] ) . '</span></div>';
 	}
-	echo '</div>';
-	echo '<h1 class="product_title entry-title dhp-title">' . esc_html( $n['title'] ) . '</h1>';
+
+	// **브랜드는 제목 안에 둔다.** 작은 회색 윗줄로 빼 놨더니 `노보 데저트` 와
+	// `노보 블랙 데저트` 가 화면에서 둘 다 그냥 `데저트` 로 보였다. 이 가게에는
+	// 그렇게 겹치는 상품이 4종 8개 있다 (데저트 · 코코넛커피 · 블랙멘솔 · 알로에베라).
+	// 포장할 때 헷갈리고, 검색엔진에도 같은 제목이 두 개로 보인다.
+	echo '<h1 class="product_title entry-title dhp-title">';
+	if ( '' !== $n['brand'] ) {
+		echo '<span class="dhp-title__b">' . esc_html( $n['brand'] ) . '</span> ';
+	}
+	echo esc_html( $n['title'] ) . '</h1>';
 }
 
 /**
