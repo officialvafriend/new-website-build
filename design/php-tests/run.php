@@ -387,6 +387,35 @@ $bo = new DhrFakeOrder(555, [], [], [], 'on-hold'); $bo->lines = [new DhrFakeLin
 $ok($rest([$bo]) === 0, '10+1 세트를 주문했으면 그날치가 끝난다');
 $GLOBALS['__logged_in'] = 0; $GLOBALS['__orders'] = [];
 
+// 41-e. 같은 사람이 계정을 여러 개 만드는 것 (includes/signup.php)
+$G = 'Duckhoo\\Redesign\\Signup\\';
+$ok(($G.'normalize')('010-1234-5678') === '01012345678', '하이픈을 지운다');
+$ok(($G.'normalize')('010 1234 5678') === '01012345678', '공백을 지운다');
+$ok(($G.'normalize')('+82 10-1234-5678') === '01012345678', '국가번호 82 는 0 으로 되돌린다');
+$ok(($G.'normalize')('없음') === '' && ($G.'normalize')('123') === '', '번호로 볼 수 없으면 빈 값');
+
+$GLOBALS['__phone_users']['01012345678'] = [11, 12];
+$GLOBALS['__usermeta'][11] = []; $GLOBALS['__usermeta'][12] = [];
+$ok(($G.'users_with_phone')('010-1234-5678') === [11, 12], '같은 번호를 쓰는 계정을 모두 찾는다');
+$ok(($G.'users_with_phone')('010-9999-0000') === [], '안 쓰이는 번호는 빈 목록');
+
+// 탈퇴한 계정은 세지 않는다 — 다시 가입할 수 있어야 한다
+$GLOBALS['__phone_users']['01055556666'] = [21];
+$GLOBALS['__usermeta'][21] = ['_duckhoo_withdrawn_at' => '2026-09-01'];
+$ok(($G.'users_with_phone')('01055556666') === [], '탈퇴한 계정의 번호는 다시 쓸 수 있다');
+
+// 노보 한도는 같은 번호의 계정을 한 사람으로 묶어 센다
+$GLOBALS['__phone_users']['01077778888'] = [31, 32];
+$GLOBALS['__usermeta'][31] = ['billing_phone' => '010-7777-8888'];
+$GLOBALS['__usermeta'][32] = ['billing_phone' => '010-7777-8888'];
+$ok(($G.'phone_of')(31) === '01077778888', '회원의 번호를 읽는다');
+$o31 = new DhrFakeOrder(7001, [], [], [], 'on-hold'); $o31->lines = [new DhrFakeLine($plain, 6)];
+$GLOBALS['__orders'] = [$o31];       // 다른 계정(32)이 오늘 6병을 샀다
+$GLOBALS['__logged_in'] = 31;
+$GLOBALS['__cart']->items = [];
+$ok(($N.'left')('plain', 31) === 4, '다른 계정으로 산 것도 같은 사람으로 세어 4병만 남는다');
+$GLOBALS['__logged_in'] = 0; $GLOBALS['__orders'] = [];
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';

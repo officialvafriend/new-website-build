@@ -173,6 +173,44 @@ function run( string $mode ): array {
 }
 
 /**
+ * 지금 겹쳐 있는 휴대폰번호. 중복 가입이 실제로 있었는지 한눈에 본다.
+ *
+ * @return string
+ */
+function dup_table(): string {
+	global $wpdb;
+	if ( ! isset( $wpdb ) ) {
+		return '<p>확인할 수 없습니다.</p>';
+	}
+	$keys = \Duckhoo\Redesign\Signup\meta_keys();
+	$in   = implode( ',', array_fill( 0, count( $keys ), '%s' ) );
+	$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			"SELECT REPLACE( REPLACE( REPLACE( meta_value, '-', '' ), ' ', '' ), '+82', '0' ) AS ph,
+			        COUNT( DISTINCT user_id ) AS n, GROUP_CONCAT( DISTINCT user_id ) AS ids
+			 FROM {$wpdb->usermeta}
+			 WHERE meta_key IN ( {$in} ) AND meta_value <> ''
+			 GROUP BY ph HAVING n > 1 ORDER BY n DESC LIMIT 50",
+			$keys
+		)
+	);
+	if ( ! $rows ) {
+		return '<p><b style="color:#1F5F46">겹치는 번호가 없습니다.</b></p>';
+	}
+	$out = '<table class="widefat striped" style="max-width:640px"><thead><tr><th>휴대폰번호</th><th>계정 수</th><th>회원 ID</th></tr></thead><tbody>';
+	foreach ( $rows as $r ) {
+		$out .= sprintf(
+			'<tr><td>%s</td><td><b style="color:#B42318">%d</b></td><td>%s</td></tr>',
+			esc_html( preg_replace( '/^(\d{3})(\d{3,4})(\d{4})$/', '$1-$2-$3', (string) $r->ph ) ),
+			(int) $r->n,
+			esc_html( (string) $r->ids )
+		);
+	}
+	return $out . '</tbody></table>';
+}
+
+/**
  * 화면.
  *
  * @return void
@@ -317,6 +355,12 @@ jQuery(function($){ $(".dhr-pick").on("click", function(e){ e.preventDefault();
     .open();
 }); });
 </script>';
+
+	echo '<h2>같은 번호를 쓰는 계정</h2>';
+	echo '<p>노보 하루 한도는 <b>같은 휴대폰번호를 쓰는 계정을 한 사람으로</b> 셉니다. '
+		. '가입 때도 이미 쓰이는 번호면 막습니다. 아래는 지금 겹쳐 있는 번호입니다 — '
+		. '이 표가 비어 있으면 중복 가입이 없다는 뜻입니다.</p>';
+	echo dup_table(); // phpcs:ignore WordPress.Security.EscapeOutput
 
 	echo '<h2>남은 수량이 안 보인다면</h2>'
 		. '<p>남은 수량은 워드커머스 <b>재고 관리</b>가 켜진 상품에만 나옵니다. 위 표의 <b>재고 관리</b>가 <b>꺼짐</b>인 상품은 '

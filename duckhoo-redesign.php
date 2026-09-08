@@ -44,6 +44,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
 // 적립금을 쓴 주문의 취소 — 되돌아오지 않는 적립금을 손님이 혼자 잃지 않게.
 require_once plugin_dir_path( __FILE__ ) . 'includes/points.php';
 
+// 계정 정책 — 같은 휴대폰번호로 두 번 가입하지 못하게.
+require_once plugin_dir_path( __FILE__ ) . 'includes/signup.php';
+
 // 노보 물량 이벤트 — 하루 구매 한도 · 남은 수량 · 이벤트 기준 가격.
 require_once plugin_dir_path( __FILE__ ) . 'includes/novo.php';
 

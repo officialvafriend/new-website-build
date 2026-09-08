@@ -704,3 +704,11 @@ html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; colo
 .dhr .nvb-img{margin:0 0 1.4rem;display:block}
 .dhr .nvb-img img{display:block;width:100%;height:auto;border-radius:20px}
 .dhr .nvb-img__cap{margin:.55rem .2rem 0;font-size:13px;line-height:1.5;color:#4E565F;word-break:keep-all}
+
+/* 이미 가입된 번호입니다 — 가입 화면 머리판 뒤. 막기만 하고 끝내지 않고 갈 곳을 준다. */
+.dhr .dhr-dup{max-width:min(560px,calc(100% - 2.2rem));margin:1.1rem auto 0;padding:1rem 1.1rem;background:#FFF4F2;border:1px solid #F2C6C0;border-left:4px solid #B42318;border-radius:14px;color:#7A1C12}
+.dhr .dhr-dup b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em}
+.dhr .dhr-dup p{margin:.35rem 0 0;font-size:14px;line-height:1.6;word-break:keep-all}
+.dhr .dhr-dup__go{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .9rem;margin-top:.8rem !important}
+.dhr .dhr-dup__btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 1.2rem;border-radius:999px;background:#111;color:#fff;font-size:14px;font-weight:800}
+.dhr .dhr-dup__lk{font-size:14px;font-weight:700;color:#7A1C12;text-decoration:underline;text-underline-offset:3px}

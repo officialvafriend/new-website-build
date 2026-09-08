@@ -186,3 +186,28 @@ $GLOBALS['__cart'] = new DhrFakeCart();
 if(!function_exists('wc_get_product')) { function wc_get_product($id){ return $GLOBALS['__products'][(int)$id] ?? null; } }
 if(!function_exists('wc_add_notice')) { function wc_add_notice($m,$t='success'){ $GLOBALS['__notices'][] = [$t,$m]; } }
 if(!function_exists('WC')) { function WC(){ return (object)['cart' => $GLOBALS['__cart']]; } }
+
+
+/* ── 회원 휴대폰번호 조회 스텁 ────────────────────────────────────────────
+   signup.php 는 usermeta 를 한 번 훑어 같은 번호를 쓰는 계정을 찾는다.
+   $GLOBALS['__phone_users'] 가 그 결과를 대신한다 (번호 → 회원 ID 목록). */
+class DhrFakeWpdb {
+  public string $usermeta = 'wp_usermeta';
+  public string $options = 'wp_options';
+  public array $lastArgs = [];
+  public function prepare($sql, ...$a){ $this->lastArgs = (isset($a[0]) && is_array($a[0])) ? $a[0] : $a; return $sql; }
+  public function get_col($sql){
+    $n = end($this->lastArgs);
+    return $GLOBALS['__phone_users'][$n] ?? [];
+  }
+  public function query($sql){ return 0; }
+}
+$GLOBALS['wpdb'] = new DhrFakeWpdb();
+$GLOBALS['__phone_users'] = [];
+if(!function_exists('wp_lostpassword_url')) { function wp_lostpassword_url($r=''){ return 'https://example.test/lost/'; } }
+if(!function_exists('wc_get_page_permalink')) { function wc_get_page_permalink($p){ return 'https://example.test/my-account/'; } }
+if(!function_exists('wp_get_referer')) { function wp_get_referer(){ return ''; } }
+if(!function_exists('wp_safe_redirect')) { function wp_safe_redirect($u){ $GLOBALS['__redirect'] = $u; } }
+if(!function_exists('add_query_arg')) { function add_query_arg($k,$v,$u){ return $u.'?'.$k.'='.$v; } }
+if(!function_exists('remove_query_arg')) { function remove_query_arg($k,$u){ return $u; } }
+if(!function_exists('sanitize_text_field')) { function sanitize_text_field($v){ return trim((string)$v); } }

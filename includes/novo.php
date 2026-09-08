@@ -197,6 +197,19 @@ function tally_orders( int $uid ): array {
 		return $out;
 	}
 
+	// **같은 휴대폰번호를 쓰는 계정은 한 사람으로 본다.** 한도가 계정 기준이면 계정을
+	// 하나 더 만드는 것으로 지나갈 수 있다. 번호가 없으면 이 계정만 센다.
+	$who = array( $uid );
+	if ( apply_filters( 'duckhoo_novo_count_by_phone', true ) && function_exists( 'Duckhoo\\Redesign\\Signup\\phone_of' ) ) {
+		$phone = \Duckhoo\Redesign\Signup\phone_of( $uid );
+		if ( '' !== $phone ) {
+			$group = \Duckhoo\Redesign\Signup\users_with_phone( $phone );
+			if ( $group ) {
+				$who = array_values( array_unique( array_merge( $who, $group ) ) );
+			}
+		}
+	}
+
 	$statuses = array();
 	if ( function_exists( 'wc_get_order_statuses' ) ) {
 		$free = free_statuses();
@@ -210,11 +223,11 @@ function tally_orders( int $uid ): array {
 
 	$orders = wc_get_orders(
 		array(
-			'customer_id' => $uid,
-			'limit'       => 60,
-			'status'      => $statuses ? $statuses : 'any',
+			'customer_id'  => 1 === count( $who ) ? $who[0] : $who,
+			'limit'        => 60 * count( $who ),
+			'status'       => $statuses ? $statuses : 'any',
 			'date_created' => '>=' . day_start(),
-			'return'      => 'objects',
+			'return'       => 'objects',
 		)
 	);
 	if ( ! is_array( $orders ) ) {
