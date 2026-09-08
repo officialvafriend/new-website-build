@@ -2065,6 +2065,9 @@ html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error{
   margin: 1rem 0 0 !important; font-size: 14px !important; line-height: 1.6 !important; word-break: keep-all;
 }
 html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error li{ margin: 0 !important; padding: 0 !important; }
+/* 워드커머스가 안내에 포커스를 옮긴다 (스크린리더가 읽게). 링은 남기되 브라우저 기본
+   파랑 대신 이 상자의 색으로 — 파란 두 겹 테두리가 빨간 상자 위에 얹혀 있었다. */
+html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error:focus{ outline: 2px solid #B42318 !important; outline-offset: 2px !important; }
 html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error::before,
 html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error li::before{ display: none !important; content: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap:has(ul.woocommerce-error) #wd-coupon-toast{ display: none !important; }
