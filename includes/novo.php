@@ -896,177 +896,23 @@ function banner(): void {
 }
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
 
-/* ── 금액대별 자동 할인에서 노보를 뺀다 ───────────────────────────────────────
-   노보는 물량이 모자라 값을 올린 상품이다. 거기에 10만원↑ 1만원 할인까지 얹히면
-   한 사람이 싸게 쓸어 가는 것을 우리가 거들게 된다.
+/* ── 노보를 자동 할인에서 빼는 일은 쿠폰 플러그인 쪽에서 해야 한다 ───────────
+   사장님 요청: 낱병이든 세트든 노보에는 할인이 붙으면 안 된다.
 
-   **할인 자체를 없애지 않는다.** 노보 금액만 기준에서 빼고, 나머지 상품 금액이
-   기준을 넘으면 할인은 그대로 붙는다. 노보 한 병 담았다고 다른 상품의 할인까지
-   사라지면 그건 손님에게 벌을 주는 것이다.
+   **우리 플러그인에서는 못 한다.** 두 가지를 다 해 봤고 둘 다 결제 화면을 깨뜨렸다
+   (로그인 상태에서 확인, 노보만 135,000원 담은 장바구니):
 
-   할인은 쿠폰 플러그인이 수수료 줄(`🎁 금액 자동 할인`, 음수)로 붙인다. 우리는
-   그 줄을 뒤늦게(우선순위 99) 다시 셈해 고치거나 뺀다. 담기는 상품 데이터에는
-   손대지 않는다 — 금액 줄 하나만 만진다. */
+       수수료 줄의 값을 0 으로   → 총 주문금액 0원 · 할인 - -10,000원
+       수수료 줄을 통째로 걷어냄 → 총 주문금액 0원 · 「금액 자동 할인 -10,000원」 줄은 그대로
 
-/**
- * 이 수수료 줄이 금액대별 자동 할인인가.
- *
- * @param object $fee 수수료 줄.
- * @return bool
- */
-function is_auto_discount( $fee ): bool {
-	$name = (string) ( $fee->name ?? '' );
-	$amt  = (float) ( $fee->amount ?? 0 );
-	return $amt < 0 && (bool) preg_match( (string) apply_filters( 'duckhoo_auto_discount_fee', '/자동\s*할인/u' ), $name );
-}
+   두 번째가 결정적이다. 줄을 걷어냈는데도 화면에는 남는다 — **쿠폰 플러그인이 그
+   줄을 워드커머스 수수료가 아니라 자기 상태로 그린다.** 우리가 워드커머스 쪽에서
+   빼면 화면과 계산이 갈라지고, 테마 요약이 그 어긋남에서 무너진다.
 
-/**
- * 장바구니의 노보 금액과 전체 금액.
- *
- * 수수료를 셈하는 시점에는 `line_subtotal` 이 아직 없을 수 있어 판매가 × 수량으로 센다.
- *
- * @return array{novo:float,all:float}
- */
-function cart_money(): array {
-	$novo = 0.0;
-	$all  = 0.0;
-	if ( ! function_exists( 'WC' ) ) {
-		return array( 'novo' => 0.0, 'all' => 0.0 );
-	}
-	$wc = WC();
-	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'get_cart' ) ) {
-		return array( 'novo' => 0.0, 'all' => 0.0 );
-	}
-	foreach ( (array) $wc->cart->get_cart() as $item ) {
-		$p = $item['data'] ?? null;
-		if ( ! $p instanceof \WC_Product ) {
-			continue;
-		}
-		$line = (float) $p->get_price() * (int) ( $item['quantity'] ?? 0 );
-		$all += $line;
-		if ( is_novo( $p ) ) {
-			$novo += $line;
-		}
-	}
-	return array( 'novo' => $novo, 'all' => $all );
-}
+   그래서 이 자리에는 코드를 두지 않는다. 규칙이 사는 곳에서 고쳐야 한다:
+   **쿠폰 플러그인(keyple-coupon-manager)의 자동 할인 설정에서 `노보 액상` 분류를
+   대상에서 뺀다.** 그 설정이 없으면 플러그인 쪽에 물어야 한다.
 
-/**
- * 자동 할인을 노보 뺀 금액으로 다시 셈한다.
- *
- * @return void
- */
-function excluding(): bool {
-	// 시험 스위치 — 주소에 `?dhr_novo_nodisc=1` 을 붙인 요청에서만 켠다.
-	// 켜면 할인이 **빠지는** 쪽이라 손님에게 유리해질 여지가 없다.
-	// phpcs:ignore WordPress.Security.NonceVerification
-	if ( isset( $_GET['dhr_novo_nodisc'] ) ) {
-		return '1' === (string) $_GET['dhr_novo_nodisc']; // phpcs:ignore WordPress.Security.NonceVerification
-	}
-	return (bool) apply_filters( 'duckhoo_novo_exclude_from_discount', false );
-}
+   되돌아와서 다시 시도하려면 커밋 `04fdf24` 에 두 방식이 다 들어 있다. */
 
-/**
- * 노보에는 금액대별 자동 할인을 붙이지 않는다.
- *
- * **줄의 값을 0 으로 내리지 않는다.** 한 번 그렇게 했더니 테마 요약이 무너져
- * 「총 주문금액 0원」이 나왔다 — 이 가게는 같은 할인을 수수료 줄과 쿠폰 양쪽으로
- * 보여 주는데, 한쪽만 0 이 되면 두 값이 어긋난다. 줄 자체를 걷어낸다.
- *
- * 노보를 뺀 나머지 금액이 기준을 넘으면 할인은 그대로 둔다 — 노보 한 병 담았다고
- * 다른 상품의 할인까지 사라지면 손님에게 벌을 주는 것이다.
- *
- * @return void
- */
-function adjust_fees(): void {
-	if ( ! on() || ! excluding() || ! function_exists( 'WC' ) ) {
-		return;
-	}
-	$wc = WC();
-	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'fees_api' ) ) {
-		return;
-	}
 
-	$money = cart_money();
-	if ( $money['novo'] <= 0 ) {
-		return; // 노보가 없으면 우리가 손댈 것이 없다.
-	}
-
-	$api  = $wc->cart->fees_api();
-	$fees = $api->get_fees();
-	if ( ! $fees ) {
-		return;
-	}
-
-	$want = \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) );
-	if ( $want > 0 ) {
-		return; // 노보를 빼도 기준을 넘는다 — 할인은 그대로.
-	}
-
-	$keep    = array();
-	$dropped = false;
-	foreach ( $fees as $fee ) {
-		if ( is_auto_discount( $fee ) ) {
-			$dropped = true;
-			continue;
-		}
-		$keep[] = $fee;
-	}
-	if ( ! $dropped ) {
-		return;
-	}
-
-	$api->remove_all_fees();
-	foreach ( $keep as $fee ) {
-		$api->add_fee(
-			array(
-				'name'      => (string) $fee->name,
-				'amount'    => (float) $fee->amount,
-				'taxable'   => ! empty( $fee->taxable ),
-				'tax_class' => (string) ( $fee->tax_class ?? '' ),
-			)
-		);
-	}
-}
-
-/**
- * 쿠폰으로 붙는 자동 할인도 막는다. 이 가게는 같은 할인을 양쪽으로 건다.
- *
- * @param bool   $valid  여태 판정.
- * @param object $coupon 쿠폰.
- * @return bool
- */
-function block_coupon( $valid, $coupon = null ) {
-	if ( ! $valid || ! on() || ! excluding() ) {
-		return $valid;
-	}
-	$money = cart_money();
-	if ( $money['novo'] <= 0 ) {
-		return $valid;
-	}
-	$name = is_object( $coupon ) && method_exists( $coupon, 'get_code' ) ? (string) $coupon->get_code() : '';
-	if ( '' === $name || ! preg_match( (string) apply_filters( 'duckhoo_auto_discount_coupon', '/자동|auto/iu' ), $name ) ) {
-		return $valid;
-	}
-	return \Duckhoo\Redesign\Front\discount_for( max( 0.0, $money['all'] - $money['novo'] ) ) > 0;
-}
-
-/**
- * 장바구니 안내 문구에 붙는 예외 표시.
- *
- * @param string $ex 여태 값.
- * @return string
- */
-function discount_except( $ex ): string {
-	if ( ! on() || ! excluding() ) {
-		return (string) $ex;
-	}
-	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
-}
-
-if ( function_exists( 'add_action' ) ) {
-	// 쿠폰 플러그인이 줄을 붙인 뒤에 본다.
-	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\adjust_fees', 99 );
-	add_filter( 'woocommerce_coupon_is_valid', __NAMESPACE__ . '\\block_coupon', 20, 2 );
-	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
-}
