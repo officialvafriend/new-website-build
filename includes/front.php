@@ -249,26 +249,6 @@ function discount_tiers(): array {
 }
 
 /**
- * 맨 위 띠에 적을 지금의 혜택 한 줄. 규칙에서 바로 만든다 — 글자를 따로 적어 두면
- * 규칙이 바뀔 때 또 어긋난다.
- *
- * @return string
- */
-function announce_text(): string {
-	$parts = array();
-	foreach ( discount_tiers() as $t ) {
-		if ( $t['amount'] > 0 ) {
-			$parts[] = number_format_i18n( $t['min'] ) . '원 이상 ' . number_format_i18n( $t['amount'] ) . '원 자동 할인';
-		}
-	}
-	if ( ! $parts ) {
-		return '';
-	}
-	$ex = (string) apply_filters( 'duckhoo_auto_discount_except', '' );
-	return implode( ' · ', $parts ) . ( '' !== $ex ? ' (' . $ex . ')' : '' );
-}
-
-/**
  * 이 금액에 붙는 자동 할인액. 해당 없으면 0.
  *
  * @param float $amount 기준 금액.
@@ -915,11 +895,7 @@ function js_config( array $extra = array() ): string {
 		'discount' => discount_tiers(),
 		// 자동 할인에서 빠지는 것이 있으면 안내 문구에 괄호로 붙는다 (노보 이벤트가 쓴다).
 		'discountEx' => (string) apply_filters( 'duckhoo_auto_discount_except', '' ),
-		// 맨 위 검은 띠(#wd-top-announce)의 글자. 사장님 스니펫이 「8월 여름 특가 —
-		// 5만원 이상 3,000원 …」을 아직 찍고 있는데 그 이벤트는 끝났다. 끝난 혜택을
-		// 손님에게 광고하면 결제에서 배신당한다. 스니펫은 건드리지 않고 글자만 덮는다.
-		// 빈 문자열이면 덮지 않는다: add_filter( 'duckhoo_announce', '__return_empty_string' );
-		'announce'   => (string) apply_filters( 'duckhoo_announce', announce_text() ),
+
 		// 사장님 홈 팝업(#pop6)에서 남길 탭 하나. 나머지 칩은 감춘다.
 		// 끄려면 빈 문자열: add_filter( 'duckhoo_popup_tab', '__return_empty_string' );
 		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '고객 안내' ),

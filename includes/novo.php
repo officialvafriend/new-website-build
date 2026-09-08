@@ -1031,8 +1031,9 @@ function discount_except( $ex ): string {
 }
 
 if ( function_exists( 'add_action' ) ) {
-	// 사장님 스니펫이 줄을 붙인 뒤에 본다.
-	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\adjust_fees', 99 );
+	// **맨 뒤에서 본다.** 우선순위 99 로는 쿠키를 켜도 할인 줄이 그대로 남았다 —
+	// 사장님 스니펫이 우리보다 늦게 붙는다는 뜻이다.
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\adjust_fees', PHP_INT_MAX );
 	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
 }
 

@@ -1018,28 +1018,3 @@
     }
   }, true);
 })();
-
-/* ── 맨 위 검은 띠의 옛 문구를 지금 규칙으로 덮는다 ──────────────────────────
-   사장님 스니펫이 `#wd-top-announce` 에 「8월 여름 특가 — 5만원 이상 3,000원 …」을
-   찍는데 그 이벤트는 끝났다. 끝난 혜택을 광고하면 손님이 결제에서 배신당한다.
-   스니펫은 건드리지 않고 글자만 덮는다. 띠는 스크립트가 나중에 만들므로 지켜본다. */
-(function(){
-  var line = (window.DHR && window.DHR.announce) || '';
-  if(!line) return;
-  var mark = 'dhr-ann-' + line.length;
-  function write(){
-    var bar = document.getElementById('wd-top-announce');
-    if(!bar || bar.dataset.dhr === mark) return false;
-    bar.textContent = '';
-    var b = document.createElement('strong'); b.textContent = '9월 이벤트';
-    bar.appendChild(document.createTextNode('🎁 '));
-    bar.appendChild(b);
-    bar.appendChild(document.createTextNode(' — ' + line));
-    bar.dataset.dhr = mark;
-    return true;
-  }
-  write();
-  var mo = new MutationObserver(write);
-  mo.observe(document.documentElement, {childList: true, subtree: true});
-  setTimeout(function(){ mo.disconnect(); write(); }, 8000);
-})();
