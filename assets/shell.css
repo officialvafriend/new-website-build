@@ -2048,3 +2048,17 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__rows{ margin-top: .6rem; padding-top:
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row{ display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; font-size: 14px; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row span{ color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink, #111); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* 담기가 막혔을 때의 안내 — 노보 하루 한도처럼 서버가 멈춘 경우다. 불투명 면에
+   왼쪽 굵은 선 하나. 워드커머스 기본 목록 표시와 아이콘은 걷는다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error,
+html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error{
+  list-style: none !important; background: #FFF4F2 !important; border: 1px solid #F2C6C0 !important;
+  border-left: 4px solid #B42318 !important; border-radius: 12px !important; color: #7A1C12 !important;
+  padding: .85rem 1rem !important; margin: 1rem 0 0 !important; font-size: 14px !important;
+  line-height: 1.6 !important; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error li,
+html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error li{ margin: 0 !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main ul.woocommerce-error::before,
+html body.dhr.dhr-wrap.dhr-wrap .dha-main ul.woocommerce-error::before{ display: none !important; }
