@@ -896,26 +896,114 @@ function banner(): void {
 }
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
 
-/* ── 노보를 자동 할인에서 빼는 일은 스니펫 쪽에서 해야 한다 ────────────────
-   9월 이벤트는 10만원 이상 10,000원 한 단계이고 노보는 대상이 아니다 (사장님).
+/* ── 노보를 금액대별 자동 할인에서 뺀다 ────────────────────────────────────
+   9월 이벤트는 10만원 이상 10,000원 한 단계이고 **노보는 대상이 아니다** (사장님).
    할인은 사장님 Code Snippets 가 `woocommerce_cart_calculate_fees` 에서 수수료
    줄(`🎁 금액 자동 할인`)로 붙인다.
 
-   **우리 플러그인에서는 못 뺀다.** 로그인 상태에서 끝까지 확인했다 (노보만 135,000원,
-   우선순위 `PHP_INT_MAX`, 스위치는 쿠키로 두어 `?wc-ajax=update_order_review` 까지
-   따라가게 했다):
+   **줄을 뒤늦게 걷어내면 안 된다.** 로그인 상태에서 확인했다 — 줄은 사라지지만
+   테마 요약의 `쿠폰할인 -10,000원` 은 그대로 남는다. 테마가 그 금액을 수수료 줄과
+   별개로 들고 있어서, 워드커머스 쪽에서만 빼면 둘이 갈라지고 총액이 0원이 된다.
+   기준에 못 미치는 장바구니(10만원 아래)는 멀쩡히 그려진다 — **줄이 없는 것**이
+   문제가 아니라 **뒤늦게 빼는 것**이 문제다.
 
-       끔 → 상품 135,000 · 할인 -0 · 쿠폰할인 -10,000 · 금액 자동 할인 -10,000 · 총 125,000원
-       켬 → 상품 135,000 · 할인 - -10,000 · 쿠폰할인 -10,000 · (자동 할인 줄 없음) · 총 0원
+   그래서 **애초에 안 만들어지게** 한다. 스니펫이 기준 금액을 물을 때
+   (`$cart->get_subtotal()` · `cart_contents_total`) 노보를 뺀 값을 돌려준다.
+   수수료를 셈하는 동안에만 그렇게 하고 곧바로 되돌린다 — 화면의 다른 금액은
+   손대지 않는다. */
 
-   줄은 실제로 사라진다. 그런데 **`쿠폰할인 -10,000원` 은 그대로 남는다** — 테마가 그
-   금액을 수수료 줄과 별개로 들고 있다는 뜻이다. 우리가 워드커머스 쪽에서만 빼면 둘이
-   갈라지고 요약이 무너진다. 기준 미달(10만원 아래) 장바구니는 멀쩡히 그려지므로
-   「수수료 줄이 없는 것」 자체가 문제는 아니다 — **뒤늦게 빼는 것**이 문제다.
+/**
+ * 지금 이 요청에서 노보를 할인에서 빼는가.
+ *
+ * @return bool
+ */
+function excluding(): bool {
+	// 시험용 쿠키 — AJAX 요청에도 따라간다. 켜지는 쪽이 할인이 빠지는 방향이라
+	// 손님이 이 쿠키로 이득을 볼 여지는 없다.
+	if ( isset( $_COOKIE['dhr_novo_nodisc'] ) ) {
+		return '1' === (string) $_COOKIE['dhr_novo_nodisc'];
+	}
+	return (bool) apply_filters( 'duckhoo_novo_exclude_from_discount', false );
+}
 
-   그래서 고칠 곳은 **줄을 만드는 스니펫**이다: 기준 금액을 셀 때 노보 분류 상품을
-   빼면, 애초에 줄이 생기지 않아 테마의 셈과도 어긋나지 않는다. 붙일 코드는
-   대화 기록과 아래 README 에 있다.
+/**
+ * 장바구니의 노보 금액과 전체 금액.
+ *
+ * @return array{novo:float,all:float}
+ */
+function cart_money(): array {
+	$out = array( 'novo' => 0.0, 'all' => 0.0 );
+	if ( ! function_exists( 'WC' ) ) {
+		return $out;
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'get_cart' ) ) {
+		return $out;
+	}
+	foreach ( (array) $wc->cart->get_cart() as $item ) {
+		$p = $item['data'] ?? null;
+		if ( ! $p instanceof \WC_Product ) {
+			continue;
+		}
+		$line = (float) $p->get_price() * max( 1, (int) ( $item['quantity'] ?? 0 ) );
+		$out['all'] += $line;
+		if ( is_novo( $p ) ) {
+			$out['novo'] += $line;
+		}
+	}
+	return $out;
+}
 
-   시도한 코드는 커밋 `04fdf24`(값 0으로) · `67159f7`(줄 걷어내기) 에 남아 있다. */
+/**
+ * 합계에서 노보 금액을 뺀 값. 수수료를 셈하는 동안에만 걸린다.
+ *
+ * @param mixed $value 여태 값.
+ * @return float
+ */
+function mask_total( $value ): float {
+	return max( 0.0, (float) $value - cart_money()['novo'] );
+}
 
+/**
+ * 수수료를 셈하기 직전 — 기준 금액에서 노보를 감춘다.
+ *
+ * @return void
+ */
+function mask_on(): void {
+	if ( ! on() || ! excluding() || cart_money()['novo'] <= 0 ) {
+		return;
+	}
+	add_filter( 'woocommerce_cart_get_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
+	add_filter( 'woocommerce_cart_get_cart_contents_total', __NAMESPACE__ . '\\mask_total', 99 );
+	add_filter( 'woocommerce_cart_get_displayed_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
+}
+
+/**
+ * 다 셈했으면 곧바로 되돌린다. 화면의 다른 금액은 손대지 않는다.
+ *
+ * @return void
+ */
+function mask_off(): void {
+	remove_filter( 'woocommerce_cart_get_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
+	remove_filter( 'woocommerce_cart_get_cart_contents_total', __NAMESPACE__ . '\\mask_total', 99 );
+	remove_filter( 'woocommerce_cart_get_displayed_subtotal', __NAMESPACE__ . '\\mask_total', 99 );
+}
+
+/**
+ * 장바구니 안내 문구에 붙는 예외 표시.
+ *
+ * @param string $ex 여태 값.
+ * @return string
+ */
+function discount_except( $ex ): string {
+	if ( ! on() || ! excluding() ) {
+		return (string) $ex;
+	}
+	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
+}
+
+if ( function_exists( 'add_action' ) ) {
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\mask_on', 0 );
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\mask_off', PHP_INT_MAX );
+	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
+}
