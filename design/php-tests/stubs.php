@@ -160,9 +160,10 @@ class WC_Product {
   public function save(){ }
 }
 class DhrFakeLine {
-  public function __construct(public ?WC_Product $p = null, public int $q = 1){}
+  public function __construct(public ?WC_Product $p = null, public int $q = 1, public array $meta = []){}
   public function get_product(){ return $this->p; }
   public function get_quantity(){ return $this->q; }
+  public function get_meta_data(){ $o=[]; foreach($this->meta as $k=>$v) $o[]=new DhrFakeMeta($k,$v); return $o; }
 }
 class DhrFakeFee {
   public function __construct(public string $name='', public float $amount=0.0, public bool $taxable=false, public string $tax_class=''){}

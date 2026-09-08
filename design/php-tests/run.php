@@ -417,6 +417,39 @@ $GLOBALS['__cart']->items = [];
 $ok(($N.'left')('plain', 31) === 4, '다른 계정으로 산 것도 같은 사람으로 세어 4병만 남는다');
 $GLOBALS['__logged_in'] = 0; $GLOBALS['__orders'] = [];
 
+// 41-f. 수량은 장바구니가 아니라 옵션 JSON 에 있다 (테마 wd-option-builder)
+$J = fn(int $q, string $type='required') => json_encode([['group_key'=>'required_main','group_label'=>'기본 상품','label'=>'노보','qty'=>$q,'unit_price'=>13500,'type'=>$type]], JSON_UNESCAPED_UNICODE);
+$ok(($N.'units_from_json')($J(12)) === 12, '옵션 JSON 의 required 수량을 읽는다');
+$ok(($N.'units_from_json')($J(3,'addon')) === 1, 'addon 줄은 기본 단위가 아니다');
+$ok(($N.'units_from_json')('') === 1 && ($N.'units_from_json')('그냥 글자') === 1, 'JSON 이 없으면 1');
+$ok(($N.'units_in')(['data'=>$plain,'quantity'=>1,'wd_option_builder_json'=>$J(12)]) === 12, '장바구니 줄에서 찾아 읽는다');
+
+// 장바구니 수량이 1 이어도 옵션이 12 면 12병으로 센다
+$GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
+$GLOBALS['__cart']->items = ['a' => ['data' => $plain, 'quantity' => 1, 'wd_option_builder_json' => $J(12)]];
+$ok(($N.'tally_cart')()['plain'] === 12, '수량 1 + 옵션 12 → 12병');
+$ok(($N.'left')('plain') === 0, '한도를 이미 넘었다');
+$threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = true; }
+$ok($threw, '옵션으로 12병을 담아도 주문은 만들어지지 않는다');
+
+// 담기 요청에 실려 온 옵션도 본다
+$GLOBALS['__cart']->items = [];
+$_POST = ['wd_option_builder_json' => $J(12)];
+$GLOBALS['__notices'] = [];
+$ok(($N.'validate_add')(true, 238, 1) === false, '수량 1 로 와도 옵션이 12 면 담기가 막힌다');
+$_POST = ['wd_option_builder_json' => $J(9)];
+$ok(($N.'validate_add')(true, 238, 1) === true, '옵션 9 는 담긴다');
+$_POST = [];
+
+// 묶음은 required 가 세트 수다 — 10+1 두 세트면 20병
+$GLOBALS['__cart']->items = ['a' => ['data' => $bundle, 'quantity' => 1, 'wd_option_builder_json' => $J(2)]];
+$ok(($N.'tally_cart')()['plain'] === 20, '10+1 두 세트는 20병으로 센다');
+$GLOBALS['__cart']->items = [];
+
+// 주문 줄의 메타에서도 읽는다
+$oi = new DhrFakeLine($plain, 1);
+$ok(($N.'units_in_order_item')($oi) === 1, '메타가 없으면 1');
+
 // 42. 이벤트 기준 가격 (도구 → 노보 이벤트)
 require_once dirname(__DIR__, 2).'/includes/novo-admin.php';
 $A = 'Duckhoo\\Redesign\\Novo\\Admin\\';

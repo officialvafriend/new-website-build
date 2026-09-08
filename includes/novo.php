@@ -161,6 +161,78 @@ function paid( $p ): int {
 }
 
 /**
+ * 테마 옵션 UI 가 적어 둔 「이 줄이 몇 개인가」.
+ *
+ * **이 사이트에서 수량은 장바구니 수량이 아니다.** 테마의 `wd-option-builder` 는
+ * `form.cart` 의 quantity 를 1 로 둔 채 실제 개수를 `wd_option_builder_json` 에 적는다.
+ * 확인한 값(단품 2병):
+ *
+ *     quantity=1, wd_option_builder_json=[{"label":"…","qty":2,"type":"required"}]
+ *     장바구니 줄: 수량 1 · 금액 27,000원 (13,500 × 2)
+ *
+ * 그래서 장바구니 수량만 세면 2병을 1병으로 본다. 12병이 한도를 지나간 길이 이것이다.
+ *
+ * `type:required` 의 합이 **이 상품의 기본 단위 개수**다 — 단품이면 병 수,
+ * 묶음이면 세트 수. 맛 선택 같은 addon 줄은 그 안에 딸린 것이라 세지 않는다.
+ *
+ * @param string $json 옵션 JSON.
+ * @return int 1 이상.
+ */
+function units_from_json( string $json ): int {
+	if ( '' === $json || false === strpos( $json, 'group_key' ) ) {
+		return 1;
+	}
+	$rows = json_decode( $json, true );
+	if ( ! is_array( $rows ) ) {
+		return 1;
+	}
+	$n = 0;
+	foreach ( $rows as $r ) {
+		if ( is_array( $r ) && 'required' === ( $r['type'] ?? '' ) ) {
+			$n += (int) ( $r['qty'] ?? 0 );
+		}
+	}
+	return $n > 0 ? $n : 1;
+}
+
+/**
+ * 배열(장바구니 줄 · POST) 안에서 옵션 JSON 을 찾아 개수를 읽는다.
+ *
+ * 키 이름을 못 박지 않는다 — 테마가 바꾸면 조용히 틀리기 때문이다. 값의 생김새로 찾는다.
+ *
+ * @param array<mixed> $bag 장바구니 줄 또는 $_POST.
+ * @return int 1 이상.
+ */
+function units_in( array $bag ): int {
+	foreach ( $bag as $v ) {
+		if ( is_string( $v ) && false !== strpos( $v, 'group_key' ) ) {
+			return units_from_json( $v );
+		}
+	}
+	return 1;
+}
+
+/**
+ * 주문 줄에서 같은 값을 읽는다. 테마가 주문 아이템 메타로 옮겨 적는다.
+ *
+ * @param object $item 주문 줄.
+ * @return int 1 이상.
+ */
+function units_in_order_item( $item ): int {
+	if ( ! is_object( $item ) || ! method_exists( $item, 'get_meta_data' ) ) {
+		return 1;
+	}
+	foreach ( (array) $item->get_meta_data() as $m ) {
+		$d = method_exists( $m, 'get_data' ) ? (array) $m->get_data() : array();
+		$v = $d['value'] ?? '';
+		if ( is_string( $v ) && false !== strpos( $v, 'group_key' ) ) {
+			return units_from_json( $v );
+		}
+	}
+	return 1;
+}
+
+/**
  * 오늘의 시작(사이트 시간대 자정) 타임스탬프.
  *
  * @return int
@@ -243,7 +315,7 @@ function tally_orders( int $uid ): array {
 			$n = paid( $p );
 			if ( $n > 0 ) {
 				$k = line( $p );
-				$out[ '' !== $k ? $k : 'plain' ] += $n * (int) $item->get_quantity();
+				$out[ '' !== $k ? $k : 'plain' ] += $n * units_in_order_item( $item ) * max( 1, (int) $item->get_quantity() );
 			}
 		}
 	}
@@ -274,7 +346,7 @@ function tally_cart( string $skip_key = '' ): array {
 		$n = paid( $p );
 		if ( $n > 0 ) {
 			$k = line( $p );
-			$out[ '' !== $k ? $k : 'plain' ] += $n * (int) ( $item['quantity'] ?? 0 );
+			$out[ '' !== $k ? $k : 'plain' ] += $n * units_in( (array) $item ) * max( 1, (int) ( $item['quantity'] ?? 0 ) );
 		}
 	}
 	return $out;
@@ -401,7 +473,9 @@ function validate_add( $passed, $pid = 0, $qty = 1 ): bool {
 	if ( $each <= 0 ) {
 		return true;
 	}
-	$need = $each * max( 1, (int) $qty );
+	// 담기 요청에도 같은 값이 실려 온다. 장바구니 수량만 보면 12병이 1병으로 보인다.
+	// phpcs:ignore WordPress.Security.NonceVerification
+	$need = $each * units_in( (array) $_POST ) * max( 1, (int) $qty );
 	$left = left( line( $p ) );
 	if ( $need > $left ) {
 		if ( function_exists( 'wc_add_notice' ) ) {
