@@ -674,3 +674,18 @@ html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; colo
 /* 노보 카드 한 줄 — 남은 재고 · 하루 한도. 홈과 목록 양쪽에 걸린다 (.dhr 하나면 된다). */
 .dhr .nlimit{margin-top:.3rem;font-size:13px;line-height:1.4;color:#4E565F;word-break:keep-all;font-variant-numeric:tabular-nums}
 .dhr .nlimit b{color:#C2410C;font-weight:800}
+
+/* ── 노보 분류 목록 맨 위 안내 띠 ──────────────────────────────────────────
+   상품의 브랜드 색(감청 · 노랑)을 그대로 쓴다. 우리 하늘색을 얹으면 노보 병 옆에서
+   두 브랜드가 싸운다. 그라데이션 · 반투명 없이 판판한 면 세 개다. */
+.dhr .nvb{background:#12328F;color:#fff;border-radius:20px;padding:clamp(1.3rem,1rem + 2.4vw,2.2rem);margin:0 0 1.4rem;display:grid;gap:.85rem;justify-items:start}
+.dhr .nvb__eb{margin:0;background:#FFE02E;color:#111;font-size:14px;font-weight:800;letter-spacing:-.02em;padding:.4rem .75rem;border-radius:8px}
+.dhr .nvb__h{margin:0;font-size:clamp(1.65rem,1.1rem + 3vw,3rem);font-weight:900;letter-spacing:-.045em;line-height:1.14;word-break:keep-all}
+.dhr .nvb__h mark{background:#FFE02E;color:#111;padding:0 .22em;border-radius:6px}
+.dhr .nvb__set{margin:.15rem 0 0;background:#0B2469;border-radius:12px;padding:.7rem 1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .9rem;font-size:clamp(1rem,.9rem + .7vw,1.35rem);font-weight:800;letter-spacing:-.03em;word-break:keep-all}
+.dhr .nvb__set i{flex:0 0 auto;width:1px;height:1.15em;background:#3C5CB8}
+.dhr .nvb__p{margin:0;font-size:clamp(14px,13.4px + .2vw,16px);line-height:1.65;color:#DDE4FA;word-break:keep-all}
+.dhr .nvb__notes{list-style:none;margin:.15rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:13px;line-height:1.5;color:#B8C6EE;word-break:keep-all}
+.dhr .nvb__notes li{position:relative;padding-left:.85rem}
+.dhr .nvb__notes li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:#FFE02E}
+@media(min-width:880px){.dhr .nvb{gap:1rem}}

@@ -479,3 +479,60 @@ function card_note( string $extra, $p = null ): string {
 		. esc_html( $cap ) . '</div>';
 }
 add_filter( 'duckhoo_card_extra', __NAMESPACE__ . '\\card_note', 10, 2 );
+
+/**
+ * 노보 분류 목록 맨 위의 안내 띠.
+ *
+ * 사장님이 만든 안내 이미지를 글자로 다시 지었다. 이미지로 넣으면 폰에서 글자가
+ * 뭉개지고, 문구를 고칠 때마다 다시 그려야 하고, 검색엔진도 읽지 못한다.
+ *
+ * 문구는 전부 필터 `duckhoo_novo_banner` 로 바꾼다.
+ *
+ * @return void
+ */
+function banner(): void {
+	if ( ! on() || ! function_exists( 'is_tax' ) || ! is_tax( 'product_cat', (string) config()['cat'] ) ) {
+		return;
+	}
+
+	$b = (array) apply_filters(
+		'duckhoo_novo_banner',
+		array(
+			'eb'    => '노보 10+1 구매 제한 안내',
+			'head'  => array( '1인 1일 최대 ', '1세트' ),
+			'set'   => array( '10병 구매 + 1병 증정', '총 11병 구성' ),
+			'lead'  => '한정된 재고를 더 많은 고객님께 제공하기 위해 구매 수량을 제한합니다.',
+			// **코드가 실제로 세는 방식과 같은 말이어야 한다.** 회원 계정(= 본인확인
+			// 한 사람)으로 세고, 주문이 들어온 날로 센다. 입금 전 주문도 자리를 잡고,
+			// 취소하면 그 자리가 풀린다.
+			'notes' => array( '동일 본인인증 정보 기준', '주문일 기준 (취소 시 복구)', '초과 주문은 확인 후 취소 · 환불될 수 있습니다' ),
+		)
+	);
+
+	echo '<section class="nvb" aria-labelledby="nvb-h">';
+	if ( '' !== (string) $b['eb'] ) {
+		echo '<p class="nvb__eb">' . esc_html( (string) $b['eb'] ) . '</p>';
+	}
+	echo '<h2 class="nvb__h" id="nvb-h">' . esc_html( (string) $b['head'][0] )
+		. '<mark>' . esc_html( (string) ( $b['head'][1] ?? '' ) ) . '</mark></h2>';
+
+	if ( $b['set'] ) {
+		echo '<p class="nvb__set">';
+		foreach ( (array) $b['set'] as $i => $row ) {
+			echo ( $i ? '<i aria-hidden="true"></i>' : '' ) . '<span>' . esc_html( (string) $row ) . '</span>';
+		}
+		echo '</p>';
+	}
+	if ( '' !== (string) $b['lead'] ) {
+		echo '<p class="nvb__p">' . esc_html( (string) $b['lead'] ) . '</p>';
+	}
+	if ( $b['notes'] ) {
+		echo '<ul class="nvb__notes">';
+		foreach ( (array) $b['notes'] as $n ) {
+			echo '<li>' . esc_html( (string) $n ) . '</li>';
+		}
+		echo '</ul>';
+	}
+	echo '</section>';
+}
+add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );

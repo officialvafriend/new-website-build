@@ -50,6 +50,11 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 	</nav>
 	<?php endif; ?>
 
+	<?php
+	// 분류마다 안내 띠가 필요할 때 쓰는 자리. 지금은 노보 이벤트가 쓴다.
+	do_action( 'duckhoo_archive_before_grid' );
+	?>
+
 	<?php if ( have_posts() ) : ?>
 		<div class="dha-bar">
 			<span class="dha-bar__n"><?php echo esc_html( number_format_i18n( $dha_total ) ); ?>개 상품</span>
