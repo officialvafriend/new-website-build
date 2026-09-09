@@ -44,6 +44,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/account.php';
 // 적립금을 쓴 주문의 취소 — 되돌아오지 않는 적립금을 손님이 혼자 잃지 않게.
 require_once plugin_dir_path( __FILE__ ) . 'includes/points.php';
 
+// 9월 금액대별 자동 할인을 끈다 (사장님 결정 2026-09-09). 테마 파일은 건드리지 않는다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/discount.php';
+
 // 계정 정책 — 같은 휴대폰번호로 두 번 가입하지 못하게.
 require_once plugin_dir_path( __FILE__ ) . 'includes/signup.php';
 

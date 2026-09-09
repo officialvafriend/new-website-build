@@ -724,8 +724,22 @@
 
   /* 안내 문구는 사장님 스니펫이 우리 뒤에 다시 그린다. 한 번 쓰고 끝내면 옛 문구로
      되돌아가므로, 그 자리를 지켜보다가 우리 것이 아니면 다시 쓴다. */
+  /* 규칙이 비었으면 = 이벤트가 꺼졌다. 없는 혜택을 계속 광고하면 손님이 결제에서
+     배신당하므로 사장님 스니펫이 그린 안내를 지운다. */
   var tiers = (window.DHR && window.DHR.discount) || [];
-  if(!tiers.length) return;
+  if(!tiers.length){
+    var wipe = function(){
+      ['#coupon-auto-notice','#coupon-applied-notice'].forEach(function(sel){
+        var n = document.querySelector(sel);
+        if(n) n.remove();
+      });
+    };
+    wipe();
+    var mo0 = new MutationObserver(wipe);
+    mo0.observe(document.documentElement, {childList: true, subtree: true});
+    setTimeout(function(){ mo0.disconnect(); wipe(); }, 8000);
+    return;
+  }
   var won = function(v){ return Number(v).toLocaleString('ko-KR'); };
   var ex = (window.DHR && window.DHR.discountEx) || '';
   var line = tiers.map(function(t){ return won(t.min) + '원 이상 ' + won(t.amount) + '원'; }).join(' · ')

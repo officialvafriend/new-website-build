@@ -335,7 +335,24 @@ $GLOBALS['__cart']->items = [];
 
 // 41-c. 금액대별 자동 할인 규칙은 그대로 읽는다 (노보 제외는 쿠폰 플러그인 쪽 일이다)
 $F = 'Duckhoo\\Redesign\\Front\\';
-$ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '지금 살아 있는 규칙은 10만원↑ 10,000원 한 단계뿐이다');
+// 이벤트를 껐으므로 규칙이 비어 있다 — 어떤 금액에도 할인이 없다
+$ok(($F.'discount_for')(100000.0) === 0 && ($F.'discount_for')(500000.0) === 0, '이벤트를 끄면 어떤 금액에도 할인이 없다');
+$GLOBALS['__filters']['duckhoo_auto_discount'] = [];
+$ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '되살리면 10만원↑ 10,000원 규칙이 돌아온다');
+add_filter('duckhoo_auto_discount', fn($t) => \Duckhoo\Redesign\Discount\no_tiers($t), 99);
+
+// 자동 할인을 붙이는 함수를 알아보는 법 — 줄 번호가 아니라 코드로 본다
+$D = 'Duckhoo\\Redesign\\Discount\\';
+$dhrHit = function() {
+    // 금액 자동 할인
+    return 1;
+};
+$dhrMiss = function() {
+    return 2;
+};
+$ok(($D.'source_has')($dhrHit, '금액 자동 할인') === true, '그 함수의 코드로 알아본다');
+$ok(($D.'source_has')($dhrMiss, '금액 자동 할인') === false, '다른 익명 함수는 건드리지 않는다');
+$ok(($D.'source_has')('wd_apply_flat_shipping_fee', '금액 자동 할인') === false, '이름 있는 함수(배송비 등)는 대상이 아니다');
 $GLOBALS['__cart']->items = []; $GLOBALS['__cart']->fees = [];
 
 // 41-d. 나눠 사도 합쳐서 센다 — 5병씩 계속 살 수 없다
