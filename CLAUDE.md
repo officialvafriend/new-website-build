@@ -829,11 +829,14 @@ POST /wc/store/v1/cart/update-item  10 → 11  → 200 (통과)   ← 여기로 
 `duckhoo_novo_banner`. 색은 상품의 브랜드 색(감청 `#12328F` · 노랑 `#FFE02E`)이다 —
 우리 하늘색을 얹으면 노보 병 옆에서 두 브랜드가 싸운다.
 
-### 테마가 거절 안내를 삼킨다
+### 거절 안내를 삼키는 것은 **사장님 스니펫 #21** 이다 (2026-09-09 정정)
 
-한도를 넘겨 담아 보니 서버는 막았는데 화면에는 아무 일도 없었다. 테마의
-`#wd-coupon-toast` 가 워드커머스 안내를 자기 토스트로 옮기고 **원본에 인라인
-`display:none` 과 `data-wd-toasted="1"` 을 박는다.** 「담았습니다」 한 줄에는 맞지만
+처음에는 테마가 하는 일로 적어 두었는데, 사장님이 스니펫 원문을 보내 주셔서 확인했다 —
+`스니펫 #21` (`wp_footer`, 우선순위 20)이 `#wd-coupon-toast` 를 만들고 MutationObserver 로
+`.woocommerce-message` · `.woocommerce-error` · `.woocommerce-info` 를 가로챈다.
+텍스트에 `제거|삭제|취소` 가 있으면 `removed`, 아니면 **전부 `success`** 로 칠하고
+(거절도 성공 색이 된다) 80자에서 자른 뒤 3.5초 만에 지운다. 원본에는 인라인
+`display:none` 과 `data-wd-toasted="1"` 을 박는다. 「담았습니다」 한 줄에는 맞지만
 왜 안 됐는지를 설명하는 두 줄은 거기서 잘리고 몇 초 뒤 사라진다. 게다가 거절도
 `success` 로 칠한다.
 
