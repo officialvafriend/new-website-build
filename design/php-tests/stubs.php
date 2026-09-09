@@ -319,6 +319,8 @@ if(!function_exists('is_wp_error')) { function is_wp_error($t){ return false; } 
 /* ── 매출 대시보드 스텁 ────────────────────────────────────────────────── */
 $GLOBALS['__fee_rows'] = [];
 $GLOBALS['__signup_rows'] = [];
+if(!function_exists('absint')) { function absint($v){ return abs((int)$v); } }
+if(!function_exists('register_shutdown_function_stub')) { }
 if(!function_exists('wp_list_pluck')) { function wp_list_pluck($list, $field){ return array_map(fn($r) => is_array($r) ? ($r[$field] ?? null) : ($r->$field ?? null), (array)$list); } }
 if(!function_exists('add_menu_page')) { function add_menu_page(...$a){ return ''; } }
 if(!function_exists('admin_url')) { function admin_url($p=''){ return 'https://duck-hoo.com/wp-admin/'.$p; } }

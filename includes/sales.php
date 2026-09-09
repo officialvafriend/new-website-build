@@ -119,7 +119,40 @@ function void_statuses(): array {
  * @return int
  */
 function scan_days(): int {
-	return max( 60, min( 1500, (int) apply_filters( 'duckhoo_sales_scan_days', 400 ) ) );
+	$d = (int) apply_filters( 'duckhoo_sales_scan_days', 90 );
+
+	// 화면에서 고른 값이 있으면 그것을 쓴다 (읽기만 하는 화면이라 논스가 필요 없다).
+	if ( isset( $_GET['dhr_days'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		$want = absint( wp_unslash( $_GET['dhr_days'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( in_array( $want, day_choices(), true ) ) {
+			$d = $want;
+		}
+	}
+
+	// 70일 아래로는 못 내려간다 — 「지난달 같은 기간」이 최대 62일 뒤를 본다.
+	return max( 70, min( 1500, $d ) );
+}
+
+/**
+ * 화면에서 고를 수 있는 기간.
+ *
+ * @return int[]
+ */
+function day_choices(): array {
+	return array( 90, 200, 400 );
+}
+
+/**
+ * 주문을 읽는 데 쓸 수 있는 시간(초).
+ *
+ * **이 화면이 한 번 죽은 적이 있다.** 400일치를 한 번에 읽다가 시간이 넘어
+ * 제목만 찍히고 아래가 통째로 비었다. 그래서 시간을 재다가 넘으면 **읽던
+ * 만큼으로 그린다** — 아무것도 없는 화면보다 「일부만」이 낫다.
+ *
+ * @return float
+ */
+function budget(): float {
+	return (float) max( 3, min( 60, (int) apply_filters( 'duckhoo_sales_budget', 15 ) ) );
 }
 
 /**
@@ -238,8 +271,9 @@ function fee_map( array $ids ): array {
  * @param array<string,mixed> $args status · date_created 등.
  * @return array<int,array<string,mixed>>
  */
-function fetch( array $args ): array {
-	$out = array();
+function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): array {
+	$out     = array();
+	$partial = false;
 	if ( ! function_exists( 'wc_get_orders' ) ) {
 		return $out;
 	}
@@ -262,6 +296,12 @@ function fetch( array $args ): array {
 			}
 		}
 		$page++;
+
+		// 시간이 넘으면 읽던 만큼으로 그린다. 통째로 죽는 것보다 낫다.
+		if ( null !== $deadline && microtime( true ) > $deadline && count( $batch ) === 200 ) {
+			$partial = true;
+			break;
+		}
 	} while ( count( $batch ) === 200 && count( $out ) < $cap );
 
 	$fees = fee_map( wp_list_pluck( $out, 'id' ) );
@@ -297,12 +337,25 @@ function data( bool $fresh = false ): array {
 
 	$today = current_time( 'Y-m-d' );
 	$from  = gmdate( 'Y-m-d', strtotime( $today . ' -' . scan_days() . ' days' ) );
+	$began = microtime( true );
+
+	// 열려 있는 주문을 **먼저** 읽는다. 「지금 얼마가 묶여 있나」가 이 화면에서
+	// 제일 급한 숫자이고 건수도 적다 — 시간이 모자라면 긴 쪽이 잘려야 한다.
+	$po   = false;
+	$pr   = false;
+	$open = fetch(
+		array( 'status' => array_merge( pending_statuses(), array( 'payment-confirmed', 'ready-to-ship', 'shipping' ) ) ),
+		$began + budget() / 2,
+		$po
+	);
+	$rows = fetch( array( 'date_created' => $from . '...' . $today ), $began + budget(), $pr );
 
 	$out = array(
-		'rows'  => fetch( array( 'date_created' => $from . '...' . $today ) ),
-		// 지금 열려 있는 주문은 날짜로 자르지 않는다 — 오래 묵은 입금전이 진짜 문제다.
-		'open'  => fetch( array( 'status' => array_merge( pending_statuses(), array( 'payment-confirmed', 'ready-to-ship', 'shipping' ) ) ) ),
-		'built' => (int) current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
+		'rows'    => $rows,
+		'open'    => $open,
+		'partial' => ( $po || $pr ),
+		'took'    => round( microtime( true ) - $began, 1 ),
+		'built'   => (int) current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
 	);
 
 	if ( ttl() > 0 ) {
@@ -310,6 +363,34 @@ function data( bool $fresh = false ): array {
 	}
 
 	return $out;
+}
+
+/**
+ * 그리다 죽으면 **왜 죽었는지 화면에 적습니다.**
+ *
+ * 한 번은 제목만 찍히고 아래가 통째로 비었다. PHP 오류가 화면에 안 나오는
+ * 설정이라 사장님 쪽에서는 「아무것도 안 보인다」로만 보인다.
+ *
+ * @return void
+ */
+function watch_render(): void {
+	$GLOBALS['dhr_sales_rendering'] = true;
+
+	register_shutdown_function( static function () {
+		if ( empty( $GLOBALS['dhr_sales_rendering'] ) ) {
+			return;
+		}
+		$e   = error_get_last();
+		$bad = array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR, E_USER_ERROR );
+		echo '<div class="notice notice-error"><p><b>매출 화면을 그리다 멈췄습니다.</b> ';
+		if ( is_array( $e ) && in_array( (int) $e['type'], $bad, true ) ) {
+			echo esc_html( (string) $e['message'] ) . ' — '
+				. esc_html( basename( (string) $e['file'] ) . ':' . (int) $e['line'] );
+		} else {
+			echo '주문을 읽는 데 시간이 너무 걸린 것으로 보입니다. 기간을 짧게 잡아 보세요.';
+		}
+		echo '</p></div>';
+	} );
 }
 
 /**
@@ -555,12 +636,15 @@ function screen(): void {
 		wp_die( esc_html__( '권한이 없습니다.', 'duckhoo-redesign' ) );
 	}
 
+	watch_render();
+
 	echo '<div class="wrap dhr-sl">';
 	styles();
 	echo '<h1 class="dhr-sl-h1">매출</h1>';
 
 	if ( ! function_exists( 'wc_get_orders' ) ) {
 		echo '<div class="notice notice-error"><p>워드커머스가 꺼져 있어 주문을 읽을 수 없습니다.</p></div></div>';
+		$GLOBALS['dhr_sales_rendering'] = false;
 		return;
 	}
 
@@ -574,6 +658,13 @@ function screen(): void {
 	$mfirst  = gmdate( 'Y-m-01', strtotime( $today ) );
 	$window  = gmdate( 'Y-m-d', strtotime( $today . ' -' . scan_days() . ' days' ) );
 	list( $lm_from, $lm_to ) = last_month_same( $today );
+
+	if ( ! empty( $data['partial'] ) ) {
+		printf(
+			'<div class="dhr-sl-warn">주문이 많아 <b>%d초 안에 읽은 만큼만</b> 그렸습니다. 아래 숫자는 실제보다 적을 수 있습니다. 기간을 짧게 잡으면 정확해집니다.</div>',
+			(int) budget()
+		);
+	}
 
 	$paid = confirmed_statuses();
 	$wait = pending_statuses();
@@ -757,7 +848,8 @@ function screen(): void {
 	printf( '<tr><td>주문한 손님</td><td class="dhr-sl-num">%d명</td><td class="dhr-sl-mut">%s</td></tr>',
 		(int) $n_buyers,
 		esc_html( $n_buyers ? '손님당 평균 ' . won( (float) $m['sales'] / $n_buyers ) : '—' ) );
-	printf( '<tr><td>그중 두 번 이상 산 손님</td><td class="dhr-sl-num">%d명</td><td class="dhr-sl-mut">%s</td></tr>',
+	printf( '<tr><td>그중 최근 %d일 안에 두 번 이상 산 손님</td><td class="dhr-sl-num">%d명</td><td class="dhr-sl-mut">%s</td></tr>',
+		(int) scan_days(),
 		(int) $repeat,
 		esc_html( $n_buyers ? sprintf( '%.0f%%', $repeat / $n_buyers * 100 ) : '—' ) );
 	printf( '<tr><td>첫 주문 매출</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d건</td></tr>',
@@ -773,16 +865,29 @@ function screen(): void {
 	printf( '<p><b>확정 매출</b>은 %s 상태의 주문 합계입니다. <b>입금 대기</b>는 %s. 취소 · 환불 · 실패는 어디에도 세지 않습니다.</p>',
 		esc_html( implode( ' · ', names( $paid ) ) ),
 		esc_html( implode( ' · ', names( $wait ) ) ) );
-	printf( '<p>주문 %d건을 읽었습니다 (%s ~ %s). 재구매는 이 범위 안에서 셉니다 — 그 전에 한 번 사고 만 손님은 새 손님으로 잡힙니다.%s</p>',
-		count( $rows ), esc_html( $window ), esc_html( $today ),
+	printf( '<p>주문 %d건을 %s초에 읽었습니다 (%s ~ %s). 재구매는 이 범위 안에서 셉니다 — 그 전에 한 번 사고 만 손님은 새 손님으로 잡힙니다.%s</p>',
+		count( $rows ),
+		esc_html( (string) ( $data['took'] ?? '?' ) ),
+		esc_html( $window ), esc_html( $today ),
 		$capped ? ' <b>상한(' . (int) max_orders() . '건)에 걸렸습니다 — 기간을 줄여 보세요.</b>' : '' );
+
+	$links = array();
+	foreach ( day_choices() as $c ) {
+		$links[] = $c === scan_days()
+			? '<b>' . (int) $c . '일</b>'
+			: sprintf( '<a href="%s">%d일</a>',
+				esc_url( admin_url( 'admin.php?page=' . SLUG . '&dhr_days=' . (int) $c ) ), (int) $c );
+	}
+	printf( '<p>읽는 기간: %s</p>', implode( ' · ', $links ) );
 	printf( '<p>%s 기준 · <a href="%s">지금 다시 읽기</a></p>',
 		esc_html( wp_date( 'Y-m-d H:i', (int) $data['built'] ) ),
-		esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&dhr_fresh=1' ), 'dhr-sales-fresh' ) ) );
+		esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&dhr_days=' . scan_days() . '&dhr_fresh=1' ), 'dhr-sales-fresh' ) ) );
 	echo '<p class="dhr-sl-mut">이 화면은 주문을 읽기만 합니다. 워드커머스가 기본으로 주는 분석 화면은 <code>processing</code> · <code>completed</code> 두 상태만 매출로 세기 때문에, 이 가게의 주문을 거의 놓칩니다.</p>';
 	echo '</section>';
 
 	echo '</div>';
+
+	$GLOBALS['dhr_sales_rendering'] = false;
 }
 
 /**

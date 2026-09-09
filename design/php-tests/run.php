@@ -787,5 +787,26 @@ $GLOBALS['__orders'] = [];
 $GLOBALS['__fee_rows'] = [];
 
 
+// 기간 — 「지난달 같은 기간」이 최대 62일 뒤를 보므로 그 아래로는 못 내려간다
+$ok(($S.'scan_days')() >= 70, '읽는 기간이 70일 아래로 내려가지 않는다');
+$_GET['dhr_days'] = '400';
+$ok(($S.'scan_days')() === 400, '화면에서 고른 기간을 쓴다');
+$_GET['dhr_days'] = '9999';
+$ok(($S.'scan_days')() === 90, '목록에 없는 값은 무시하고 기본으로 돌아간다');
+unset($_GET['dhr_days']);
+$ok(in_array(90, ($S.'day_choices')(), true), '기본 기간이 고를 수 있는 값 안에 있다');
+$ok(($S.'budget')() > 0 && ($S.'budget')() <= 60, '읽는 시간에 상한이 있다');
+
+// 시간이 넘으면 읽던 만큼으로 그린다 — 통째로 죽는 것보다 낫다
+$GLOBALS['__orders'] = array_map(fn($i) => new DhrSalesOrder($i, '2026-09-02', 'delivered', 1000.0, 1), range(1, 200));
+$part = false;
+$got2 = ($S.'fetch')([], microtime(true) - 1, $part);
+$ok($part === true && count($got2) === 200, '시간이 넘으면 멈추고 「일부」라고 알린다');
+$part = false;
+($S.'fetch')([], microtime(true) + 60, $part);
+$ok($part === false, '시간이 남으면 「일부」가 아니다');
+$GLOBALS['__orders'] = [];
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
