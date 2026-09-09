@@ -2,6 +2,7 @@
 /* 워드프레스 없이 로직만 돌려 보기 위한 최소 스텁 */
 define('ABSPATH', __DIR__);
 define('MINUTE_IN_SECONDS', 60);
+if(!defined('ARRAY_A')) { define('ARRAY_A', 'ARRAY_A'); }
 
 $GLOBALS['__filters'] = [];
 $GLOBALS['__actions'] = [];
@@ -28,7 +29,11 @@ function wp_strip_all_tags($s){ return strip_tags((string)$s); }
 function sanitize_text_field($s){ return trim(strip_tags((string)$s)); }
 function wp_unslash($s){ return is_string($s)?stripslashes($s):$s; }
 function number_format_i18n($n){ return number_format((float)$n); }
-function current_time($t){ return '2026-09-02 00:00:00'; }
+$GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
+function current_time($t){ $n=(int)$GLOBALS['__now'];
+  if($t==='timestamp'||$t==='U') return $n;
+  if($t==='mysql') return '2026-09-02 00:00:00';
+  return date($t, $n); }
 function home_url($p=''){ return 'https://duck-hoo.com'.$p; }
 function get_permalink($p=null){ return 'https://duck-hoo.com/membership-cancel/'; }
 function wp_login_url($r=''){ return 'https://duck-hoo.com/login/'; }
@@ -73,7 +78,7 @@ function wc_get_orders($args){
   $out = $GLOBALS['__orders'];
   // 상태 거르기 — 취소·환불된 주문이 한도에서 빠지는지 실제로 재려면 이게 있어야 한다.
   if (!empty($args['status']) && is_array($args['status'])) {
-    $want = array_map(fn($s) => ltrim((string)$s, 'wc-'), $args['status']);
+    $want = array_map(fn($s) => preg_replace('/^wc-/', '', (string)$s), $args['status']);
     $out = array_values(array_filter($out, fn($o) => !is_object($o) || !property_exists($o,'status') || in_array($o->status, $want, true)));
   }
   return $out;
@@ -86,7 +91,7 @@ if(!function_exists('is_admin')) { function is_admin(){ return false; } } if(!fu
 if(!function_exists('get_terms')) { function get_terms($a){ return []; } } if(!function_exists('is_wp_error')) { function is_wp_error($x){ return false; } } if(!function_exists('wp_timezone')) { function wp_timezone(){ return new DateTimeZone('Asia/Seoul'); } }
 if(!function_exists('get_theme_mod')) { function get_theme_mod($k){ return 0; } } if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image(...$a){ return ''; } } if(!function_exists('get_bloginfo')) { function get_bloginfo($k){ return '액상덕후'; } }
 if(!function_exists('get_search_query')) { function get_search_query(){ return ''; } } if(!function_exists('language_attributes')) { function language_attributes(){} } if(!function_exists('body_class')) { function body_class(){} } if(!function_exists('wp_head')) { function wp_head(){} } if(!function_exists('wp_footer')) { function wp_footer(){} } if(!function_exists('wp_body_open')) { function wp_body_open(){} }
-if(!function_exists('get_privacy_policy_url')) { function get_privacy_policy_url(){ return ''; } } if(!function_exists('wp_date')) { function wp_date($f){ return date($f); } } if(!function_exists('has_term')) { function has_term(...$a){ return false; } } if(!function_exists('get_permalink_stub')) { function get_permalink_stub(){ } }
+if(!function_exists('get_privacy_policy_url')) { function get_privacy_policy_url(){ return ''; } } if(!function_exists('wp_date')) { function wp_date($f,$ts=null){ return date($f, null===$ts ? time() : (int)$ts); } } if(!function_exists('has_term')) { function has_term(...$a){ return false; } } if(!function_exists('get_permalink_stub')) { function get_permalink_stub(){ } }
 
 /* ── 적립금 주문 스텁 ────────────────────────────────────────────────────
    points.php 는 WC_Order 의 몇 가지 메서드만 쓴다. 그만큼만 흉내 낸다. */
@@ -195,7 +200,14 @@ if(!function_exists('WC')) { function WC(){ return (object)['cart' => $GLOBALS['
 class DhrFakeWpdb {
   public string $usermeta = 'wp_usermeta';
   public string $options = 'wp_options';
+  public string $users = 'wp_users';
+  public string $prefix = 'wp_';
   public array $lastArgs = [];
+  public function get_results($sql, $mode=null){
+    if (str_contains($sql, 'woocommerce_order_items')) return $GLOBALS['__fee_rows'] ?? [];
+    if (str_contains($sql, 'user_registered')) return $GLOBALS['__signup_rows'] ?? [];
+    return [];
+  }
   public function prepare($sql, ...$a){ $this->lastArgs = (isset($a[0]) && is_array($a[0])) ? $a[0] : $a; return $sql; }
   public function get_col($sql){
     $n = end($this->lastArgs);
@@ -303,3 +315,36 @@ if(!function_exists('comments_template')) { function comments_template(){ echo '
 if(!function_exists('wp_get_attachment_image_url')) { function wp_get_attachment_image_url($id,$s=''){ return 'https://duck-hoo.com/i/'.$id.'.jpg'; } }
 if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image($id,$s='',$icon=false,$attr=[]){ return '<img src="https://duck-hoo.com/i/'.$id.'.jpg">'; } }
 if(!function_exists('is_wp_error')) { function is_wp_error($t){ return false; } }
+
+/* ── 매출 대시보드 스텁 ────────────────────────────────────────────────── */
+$GLOBALS['__fee_rows'] = [];
+$GLOBALS['__signup_rows'] = [];
+if(!function_exists('wp_list_pluck')) { function wp_list_pluck($list, $field){ return array_map(fn($r) => is_array($r) ? ($r[$field] ?? null) : ($r->$field ?? null), (array)$list); } }
+if(!function_exists('add_menu_page')) { function add_menu_page(...$a){ return ''; } }
+if(!function_exists('admin_url')) { function admin_url($p=''){ return 'https://duck-hoo.com/wp-admin/'.$p; } }
+if(!function_exists('wp_nonce_url')) { function wp_nonce_url($u,$a=''){ return $u.'&_wpnonce=good'; } }
+if(!function_exists('check_admin_referer')) { function check_admin_referer($a=''){ return true; } }
+if(!function_exists('wc_get_order_status_name')) { function wc_get_order_status_name($s){ return $GLOBALS['__status_names'][$s] ?? $s; } }
+$GLOBALS['__status_names'] = ['on-hold'=>'결제 확인 중','delivered'=>'배송완료','ready-to-ship'=>'배송준비중'];
+
+/** 매출 대시보드가 읽는 만큼만 흉내 낸 주문. */
+class DhrSalesDate {
+  public function __construct(public int $ts){}
+  public function date($f){ return date($f, $this->ts); }
+  public function getTimestamp(){ return $this->ts; }
+}
+class DhrSalesOrder {
+  public function __construct(
+    public int $id, public string $day, public string $status, public float $total,
+    public int $uid = 0, public array $meta = [], public float $coupon = 0.0, public float $ship = 0.0
+  ){}
+  public function get_id(){ return $this->id; }
+  public function get_date_created(){ return '' === $this->day ? null : new DhrSalesDate(strtotime($this->day.' 12:00:00')); }
+  public function get_status(){ return $this->status; }
+  public function get_total(){ return $this->total; }
+  public function get_customer_id(){ return $this->uid; }
+  public function get_meta($k, $single=true){ return $this->meta[$k] ?? ''; }
+  public function get_discount_total(){ return $this->coupon; }
+  public function get_shipping_total(){ return $this->ship; }
+}
+

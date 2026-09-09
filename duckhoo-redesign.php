@@ -62,6 +62,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/impact.php';
 	// 노보 이벤트 — 기준 가격 대조 · 적용(관리자).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/novo-admin.php';
+	// 매출 대시보드 — 이 가게의 진짜 주문 상태로 센다(관리자 · 읽기 전용).
+	require_once plugin_dir_path( __FILE__ ) . 'includes/sales.php';
 }
 
 
