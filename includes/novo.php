@@ -984,6 +984,71 @@ function discount_except( $ex ): string {
 	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
 }
 
+/**
+ * 이 수수료 줄이 금액대별 자동 할인인가.
+ *
+ * @param object $fee 수수료 줄.
+ * @return bool
+ */
+function is_auto_discount( $fee ): bool {
+	$name = (string) ( $fee->name ?? '' );
+	return (float) ( $fee->amount ?? 0 ) < 0
+		&& (bool) preg_match( (string) apply_filters( 'duckhoo_auto_discount_fee', '/자동\s*할인/u' ), $name );
+}
+
+/**
+ * 금액대별 자동 할인을 **끈다**.
+ *
+ * 사장님 요청으로 할인 자체를 내리기 위한 것이다. 할인은 사장님 Code Snippets 가
+ * 붙이므로 원래는 그 스니펫 토글을 끄는 것이 맞다 — 우리는 관리자가 아니라 그 토글을
+ * 누를 수 없어서, 워드커머스가 쥔 수수료 줄을 걷어내는 쪽으로 대신한다.
+ *
+ * **끄기 전에 반드시 재 본다.** 노보만 담은 장바구니에서 이 줄을 걷어냈을 때 테마
+ * 요약이 「총 주문금액 0원」이 된 적이 있다. 다른 상품에서도 같은지 확인해야 한다.
+ *
+ * 기본은 꺼짐(= 할인 그대로). 쿠키 `dhr_novo_nodisc=1` 이 있는 요청에서만 걷어낸다.
+ *
+ * @return void
+ */
+function kill_discount(): void {
+	if ( ! excluding() || ! function_exists( 'WC' ) ) {
+		return;
+	}
+	$wc = WC();
+	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'fees_api' ) ) {
+		return;
+	}
+	$api  = $wc->cart->fees_api();
+	$fees = $api->get_fees();
+	if ( ! $fees ) {
+		return;
+	}
+	$keep    = array();
+	$dropped = false;
+	foreach ( $fees as $fee ) {
+		if ( is_auto_discount( $fee ) ) {
+			$dropped = true;
+			continue;
+		}
+		$keep[] = $fee;
+	}
+	if ( ! $dropped ) {
+		return;
+	}
+	$api->remove_all_fees();
+	foreach ( $keep as $fee ) {
+		$api->add_fee(
+			array(
+				'name'      => (string) $fee->name,
+				'amount'    => (float) $fee->amount,
+				'taxable'   => ! empty( $fee->taxable ),
+				'tax_class' => (string) ( $fee->tax_class ?? '' ),
+			)
+		);
+	}
+}
+
 if ( function_exists( 'add_action' ) ) {
 	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
+	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\kill_discount', PHP_INT_MAX );
 }
