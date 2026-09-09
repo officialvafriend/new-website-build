@@ -180,14 +180,18 @@ function screen(): void {
 	}
 	echo '</textarea>';
 
-	echo '<h2>3. 그 코드 원문</h2>';
+	echo '<h2 style="background:#FFE02E;padding:.4rem .6rem;display:inline-block;border-radius:6px">3. 그 코드 원문 — 이 상자를 복사해 주세요</h2>';
 	echo '<p>찾은 자리는 <code>테마/functions.php:10669~10700</code> 다. 규칙을 그대로 읽어야 '
 		. '<b>같은 규칙에 노보만 빼서</b> 다시 지을 수 있다.</p>';
-	echo '<textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:12px">';
+	echo '<textarea readonly style="width:100%;height:520px;font-family:monospace;font-size:12px">';
 	foreach ( array(
 		array( get_theme_root() . '/' . get_template() . '/functions.php', 10655, 10710 ),
 		array( get_theme_root() . '/' . get_template() . '/functions.php', 1935, 1960 ),
-		array( get_theme_root() . '/' . get_template() . '/woocommerce/checkout/form-checkout.php', 128, 155 ),
+		array( get_theme_root() . '/' . get_template() . '/woocommerce/checkout/form-checkout.php', 120, 165 ),
+		array( get_theme_root() . '/' . get_template() . '/page-cart.php', 40, 75 ),
+		// duckhoo-front 가 우선순위 100 에 뭔가를 건다. 저장소 사본(183줄)보다 실제
+		// 파일이 길다 — 누군가 업데이트했다. 그 부분을 봐야 한다.
+		array( WP_PLUGIN_DIR . '/duckhoo-front/duckhoo-front.php', 180, 260 ),
 	) as $one ) {
 		list( $path, $from, $to ) = $one;
 		echo esc_textarea( '== ' . str_replace( WP_CONTENT_DIR, 'wp-content', $path ) . " {$from}~{$to} ==\n" );
