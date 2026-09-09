@@ -632,12 +632,15 @@ function over_text( int $ordered, int $in_cart, int $adding = 0 ): string {
 				$tail
 			);
 		}
-		if ( $adding > 0 && $in_cart <= 0 ) {
-			return $head . sprintf( ' 한 번에 %s 세트는 담을 수 없어요.%s', nword( sets_of( $adding ) ), $tail );
+		// 담는 중이라면 「담겨 있다」고 말하면 안 된다 — 아직 안 담겼다.
+		if ( $adding > 0 ) {
+			return $head . ( $in_cart > 0
+				? sprintf( ' 장바구니에 이미 %s 세트가 있어서 더 담을 수 없어요.%s', nword( sets_of( $in_cart ) ), $tail )
+				: sprintf( ' 한 번에 %s 세트는 담을 수 없어요.%s', nword( sets_of( $adding ) ), $tail ) );
 		}
 		return $head . sprintf(
 			' 지금 장바구니에 %s 세트가 담겨 있어요. 한 세트만 남기고 빼 주세요.%s',
-			nword( sets_of( $in_cart + $adding ) ),
+			nword( sets_of( $in_cart ) ),
 			$tail
 		);
 	}
@@ -654,13 +657,18 @@ function over_text( int $ordered, int $in_cart, int $adding = 0 ): string {
 	}
 	if ( $ordered > 0 ) {
 		return $head . sprintf(
-			' 오늘 이미 %d병을 주문하셨어요. 오늘 더 사실 수 있는 것은 %d병인데 지금 %d병을 담으셨습니다.',
+			' 오늘 이미 %d병을 주문하셨어요. 오늘 더 사실 수 있는 것은 %d병입니다%s.',
 			$ordered,
 			$lim - $ordered,
-			$in_cart + $adding
+			$adding > 0 ? sprintf( ' (담으려던 것은 %d병)', $adding ) : sprintf( ' — 지금 장바구니에 %d병이 있습니다', $in_cart )
 		);
 	}
-	return $head . sprintf( ' 지금 %d병을 담으셨어요. %d병으로 줄여 주세요.', $in_cart + $adding, $lim );
+	if ( $adding > 0 ) {
+		return $head . ( $in_cart > 0
+			? sprintf( ' 장바구니에 이미 %d병이 있어서 %d병을 더 담을 수 없어요.', $in_cart, $adding )
+			: sprintf( ' 한 번에 %d병은 담을 수 없어요.', $adding ) );
+	}
+	return $head . sprintf( ' 지금 %d병을 담으셨어요. %d병으로 줄여 주세요.', $in_cart, $lim );
 }
 
 /**
