@@ -2080,7 +2080,14 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-Reviews-title{ display: no
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev__n{
   margin-left: .4rem; font-size: .8em; color: var(--dh-accent-warm, #C2410C);
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #reviews{ display: grid; gap: 14px; }
+/* 테마가 리뷰를 탭 안에 넣어 두고 `#reviews` 를 `display:none !important` 로 접는다.
+   우리 화면에는 탭이 없어서 열어 줄 사람이 없다 — 여기서 펴 준다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #reviews{ display: grid !important; gap: 14px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #comments,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #review_form_wrapper,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #review_form,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #respond{ display: block !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #commentform{ display: grid !important; }
 
 /* 아직 없을 때 — 비어 있다고만 하지 말고 첫 사람이 되라고 말한다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-noreviews{
