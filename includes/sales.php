@@ -791,23 +791,32 @@ function screen(): void {
 	$m      = agg( $m_rows );
 	$out    = (float) $m['points'] + (float) $m['coupon'] + (float) $m['fee'];
 
+	// 할인 전 금액 = 실제로 받은 돈 + 깎아 준 돈. **확정 매출은 이미 깎인 뒤 금액이다** —
+	// 「나가는 돈」을 매출에서 또 빼면 두 번 빼는 것이 된다. 그래서 표를 뺄셈으로 세운다.
+	$before = (float) $m['sales'] + $out;
+
 	echo '<section class="dhr-sl-sec"><h2>이번 달 나가는 돈</h2>';
+	echo '<p class="dhr-sl-note">확정 매출은 아래 할인이 <b>이미 빠진</b> 금액입니다 — 손님이 실제로 입금한 돈입니다. 여기서 또 빼지 마세요.</p>';
 	echo '<table class="widefat striped dhr-sl-kv"><tbody>';
+	printf( '<tr><td>할인 전 주문 금액</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d건</td></tr>',
+		esc_html( won( $before ) ), (int) $m['n'] );
 	foreach ( array(
-		'적립금 사용'     => $m['points'],
-		'쿠폰 할인'       => $m['coupon'],
-		'자동 할인 · 기타' => $m['fee'],
+		'− 적립금 사용'     => $m['points'],
+		'− 쿠폰 할인'       => $m['coupon'],
+		'− 자동 할인 · 기타' => $m['fee'],
 	) as $label => $v ) {
 		printf( '<tr><td>%s</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td></tr>',
 			esc_html( $label ),
 			esc_html( won( (float) $v ) ),
-			esc_html( $m['sales'] > 0 ? sprintf( '매출의 %.1f%%', (float) $v / (float) $m['sales'] * 100 ) : '—' ) );
+			esc_html( $before > 0 ? sprintf( '할인 전의 %.1f%%', (float) $v / $before * 100 ) : '—' ) );
 	}
-	printf( '<tr><td><b>합계</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-num dhr-sl-mut">%s</td></tr>',
+	printf( '<tr><td>깎아 준 돈 합계</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td></tr>',
 		esc_html( won( $out ) ),
-		esc_html( $m['sales'] > 0 ? sprintf( '매출의 %.1f%%', $out / (float) $m['sales'] * 100 ) : '—' ) );
+		esc_html( $before > 0 ? sprintf( '할인 전의 %.1f%%', $out / $before * 100 ) : '—' ) );
+	printf( '<tr><td><b>= 확정 매출 (실제로 받은 돈)</b></td><td class="dhr-sl-num"><b>%s</b></td><td></td></tr>',
+		esc_html( won( (float) $m['sales'] ) ) );
 	echo '</tbody></table>';
-	echo '<p class="dhr-sl-note">배송비는 아직 여기 넣지 않았습니다 (참고: 이번 달 배송비로 받은 돈 ' . esc_html( won( (float) $m['ship'] ) ) . ').</p>';
+	echo '<p class="dhr-sl-note">배송비는 아직 따로 떼지 않았습니다 — 위 금액에 배송비가 들어 있습니다 (이번 달 배송비로 받은 돈 ' . esc_html( won( (float) $m['ship'] ) ) . ').</p>';
 	echo '</section>';
 
 	// ── 회원 ────────────────────────────────────────────────
