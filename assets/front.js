@@ -1034,3 +1034,37 @@
     }
   }, true);
 })();
+
+/* 홈 맨 위 검은 공지 띠 (#wd-top-announce) — 사장님 Code Snippets 가 `document.body`
+   맨 앞에 끼워 넣는다. 그 파일은 건드리지 않고 **글자만** 우리가 정한다
+   (#pop6 · #dh-agegate2 와 같은 방식).
+
+   2026-09-09: 자동 할인을 껐는데 띠는 「9월 특가 진행 중 — 10만원 이상 10,000원
+   자동 할인!」 이라고 그대로 말하고 있었다. 없는 혜택을 믿고 담은 손님은 결제
+   화면에서 배신당한다.
+
+   띠는 우리 스크립트보다 뒤에 만들어질 수 있어 세 번 본다 — 지금 · DOM 이 다
+   그려진 뒤 · load. 그래도 놓칠 수 있어 body 를 잠깐(8초) 지켜본다.
+   그 동안 CSS(body.dhr-ann)가 띠를 감춰 둔다 — 옛 문구가 한 번 번쩍이면 그것도 광고다. */
+(function(){
+  var C = window.DHR || {};
+  if(!C.takeAnnounce) return;
+
+  function apply(){
+    var bar = document.getElementById('wd-top-announce');
+    if(!bar) return false;
+    if(bar.dataset.dhrAnn) return true;
+    bar.dataset.dhrAnn = '1';
+    if(!C.announce){ bar.hidden = true; bar.style.display = 'none'; return true; }
+    bar.textContent = C.announce;   /* 스니펫이 넣은 <strong> 까지 통째로 갈아 끼운다 */
+    return true;
+  }
+
+  if(!apply()){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+    addEventListener('load', apply);
+    var mo = new MutationObserver(function(){ if(apply()) mo.disconnect(); });
+    mo.observe(document.body, {childList: true});
+    setTimeout(function(){ mo.disconnect(); }, 8000);
+  }
+})();

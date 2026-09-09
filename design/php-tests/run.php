@@ -539,6 +539,21 @@ $ok(str_contains($T(10, 11),'낱병은 제한 없습니다'), '낱병은 살 수
 $ok(($N.'nword')(1) === '한' && ($N.'nword')(2) === '두' && ($N.'nword')(9) === '9', '1~5 는 한글 수관형사로 쓴다');
 $ok(($N.'sets_of')(10) === 1 && ($N.'sets_of')(20) === 2, '병 수를 세트 수로 센다');
 
+// 홈 공지 띠 — 이벤트가 끝났으면 「진행 중」이 떠 있으면 안 된다
+$ok(str_contains(($F.'announce')(), '조기 종료'), '공지 띠가 이벤트가 끝났다고 말한다');
+$ok(!str_contains(($F.'announce')(), '진행 중'), '「진행 중」이라고 말하지 않는다');
+$ok(($F.'take_announce')() === true, '기본으로 우리가 띠를 맡는다');
+$ok(in_array('dhr-ann', ($F.'announce_body_class')([]), true), '맡는 동안 몸통에 표시를 남긴다');
+add_filter('duckhoo_announce', fn() => '  새 문구  ');
+$ok(($F.'announce')() === '새 문구', '필터로 문구를 바꾼다 (앞뒤 공백은 턴다)');
+$GLOBALS['__filters']['duckhoo_announce'] = [];
+add_filter('duckhoo_announce', fn() => '');
+$ok(($F.'announce')() === '', '빈 문자열이면 띠를 없앤다');
+$GLOBALS['__filters']['duckhoo_announce'] = [];
+add_filter('duckhoo_take_announce', fn() => false);
+$ok(($F.'take_announce')() === false && ($F.'announce_body_class')([]) === [], '끄면 스니펫 글자를 그대로 둔다');
+$GLOBALS['__filters']['duckhoo_take_announce'] = [];
+
 // 41-h. 취소한 주문은 어떤 상태 이름이든 한도를 놓아 준다
 $singlesOn();
 $GLOBALS['__cart']->items = []; $GLOBALS['__logged_in'] = 300;

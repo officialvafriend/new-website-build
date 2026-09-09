@@ -899,6 +899,13 @@ function js_config( array $extra = array() ): string {
 		// 사장님 홈 팝업(#pop6)에서 남길 탭 하나. 나머지 칩은 감춘다.
 		// 끄려면 빈 문자열: add_filter( 'duckhoo_popup_tab', '__return_empty_string' );
 		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '고객 안내' ),
+
+		// 사장님 스니펫이 홈 맨 위에 그리는 검은 공지 띠(#wd-top-announce).
+		// 그 스니펫은 건드리지 않고 **글자만** 우리가 정한다 — 이벤트가 끝났는데
+		// 「진행 중」이 떠 있으면 손님이 없는 혜택을 믿고 담는다.
+		// 띠를 통째로 없애려면 빈 문자열, 스니펫 글자를 그대로 두려면 take 를 false 로.
+		'announce'     => announce(),
+		'takeAnnounce' => take_announce(),
 		'loggedIn' => is_user_logged_in(),
 		'nonce'    => wp_create_nonce( 'wc_store_api' ),
 		'freeShip' => (int) apply_filters( 'duckhoo_free_shipping_min', 30000 ),
@@ -912,6 +919,54 @@ function js_config( array $extra = array() ): string {
 	$cfg = (array) apply_filters( 'duckhoo_js_config', $cfg );
 	return 'window.DHR=' . wp_json_encode( array_merge( $cfg, $extra ) ) . ';';
 }
+
+/**
+ * 홈 맨 위 검은 공지 띠에 적을 글.
+ *
+ * 그 띠는 사장님 Code Snippets 가 `document.body` 맨 앞에 끼워 넣는다
+ * (`#wd-top-announce`). 스니펫 파일은 건드리지 않고 **글자만** 바꾼다 —
+ * 팝업(`#pop6`) · 성인인증 안내(`#dh-agegate2`) 와 같은 방식이다.
+ *
+ * 2026-09-09: 금액대별 자동 할인을 껐는데 띠는 「9월 특가 진행 중 — 10만원 이상
+ * 10,000원 자동 할인!」 이라고 그대로 말하고 있었다. **없는 혜택을 믿고 담은 손님은
+ * 결제 화면에서 배신당한다.** 그래서 끝났다고 알리는 쪽으로 바꾼다.
+ *
+ * - 문구를 바꾸려면 `duckhoo_announce`
+ * - 띠를 아예 없애려면 빈 문자열 (`__return_empty_string`)
+ * - 스니펫이 쓴 글자를 그대로 두려면 `duckhoo_take_announce` 를 false 로
+ *
+ * @return string
+ */
+function announce(): string {
+	return trim( (string) apply_filters(
+		'duckhoo_announce',
+		'9월 금액 자동 할인 이벤트가 조기 종료되었습니다. 그동안 이용해 주셔서 감사합니다.'
+	) );
+}
+
+/**
+ * 그 띠를 우리가 맡는가.
+ *
+ * @return bool
+ */
+function take_announce(): bool {
+	return (bool) apply_filters( 'duckhoo_take_announce', true );
+}
+
+/**
+ * 우리가 띠를 맡는 동안에는 몸통에 표시를 남긴다 — front.js 가 글자를 바꿔 넣기
+ * 전까지 CSS 가 띠를 감춰 둔다. 옛 문구가 한 번 번쩍이면 그것도 광고다.
+ *
+ * @param string[] $classes 클래스.
+ * @return string[]
+ */
+function announce_body_class( array $classes ): array {
+	if ( take_announce() ) {
+		$classes[] = 'dhr-ann';
+	}
+	return $classes;
+}
+add_filter( 'body_class', __NAMESPACE__ . '\\announce_body_class' );
 
 /**
  * 상품이 바뀌면 캐시를 비운다.

@@ -553,6 +553,11 @@ body.dhr #pop-dim{position:fixed!important;inset:0!important;width:100%!importan
 body.dhr #pop6{max-width:min(480px,calc(100vw - 1.6rem))!important;width:calc(100vw - 1.6rem)!important}
 body.dhr #pop6 .panel{max-width:100%!important;width:100%!important}
 
+/* 홈 맨 위 검은 공지 띠(#wd-top-announce)는 사장님 스니펫이 JS 로 끼워 넣는다.
+   글자는 front.js 가 우리 것으로 갈아 끼운다 — 그 전까지는 감춰 둔다.
+   옛 문구("진행 중")가 한 번 번쩍이면 그것도 없는 혜택을 광고하는 것이다. */
+body.dhr-ann #wd-top-announce:not([data-dhr-ann]){visibility:hidden!important}
+
 /* 폰 검색창 — 헤더 아이콘과 홈 검색 알약이 연다.
    불투명이다. 이 사이트는 반투명 표면을 쓰지 않는다 (막만 어둡게 깐다). */
 /* 테마 공지 띠(#wd-top-announce)가 z-index 9999 라 그 위로 올라가야 한다.

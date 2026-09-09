@@ -885,6 +885,24 @@ mtime · 크기가 들어가 테마가 바뀌면 다시 만든다.
 테마 파일이 그대로인지 · 다른 템플릿은 건드리지 않는지) ·
 `scratchpad/live/disc3.mjs`(결제 화면 네 장바구니) · `disc4.mjs`(장바구니 화면 · 안내 문구).
 
+### 홈 맨 위 검은 공지 띠는 스니펫이 그린다 — 글자만 우리가 정한다 (2026-09-09)
+
+자동 할인을 껐는데 띠는 **「9월 특가 진행 중 — 10만원 이상 구매 시 10,000원 자동 할인!」**
+이라고 그대로 말하고 있었다. 없는 혜택을 믿고 담은 손님은 결제 화면에서 배신당한다.
+
+- 그 띠(`#wd-top-announce`)는 사장님 Code Snippets 가 `wp_footer` 에서 JS 로
+  `document.body` 맨 앞에 끼워 넣는다. **스니펫 파일은 건드리지 않는다** —
+  `#pop6` · `#dh-agegate2` 와 같은 방식으로 **글자만** `front.js` 가 갈아 끼운다
+- 문구는 `Front\announce()` (필터 `duckhoo_announce`). 지금은
+  `9월 금액 자동 할인 이벤트가 조기 종료되었습니다. 그동안 이용해 주셔서 감사합니다.`
+  **빈 문자열이면 띠 자체를 없앤다.** 스니펫 글자를 그대로 두려면 `duckhoo_take_announce` 를 false 로
+- **띠는 홈에서만 보인다.** 테마 화면(`dhr-wrap`)에서는 shell.css 가 이미 숨긴다.
+  그래서 결제 화면 스크린샷에는 안 나온다 — 없어진 것이 아니다
+- 옛 문구가 한 번 번쩍이지 않게 `body.dhr-ann #wd-top-announce:not([data-dhr-ann])` 를
+  `visibility:hidden` 으로 두고, 글자를 넣은 뒤에 보인다. 띠는 우리 스크립트보다 뒤에
+  만들어질 수 있어 **지금 · DOMContentLoaded · load** 세 번 보고, 그래도 놓치면
+  body 를 8초간 지켜본다
+
 ### 노보 배너
 
 노보 분류 목록 맨 위(`duckhoo_archive_before_grid` → `Novo\banner()`). `도구 → 노보
