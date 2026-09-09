@@ -2089,7 +2089,11 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #review_form,
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #respond{ display: block !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #commentform{ display: grid !important; }
 
-/* 아직 없을 때 — 비어 있다고만 하지 말고 첫 사람이 되라고 말한다 */
+/* 쓸 자리가 바로 아래 있으면 「아직 상품평이 없습니다」 상자는 같은 말을 두 번 한다
+   (폼 제목이 이미 「첫 상품평을 남겨 주세요」다) — 그때는 뺀다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #reviews:has(#commentform) .woocommerce-noreviews{ display: none; }
+
+/* 아직 없고 쓸 자리도 없을 때 (비로그인 · 구매자 전용) */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-noreviews{
   margin: 0; padding: 26px 18px; background: #fff; border: 1px solid var(--dh-line, #E1E5E8);
   border-radius: 16px; text-align: center; color: var(--dh-ink-2, #4E565F); font-size: 15px;
