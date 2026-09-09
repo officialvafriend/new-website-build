@@ -56,6 +56,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/impact.php';
 	// 노보 이벤트 — 기준 가격 대조 · 적용(관리자).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/novo-admin.php';
+	// 자동 할인을 누가 붙이는지 찾는 임시 진단. 찾고 나면 이 줄과 파일을 지운다.
+	require_once plugin_dir_path( __FILE__ ) . 'includes/fee-doctor.php';
 }
 
 
