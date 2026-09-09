@@ -256,3 +256,10 @@ function dhr_set_tier_recalc(bool $on): void {
   clearstatcache(true, $GLOBALS['__tier_file']);
   $GLOBALS['__transients'] = [];
 }
+
+/* ── 상품 후기 스텁 ─────────────────────────────────────────────────────
+   product.php 의 reviews_on() · open_reviews() 가 쓴다. */
+if(!function_exists('get_option')) { function get_option($k,$d=false){ return $GLOBALS['__options'][$k] ?? $d; } }
+if(!function_exists('get_post_type')) { function get_post_type($id=0){ return $GLOBALS['__posttype'][$id] ?? 'post'; } }
+$GLOBALS['__options'] = [];
+$GLOBALS['__posttype'] = [];

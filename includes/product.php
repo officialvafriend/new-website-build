@@ -228,3 +228,64 @@ function schema_brand( $data, $product = null ): array {
 	return $data;
 }
 add_filter( 'woocommerce_structured_data_product', __NAMESPACE__ . '\\schema_brand', 10, 2 );
+
+/* ── 상품 후기 ────────────────────────────────────────────────────────────
+   상세를 우리 템플릿으로 바꾸면서 **리뷰 영역이 통째로 빠져 있었다.** 관리자에
+   `상품 → 상품평` 메뉴가 있으니 워드커머스 리뷰는 켜져 있는데, 화면에 쓸 자리가
+   없어서 손님이 후기를 남길 방법이 없었다 (2026-09-09 사장님 확인). */
+
+/**
+ * 이 사이트에서 리뷰를 쓰는가 — 워드커머스의 전체 설정.
+ *
+ * @return bool
+ */
+function reviews_on(): bool {
+	return 'yes' === get_option( 'woocommerce_enable_reviews', 'yes' );
+}
+
+/**
+ * 상품의 댓글이 닫혀 있어도 리뷰를 열어 준다.
+ *
+ * **왜 필요한가.** 리뷰가 꺼진 채로 만들어지거나 가져오기(import)로 들어온 상품은
+ * `comment_status` 가 `closed` 로 남는다. 그러면 전체 설정을 켜도 그 상품에는
+ * 리뷰 영역이 안 나온다 — 173개를 하나씩 열어 고칠 수는 없다.
+ *
+ * 상품에만, 전체 설정이 켜져 있을 때만 연다. 끄려면
+ * `add_filter( 'duckhoo_force_product_reviews', '__return_false' );`
+ *
+ * @param bool $open 여태 판정.
+ * @param int  $pid  글 ID.
+ * @return bool
+ */
+function open_reviews( $open, $pid = 0 ): bool {
+	if ( $open || ! reviews_on() ) {
+		return (bool) $open;
+	}
+	if ( 'product' !== get_post_type( (int) $pid ) ) {
+		return (bool) $open;
+	}
+	return (bool) apply_filters( 'duckhoo_force_product_reviews', true );
+}
+add_filter( 'comments_open', __NAMESPACE__ . '\\open_reviews', 10, 2 );
+
+/**
+ * 상세의 후기 영역. **워드커머스가 그린다** — 폼 · 필드 이름 · 논스 · 구매자 확인이
+ * 전부 그쪽 것이라야 관리자의 `상품평` 화면과 별점 집계가 그대로 맞는다.
+ * 우리는 자리와 제목만 준다.
+ *
+ * @return void
+ */
+function reviews(): void {
+	if ( ! reviews_on() || ! comments_open() ) {
+		return;
+	}
+	$n = (int) get_comments_number();
+	?>
+	<section class="dhp-sec dhp-rev" id="dhp-rev">
+		<div class="sec-h">
+			<h2>상품 후기<?php echo $n ? ' <span class="dhp-rev__n n">' . esc_html( number_format_i18n( $n ) ) . '</span>' : ''; // phpcs:ignore ?></h2>
+		</div>
+		<?php comments_template(); ?>
+	</section>
+	<?php
+}

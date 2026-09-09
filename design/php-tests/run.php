@@ -543,6 +543,22 @@ $ok(($N.'sets_of')(10) === 1 && ($N.'sets_of')(20) === 2, '병 수를 세트 수
 $ok(str_contains(($F.'announce')(), '조기 종료'), '공지 띠가 이벤트가 끝났다고 말한다');
 $ok(!str_contains(($F.'announce')(), '진행 중'), '「진행 중」이라고 말하지 않는다');
 $ok(str_contains(($F.'announce')(), '10만원 이상'), '손님이 본 이름 그대로 쓴다');
+
+// 상품 후기 — 상품의 댓글이 닫혀 있어도 리뷰는 열어 준다 (가져온 상품이 그렇다)
+$R = 'Duckhoo\\Redesign\\Product\\';
+$GLOBALS['__posttype'][7] = 'product';
+$GLOBALS['__posttype'][8] = 'page';
+$GLOBALS['__options']['woocommerce_enable_reviews'] = 'yes';
+$ok(($R.'reviews_on')() === true, '워드커머스 리뷰 설정을 읽는다');
+$ok(($R.'open_reviews')(false, 7) === true, '댓글이 닫힌 상품도 리뷰는 연다');
+$ok(($R.'open_reviews')(false, 8) === false, '상품이 아니면 열지 않는다');
+$ok(($R.'open_reviews')(true, 8) === true, '이미 열려 있으면 그대로 둔다');
+add_filter('duckhoo_force_product_reviews', fn() => false);
+$ok(($R.'open_reviews')(false, 7) === false, '필터로 끌 수 있다');
+$GLOBALS['__filters']['duckhoo_force_product_reviews'] = [];
+$GLOBALS['__options']['woocommerce_enable_reviews'] = 'no';
+$ok(($R.'reviews_on')() === false && ($R.'open_reviews')(false, 7) === false, '전체 설정이 꺼져 있으면 열지 않는다');
+$GLOBALS['__options']['woocommerce_enable_reviews'] = 'yes';
 $ok(str_contains(($F.'announce')(), '9월 9일'), '언제부터인지 적는다');
 $ok(!str_contains(($F.'announce')(), '그동안 이용해'), '가게가 문 닫는 것처럼 읽힐 말은 쓰지 않는다');
 $ok(($F.'take_announce')() === true, '기본으로 우리가 띠를 맡는다');

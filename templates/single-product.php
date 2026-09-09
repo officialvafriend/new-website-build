@@ -151,6 +151,8 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 			</div>
 		</section>
 
+		<?php \Duckhoo\Redesign\Product\reviews(); ?>
+
 		<?php if ( $dhp_rel ) : ?>
 		<section class="dhp-sec dhp-rel">
 			<div class="sec-h"><h2>함께 볼 상품</h2><a class="lk" href="<?php echo esc_url( $dhp_cat ? get_term_link( $dhp_cat ) : $dhp_shop ); ?>">더 보기 <?php echo icon( 'chev' ); // phpcs:ignore ?></a></div>
