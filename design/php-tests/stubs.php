@@ -216,22 +216,39 @@ if(!function_exists('sanitize_text_field')) { function sanitize_text_field($v){ 
 if(!function_exists('is_checkout')) { function is_checkout(){ return (bool)($GLOBALS['__is_checkout'] ?? false); } }
 
 
-/* ── 테마 결제 템플릿 검사 스텁 ──────────────────────────────────────────
-   discount.php 는 그 파일을 읽어 「스스로 다시 계산하는가」를 본다.
-   테스트에서는 $GLOBALS['__tier_recalc'] 로 그 답을 정한다. */
+/* ── 테마 결제 템플릿 스텁 ──────────────────────────────────────────────
+   discount.php 는 그 파일을 읽어 「스스로 다시 계산하는가」를 보고,
+   그렇다면 숫자만 0 으로 바꾼 사본을 만들어 wc_get_template 으로 건넨다.
+   여기서는 진짜 파일을 임시 폴더에 써서 그 길을 그대로 돌려 본다. */
 if(!function_exists('get_theme_root')) { function get_theme_root(){ return sys_get_temp_dir().'/dhr-themes'; } }
 if(!function_exists('get_template')) { function get_template(){ return 'fake'; } }
 if(!function_exists('get_current_screen')) { function get_current_screen(){ return null; } }
 if(!function_exists('current_user_can')) { function current_user_can($c){ return false; } }
+if(!function_exists('remove_action')) { function remove_action($h,$cb,$p=10){ } }
+if(!function_exists('wp_mkdir_p')) { function wp_mkdir_p($d){ return is_dir($d) || @mkdir($d, 0777, true); } }
+if(!function_exists('wp_upload_dir')) {
+  function wp_upload_dir(){ $d = sys_get_temp_dir().'/dhr-uploads'; @mkdir($d, 0777, true); return ['basedir'=>$d,'error'=>false]; }
+}
 if(!defined('DAY_IN_SECONDS')) { define('DAY_IN_SECONDS', 86400); }
 (function(){
   $dir = sys_get_temp_dir().'/dhr-themes/fake/woocommerce/checkout';
   @mkdir($dir, 0777, true);
   $GLOBALS['__tier_file'] = $dir.'/form-checkout.php';
 })();
+
+/** 테마의 「표시 안정화」 블록이 있는 결제 템플릿 (진짜 모양에 가깝게). */
+function dhr_tier_template(): string {
+  return "<?php\ndefined( 'ABSPATH' ) || exit;\n"
+    . "// 표시 안정화: fee 목록 대신 직접 구간 계산 (부과 로직과 동일 기준)\n"
+    . "\$wd_tier_base = 0;\n"
+    . "foreach ( WC()->cart->get_cart() as \$wd_ti ) { \$wd_tier_base += 1; }\n"
+    . "if ( \$wd_tier_base >= 100000 ) { \$wd_auto_fee_discount = 10000; }\n"
+    . "elseif ( \$wd_tier_base >= 80000 ) { \$wd_auto_fee_discount = 5000; }\n"
+    . "elseif ( \$wd_tier_base >= 50000 ) { \$wd_auto_fee_discount = 3000; }\n";
+}
 function dhr_set_tier_recalc(bool $on): void {
-  file_put_contents($GLOBALS['__tier_file'], $on ? "<?php \$wd_tier_base = 0;" : "<?php // fee 합산만 한다");
-  /* template_recomputes() 는 mtime 으로 캐시 키를 만들고 static 으로 기억한다.
+  file_put_contents($GLOBALS['__tier_file'], $on ? dhr_tier_template() : "<?php // fee 합산만 한다\n");
+  /* patched()/read() 는 mtime 으로 캐시 키를 만들고 static 으로 기억한다.
      테스트는 같은 초 안에 파일을 두 번 쓰므로 mtime 을 손으로 벌려 줘야
      키가 달라져 그 기억을 지나친다 (실제 사이트에서는 저절로 달라진다). */
   static $n = 0;
