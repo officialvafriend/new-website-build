@@ -335,14 +335,24 @@ $GLOBALS['__cart']->items = [];
 
 // 41-c. 금액대별 자동 할인 규칙은 그대로 읽는다 (노보 제외는 쿠폰 플러그인 쪽 일이다)
 $F = 'Duckhoo\\Redesign\\Front\\';
-$ok(($F.'discount_for')(99999.0) === 0 && ($F.'discount_for')(100000.0) === 10000, '켜져 있을 때는 10만원↑ 10,000원');
-// 끄면 규칙이 비어 어떤 금액에도 할인이 없다
-add_filter('duckhoo_kill_auto_discount', fn() => true);
-$ok(($F.'discount_for')(100000.0) === 0 && ($F.'discount_for')(500000.0) === 0, '이벤트를 끄면 어떤 금액에도 할인이 없다');
+$D = 'Duckhoo\\Redesign\\Discount\\';
+// 결제 템플릿이 아직 스스로 다시 계산하면 끄지 않는다 — 껐다가는 화면과 금액이 갈린다
+dhr_set_tier_recalc(true);
+$ok(($D.'template_recomputes')() === true, '템플릿이 스스로 계산하는 것을 알아본다');
+$ok(($D.'killing')() === false, '그 동안에는 끄지 않는다');
+$ok(($F.'discount_for')(100000.0) === 10000, '할인 규칙도 그대로 살아 있다');
+// 사장님이 그 블록을 지우면 저절로 꺼진다
+dhr_set_tier_recalc(false);
+$ok(($D.'template_recomputes')() === false, '블록이 사라진 것을 알아본다');
+$ok(($D.'killing')() === true, '그때 비로소 끈다');
+$ok(($F.'discount_for')(100000.0) === 0 && ($F.'discount_for')(500000.0) === 0, '끄면 어떤 금액에도 할인이 없다');
+// 필터로 되살릴 수 있다
+add_filter('duckhoo_kill_auto_discount', fn() => false);
+$ok(($D.'killing')() === false && ($F.'discount_for')(100000.0) === 10000, '필터로 도로 켤 수 있다');
 $GLOBALS['__filters']['duckhoo_kill_auto_discount'] = [];
+dhr_set_tier_recalc(true);
 
 // 자동 할인을 붙이는 함수를 알아보는 법 — 줄 번호가 아니라 코드로 본다
-$D = 'Duckhoo\\Redesign\\Discount\\';
 $dhrHit = function() {
     // 금액 자동 할인
     return 1;

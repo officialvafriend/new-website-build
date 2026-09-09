@@ -32,17 +32,78 @@ namespace Duckhoo\Redesign\Discount;
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * 결제 템플릿이 아직 **스스로 다시 계산**하는가.
+ *
+ * `woocommerce/checkout/form-checkout.php:145` 의 「표시 안정화: fee 목록 대신 직접
+ * 구간 계산」 블록이 그렇다. 그것이 살아 있는 동안에는 fee 를 떼도 결제 화면이
+ * 10,000 을 계속 빼서 실제 주문 금액과 어긋난다 (프로덕션에서 총액이 0원이 됐다).
+ *
+ * **그래서 우리가 먼저 확인한다.** 사장님이 그 블록을 지우면 이 함수가 false 가 되고
+ * 할인은 저절로 꺼진다 — 따로 눌러야 할 것이 없다. 파일을 읽을 수 없으면
+ * 「아직 있다」로 본다 (모를 때는 건드리지 않는 쪽).
+ *
+ * @return bool
+ */
+function template_recomputes(): bool {
+	$file = get_theme_root() . '/' . get_template() . '/woocommerce/checkout/form-checkout.php';
+	if ( ! is_readable( $file ) ) {
+		return true;
+	}
+	// 파일이 바뀌면 다시 본다 — 사장님이 블록을 지운 그 순간부터 꺼져야 한다.
+	$key = 'dhr_tier_recalc_' . (int) filemtime( $file );
+
+	static $memo = array();
+	if ( isset( $memo[ $key ] ) ) {
+		return $memo[ $key ];
+	}
+	$found = get_transient( $key );
+	if ( false === $found ) {
+		$body  = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		$found = false !== strpos( $body, 'wd_tier_base' ) ? '1' : '0';
+		set_transient( $key, $found, DAY_IN_SECONDS );
+	}
+	$memo[ $key ] = ( '1' === $found );
+	return $memo[ $key ];
+}
+
+/**
  * 자동 할인을 끄는가.
+ *
+ * 사장님 결정 2026-09-09: **이 이벤트를 없앤다.** 다만 결제 템플릿이 아직 스스로
+ * 다시 계산하고 있으면 끄지 않는다 — 껐다가는 화면과 실제 금액이 갈린다.
  *
  * @return bool
  */
 function killing(): bool {
-	// **잠시 꺼 둔다.** 훅에서 떼는 것 자체는 됐다 — 펠릭스 178,000원 · 조바 12,500원 ·
-	// 장바구니 화면 모두 정상이었다. 그런데 **노보 장바구니만** 결제 요약이 0원이 됐고
-	// (`할인 - -10,000` · `쿠폰할인 - 10,000` 이 fee 없이도 남는다) 라이브 쇼핑몰이라
-	// 원인을 잡을 때까지 원래대로 둔다. 테마 결제 템플릿의 셈을 읽어야 한다.
-	return (bool) apply_filters( 'duckhoo_kill_auto_discount', false );
+	if ( ! apply_filters( 'duckhoo_kill_auto_discount', true ) ) {
+		return false;
+	}
+	return ! template_recomputes();
 }
+
+/**
+ * 아직 못 끄고 있으면 관리자에게 왜인지 말해 준다. 조용히 안 되는 것이 제일 나쁘다.
+ *
+ * @return void
+ */
+function admin_notice(): void {
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( ! apply_filters( 'duckhoo_kill_auto_discount', true ) || ! template_recomputes() ) {
+		return;
+	}
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	// 아무 화면에나 띄우지 않는다 — 상거래 · 도구 쪽에서만.
+	if ( $screen && ! preg_match( '/woocommerce|tools|dashboard|plugins/i', (string) $screen->id ) ) {
+		return;
+	}
+	echo '<div class="notice notice-warning"><p><b>금액대별 자동 할인이 아직 꺼지지 않았습니다.</b> '
+		. '테마 결제 화면(<code>woocommerce/checkout/form-checkout.php</code>)이 fee 를 무시하고 '
+		. '할인을 스스로 다시 계산합니다 — 「표시 안정화: fee 목록 대신 직접 구간 계산」 블록입니다. '
+		. '그 블록을 지우시면 <b>자동으로</b> 꺼집니다. 지금 끄면 결제 화면 금액이 장바구니와 갈립니다.</p></div>';
+}
+add_action( 'admin_notices', __NAMESPACE__ . '\\admin_notice' );
 
 /**
  * 이 콜백의 원본 코드에 이 글자가 있는가.

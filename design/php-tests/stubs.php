@@ -214,3 +214,28 @@ if(!function_exists('remove_query_arg')) { function remove_query_arg($k,$u){ ret
 if(!function_exists('sanitize_text_field')) { function sanitize_text_field($v){ return trim((string)$v); } }
 
 if(!function_exists('is_checkout')) { function is_checkout(){ return (bool)($GLOBALS['__is_checkout'] ?? false); } }
+
+
+/* ── 테마 결제 템플릿 검사 스텁 ──────────────────────────────────────────
+   discount.php 는 그 파일을 읽어 「스스로 다시 계산하는가」를 본다.
+   테스트에서는 $GLOBALS['__tier_recalc'] 로 그 답을 정한다. */
+if(!function_exists('get_theme_root')) { function get_theme_root(){ return sys_get_temp_dir().'/dhr-themes'; } }
+if(!function_exists('get_template')) { function get_template(){ return 'fake'; } }
+if(!function_exists('get_current_screen')) { function get_current_screen(){ return null; } }
+if(!function_exists('current_user_can')) { function current_user_can($c){ return false; } }
+if(!defined('DAY_IN_SECONDS')) { define('DAY_IN_SECONDS', 86400); }
+(function(){
+  $dir = sys_get_temp_dir().'/dhr-themes/fake/woocommerce/checkout';
+  @mkdir($dir, 0777, true);
+  $GLOBALS['__tier_file'] = $dir.'/form-checkout.php';
+})();
+function dhr_set_tier_recalc(bool $on): void {
+  file_put_contents($GLOBALS['__tier_file'], $on ? "<?php \$wd_tier_base = 0;" : "<?php // fee 합산만 한다");
+  /* template_recomputes() 는 mtime 으로 캐시 키를 만들고 static 으로 기억한다.
+     테스트는 같은 초 안에 파일을 두 번 쓰므로 mtime 을 손으로 벌려 줘야
+     키가 달라져 그 기억을 지나친다 (실제 사이트에서는 저절로 달라진다). */
+  static $n = 0;
+  touch($GLOBALS['__tier_file'], time() + ( ++$n * 60 ));
+  clearstatcache(true, $GLOBALS['__tier_file']);
+  $GLOBALS['__transients'] = [];
+}
