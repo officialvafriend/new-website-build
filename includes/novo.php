@@ -474,6 +474,30 @@ function add_tally( array $a, array $b ): array {
 }
 
 /**
+ * 지금까지 쓴 양을 **어디서 왔는지 나눠서** 돌려준다.
+ *
+ * 거절 안내가 「20병입니다」 처럼 합계만 말하면 손님은 무엇을 해야 할지 알 수 없다.
+ * 오늘 이미 주문한 몫과 지금 장바구니에 있는 몫은 할 일이 다르다 — 앞의 것은
+ * 내일까지 기다려야 하고, 뒤의 것은 지금 빼면 된다.
+ *
+ * @param string $line     라인.
+ * @param string $skip_key 빼고 셀 장바구니 줄.
+ * @return array{ordered:int,cart:int}
+ */
+function counts( string $line = '', string $skip_key = '' ): array {
+	$uid  = function_exists( 'get_current_user_id' ) ? (int) get_current_user_id() : 0;
+	$pick = static function ( array $tally ) use ( $line ): int {
+		return 'line' === (string) config()['scope'] && '' !== $line
+			? (int) ( $tally[ $line ] ?? 0 )
+			: (int) array_sum( $tally );
+	};
+	return array(
+		'ordered' => $pick( tally_orders( $uid ) ),
+		'cart'    => $pick( tally_cart( $skip_key ) ),
+	);
+}
+
+/**
  * 지금까지 쓴 양 — 오늘 주문 + 장바구니. scope 에 따라 합계 또는 라인별.
  *
  * @param string $line     라인.
@@ -481,11 +505,8 @@ function add_tally( array $a, array $b ): array {
  * @return int
  */
 function used_now( string $line = '', string $skip_key = '' ): int {
-	$uid   = function_exists( 'get_current_user_id' ) ? (int) get_current_user_id() : 0;
-	$tally = add_tally( tally_orders( $uid ), tally_cart( $skip_key ) );
-	return 'line' === (string) config()['scope'] && '' !== $line
-		? (int) ( $tally[ $line ] ?? 0 )
-		: (int) array_sum( $tally );
+	$c = counts( $line, $skip_key );
+	return $c['ordered'] + $c['cart'];
 }
 
 /**
@@ -549,21 +570,109 @@ function rule(): string {
 }
 
 /**
- * 한도를 넘었을 때 손님에게 하는 말.
+ * 1~5 는 한글 수관형사로 — 「1 세트」보다 「한 세트」가 읽힌다.
  *
- * @param int $left 더 담을 수 있는 병 수.
- * @param int $need 담으려는 병 수.
+ * @param int $n 수.
  * @return string
  */
-function over_message( int $left, int $need = 0 ): string {
-	if ( $left <= 0 ) {
-		return rule() . ' 오늘 살 수 있는 수량을 이미 다 담으셨습니다. 내일 다시 담아 주세요.';
-	}
-	return rule() . sprintf(
-		' 오늘 %d병까지 더 담을 수 있습니다%s.',
-		$left,
-		$need > 0 ? sprintf( ' (담으려던 것은 %d병)', $need ) : ''
+function nword( int $n ): string {
+	$w = array(
+		1 => '한',
+		2 => '두',
+		3 => '세',
+		4 => '네',
+		5 => '다섯',
 	);
+	return $w[ $n ] ?? (string) $n;
+}
+
+/**
+ * 병 수를 세트 수로. 묶음만 세는 지금 설정에서는 한 세트가 곧 하루치다.
+ *
+ * @param int $bottles 값을 치르는 병 수.
+ * @return int
+ */
+function sets_of( int $bottles ): int {
+	$lim = max( 1, limit() );
+	return (int) ceil( $bottles / $lim );
+}
+
+/**
+ * 한도를 넘었을 때 손님에게 하는 말.
+ *
+ * **합계만 말하지 않는다.** 「지금 20병입니다」 는 맞는 말이지만 손님이 할 일을
+ * 알려 주지 않는다 — 10+1 을 산 사람은 병을 22개 받았으므로 20이라는 숫자도 낯설다.
+ * 오늘 이미 주문한 몫(내일까지 기다려야 한다)과 장바구니에 있는 몫(지금 빼면 된다)을
+ * 나눠 말하고, 마지막에 무엇을 하면 되는지로 끝낸다.
+ *
+ * @param int $ordered 오늘 이미 주문한 병 수.
+ * @param int $in_cart 지금 장바구니에 있는 병 수.
+ * @param int $adding  지금 담으려는 병 수 (담기 단계에서만).
+ * @return string
+ */
+function over_text( int $ordered, int $in_cart, int $adding = 0 ): string {
+	$lim = limit();
+
+	// 묶음만 세는 설정 — **세트로 말한다.** 손님이 고른 단위가 세트다.
+	if ( empty( config()['singles'] ) ) {
+		$head = '노보 10+1 묶음은 한 분당 하루 한 세트까지 사실 수 있습니다.';
+		$tail = ' (낱병은 제한 없습니다.)';
+
+		if ( $ordered > 0 && $in_cart > 0 ) {
+			return $head . sprintf(
+				' 오늘 이미 %s 세트를 주문하셨어요. 장바구니에서 노보 묶음을 빼시면 나머지 상품은 그대로 주문하실 수 있고, 노보는 내일 다시 주문해 주세요.%s',
+				nword( sets_of( $ordered ) ),
+				$tail
+			);
+		}
+		if ( $ordered > 0 ) {
+			return $head . sprintf(
+				' 오늘 이미 %s 세트를 주문하셨어요. 내일 다시 주문해 주세요.%s',
+				nword( sets_of( $ordered ) ),
+				$tail
+			);
+		}
+		if ( $adding > 0 && $in_cart <= 0 ) {
+			return $head . sprintf( ' 한 번에 %s 세트는 담을 수 없어요.%s', nword( sets_of( $adding ) ), $tail );
+		}
+		return $head . sprintf(
+			' 지금 장바구니에 %s 세트가 담겨 있어요. 한 세트만 남기고 빼 주세요.%s',
+			nword( sets_of( $in_cart + $adding ) ),
+			$tail
+		);
+	}
+
+	// 낱병까지 세는 설정 — 병으로 말한다.
+	$head = sprintf( '노보 액상은 한 분당 하루 %d병까지 사실 수 있습니다 (10+1 묶음은 한 세트가 하루치이고, 사은품 1병은 세지 않습니다).', $lim );
+
+	if ( $ordered >= $lim ) {
+		return $head . sprintf(
+			' 오늘 이미 %d병을 주문하셔서 남은 수량이 없어요.%s 내일 다시 주문해 주세요.',
+			$ordered,
+			$in_cart > 0 ? ' 장바구니에서 노보 상품을 빼시면 나머지 상품은 그대로 주문하실 수 있습니다.' : ''
+		);
+	}
+	if ( $ordered > 0 ) {
+		return $head . sprintf(
+			' 오늘 이미 %d병을 주문하셨어요. 오늘 더 사실 수 있는 것은 %d병인데 지금 %d병을 담으셨습니다.',
+			$ordered,
+			$lim - $ordered,
+			$in_cart + $adding
+		);
+	}
+	return $head . sprintf( ' 지금 %d병을 담으셨어요. %d병으로 줄여 주세요.', $in_cart + $adding, $lim );
+}
+
+/**
+ * 담기 단계의 거절 안내.
+ *
+ * @param int    $adding 담으려는 병 수.
+ * @param string $line   라인.
+ * @return string
+ */
+function over_message( int $adding = 0, string $line = '' ): string {
+	$c = counts( $line );
+	return over_text( $c['ordered'], $c['cart'], $adding );
 }
 
 /**
@@ -589,7 +698,7 @@ function validate_add( $passed, $pid = 0, $qty = 1 ): bool {
 	$left = left( line( $p ) );
 	if ( $need > $left ) {
 		if ( function_exists( 'wc_add_notice' ) ) {
-			wc_add_notice( over_message( $left, $need ), 'error' );
+			wc_add_notice( over_message( $need, line( $p ) ), 'error' );
 		}
 		return false;
 	}
@@ -610,17 +719,17 @@ function over_messages(): array {
 
 	if ( 'line' === (string) config()['scope'] ) {
 		foreach ( config()['lines'] as $key => $meta ) {
-			$used = used_now( (string) $key );
-			if ( $used > $lim ) {
-				$out[] = sprintf( '%s 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', (string) $meta['label'], $lim, $used );
+			$c = counts( (string) $key );
+			if ( $c['ordered'] + $c['cart'] > $lim ) {
+				$out[] = (string) $meta['label'] . ' — ' . over_text( $c['ordered'], $c['cart'] );
 			}
 		}
 		return $out;
 	}
 
-	$used = used_now();
-	if ( $used > $lim ) {
-		$out[] = sprintf( '노보 액상이 하루 한도(%d병)를 넘었습니다. 지금 %d병입니다. 수량을 줄여 주세요.', $lim, $used );
+	$c = counts();
+	if ( $c['ordered'] + $c['cart'] > $lim ) {
+		$out[] = over_text( $c['ordered'], $c['cart'] );
 	}
 	return $out;
 }

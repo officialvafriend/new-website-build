@@ -326,7 +326,7 @@ $ok(($N.'store_max')(9999, $plain, null) === 9999, '어느 줄인지 모르면 �
 $ok(($N.'store_max')(3, $plain, ['key' => 'abc']) === 3, '재고가 더 적으면 그쪽이 이긴다');
 // 주문 만들기 직전
 $GLOBALS['__cart']->items = ['abc' => ['data' => $plain, 'quantity' => 11]];
-$threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = str_contains($e->getMessage(), '하루 한도'); }
+$threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = str_contains($e->getMessage(), '하루 10병까지'); }
 $ok($threw, '한도를 넘은 장바구니는 주문이 만들어지지 않는다');
 $GLOBALS['__cart']->items = ['abc' => ['data' => $plain, 'quantity' => 10]];
 $threw = false; try { ($N.'guard_order')(); } catch (\Throwable $e) { $threw = true; }
@@ -518,6 +518,23 @@ $ok(($N.'validate_add')(true, 238, 20) === true, '묶음을 담은 뒤에도 낱
 $GLOBALS['__cart']->items = [];
 $ok(str_contains(apply_filters('duckhoo_card_extra', '', $lowst), '하루') === false, '낱병 카드에는 한도 문구가 없다');
 $ok(str_contains(($N.'rule')(), '낱병은 제한이 없습니다'), '안내가 낱병은 제한이 없다고 말한다');
+
+// 거절 안내는 합계만 말하지 않는다 — 오늘 주문한 것과 장바구니를 나눠 말하고 할 일로 끝낸다
+$T = $N.'over_text';
+$m = $T(10, 11);            // 오늘 한 세트 주문 + 장바구니에 한 세트
+$ok(str_contains($m,'오늘 이미 한 세트를 주문하셨어요'), '오늘 주문한 몫을 세트로 말한다');
+$ok(str_contains($m,'장바구니에서 노보 묶음을 빼시면'), '장바구니 몫은 지금 빼면 된다고 말한다');
+$ok(str_contains($m,'내일 다시 주문해 주세요'), '언제 다시 살 수 있는지 말한다');
+$ok(!str_contains($m,'20병') && !str_contains($m,'수량을 줄여 주세요'), '합계 병 수로 말하지 않는다');
+$m = $T(10, 0);
+$ok(str_contains($m,'오늘 이미 한 세트를 주문하셨어요') && !str_contains($m,'장바구니'), '장바구니가 비었으면 그 말은 하지 않는다');
+$m = $T(0, 20);
+$ok(str_contains($m,'장바구니에 두 세트가 담겨 있어요') && str_contains($m,'한 세트만 남기고'), '장바구니에만 있으면 빼라고 말한다');
+$m = $T(0, 0, 20);
+$ok(str_contains($m,'한 번에 두 세트는 담을 수 없어요'), '한 번에 두 세트를 담으려 하면 그렇게 말한다');
+$ok(str_contains($T(10, 11),'낱병은 제한 없습니다'), '낱병은 살 수 있다고 알려 준다');
+$ok(($N.'nword')(1) === '한' && ($N.'nword')(2) === '두' && ($N.'nword')(9) === '9', '1~5 는 한글 수관형사로 쓴다');
+$ok(($N.'sets_of')(10) === 1 && ($N.'sets_of')(20) === 2, '병 수를 세트 수로 센다');
 
 // 41-h. 취소한 주문은 어떤 상태 이름이든 한도를 놓아 준다
 $singlesOn();
