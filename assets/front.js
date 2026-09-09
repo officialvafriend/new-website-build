@@ -1035,36 +1035,56 @@
   }, true);
 })();
 
-/* 홈 맨 위 검은 공지 띠 (#wd-top-announce) — 사장님 Code Snippets 가 `document.body`
-   맨 앞에 끼워 넣는다. 그 파일은 건드리지 않고 **글자만** 우리가 정한다
-   (#pop6 · #dh-agegate2 와 같은 방식).
+/* 홈 맨 위 검은 공지 띠 (#wd-top-announce) — 사장님 Code Snippets **두 개**가 만든다.
+   그 파일들은 건드리지 않고 글자만 우리가 정한다 (#pop6 · #dh-agegate2 와 같은 방식).
 
    2026-09-09: 자동 할인을 껐는데 띠는 「9월 특가 진행 중 — 10만원 이상 10,000원
    자동 할인!」 이라고 그대로 말하고 있었다. 없는 혜택을 믿고 담은 손님은 결제
    화면에서 배신당한다.
 
-   띠는 우리 스크립트보다 뒤에 만들어질 수 있어 세 번 본다 — 지금 · DOM 이 다
-   그려진 뒤 · load. 그래도 놓칠 수 있어 body 를 잠깐(8초) 지켜본다.
-   그 동안 CSS(body.dhr-ann)가 띠를 감춰 둔다 — 옛 문구가 한 번 번쩍이면 그것도 광고다. */
+   **스니펫이 둘이라 한 번 써 놓고 끝내면 안 된다.**
+     A. 띠를 만든다 (`injectAnnounceBar`, DOMContentLoaded, 8월 문구)
+     B. 그 띠를 자기 문구로 덮어쓴다 (`dhfPatchTopBar`, 9월 문구) — **body 변화마다**
+        다시 돈다 (`MutationObserver(subtree:true)`). 이미 고친 것은 `data-dhf="1"` 로 가른다
+   그래서 (1) 우리가 먼저 `data-dhf="1"` 을 찍어 B 가 지나가게 하고,
+   (2) 그래도 덮이면 띠 자신을 8초간 지켜보다 도로 우리 글자로 되돌린다.
+
+   띠는 우리 스크립트보다 뒤에 만들어지므로 지금 · DOMContentLoaded · load 세 번 보고,
+   그래도 놓치면 body 를 지켜본다. 그 동안 CSS(body.dhr-ann)가 띠를 감춰 둔다 —
+   옛 문구가 한 번 번쩍이면 그것도 광고다. */
 (function(){
   var C = window.DHR || {};
   if(!C.takeAnnounce) return;
+  var seen = null, watching = false;
+
+  function write(bar){
+    if(!C.announce){ bar.hidden = true; bar.style.display = 'none'; return; }
+    if(bar.textContent === C.announce) return;
+    bar.textContent = C.announce;   /* 스니펫이 넣은 <strong> 까지 통째로 갈아 끼운다 */
+  }
 
   function apply(){
     var bar = document.getElementById('wd-top-announce');
     if(!bar) return false;
-    if(bar.dataset.dhrAnn) return true;
+    /* B 스니펫의 「이미 고쳤다」 표시를 우리가 먼저 찍는다 — 그러면 지나간다 */
+    bar.setAttribute('data-dhf', '1');
     bar.dataset.dhrAnn = '1';
-    if(!C.announce){ bar.hidden = true; bar.style.display = 'none'; return true; }
-    bar.textContent = C.announce;   /* 스니펫이 넣은 <strong> 까지 통째로 갈아 끼운다 */
+    write(bar);
+
+    if(!watching && bar !== seen){
+      seen = bar; watching = true;
+      var mo = new MutationObserver(function(){ write(bar); });
+      mo.observe(bar, {childList: true, characterData: true, subtree: true});
+      setTimeout(function(){ mo.disconnect(); watching = false; }, 8000);
+    }
     return true;
   }
 
   if(!apply()){
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     addEventListener('load', apply);
-    var mo = new MutationObserver(function(){ if(apply()) mo.disconnect(); });
-    mo.observe(document.body, {childList: true});
-    setTimeout(function(){ mo.disconnect(); }, 8000);
+    var body = new MutationObserver(function(){ if(apply()) body.disconnect(); });
+    body.observe(document.body, {childList: true});
+    setTimeout(function(){ body.disconnect(); }, 8000);
   }
 })();

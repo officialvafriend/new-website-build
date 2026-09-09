@@ -890,9 +890,14 @@ mtime · 크기가 들어가 테마가 바뀌면 다시 만든다.
 자동 할인을 껐는데 띠는 **「9월 특가 진행 중 — 10만원 이상 구매 시 10,000원 자동 할인!」**
 이라고 그대로 말하고 있었다. 없는 혜택을 믿고 담은 손님은 결제 화면에서 배신당한다.
 
-- 그 띠(`#wd-top-announce`)는 사장님 Code Snippets 가 `wp_footer` 에서 JS 로
-  `document.body` 맨 앞에 끼워 넣는다. **스니펫 파일은 건드리지 않는다** —
-  `#pop6` · `#dh-agegate2` 와 같은 방식으로 **글자만** `front.js` 가 갈아 끼운다
+- 그 띠(`#wd-top-announce`)는 사장님 Code Snippets **두 개**가 만든다. **파일은 건드리지
+  않는다** — `#pop6` · `#dh-agegate2` 와 같은 방식으로 **글자만** `front.js` 가 갈아 끼운다
+  - **A** `injectAnnounceBar` — 띠를 만든다 (DOMContentLoaded, 아직 8월 문구가 들어 있다)
+  - **B** `dhfPatchTopBar` — 그 띠를 9월 문구로 **덮어쓴다.** `MutationObserver(subtree:true)`
+    라 body 가 바뀔 때마다 다시 돈다. 이미 고친 것은 `data-dhf="1"` 로 가른다
+  - 그래서 **한 번 써 놓고 끝내면 안 된다.** 우리가 먼저 `data-dhf="1"` 을 찍어 B 가
+    지나가게 하고, 그래도 덮이면 띠 자신을 8초간 지켜보다 되돌린다 (처음엔 이걸 놓쳐
+    배포하고도 화면은 그대로였다)
 - 문구는 `Front\announce()` (필터 `duckhoo_announce`). 지금은
   `9월 금액 자동 할인 이벤트가 조기 종료되었습니다. 그동안 이용해 주셔서 감사합니다.`
   **빈 문자열이면 띠 자체를 없앤다.** 스니펫 글자를 그대로 두려면 `duckhoo_take_announce` 를 false 로
