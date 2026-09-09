@@ -184,6 +184,32 @@ function can_return(): bool {
 }
 
 /**
+ * 적립금을 **더하거나 뺀다** — 잔액과 원장을 같이.
+ *
+ * 취소 반환(`return_points()`)이 쓰던 두 줄을 밖으로 뺀 것이다. 사진 후기 적립도
+ * 같은 길로 지나가야 정산이 어긋나지 않는다. 회원 메타에 숫자만 더하면 원장에 없는
+ * 돈이 생긴다.
+ *
+ * @param int    $uid    회원 ID.
+ * @param int    $amount 더할 금액 (음수면 뺀다).
+ * @param string $label  원장에 남길 사유.
+ * @return bool 실제로 건드렸는가.
+ */
+function grant( int $uid, int $amount, string $label ): bool {
+	if ( $uid <= 0 || 0 === $amount || ! can_return() ) {
+		return false;
+	}
+	$before = (int) get_user_meta( $uid, '_keyple_points', true );
+	$after  = max( 0, $before + $amount );
+	if ( $after === $before ) {
+		return false; // 뺄 것이 없다 — 잔액을 음수로 만들지 않는다.
+	}
+	update_user_meta( $uid, '_keyple_points', $after );
+	wd_log_keyple_points_change( $uid, $after - $before, $label );
+	return true;
+}
+
+/**
  * 우리가 취소 가능 목록에 더한 상태들. 본체가 없으면 입금전(on-hold) 하나로 본다.
  *
  * @return string[]

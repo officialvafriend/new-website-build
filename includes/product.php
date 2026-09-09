@@ -285,9 +285,43 @@ function reviews(): void {
 		<div class="sec-h">
 			<h2>상품 후기<?php echo $n ? ' <span class="dhp-rev__n n">' . esc_html( number_format_i18n( $n ) ) . '</span>' : ''; // phpcs:ignore ?></h2>
 		</div>
-		<?php comments_template(); ?>
+		<?php echo with_uploads( render_reviews() ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 	</section>
 	<?php
+}
+
+/**
+ * 워드커머스의 후기 화면을 글자로 받는다.
+ *
+ * @return string
+ */
+function render_reviews(): string {
+	ob_start();
+	comments_template();
+	return (string) ob_get_clean();
+}
+
+/**
+ * 후기 폼이 **파일을 보낼 수 있게** 한다.
+ *
+ * `comment_form()` 은 `<form>` 을 직접 찍고 `enctype` 을 넣을 필터를 주지 않는다.
+ * 그렇다고 JS 로 붙이면 스크립트가 늦거나 죽었을 때 사진이 조용히 사라진다 — 손님은
+ * 올렸다고 믿고 적립금을 기다린다. 그래서 **우리가 그린 글자에서** 그 한 칸만 채운다.
+ * 이미 있으면 그대로 둔다.
+ *
+ * @param string $html 후기 화면.
+ * @return string
+ */
+function with_uploads( string $html ): string {
+	if ( false !== strpos( $html, 'enctype' ) ) {
+		return $html;
+	}
+	return (string) preg_replace(
+		'/(<form\b[^>]*\bid=["\']commentform["\'])/i',
+		'$1 enctype="multipart/form-data"',
+		$html,
+		1
+	);
 }
 
 /**

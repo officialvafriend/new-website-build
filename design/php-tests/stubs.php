@@ -269,3 +269,37 @@ if(!function_exists('wc_customer_bought_product')) {
 }
 if(!function_exists('wp_die')) { function wp_die($m='',$t='',$a=[]){ throw new \RuntimeException('wp_die: '.$m); } }
 $GLOBALS['__bought'] = [];
+
+/* ── 사진 후기 스텁 ─────────────────────────────────────────────────────── */
+if(!class_exists('WP_Comment')) {
+  class WP_Comment {
+    public $comment_ID=0, $comment_post_ID=0, $comment_type='review', $comment_approved='1', $user_id=0;
+    function __construct($a=[]){ foreach($a as $k=>$v) $this->$k=$v; }
+  }
+}
+$GLOBALS['__comments'] = [];      // id => WP_Comment
+$GLOBALS['__cmeta'] = [];         // id => [key => value]
+$GLOBALS['__titles'] = [];        // post id => 제목
+if(!function_exists('get_comment')) { function get_comment($id=0){ return $GLOBALS['__comments'][(int)$id] ?? null; } }
+if(!function_exists('get_comment_meta')) { function get_comment_meta($id,$k='',$single=false){ $v=$GLOBALS['__cmeta'][(int)$id][$k] ?? ''; return $single?$v:($v===''?[]:[$v]); } }
+if(!function_exists('update_comment_meta')) { function update_comment_meta($id,$k,$v){ $GLOBALS['__cmeta'][(int)$id][$k]=$v; return true; } }
+if(!function_exists('add_comment_meta')) { function add_comment_meta($id,$k,$v,$u=false){ $GLOBALS['__cmeta'][(int)$id][$k]=$v; return true; } }
+if(!function_exists('delete_comment_meta')) { function delete_comment_meta($id,$k){ unset($GLOBALS['__cmeta'][(int)$id][$k]); return true; } }
+if(!function_exists('get_comments')) {
+  function get_comments($args=[]){
+    $out=[];
+    foreach($GLOBALS['__comments'] as $id=>$c){
+      if((int)$c->comment_post_ID !== (int)($args['post_id']??0)) continue;
+      if((int)$c->user_id !== (int)($args['user_id']??0)) continue;
+      $out[]=$id;
+    }
+    return $out;
+  }
+}
+if(!function_exists('get_the_title')) { function get_the_title($id=0){ return $GLOBALS['__titles'][(int)$id] ?? '상품'; } }
+if(!function_exists('get_comments_number')) { function get_comments_number($id=0){ return 0; } }
+if(!function_exists('comments_open')) { function comments_open($id=0){ return true; } }
+if(!function_exists('comments_template')) { function comments_template(){ echo ''; } }
+if(!function_exists('wp_get_attachment_image_url')) { function wp_get_attachment_image_url($id,$s=''){ return 'https://duck-hoo.com/i/'.$id.'.jpg'; } }
+if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image($id,$s='',$icon=false,$attr=[]){ return '<img src="https://duck-hoo.com/i/'.$id.'.jpg">'; } }
+if(!function_exists('is_wp_error')) { function is_wp_error($t){ return false; } }

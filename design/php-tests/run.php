@@ -624,5 +624,79 @@ $ok(($N.'validate_add')(true, 238, 99) === true, '이벤트를 끄면 막지 않
 $GLOBALS['__filters']['duckhoo_novo_event'] = [];
 $GLOBALS['__cart']->items = [];
 
+
+/* ── 사진 후기 적립 (includes/review-photos.php) ────────────────────────── */
+$V  = 'Duckhoo\\Redesign\\ReviewPhotos\\';
+$PT = 'Duckhoo\\Redesign\\Points\\';
+$R2 = 'Duckhoo\\Redesign\\Product\\';
+$GLOBALS['__keyple_on'] = true;
+$GLOBALS['__ledger'] = [];
+$GLOBALS['__titles'][7] = '[노보] 데저트';
+
+$ok(($V.'reward')() === 1000, '사진 후기 적립금은 1,000원');
+$ok(($V.'max_photos')() === 3, '한 후기에 사진 3장까지');
+
+// 폼이 파일을 보낼 수 있어야 한다 — enctype 이 없으면 사진이 조용히 사라진다
+$form = '<form action="/x" method="post" id="commentform" class="comment-form">…</form>';
+$ok(str_contains(($R2.'with_uploads')($form), 'enctype="multipart/form-data"'), '후기 폼에 enctype 을 채운다');
+$ok(substr_count(($R2.'with_uploads')($form), 'enctype') === 1, '한 번만 채운다');
+$done = str_replace('id="commentform"', 'id="commentform" enctype="multipart/form-data"', $form);
+$ok(($R2.'with_uploads')($done) === $done, '이미 있으면 그대로 둔다');
+
+$ok(str_contains(($V.'form_field')('<textarea></textarea>'), '1,000원'), '폼이 적립금 액수를 말한다');
+$ok(str_contains(($V.'form_field')(''), 'name="dhr_review_photos[]"'), '파일칸이 붙는다');
+
+$mk = function(array $a) { $GLOBALS['__comments'][(int)$a['comment_ID']] = new WP_Comment($a); };
+$GLOBALS['__usermeta'][900] = ['_keyple_points' => '0'];
+
+$mk(['comment_ID'=>11,'comment_post_ID'=>7,'user_id'=>900,'comment_approved'=>'0']);
+$GLOBALS['__cmeta'][11]['_dhr_photos'] = [5];
+$ok(($V.'maybe_pay')(11) === 0, '승인 전에는 주지 않는다');
+
+$mk(['comment_ID'=>12,'comment_post_ID'=>7,'user_id'=>900,'comment_approved'=>'1']);
+$ok(($V.'maybe_pay')(12) === 0, '사진이 없으면 주지 않는다');
+
+$mk(['comment_ID'=>13,'comment_post_ID'=>7,'user_id'=>0,'comment_approved'=>'1']);
+$GLOBALS['__cmeta'][13]['_dhr_photos'] = [5];
+$ok(($V.'maybe_pay')(13) === 0, '비회원에게는 주지 않는다');
+
+$GLOBALS['__comments'] = [];
+$mk(['comment_ID'=>14,'comment_post_ID'=>7,'user_id'=>900,'comment_approved'=>'1']);
+$GLOBALS['__cmeta'][14]['_dhr_photos'] = [5,6];
+$ok(($V.'maybe_pay')(14) === 1000, '승인된 사진 후기에 1,000원을 준다');
+$ok((int)$GLOBALS['__usermeta'][900]['_keyple_points'] === 1000, '잔액이 늘었다');
+$ok(count($GLOBALS['__ledger']) === 1 && str_contains((string)($GLOBALS['__ledger'][0][2] ?? ''), '사진 후기 적립'), '원장에도 한 줄 남는다');
+$ok(($V.'maybe_pay')(14) === 0, '같은 후기에 두 번 주지 않는다');
+
+$mk(['comment_ID'=>15,'comment_post_ID'=>7,'user_id'=>900,'comment_approved'=>'1']);
+$GLOBALS['__cmeta'][15]['_dhr_photos'] = [7];
+$ok(($V.'maybe_pay')(15) === 0, '같은 상품에서는 한 번만 준다');
+
+$ok(($V.'take_back')(14) === 1000, '승인을 내리면 도로 가져간다');
+$ok((int)$GLOBALS['__usermeta'][900]['_keyple_points'] === 0, '잔액이 제자리로');
+$ok(($V.'take_back')(14) === 0, '두 번 가져가지 않는다');
+$ok(($V.'maybe_pay')(15) === 1000, '가져간 뒤에는 다른 후기에 줄 수 있다');
+
+$GLOBALS['__usermeta'][901] = ['_keyple_points' => '300'];
+$ok(($PT.'grant')(901, -1000, '시험') === true && (int)$GLOBALS['__usermeta'][901]['_keyple_points'] === 0, '잔액은 0 아래로 내려가지 않는다');
+
+$ok(($V.'is_photo')(['tmp_name'=>'','error'=>0,'size'=>10]) === false, '파일이 없으면 받지 않는다');
+$ok(($V.'is_photo')(['tmp_name'=>'/x','error'=>0,'size'=>99*1024*1024]) === false, '너무 크면 받지 않는다');
+$ok(count(($V.'spread')(['name'=>['a.jpg','b.jpg'],'type'=>['image/jpeg','image/jpeg'],'tmp_name'=>['/a','/b'],'error'=>[0,0],'size'=>[1,2]])) === 2, '여러 장을 한 장씩 편다');
+
+// 사진이 붙은 후기는 사람이 볼 때까지 세워 둔다 — 안 그러면 아무도 안 본 채 돈이 나간다
+$_FILES['dhr_review_photos'] = ['name'=>['a.jpg'],'type'=>['image/jpeg'],'tmp_name'=>['/a'],'error'=>[0],'size'=>[10]];
+$ok(($V.'hold_for_review')(1, ['comment_type'=>'review']) === 0, '사진 후기는 검토 대기로 잡는다');
+$ok(($V.'hold_for_review')(1, ['comment_type'=>'comment']) === 1, '상품 후기가 아니면 건드리지 않는다');
+$ok(($V.'hold_for_review')('spam', ['comment_type'=>'review']) === 'spam', '스팸 판정은 그대로 둔다');
+$_FILES['dhr_review_photos'] = ['name'=>[''],'type'=>[''],'tmp_name'=>[''],'error'=>[4],'size'=>[0]];
+$ok(($V.'hold_for_review')(1, ['comment_type'=>'review']) === 1, '사진이 없으면 그냥 지나간다');
+unset($_FILES['dhr_review_photos']);
+
+add_filter('duckhoo_photo_review_on', fn() => false);
+$ok(($V.'maybe_pay')(15) === 0 && ($V.'form_field')('X') === 'X', '필터로 끄면 아무것도 하지 않는다');
+$GLOBALS['__filters']['duckhoo_photo_review_on'] = [];
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
