@@ -51,7 +51,7 @@ const PEEK_COOK = 'dhr_disc_off';
  * @return string
  */
 function mode(): string {
-	$m = (string) apply_filters( 'duckhoo_auto_discount_mode', 'preview' );
+	$m = (string) apply_filters( 'duckhoo_auto_discount_mode', 'on' );
 	return in_array( $m, array( 'off', 'preview', 'on' ), true ) ? $m : 'off';
 }
 
