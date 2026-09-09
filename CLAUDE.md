@@ -945,6 +945,16 @@ mtime · 크기가 들어가 테마가 바뀌면 다시 만든다.
 - **폼을 감추는 것만으로는 모자란다.** 워드커머스는 안 산 사람에게 폼을 안 그릴 뿐이라
   주소만 알면 그대로 보낼 수 있다 — `preprocess_comment` 에서 **보내는 것도 막는다**
   (`guard_review()`). 상품 후기일 때만 보고, 관리자는 지나간다 (답글 · 정리)
+- **워드커머스는 이 가게의 주문을 「샀다」고 보지 않는다.** `wc_customer_bought_product()`
+  는 `wc_get_is_paid_statuses()` = `processing` · `completed` 만 센다. 그런데 이 가게는
+  입금전(on-hold) → 입금확인(payment-confirmed) → 배송준비중(ready-to-ship) →
+  배송완료(delivered) 로 흐르고 **그 중 어느 것도 그 목록에 없다.** 그대로 두면
+  「구매한 고객만」을 켜는 순간 **산 사람에게도 폼이 안 나온다** (실제로 그랬다 —
+  구매 이력이 있는 계정으로 확인).
+  `woocommerce_pre_customer_bought_product` 로 **후기 판정 하나만** 우리가 답한다 —
+  `woocommerce_order_is_paid_statuses` 를 넓히면 매출 · 정산 · 재고까지 따라 움직인다.
+  세는 상태는 `배송완료 · 완료 · processing` (필터 `duckhoo_review_bought_statuses`) —
+  **받은 사람만** 센다. 사진 후기를 쓰려면 물건이 손에 있어야 한다
 - 끄려면 `add_filter( 'duckhoo_reviews_verified_only', '__return_false' );`
 - **아직 안 켠 것**: `리뷰 승인 후 노출` (워드프레스 → 설정 → 토론). 사장님 판단
 

@@ -351,6 +351,87 @@ function force_verified( $value ) {
 add_filter( 'option_woocommerce_review_rating_verification_required', __NAMESPACE__ . '\\force_verified' );
 
 /**
+ * 이 가게에서 「샀다」고 볼 주문 상태.
+ *
+ * **워드커머스는 `processing` · `completed` 만 산 것으로 본다**
+ * (`wc_get_is_paid_statuses()`). 그런데 이 가게의 주문은 입금전(on-hold) →
+ * 입금확인(payment-confirmed) → 배송준비중(ready-to-ship) → 배송완료(delivered)
+ * 로 흐르고, **그 중 어느 것도 그 목록에 없다.** 그대로 두면 「구매한 고객만」을
+ * 켜는 순간 **아무도 후기를 못 쓴다** (실제로 그랬다).
+ *
+ * 받은 사람만 센다 — 배송완료 · 완료. 사진 후기를 쓰려면 물건이 손에 있어야 하고,
+ * 입금 전 주문으로 후기를 쓰는 것은 후기가 아니다.
+ *
+ * @return string[]
+ */
+function bought_statuses(): array {
+	return array_values( array_unique( array_map(
+		'strval',
+		(array) apply_filters(
+			'duckhoo_review_bought_statuses',
+			array( 'delivered', 'completed', 'processing' )
+		)
+	) ) );
+}
+
+/**
+ * 이 회원이 이 상품을 받은 적이 있는가.
+ *
+ * `woocommerce_order_is_paid_statuses` 를 통째로 넓히지 않는다 — 그것은 매출 ·
+ * 정산 · 재고까지 따라 움직이는 값이다. 후기 판정 하나만 우리가 답한다.
+ *
+ * @param null|bool $pre   여태 판정 (null 이면 워드커머스가 스스로 본다).
+ * @param string    $email 비회원 이메일.
+ * @param int       $uid   회원 ID.
+ * @param int       $pid   상품 ID.
+ * @return null|bool
+ */
+function bought( $pre, $email = '', $uid = 0, $pid = 0 ) {
+	if ( null !== $pre || ! verified_only() || ! function_exists( 'wc_get_orders' ) ) {
+		return $pre;
+	}
+	$uid = (int) $uid;
+	$pid = (int) $pid;
+	if ( $uid <= 0 || $pid <= 0 ) {
+		return false; // 비회원 — 이 가게는 비로그인 결제가 안 된다.
+	}
+
+	static $memo = array();
+	$key = $uid . ':' . $pid;
+	if ( isset( $memo[ $key ] ) ) {
+		return $memo[ $key ];
+	}
+
+	$orders = wc_get_orders(
+		array(
+			'customer_id' => $uid,
+			'status'      => bought_statuses(),
+			'limit'       => 50,
+			'return'      => 'objects',
+		)
+	);
+	$found = false;
+	foreach ( (array) $orders as $order ) {
+		if ( ! is_object( $order ) || ! method_exists( $order, 'get_items' ) ) {
+			continue;
+		}
+		foreach ( (array) $order->get_items() as $item ) {
+			if ( ! is_object( $item ) || ! method_exists( $item, 'get_product_id' ) ) {
+				continue;
+			}
+			if ( (int) $item->get_product_id() === $pid || (int) $item->get_variation_id() === $pid ) {
+				$found = true;
+				break 2;
+			}
+		}
+	}
+
+	$memo[ $key ] = $found;
+	return $found;
+}
+add_filter( 'woocommerce_pre_customer_bought_product', __NAMESPACE__ . '\\bought', 10, 4 );
+
+/**
  * 폼을 감추는 것만으로는 모자란다 — **보내는 것도 막는다.**
  *
  * 워드커머스는 안 산 사람에게 폼을 안 그릴 뿐이라, 주소만 알면 그대로 보낼 수 있다.

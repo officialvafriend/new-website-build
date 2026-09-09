@@ -684,6 +684,22 @@ $ok(($V.'is_photo')(['tmp_name'=>'','error'=>0,'size'=>10]) === false, '파일�
 $ok(($V.'is_photo')(['tmp_name'=>'/x','error'=>0,'size'=>99*1024*1024]) === false, '너무 크면 받지 않는다');
 $ok(count(($V.'spread')(['name'=>['a.jpg','b.jpg'],'type'=>['image/jpeg','image/jpeg'],'tmp_name'=>['/a','/b'],'error'=>[0,0],'size'=>[1,2]])) === 2, '여러 장을 한 장씩 편다');
 
+// 이 가게의 주문 상태는 워드커머스가 「샀다」고 보는 목록에 하나도 없다
+class DhrBoughtItem { public function __construct(public int $p=0){} public function get_product_id(){ return $this->p; } public function get_variation_id(){ return 0; } }
+class DhrBoughtOrder { public $status=''; public array $items=[];
+  public function __construct(string $st, array $pids){ $this->status=$st; $this->items=array_map(fn($p)=>new DhrBoughtItem($p), $pids); }
+  public function get_items(){ return $this->items; } }
+$ok(in_array('delivered', ($R2.'bought_statuses')(), true), '배송완료를 「샀다」로 센다');
+$ok(!in_array('on-hold', ($R2.'bought_statuses')(), true), '입금전은 아직 산 것이 아니다');
+$GLOBALS['__orders'] = [ new DhrBoughtOrder('delivered', [7, 9]) ];
+$ok(($R2.'bought')(null, '', 900, 7) === true, '배송완료 주문에 든 상품은 살 수 있다고 본다');
+$ok(($R2.'bought')(null, '', 900, 8) === false, '안 산 상품은 아니라고 한다');
+$ok(($R2.'bought')(null, '', 0, 7) === false, '비회원은 확인할 길이 없다');
+$ok(($R2.'bought')(true, '', 0, 7) === true, '이미 판정이 있으면 그대로 둔다');
+$GLOBALS['__orders'] = [ new DhrBoughtOrder('on-hold', [21]) ];
+$ok(($R2.'bought')(null, '', 901, 21) === false, '입금전 주문만 있으면 아직 아니다');
+$GLOBALS['__orders'] = [];
+
 // 사진이 붙은 후기는 사람이 볼 때까지 세워 둔다 — 안 그러면 아무도 안 본 채 돈이 나간다
 $_FILES['dhr_review_photos'] = ['name'=>['a.jpg'],'type'=>['image/jpeg'],'tmp_name'=>['/a'],'error'=>[0],'size'=>[10]];
 $ok(($V.'hold_for_review')(1, ['comment_type'=>'review']) === 0, '사진 후기는 검토 대기로 잡는다');
