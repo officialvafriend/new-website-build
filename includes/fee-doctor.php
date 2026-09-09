@@ -180,5 +180,28 @@ function screen(): void {
 	}
 	echo '</textarea>';
 
+	echo '<h2>3. 그 코드 원문</h2>';
+	echo '<p>찾은 자리는 <code>테마/functions.php:10669~10700</code> 다. 규칙을 그대로 읽어야 '
+		. '<b>같은 규칙에 노보만 빼서</b> 다시 지을 수 있다.</p>';
+	echo '<textarea readonly style="width:100%;height:420px;font-family:monospace;font-size:12px">';
+	foreach ( array(
+		array( get_theme_root() . '/' . get_template() . '/functions.php', 10655, 10710 ),
+		array( get_theme_root() . '/' . get_template() . '/functions.php', 1935, 1960 ),
+		array( get_theme_root() . '/' . get_template() . '/woocommerce/checkout/form-checkout.php', 128, 155 ),
+	) as $one ) {
+		list( $path, $from, $to ) = $one;
+		echo esc_textarea( '== ' . str_replace( WP_CONTENT_DIR, 'wp-content', $path ) . " {$from}~{$to} ==\n" );
+		if ( ! is_readable( $path ) ) {
+			echo esc_textarea( "  (읽을 수 없음)\n\n" );
+			continue;
+		}
+		$lines = file( $path );
+		for ( $i = $from - 1; $i < min( $to, count( $lines ) ); $i++ ) {
+			echo esc_textarea( sprintf( '%5d  %s', $i + 1, (string) $lines[ $i ] ) );
+		}
+		echo esc_textarea( "\n" );
+	}
+	echo '</textarea>';
+
 	echo '<p style="margin-top:1em;color:#616870">찾고 나면 이 화면은 지웁니다.</p></div>';
 }
