@@ -542,6 +542,9 @@ $ok(($N.'sets_of')(10) === 1 && ($N.'sets_of')(20) === 2, '병 수를 세트 수
 // 홈 공지 띠 — 이벤트가 끝났으면 「진행 중」이 떠 있으면 안 된다
 $ok(str_contains(($F.'announce')(), '조기 종료'), '공지 띠가 이벤트가 끝났다고 말한다');
 $ok(!str_contains(($F.'announce')(), '진행 중'), '「진행 중」이라고 말하지 않는다');
+$ok(str_contains(($F.'announce')(), '10만원 이상'), '손님이 본 이름 그대로 쓴다');
+$ok(str_contains(($F.'announce')(), '9월 9일'), '언제부터인지 적는다');
+$ok(!str_contains(($F.'announce')(), '그동안 이용해'), '가게가 문 닫는 것처럼 읽힐 말은 쓰지 않는다');
 $ok(($F.'take_announce')() === true, '기본으로 우리가 띠를 맡는다');
 $ok(in_array('dhr-ann', ($F.'announce_body_class')([]), true), '맡는 동안 몸통에 표시를 남긴다');
 add_filter('duckhoo_announce', fn() => '  새 문구  ');
