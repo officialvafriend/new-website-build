@@ -984,71 +984,29 @@ function discount_except( $ex ): string {
 	return '' === (string) $ex ? '노보 액상 제외' : $ex . ' · 노보 액상 제외';
 }
 
-/**
- * 이 수수료 줄이 금액대별 자동 할인인가.
- *
- * @param object $fee 수수료 줄.
- * @return bool
- */
-function is_auto_discount( $fee ): bool {
-	$name = (string) ( $fee->name ?? '' );
-	return (float) ( $fee->amount ?? 0 ) < 0
-		&& (bool) preg_match( (string) apply_filters( 'duckhoo_auto_discount_fee', '/자동\s*할인/u' ), $name );
-}
+/* ── 할인을 끄는 일은 스니펫 토글이어야 한다 (2026-09-09, 재 봤다) ──────────
+   사장님 요청으로 워드커머스 수수료 줄을 걷어내 봤다. **장바구니에 따라 갈린다.**
 
-/**
- * 금액대별 자동 할인을 **끈다**.
- *
- * 사장님 요청으로 할인 자체를 내리기 위한 것이다. 할인은 사장님 Code Snippets 가
- * 붙이므로 원래는 그 스니펫 토글을 끄는 것이 맞다 — 우리는 관리자가 아니라 그 토글을
- * 누를 수 없어서, 워드커머스가 쥔 수수료 줄을 걷어내는 쪽으로 대신한다.
- *
- * **끄기 전에 반드시 재 본다.** 노보만 담은 장바구니에서 이 줄을 걷어냈을 때 테마
- * 요약이 「총 주문금액 0원」이 된 적이 있다. 다른 상품에서도 같은지 확인해야 한다.
- *
- * 기본은 꺼짐(= 할인 그대로). 쿠키 `dhr_novo_nodisc=1` 이 있는 요청에서만 걷어낸다.
- *
- * @return void
- */
-function kill_discount(): void {
-	if ( ! excluding() || ! function_exists( 'WC' ) ) {
-		return;
-	}
-	$wc = WC();
-	if ( ! isset( $wc->cart ) || ! is_object( $wc->cart ) || ! method_exists( $wc->cart, 'fees_api' ) ) {
-		return;
-	}
-	$api  = $wc->cart->fees_api();
-	$fees = $api->get_fees();
-	if ( ! $fees ) {
-		return;
-	}
-	$keep    = array();
-	$dropped = false;
-	foreach ( $fees as $fee ) {
-		if ( is_auto_discount( $fee ) ) {
-			$dropped = true;
-			continue;
-		}
-		$keep[] = $fee;
-	}
-	if ( ! $dropped ) {
-		return;
-	}
-	$api->remove_all_fees();
-	foreach ( $keep as $fee ) {
-		$api->add_fee(
-			array(
-				'name'      => (string) $fee->name,
-				'amount'    => (float) $fee->amount,
-				'taxable'   => ! empty( $fee->taxable ),
-				'tax_class' => (string) ( $fee->tax_class ?? '' ),
-			)
-		);
-	}
-}
+   | 장바구니 | 할인 켬 | 할인 끔 |
+   |---|---|---|
+   | 펠릭스 2개 (정가 200,000 · 판매 178,000) | 168,000원 | **178,000원 ✅** |
+   | 조바 팟 (10,000 · 기준 미달) | 12,500원 | 12,500원 ✅ |
+   | 노보 낱병 10병 (135,000 · 할인 없는 상품) | 125,000원 | **0원 ❌** |
+
+   이유가 보인다. 수수료 줄을 걷어내도 결제 요약의 `쿠폰할인 -10,000원` 은 **그대로
+   남는다** — 그 줄은 서버가 아니라 사장님 스니펫의 JS 가 상품가격을 보고 스스로
+   그린다. 테마는 `할인 = 상품가격 − 총액 − 쿠폰할인` 으로 되짚는데,
+
+   - 펠릭스는 정가↔판매가 차이가 있어 22,000 → 12,000 으로 줄어 앞뒤가 맞는다
+   - 노보는 할인이 없어 `0 − 10,000 = -10,000` 이 되고, 음수에서 총액 셈이 무너진다
+     (같은 화면에 `배송비 + 2,500원` 이 함께 나타나는 것도 같은 증상이다)
+
+   즉 **서버의 줄과 스니펫의 JS 를 함께 꺼야 한다.** 그 둘은 한 스니펫에 있으므로
+   관리자 → Snippets 에서 그 스니펫의 On/Off 토글을 끄면 한 번에 끝난다.
+   우리가 한쪽만 끄면 반드시 어긋난다 — 그래서 여기에는 코드를 두지 않는다.
+
+   시도한 코드는 커밋 `84dbb33` 에 남아 있다. */
 
 if ( function_exists( 'add_action' ) ) {
 	add_filter( 'duckhoo_auto_discount_except', __NAMESPACE__ . '\\discount_except' );
-	add_action( 'woocommerce_cart_calculate_fees', __NAMESPACE__ . '\\kill_discount', PHP_INT_MAX );
 }
