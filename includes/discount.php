@@ -37,7 +37,11 @@ defined( 'ABSPATH' ) || exit;
  * @return bool
  */
 function killing(): bool {
-	return (bool) apply_filters( 'duckhoo_kill_auto_discount', true );
+	// **잠시 꺼 둔다.** 훅에서 떼는 것 자체는 됐다 — 펠릭스 178,000원 · 조바 12,500원 ·
+	// 장바구니 화면 모두 정상이었다. 그런데 **노보 장바구니만** 결제 요약이 0원이 됐고
+	// (`할인 - -10,000` · `쿠폰할인 - 10,000` 이 fee 없이도 남는다) 라이브 쇼핑몰이라
+	// 원인을 잡을 때까지 원래대로 둔다. 테마 결제 템플릿의 셈을 읽어야 한다.
+	return (bool) apply_filters( 'duckhoo_kill_auto_discount', false );
 }
 
 /**
