@@ -263,3 +263,9 @@ if(!function_exists('get_option')) { function get_option($k,$d=false){ return $G
 if(!function_exists('get_post_type')) { function get_post_type($id=0){ return $GLOBALS['__posttype'][$id] ?? 'post'; } }
 $GLOBALS['__options'] = [];
 $GLOBALS['__posttype'] = [];
+
+if(!function_exists('wc_customer_bought_product')) {
+  function wc_customer_bought_product($email,$uid,$pid){ return !empty($GLOBALS['__bought'][$uid][$pid]); }
+}
+if(!function_exists('wp_die')) { function wp_die($m='',$t='',$a=[]){ throw new \RuntimeException('wp_die: '.$m); } }
+$GLOBALS['__bought'] = [];

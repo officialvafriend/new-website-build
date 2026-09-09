@@ -549,6 +549,21 @@ $R = 'Duckhoo\\Redesign\\Product\\';
 $GLOBALS['__posttype'][7] = 'product';
 $GLOBALS['__posttype'][8] = 'page';
 $GLOBALS['__options']['woocommerce_enable_reviews'] = 'yes';
+
+// 후기는 그 상품을 산 사람만 — 폼을 감추는 것만이 아니라 보내는 것도 막는다
+$ok(($R.'verified_only')() === true, '기본으로 구매한 고객만 쓴다');
+$ok(($R.'force_verified')('no') === 'yes', '워드커머스 설정값을 우리가 정한다');
+$GLOBALS['__logged_in'] = 3;
+$GLOBALS['__bought'][3][7] = true;
+$ok(($R.'guard_review')(['comment_post_ID'=>7]) === ['comment_post_ID'=>7], '산 사람은 그대로 지나간다');
+$GLOBALS['__bought'][3][7] = false;
+$stopped = false; try { ($R.'guard_review')(['comment_post_ID'=>7]); } catch (\Throwable $e) { $stopped = str_contains($e->getMessage(),'구매하신 분만'); }
+$ok($stopped, '안 산 사람은 보내도 막힌다');
+$ok(($R.'guard_review')(['comment_post_ID'=>8]) === ['comment_post_ID'=>8], '상품이 아닌 글의 댓글은 건드리지 않는다');
+add_filter('duckhoo_reviews_verified_only', fn() => false);
+$ok(($R.'guard_review')(['comment_post_ID'=>7]) === ['comment_post_ID'=>7] && ($R.'force_verified')('no') === 'no', '필터로 끌 수 있다');
+$GLOBALS['__filters']['duckhoo_reviews_verified_only'] = [];
+$GLOBALS['__logged_in'] = 1;
 $ok(($R.'reviews_on')() === true, '워드커머스 리뷰 설정을 읽는다');
 $ok(($R.'open_reviews')(false, 7) === true, '댓글이 닫힌 상품도 리뷰는 연다');
 $ok(($R.'open_reviews')(false, 8) === false, '상품이 아니면 열지 않는다');

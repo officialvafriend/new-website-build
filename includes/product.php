@@ -289,3 +289,62 @@ function reviews(): void {
 	</section>
 	<?php
 }
+
+/**
+ * 후기는 **그 상품을 산 사람만** 쓴다.
+ *
+ * 사장님 결정 2026-09-09. 워드커머스 설정
+ * (`WooCommerce → 설정 → 상품 → 구매한 고객만 리뷰 작성`)과 같은 값을 플러그인이
+ * 정한다 — 관리자 화면의 체크박스도 켜진 것으로 보인다.
+ *
+ * 끄려면 `add_filter( 'duckhoo_reviews_verified_only', '__return_false' );`
+ *
+ * @return bool
+ */
+function verified_only(): bool {
+	return (bool) apply_filters( 'duckhoo_reviews_verified_only', true );
+}
+
+/**
+ * 그 설정값을 우리가 돌려준다.
+ *
+ * @param mixed $value 저장된 값.
+ * @return mixed
+ */
+function force_verified( $value ) {
+	return verified_only() ? 'yes' : $value;
+}
+add_filter( 'option_woocommerce_review_rating_verification_required', __NAMESPACE__ . '\\force_verified' );
+
+/**
+ * 폼을 감추는 것만으로는 모자란다 — **보내는 것도 막는다.**
+ *
+ * 워드커머스는 안 산 사람에게 폼을 안 그릴 뿐이라, 주소만 알면 그대로 보낼 수 있다.
+ * 상품 후기일 때만, 산 적이 없으면 여기서 멈춘다. 관리자는 지나간다 (답글 · 정리).
+ *
+ * @param array<string,mixed> $data 들어온 댓글.
+ * @return array<string,mixed>
+ */
+function guard_review( $data ) {
+	$pid = (int) ( $data['comment_post_ID'] ?? 0 );
+	if ( ! verified_only() || $pid <= 0 || 'product' !== get_post_type( $pid ) ) {
+		return $data;
+	}
+	if ( ! function_exists( 'wc_customer_bought_product' ) || current_user_can( 'moderate_comments' ) ) {
+		return $data;
+	}
+	$uid   = (int) get_current_user_id();
+	$email = (string) ( $data['comment_author_email'] ?? '' );
+	if ( wc_customer_bought_product( $email, $uid, $pid ) ) {
+		return $data;
+	}
+	wp_die(
+		esc_html( '이 상품을 구매하신 분만 후기를 남길 수 있습니다.' ),
+		'',
+		array(
+			'response'  => 403,
+			'back_link' => true,
+		)
+	);
+}
+add_filter( 'preprocess_comment', __NAMESPACE__ . '\\guard_review' );
