@@ -407,7 +407,7 @@ function card( \WC_Product $p ): string {
 
 	// 비로그인에게는 사진이 「19」로 가려진다 (키플 성인 인증 게이트 — 우회하지 않는다).
 	// 그 위에 한 줄만 얹는다: 벽이 아니라 문이라고. 왜인지는 목록 맨 위 gate_note() 가 말한다.
-	$lock = gated() ? '<span class="lock" aria-hidden="true">가입하면 사진이 열려요</span>' : '';
+	$lock = gated() ? '<span class="lock" aria-hidden="true">가입하면 사진 공개</span>' : '';
 
 	return '<article class="card' . ( $p->is_in_stock() ? '' : ' is-out' ) . ( $lock ? ' is-gated' : '' ) . '">'
 		. '<a class="fig" href="' . esc_url( $url ) . '" aria-label="' . esc_attr( $n['title'] ) . '">'
