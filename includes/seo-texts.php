@@ -1,0 +1,50 @@
+<?php
+/**
+ * 상품 한 줄 설명 — 사장님이 승인한 글 (2026-09-10).
+ *
+ * 관리자 화면의 상자(`_dhr_text`)에 쓴 글이 있으면 **그쪽이 먼저**다. 여기 것은
+ * 상자가 비어 있을 때만 쓴다. 그래서 사장님이 나중에 상자에서 고치면 이 파일을
+ * 지우지 않아도 된다. 상품은 주소 조각(slug)으로 찾는다 — 이름은 가격이 바뀌면 같이 바뀐다.
+ *
+ * 쓰지 않는 말: 건강 · 금연 · 순하다 · 해롭지 않다 (담배사업법 광고 제한).
+ * 맛 · 용량 · 니코틴 · 기기 호환만 말한다. 맛 표현은 사장님이 확인한 것이다.
+ *
+ * @package Duckhoo\Redesign
+ */
+
+declare( strict_types = 1 );
+
+namespace Duckhoo\Redesign\Seo\Texts;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * slug(한글 그대로) => 글.
+ *
+ * @return array<string,string>
+ */
+function texts(): array {
+	return (array) apply_filters( 'duckhoo_seo_texts', array(
+		'펠릭스-더블라임-9-8mg-30ml'                                 => '라임을 두 겹으로 겹친 상큼함에 시원한 끝맛. 30ml · 니코틴 9.8mg · 입호흡(MTL) 기기용. 폐호흡용은 모드 더블라임(3mg 60ml).',
+		'펠릭스-모드-더블라임-3mg-60ml'                              => '더블라임을 폐호흡(DL) 기기에 맞춰 60ml · 니코틴 3mg 으로. 라임 두 겹의 상큼함과 시원한 끝맛은 그대로. 입호흡용은 더블라임(9.8mg 30ml).',
+		'네스티-하이민트-더블-슬로블로-입호흡-액상-9-8mg-30ml'      => '슬로우블로우(파인애플 · 라임 소다)에 민트를 두 배로 넣은 하이민트 더블. 30ml · 니코틴 9.8mg · 입호흡(MTL) 기기용. 폐호흡용은 모드(3mg 60ml).',
+		'네스티-하이민트-더블-슬로우블로우-모드-액상-3mg-60ml'      => '같은 하이민트 더블 슬로우블로우를 폐호흡(DL) 기기에 맞춰 60ml · 니코틴 3mg 으로. 입호흡용은 9.8mg 30ml.',
+	) );
+}
+
+/**
+ * 상자가 비어 있으면 여기 글을 준다.
+ *
+ * @param string      $t 지금 값 (상자의 글).
+ * @param \WC_Product $p 상품.
+ * @return string
+ */
+function fill( $t, $p = null ): string {
+	$t = (string) $t;
+	if ( '' !== trim( $t ) || ! $p instanceof \WC_Product || ! method_exists( $p, 'get_slug' ) ) {
+		return $t;
+	}
+	$slug = rawurldecode( (string) $p->get_slug() );
+	return texts()[ $slug ] ?? $t;
+}
+add_filter( 'duckhoo_product_text', __NAMESPACE__ . '\\fill', 10, 2 );

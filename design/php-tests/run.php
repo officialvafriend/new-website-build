@@ -1034,5 +1034,20 @@ $_POST = ['dhr_text_nonce' => 'bad', 'dhr_text' => 'x'];
 $ok(!isset($GLOBALS['__postmeta'][901]['_dhr_text']), '논스가 틀리면 저장하지 않는다');
 $_POST = []; $GLOBALS['__can'] = false;
 
+
+// ── 승인된 상품 글 (includes/seo-texts.php) ───────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/seo-texts.php';
+$GLOBALS['__pmeta'][901] = [];
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$ok(str_starts_with(($S.'hand_text')($GLOBALS['__products'][901]), '라임을 두 겹'), '상자가 비면 승인된 글을 쓴다 (slug 는 퍼센트 인코딩돼 있어도)');
+ob_start(); ($S.'render_text')($GLOBALS['__products'][901]); $h = ob_get_clean();
+$ok(str_contains($h, 'dhp-about') && str_contains($h, '입호흡(MTL)'), '화면에도 그린다');
+$GLOBALS['__pmeta'][901]['_dhr_text'] = '사장님이 상자에 쓴 글';
+$ok(($S.'hand_text')($GLOBALS['__products'][901]) === '사장님이 상자에 쓴 글', '상자의 글이 먼저다');
+$GLOBALS['__pmeta'][901] = [];
+$GLOBALS['__slugs'][902] = '노보-10-1';
+$ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
+foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

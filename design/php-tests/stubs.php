@@ -149,6 +149,7 @@ class WC_Product {
   ){ if ($this->regular === 0.0) { $this->regular = $this->price; } }
   public function get_id(){ return $this->id; }
   public function get_name(){ return $this->name; }
+  public function get_slug(){ return $GLOBALS['__slugs'][$this->id] ?? ''; }
   public function get_price(){ return $this->price; }
   public function get_regular_price(){ return (string)$this->regular; }
   public function get_sale_price(){ return $this->sale; }
