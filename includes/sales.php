@@ -868,6 +868,11 @@ function screen(): void {
 		esc_html( $m['sales'] > 0 ? sprintf( ' · 매출의 %.0f%%', $back_v / (float) $m['sales'] * 100 ) : '' ) );
 	echo '</tbody></table></section>';
 
+	// ── 깔때기 ──────────────────────────────────────────────
+	if ( function_exists( '\\Duckhoo\\Redesign\\Funnel\\render' ) ) {
+		\Duckhoo\Redesign\Funnel\render();
+	}
+
 	// ── 각주 ────────────────────────────────────────────────
 	$capped = count( $rows ) >= max_orders();
 	echo '<section class="dhr-sl-foot">';
@@ -950,6 +955,8 @@ function styles(): void {
 .dhr-sl-tab summary{ cursor:pointer; font-size:14px; color:var(--mut); }
 .dhr-sl-tab table{ margin-top:10px; }
 .dhr-sl-foot{ font-size:13px; color:var(--mut); line-height:1.7; }
+.dhr-sl-h3{ font-size:14px; font-weight:700; margin:14px 0 6px; color:var(--mut); }
+.dhr-sl-ev{ display:inline-block; font-size:13px; font-weight:600; color:var(--mut); border:1px solid var(--line); border-radius:5px; padding:0 5px; margin-left:4px; vertical-align:1px; }
 .dhr-sl-foot p{ margin:0 0 6px; word-break:keep-all; }
 @media (min-width:600px){ .dhr-sl-cards{ grid-template-columns:1fr 1fr; } }
 @media (min-width:1100px){ .dhr-sl-cards{ grid-template-columns:repeat(4,1fr); } }

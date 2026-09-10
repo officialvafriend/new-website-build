@@ -1088,3 +1088,25 @@
     setTimeout(function(){ body.disconnect(); }, 8000);
   }
 })();
+
+/* ── 구매 깔때기 신호 ─────────────────────────────────────────────────────
+   서버는 비로그인 화면을 캐시로 내주므로 PHP 가 돌지 않는다. 그래서 화면 단계는
+   브라우저가 알린다. 하루에 같은 단계는 한 번만 — 사람 수를 세는 것이지 조회 수가 아니다.
+   보내는 것은 단계 이름과 로그인 여부뿐이다. */
+(function(){
+  var C = window.DHR || {};
+  if(!C.stage || !C.beacon) return;
+  var day = new Date(); day = day.getFullYear()+'-'+(day.getMonth()+1)+'-'+day.getDate();
+  var seen = {};
+  try{ seen = JSON.parse(localStorage.getItem('dhr-f') || '{}'); }catch(e){ seen = {}; }
+  if(seen.d !== day){ seen = { d: day, s: [] }; }
+  if(!seen.s) seen.s = [];
+  if(seen.s.indexOf(C.stage) !== -1) return;
+  seen.s.push(C.stage);
+  try{ localStorage.setItem('dhr-f', JSON.stringify(seen)); }catch(e){}
+  var body = 's=' + encodeURIComponent(C.stage) + '&m=' + (C.loggedIn ? '1' : '0');
+  try{
+    fetch(C.beacon, { method:'POST', keepalive:true, credentials:'omit',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body: body }).catch(function(){});
+  }catch(e){}
+})();

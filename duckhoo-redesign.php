@@ -56,6 +56,12 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/signup.php';
 // 노보 물량 이벤트 — 하루 구매 한도 · 남은 수량 · 이벤트 기준 가격.
 require_once plugin_dir_path( __FILE__ ) . 'includes/novo.php';
 
+// 구매 깔때기 — 첫 화면부터 주문까지 날마다 몇 명이 어디까지 갔는지 센다 (매출 화면에 그린다).
+require_once plugin_dir_path( __FILE__ ) . 'includes/funnel.php';
+
+// 가입 · 로그인 뒤 보던 상품으로 돌아온다 — 키플 가입 흐름이 redirect_to 를 버리기 때문.
+require_once plugin_dir_path( __FILE__ ) . 'includes/back.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {

@@ -206,6 +206,7 @@ class DhrFakeWpdb {
   public function get_results($sql, $mode=null){
     if (str_contains($sql, 'woocommerce_order_items')) return $GLOBALS['__fee_rows'] ?? [];
     if (str_contains($sql, 'user_registered')) return $GLOBALS['__signup_rows'] ?? [];
+    if (str_contains($sql, 'dhr_funnel')) return $GLOBALS['__funnel_rows'] ?? [];
     return [];
   }
   public function prepare($sql, ...$a){ $this->lastArgs = (isset($a[0]) && is_array($a[0])) ? $a[0] : $a; return $sql; }
@@ -213,7 +214,9 @@ class DhrFakeWpdb {
     $n = end($this->lastArgs);
     return $GLOBALS['__phone_users'][$n] ?? [];
   }
-  public function query($sql){ return 0; }
+  public function query($sql){ $GLOBALS['__sql'][] = $sql; return 1; }
+  public function get_var($sql){ return $GLOBALS['__funnel_since'] ?? null; }
+  public function get_charset_collate(){ return ''; }
 }
 $GLOBALS['wpdb'] = new DhrFakeWpdb();
 $GLOBALS['__phone_users'] = [];
@@ -350,3 +353,22 @@ class DhrSalesOrder {
   public function get_shipping_total(){ return $this->ship; }
 }
 
+/* ── 깔때기 · 되돌림 스텁 ─────────────────────────────────────────────── */
+$GLOBALS['__cookies_set'] = []; $GLOBALS['__did'] = []; $GLOBALS['__sql'] = []; $GLOBALS['__funnel_rows'] = [];
+if(!function_exists('setcookie')) { }
+function dhr_setcookie_stub($n,$v,$o=[]){ $GLOBALS['__cookies_set'][] = [$n,$v,$o]; return true; }
+if(!function_exists('headers_sent')) { }
+if(!function_exists('is_ssl')) { function is_ssl(){ return true; } }
+if(!function_exists('untrailingslashit')) { function untrailingslashit($s){ return rtrim((string)$s,'/'); } }
+if(!function_exists('wp_validate_redirect')) { function wp_validate_redirect($u,$d=''){ return str_starts_with((string)$u,'https://duck-hoo.com/') ? $u : $d; } }
+if(!function_exists('did_action')) { function did_action($h){ return (int)($GLOBALS['__did'][$h] ?? 0); } }
+if(!function_exists('register_rest_route')) { function register_rest_route(...$a){ return true; } }
+if(!function_exists('rest_url')) { function rest_url($p=''){ return 'https://duck-hoo.com/wp-json/'.$p; } }
+if(!function_exists('rest_ensure_response')) { function rest_ensure_response($r){ return $r; } }
+if(!function_exists('update_option')) { function update_option($k,$v,$a=null){ $GLOBALS['__options'][$k]=$v; return true; } }
+if(!function_exists('is_shop')) { function is_shop(){ return (bool)($GLOBALS['__is_shop'] ?? false); } }
+if(!function_exists('is_product')) { function is_product(){ return (bool)($GLOBALS['__is_product'] ?? false); } }
+if(!function_exists('is_product_taxonomy')) { function is_product_taxonomy(){ return false; } }
+if(!function_exists('is_cart')) { function is_cart(){ return false; } }
+if(!function_exists('is_search')) { function is_search(){ return false; } }
+class DhrReq { public function __construct(public array $p){} public function get_param($k){ return $this->p[$k] ?? null; } }
