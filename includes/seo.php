@@ -53,8 +53,26 @@ const QV        = 'dhr_brand';
  * @return string
  */
 function naver_code(): string {
-	$c = (string) apply_filters( 'duckhoo_naver_verify', (string) get_option( OPT_NAVER, '' ) );
-	return preg_replace( '/[^A-Za-z0-9]/', '', $c );
+	return clean_code( (string) apply_filters( 'duckhoo_naver_verify', (string) get_option( OPT_NAVER, '' ) ) );
+}
+
+/**
+ * 붙여 넣은 것에서 코드만 꺼낸다.
+ *
+ * 2026-09-10 사장님이 `<meta name="naver-site-verification" content="04c1…">` 태그를
+ * 통째로 붙였는데 글자만 남기는 정리가 `metanamenaversiteverificationcontent04c1…` 로
+ * 이어 붙여 네이버가 「메타태그를 찾을 수 없습니다」라고 했다. 태그든 코드든 받는다.
+ *
+ * @param string $raw 입력.
+ * @return string
+ */
+function clean_code( string $raw ): string {
+	if ( preg_match( '/content\s*=\s*["\']?\s*([A-Za-z0-9]+)/i', $raw, $m ) ) {
+		return $m[1];
+	}
+	$c = preg_replace( '/[^A-Za-z0-9]/', '', $raw );
+	// 전에 잘못 저장된 값: 태그 글자가 앞에 붙어 있다
+	return (string) preg_replace( '/^metanamenaversiteverificationcontent/i', '', $c );
 }
 
 /**
@@ -651,7 +669,7 @@ function screen(): void {
 	}
 	$saved = false;
 	if ( isset( $_POST['dhr_seo_nonce'] ) && wp_verify_nonce( (string) $_POST['dhr_seo_nonce'], 'dhr_seo_save' ) ) { // phpcs:ignore
-		update_option( OPT_NAVER, preg_replace( '/[^A-Za-z0-9]/', '', (string) ( $_POST['naver'] ?? '' ) ) ); // phpcs:ignore
+		update_option( OPT_NAVER, clean_code( wp_unslash( (string) ( $_POST['naver'] ?? '' ) ) ) ); // phpcs:ignore
 		$saved = true;
 	}
 	$code = naver_code();
@@ -685,7 +703,7 @@ function screen(): void {
 	echo '<form method="post" style="max-width:720px">';
 	wp_nonce_field( 'dhr_seo_save', 'dhr_seo_nonce' );
 	echo '<h2>네이버 서치어드바이저</h2>';
-	echo '<p><a href="https://searchadvisor.naver.com/" target="_blank" rel="noopener">searchadvisor.naver.com</a> 에서 <code>https://duck-hoo.com</code> 을 등록하고, <b>HTML 태그</b> 방식의 인증 코드(content 값)만 여기에 붙입니다. 저장하면 모든 화면 <code>&lt;head&gt;</code> 에 메타가 들어가고, 그 다음 네이버 화면에서 「소유확인」을 누르면 됩니다.</p>';
+	echo '<p><a href="https://searchadvisor.naver.com/" target="_blank" rel="noopener">searchadvisor.naver.com</a> 에서 <code>https://duck-hoo.com</code> 을 등록하고, <b>HTML 태그</b> 방식의 인증 코드를 여기에 붙입니다. 태그 전체를 붙여도 되고 content 값만 붙여도 됩니다. 저장하면 모든 화면 <code>&lt;head&gt;</code> 에 메타가 들어가고, 그 다음 네이버 화면에서 「소유확인」을 누르면 됩니다.</p>';
 	echo '<p><input type="text" name="naver" value="' . esc_attr( $code ) . '" class="regular-text" placeholder="예) 3f2a9c…"> ';
 	echo '<button class="button button-primary">저장</button></p>';
 	echo '<p>' . ( '' !== $code ? '<span style="color:#1b7f3a">● 메타가 나가고 있습니다.</span> 확인 뒤에는 서치어드바이저 → 요청 → 사이트맵 제출에 <code>' . esc_html( home_url( '/sitemap.xml' ) ) . '</code> 을 넣어 주세요.' : '<span style="color:#b45309">● 아직 코드가 없습니다.</span> 네이버는 인증 전에는 사이트맵을 받지 않습니다.' ) . '</p>';

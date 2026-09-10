@@ -937,6 +937,10 @@ $GLOBALS['__pterms'][901] = [(object)['name'=>'9월 특가 할인'], (object)['n
 $GLOBALS['__pterms'][902] = [(object)['name'=>'노보 액상'], (object)['name'=>'입호흡 액상']];
 $GLOBALS['__options']['duckhoo_naver_verify'] = ' ab-12 3 ';
 $ok(($S.'naver_code')() === 'ab123', '네이버 인증 코드는 영숫자만 남긴다');
+$GLOBALS['__options']['duckhoo_naver_verify'] = '<meta name="naver-site-verification" content="04c147a3e48928d7" />';
+$ok(($S.'naver_code')() === '04c147a3e48928d7', '태그를 통째로 붙여도 코드만 꺼낸다');
+$GLOBALS['__options']['duckhoo_naver_verify'] = 'metanamenaversiteverificationcontent04c147a3e48928d7';
+$ok(($S.'naver_code')() === '04c147a3e48928d7', '전에 잘못 저장된 값도 코드로 읽는다');
 unset($GLOBALS['__options']['duckhoo_naver_verify']);
 ob_start(); ($S.'head')(); $h = ob_get_clean();
 $ok(!str_contains($h, 'naver-site-verification'), '코드가 없으면 인증 메타를 찍지 않는다');
