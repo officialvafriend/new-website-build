@@ -1015,6 +1015,9 @@ $GLOBALS['__options']['duckhoo_seo_rewrite'] = '';
 $GLOBALS['__rw_flushed'] = 0;
 ($S.'rewrite')(); ($S.'rewrite')();
 $ok(isset($GLOBALS['__rw_rules']['^brand/([^/]+)/?$']) && $GLOBALS['__rw_flushed'] === 1, '주소 규칙은 등록하고 flush 는 버전이 바뀔 때 한 번');
+$xml = ($S.'brand_sitemap_xml')();
+$ok(str_starts_with($xml, '<?xml') && str_contains($xml, '<loc>https://duck-hoo.com/brand/novo/</loc>') && str_contains($xml, '/brand/felix/') && str_contains($xml, '/brand/' . rawurlencode('조바') . '/'), '브랜드 사이트맵에 상품이 있는 브랜드가 전부 실린다');
+$ok(isset($GLOBALS['__rw_rules']['^brand-sitemap\\.xml$']) && in_array('dhr_sitemap', ($S.'query_vars')([]), true), '사이트맵 주소 규칙 · 쿼리 변수');
 // 저장
 $_POST = ['dhr_text_nonce' => 'good', 'dhr_text' => "  <script>x</script>맛 설명  "];
 $GLOBALS['__can'] = false;

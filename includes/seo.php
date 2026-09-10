@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
 const META      = '_dhr_text';          // 상품 한 줄 설명 (글)
 const OPT_NAVER = 'duckhoo_naver_verify';
 const OPT_RW    = 'duckhoo_seo_rewrite';
-const RW_V      = '1';
+const RW_V      = '2';
 const QV        = 'dhr_brand';
 
 /* ── 1. 네이버 인증 ──────────────────────────────────────────────────────── */
@@ -448,6 +448,8 @@ function brand_prefixes( string $brand ): array {
 function rewrite(): void {
 	add_rewrite_tag( '%' . QV . '%', '([^&]+)' );
 	add_rewrite_rule( '^brand/([^/]+)/?$', 'index.php?' . QV . '=$matches[1]', 'top' );
+	add_rewrite_tag( '%dhr_sitemap%', '([a-z]+)' );
+	add_rewrite_rule( '^brand-sitemap\.xml$', 'index.php?dhr_sitemap=brand', 'top' );
 	if ( RW_V !== (string) get_option( OPT_RW, '' ) && function_exists( 'flush_rewrite_rules' ) ) {
 		flush_rewrite_rules( false );
 		update_option( OPT_RW, RW_V );
@@ -464,8 +466,47 @@ add_action( 'init', __NAMESPACE__ . '\\rewrite', 20 );
 function query_vars( $vars ): array {
 	$vars   = (array) $vars;
 	$vars[] = QV;
+	$vars[] = 'dhr_sitemap';
 	return $vars;
 }
+
+/**
+ * 브랜드 페이지 사이트맵 `/brand-sitemap.xml`.
+ *
+ * AIOSEO 사이트맵은 상품 · 분류 · 글만 안다 — 브랜드 페이지는 워드프레스 글이 아니라
+ * 거기 안 실린다. 그래서 따로 낸다. 네이버 · 구글에 한 번 더 제출하면 된다.
+ * 상품이 한 개라도 있는 브랜드만 싣는다 (빈 페이지는 404 다).
+ *
+ * @return string
+ */
+function brand_sitemap_xml(): string {
+	$out = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+		. '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+	foreach ( brands() as $b => $n ) {
+		if ( $n < 1 ) {
+			continue;
+		}
+		$out .= "\t<url><loc>" . esc_url( brand_url( (string) $b ) ) . "</loc><changefreq>weekly</changefreq></url>\n";
+	}
+	return $out . '</urlset>' . "\n";
+}
+
+/**
+ * 사이트맵 요청이면 XML 을 내고 끝낸다.
+ *
+ * @return void
+ */
+function serve_sitemap(): void {
+	if ( 'brand' !== (string) get_query_var( 'dhr_sitemap', '' ) ) {
+		return;
+	}
+	status_header( 200 );
+	header( 'Content-Type: application/xml; charset=UTF-8' );
+	header( 'X-Robots-Tag: noindex' );
+	echo brand_sitemap_xml(); // phpcs:ignore
+	exit;
+}
+add_action( 'template_redirect', __NAMESPACE__ . '\serve_sitemap', 0 );
 add_filter( 'query_vars', __NAMESPACE__ . '\\query_vars' );
 
 /**
@@ -717,7 +758,7 @@ function screen(): void {
 		$u = brand_url( $b );
 		echo '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">' . esc_html( $u ) . '</a><br>';
 	}
-	echo '<span class="description">이름 앞 [브랜드] 로 모은 목록입니다. 푸터 · 홈의 브랜드 링크가 이 주소를 씁니다.</span></td></tr>';
+	echo '<span class="description">이름 앞 [브랜드] 로 모은 목록입니다. 푸터 · 홈의 브랜드 링크가 이 주소를 씁니다. AIOSEO 사이트맵에는 안 실리므로 <code>' . esc_html( home_url( '/brand-sitemap.xml' ) ) . '</code> 을 네이버 · 구글에 따로 제출합니다.</span></td></tr>';
 	echo '<tr><th>상품 구조화 데이터</th><td>브랜드 · 설명을 채웁니다. 가격 · 재고는 워드커머스 값 그대로.</td></tr>';
 	echo '</tbody></table>';
 	echo '<p class="description" style="max-width:720px">글에 쓰지 않는 말: 건강 · 금연 · 순하다 · 해롭지 않다 (담배사업법 광고 제한). 맛 · 용량 · 니코틴 · 기기 호환 · 가격 · 배송만 말합니다.</p>';
