@@ -14,9 +14,11 @@
 defined( 'ABSPATH' ) || exit;
 
 use function Duckhoo\Redesign\Front\{card, icon, gate_note};
+use function Duckhoo\Redesign\Seo\{brand_title, brand_intro_html};
 
 $dha_total = (int) $GLOBALS['wp_query']->found_posts;
-$dha_title = is_search() ? '“' . get_search_query() . '” 검색 결과' : ( is_shop() ? '전체 상품' : (string) woocommerce_page_title( false ) );
+$dha_brand = brand_title(); // /brand/<slug>/ 이면 "노보 액상", 아니면 빈 문자열
+$dha_title = '' !== $dha_brand ? $dha_brand : ( is_search() ? '“' . get_search_query() . '” 검색 결과' : ( is_shop() ? '전체 상품' : (string) woocommerce_page_title( false ) ) );
 $dha_shop  = wc_get_page_permalink( 'shop' );
 $dha_cats  = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 8 ) );
 $dha_cats  = is_wp_error( $dha_cats ) ? array() : $dha_cats;
@@ -39,6 +41,7 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 			<h1><?php echo esc_html( $dha_title ); ?></h1>
 			<?php if ( $dha_total ) : ?><span class="dha-n"><?php echo esc_html( number_format_i18n( $dha_total ) ); ?>종</span><?php endif; ?>
 		</div>
+		<?php echo brand_intro_html(); // phpcs:ignore — 브랜드 페이지: 검색엔진이 읽을 글 한 줄 (사실만) ?>
 	</header>
 
 	<?php if ( $dha_cats ) : ?>

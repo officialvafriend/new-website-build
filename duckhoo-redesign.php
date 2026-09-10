@@ -62,6 +62,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/funnel.php';
 // 가입 · 로그인 뒤 보던 상품으로 돌아온다 — 키플 가입 흐름이 redirect_to 를 버리기 때문.
 require_once plugin_dir_path( __FILE__ ) . 'includes/back.php';
 
+// 검색 노출 — 네이버 인증 메타 · 상품 한 줄 설명(글) · 분류 메타 설명 · 브랜드 페이지 /brand/<slug>/.
+require_once plugin_dir_path( __FILE__ ) . 'includes/seo.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {

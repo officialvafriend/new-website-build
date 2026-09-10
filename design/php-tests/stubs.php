@@ -217,6 +217,8 @@ class DhrFakeWpdb {
   public function query($sql){ $GLOBALS['__sql'][] = $sql; return 1; }
   public function get_var($sql){ return $GLOBALS['__funnel_since'] ?? null; }
   public function get_charset_collate(){ return ''; }
+  public string $posts = 'wp_posts';
+  public function esc_like($t){ return addcslashes((string)$t, '_%\\'); }
 }
 $GLOBALS['wpdb'] = new DhrFakeWpdb();
 $GLOBALS['__phone_users'] = [];
@@ -238,7 +240,7 @@ if(!function_exists('is_checkout')) { function is_checkout(){ return (bool)($GLO
 if(!function_exists('get_theme_root')) { function get_theme_root(){ return sys_get_temp_dir().'/dhr-themes'; } }
 if(!function_exists('get_template')) { function get_template(){ return 'fake'; } }
 if(!function_exists('get_current_screen')) { function get_current_screen(){ return null; } }
-if(!function_exists('current_user_can')) { function current_user_can($c){ return false; } }
+if(!function_exists('current_user_can')) { function current_user_can($c,...$a){ return (bool)($GLOBALS['__can'] ?? false); } }
 if(!function_exists('remove_action')) { function remove_action($h,$cb,$p=10){ } }
 if(!function_exists('wp_mkdir_p')) { function wp_mkdir_p($d){ return is_dir($d) || @mkdir($d, 0777, true); } }
 if(!function_exists('wp_upload_dir')) {
@@ -372,3 +374,32 @@ if(!function_exists('is_product_taxonomy')) { function is_product_taxonomy(){ re
 if(!function_exists('is_cart')) { function is_cart(){ return false; } }
 if(!function_exists('is_search')) { function is_search(){ return false; } }
 class DhrReq { public function __construct(public array $p){} public function get_param($k){ return $this->p[$k] ?? null; } }
+
+// ── 검색 노출 (includes/seo.php) 스텁 ──
+if(!function_exists('get_query_var')) { function get_query_var($k,$d=''){ return $GLOBALS['__qv'][$k] ?? $d; } }
+if(!function_exists('get_the_terms')) { function get_the_terms($id,$tax){ return $GLOBALS['__pterms'][(int)$id] ?? []; } }
+if(!function_exists('get_post_meta')) { function get_post_meta($id,$k,$s=false){ return $GLOBALS['__postmeta'][(int)$id][$k] ?? ''; } }
+if(!function_exists('update_post_meta')) { function update_post_meta($id,$k,$v){ $GLOBALS['__postmeta'][(int)$id][$k]=$v; return true; } }
+if(!function_exists('delete_post_meta')) { function delete_post_meta($id,$k){ unset($GLOBALS['__postmeta'][(int)$id][$k]); return true; } }
+if(!function_exists('get_bloginfo')) { function get_bloginfo($k=''){ return '액상덕후'; } }
+if(!function_exists('get_queried_object')) { function get_queried_object(){ return $GLOBALS['__qobj'] ?? null; } }
+if(!function_exists('get_queried_object_id')) { function get_queried_object_id(){ return (int)($GLOBALS['__qid'] ?? 0); } }
+if(!function_exists('esc_textarea')) { function esc_textarea($s){ return htmlspecialchars((string)$s, ENT_QUOTES); } }
+if(!function_exists('add_meta_box')) { function add_meta_box(...$a){ $GLOBALS['__metaboxes'][] = $a[0]; } }
+if(!function_exists('sanitize_textarea_field')) { function sanitize_textarea_field($s){ return trim(strip_tags((string)$s)); } }
+if(!function_exists('add_rewrite_tag')) { function add_rewrite_tag($t,$r){ $GLOBALS['__rw_tags'][] = $t; } }
+if(!function_exists('add_rewrite_rule')) { function add_rewrite_rule($re,$q,$pos='bottom'){ $GLOBALS['__rw_rules'][$re] = $q; } }
+if(!function_exists('flush_rewrite_rules')) { function flush_rewrite_rules($h=true){ $GLOBALS['__rw_flushed'] = ($GLOBALS['__rw_flushed'] ?? 0) + 1; } }
+if(!function_exists('add_management_page')) { function add_management_page(...$a){ return ''; } }
+class DhrFakeQuery {
+  public array $v = []; public bool $is_home = true; public bool $is_archive = false; public bool $is_404 = false; public bool $main = true;
+  public function __construct(array $v = [], bool $main = true){ $this->v = $v; $this->main = $main; }
+  public function get($k,$d=''){ return $this->v[$k] ?? $d; }
+  public function set($k,$val){ $this->v[$k] = $val; }
+  public function is_main_query(){ return $this->main; }
+}
+
+// 실제 Front\products() 가 도는 길 — 상품은 $GLOBALS['__products'], 이름 검색은 mb_strpos.
+if(!function_exists('wc_get_products')) { function wc_get_products($a){ return array_values($GLOBALS['__products'] ?? []); } }
+if(!class_exists('WP_Query')) { class WP_Query { public array $posts = []; public function __construct(array $a = []){ foreach($GLOBALS['__products'] ?? [] as $p){ if(!isset($a['s']) || false !== mb_strpos($p->get_name(), (string)$a['s'])) $this->posts[] = $p->get_id(); } } } }
+if(!function_exists('wp_json_encode')) { function wp_json_encode($v,$f=0){ return json_encode($v, $f | JSON_UNESCAPED_UNICODE); } }

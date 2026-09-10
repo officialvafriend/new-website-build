@@ -1162,6 +1162,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__login{
 
 /* 구매 상자 안의 짧은 설명 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-short{ margin: .6rem 0 0; font-size: 15px; line-height: 1.65; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
+/* 손으로 쓴 한 줄 설명(_dhr_text) — 가격 아래. form.cart 바깥이라 구매 게이트와 무관 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-about{ margin: .7rem 0 0; font-size: 15px; line-height: 1.65; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-short p{ margin: 0; }
 
 /* 아래 섹션 */

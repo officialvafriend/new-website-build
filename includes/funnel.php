@@ -163,7 +163,8 @@ function page_stage(): string {
 			return $stage;
 		}
 	}
-	return '';
+	// 브랜드 페이지처럼 다른 파일이 아는 화면 (includes/seo.php).
+	return (string) apply_filters( 'duckhoo_funnel_stage', '' );
 }
 
 /**

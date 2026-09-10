@@ -167,7 +167,9 @@ function brand_aliases(): array {
  * @return string
  */
 function brand_url( string $brand ): string {
-	return add_query_arg( array( 's' => $brand, 'post_type' => 'product' ), home_url( '/' ) );
+	$search = add_query_arg( array( 's' => $brand, 'post_type' => 'product' ), home_url( '/' ) );
+	// includes/seo.php 가 /brand/<slug>/ 로 바꾼다 — 검색 결과 주소는 검색엔진이 색인하지 않는다.
+	return (string) apply_filters( 'duckhoo_brand_url', $search, $brand );
 }
 
 /**
@@ -873,8 +875,9 @@ function take_front_page( string $template ): string {
 	if ( function_exists( 'is_product' ) && is_product() && apply_filters( 'duckhoo_take_product', true ) ) {
 		return DIR . 'templates/single-product.php';
 	}
-	if ( function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() || ( is_search() && 'product' === get_query_var( 'post_type' ) ) )
-		&& apply_filters( 'duckhoo_take_archive', true ) ) {
+	$archive = function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() || ( is_search() && 'product' === get_query_var( 'post_type' ) ) );
+	// 브랜드 페이지(/brand/novo/)도 목록이다 — includes/seo.php 가 이 필터로 켠다.
+	if ( apply_filters( 'duckhoo_is_archive_page', $archive ) && apply_filters( 'duckhoo_take_archive', true ) ) {
 		return DIR . 'templates/archive-product.php';
 	}
 	return $template;
