@@ -1121,8 +1121,12 @@ mtime · 크기가 들어가 테마가 바뀌면 다시 만든다.
   이미 「로그인 후 확인 가능」이라 두 번 읽지 않게. 13px 이라 폰 2열(사진 폭 ~153px)에서도
   한 줄에 든다 (한글 9자 + 띄어쓰기 2 ≈ 124px). 더 길게 쓰면 잘린다
 - **목록 · 홈 한 줄** `gate_note()` (`.dhr-gate`): 「왜」는 여기서 **한 번만** — 성인인증
-  회원에게만 · 가입 즉시 8,800원 · 본인확인 1분 → `/register/`. 목록은 `Shell\archive_title()`
-  뒤, 홈은 분류 타일 아래 · 첫 상품 위
+  회원에게만 · 가입 즉시 8,800원 · 본인확인 1분 → `/register/`. 목록은
+  `templates/archive-product.php` 의 칩 아래 · 격자 위, 홈은 분류 타일 아래 · 첫 상품 위.
+  **`Shell\archive_title()` 에 넣으면 안 돈다** — `duckhoo_take_archive` 가 true 라 그 함수는
+  일찍 return 한다 (한 번 그렇게 넣고 배포까지 하고서야 알았다)
+- 카드 HTML 은 10분 transient 에 들어 있어 **배포 뒤 10분은 옛 카드와 새 카드가 섞여 보인다**
+  (홈 lock 5 → 61). 미니파이된 HTML 은 한 줄이라 `grep -c` 로 세면 1 이 나온다 — `grep -o | wc -l`
 - **상세**: `Product\gate()` — `.dhp-gal__main`(position:relative) 안, 「19」 슬라이드 뒤에
   불투명 흰 판. 가입하고 사진 보기(48px 검은 알약) · 이미 회원이면 로그인. **`form.cart`
   바깥**이라 구매 게이트가 읽는 칸 이름과 무관하다 (확인: 폼을 만들지 않는다)
@@ -1130,6 +1134,37 @@ mtime · 크기가 들어가 테마가 바뀌면 다시 만든다.
 
 검증: `php design/php-tests/run.php` (가림 문 10개) · `scratchpad/live/gate-shot.mjs`
 (배포를 `.dhr-gate` 렌더로 기다린 뒤 홈 · 목록 · 상세를 390/1280 에서 찍고 띠가 잘리는지 잰다).
+
+### 깔때기는 플러그인이 센다 · 가입 뒤 되돌림 (2026-09-10)
+
+사장님: **처음 들어왔을 때부터 구매까지의 전환이 목표, 기획도 만드는 것도 내 몫.**
+그래서 숫자를 남에게 부탁하지 않고 플러그인이 센다 — `includes/funnel.php`.
+
+- **화면 단계는 브라우저 신호로 센다.** 비로그인 화면은 페이지 캐시가 내주므로 서버 훅으로는
+  안 보인다 (`?nocache=` 없이 받으면 PHP 가 안 돈다). front.js 가 `window.DHR.stage` 를
+  `POST /wp-json/duckhoo/v1/f` 로 보낸다. **하루에 단계마다 한 사람 한 번** (localStorage
+  `dhr-f`). 봇은 JS 를 안 돌려 저절로 빠지고, UA 로 한 번 더 거른다
+- **사건(담기 · 가입 완료 · 주문 완료)은 서버 훅** — `woocommerce_add_to_cart` ·
+  `user_register` · `woocommerce_checkout_order_processed`(+Store API). 캐시와 무관
+- 표 `{prefix}dhr_funnel(day, stage, who, n)`, `INSERT … ON DUPLICATE KEY UPDATE n=n+VALUES(n)`
+  한 질의 — 동시에 와도 안 샌다. dbDelta 로 한 번 만든다 (`duckhoo_funnel_db`).
+  개인정보 없음. 매출 화면에 최근 7일 · 30일 깔때기 + 앞 단계 대비 %
+- 읽는 법은 화면 각주에 적었다: 첫 화면→상세 낮으면 고르기, 상세→담기 낮으면 사진·가격·신뢰,
+  담기→가입 완료 낮으면 가입 벽, 결제→주문 낮으면 주문서. **일주일 쌓인 뒤에 다음 손을 정한다**
+- 끄기: `add_filter( 'duckhoo_funnel_on', '__return_false' );`
+
+**가입 뒤 되돌림** `includes/back.php`: 키플 가입 흐름이 `/register/?redirect_to=` 를
+두 번째 장(`/agree/`)으로 가는 링크에서 **버린다** (확인함 — 맨 주소다). 상품 사진을 열려고
+가입해도 끝나면 아무 데나 떨어졌다. 첫 장에서 돌아올 곳을 쿠키 `dhr_back`(1시간, httponly,
+Lax)에 적고, `user_register` 가 돈 요청의 `wp_redirect` 필터에서 그리로 바꾼다. 로그인은
+`woocommerce_login_redirect` 가 기본(내 계정)일 때만. `wp_validate_redirect` 로 같은 사이트만.
+**아직 라이브에서 못 봤다** — 본인확인 없이는 가입을 끝낼 수 없다. 사장님이 한 번 가입해
+보시거나, 다음 신규 가입자의 도착 화면으로 확인한다.
+
+**진단을 두 군데 고쳤다 (사장님 질문에 다시 재 봄)**: ①「19」 이미지는 빨간 원의
+청소년 이용불가 표시라 성인이면 뜻을 안다 — 「사진이 깨진 가게」는 과장이었고, 없는 것은
+설명이 아니라 **버튼**이다. ②「가입 뒤 돌아온다」는 확인 없이 한 말이었고 틀렸다 → 위 back.php.
+GTM(`GTM-P4DG6S3M`) · 메타 픽셀이 붙어 있어 GA4 가 있을 가능성이 높지만 이 자리에서는 못 읽는다.
 
 ### 노보 배너
 

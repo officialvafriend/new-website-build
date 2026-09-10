@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use function Duckhoo\Redesign\Front\{card, icon};
+use function Duckhoo\Redesign\Front\{card, icon, gate_note};
 
 $dha_total = (int) $GLOBALS['wp_query']->found_posts;
 $dha_title = is_search() ? '“' . get_search_query() . '” 검색 결과' : ( is_shop() ? '전체 상품' : (string) woocommerce_page_title( false ) );
@@ -52,6 +52,7 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 
 	<?php
 	// 분류마다 안내 띠가 필요할 때 쓰는 자리. 지금은 노보 이벤트가 쓴다.
+	echo gate_note(); // phpcs:ignore — 비로그인: 사진이 왜 안 보이는지 (한 번만)
 	do_action( 'duckhoo_archive_before_grid' );
 	?>
 
