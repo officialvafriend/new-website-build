@@ -68,14 +68,25 @@ function head(): void {
 	if ( '' !== $c ) {
 		echo '<meta name="naver-site-verification" content="' . esc_attr( $c ) . '">' . "\n";
 	}
+	if ( is_brand_page() ) {
+		// AIOSEO 는 이 화면이 무엇인지 모른다 — 상품도 분류도 검색도 아니라서 canonical 만 찍고
+		// 설명 · og 는 아예 안 찍는다 (2026-09-10 스테이징에서 확인). 그래서 여기서만 우리가 찍는다.
+		$d = brand_intro( current_brand() );
+		echo '<meta name="description" content="' . esc_attr( $d ) . '">' . "\n";
+		echo '<meta property="og:type" content="website">' . "\n";
+		echo '<meta property="og:title" content="' . esc_attr( title( '' ) ) . '">' . "\n";
+		echo '<meta property="og:description" content="' . esc_attr( $d ) . '">' . "\n";
+		echo '<meta property="og:url" content="' . esc_url( canonical( '' ) ) . '">' . "\n";
+		if ( ! has_aioseo() ) {
+			echo '<link rel="canonical" href="' . esc_url( canonical( '' ) ) . '">' . "\n";
+		}
+		return;
+	}
 	// AIOSEO 가 없을 때만 우리가 설명을 찍는다. 있으면 필터로 그쪽 값을 채운다.
 	if ( ! has_aioseo() ) {
 		$d = description( '' );
 		if ( '' !== $d ) {
 			echo '<meta name="description" content="' . esc_attr( $d ) . '">' . "\n";
-		}
-		if ( is_brand_page() ) {
-			echo '<link rel="canonical" href="' . esc_url( canonical( '' ) ) . '">' . "\n";
 		}
 	}
 }

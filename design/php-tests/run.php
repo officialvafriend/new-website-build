@@ -988,6 +988,8 @@ $bi = ($S.'brand_intro')('노보');
 $ok(str_contains($bi, '노보 액상 2종') && str_contains($bi, '입호흡 액상') && !str_contains($bi, '특가'), '소개 한 줄은 개수와 실제 분류를 말한다');
 $ok(($S.'description')('') === $bi && ($S.'canonical')('x') === 'https://duck-hoo.com/brand/novo/', '메타 설명 · canonical 도 브랜드 것');
 $ok(str_contains(($S.'brand_intro_html')(), 'class="dhr-brandintro"'), '화면에 글자로 그린다');
+ob_start(); ($S.'head')(); $h = ob_get_clean();
+$ok(substr_count($h, 'name="description"') === 1 && str_contains($h, 'og:title" content="노보 액상 2종 | 액상덕후"') && str_contains($h, 'og:url" content="https://duck-hoo.com/brand/novo/"'), '브랜드 페이지는 설명 · og 를 우리가 찍는다 (AIOSEO 가 이 화면을 모른다)');
 $ok(($S.'take_archive')(false) === true && ($S.'funnel_stage')('') === 'list', '목록 템플릿 · 깔때기 목록 단계');
 $q = new DhrFakeQuery(['dhr_brand' => 'novo']);
 ($S.'pre_get_posts')($q);
