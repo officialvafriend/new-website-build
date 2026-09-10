@@ -40,6 +40,11 @@ function config(): array {
 		'duckhoo_novo_event',
 		array(
 			'on'    => true,
+			// **하루 구매 제한을 풀었다** (사장님 결정 2026-09-10). 이벤트 자체(배너 ·
+			// 기준 가격 · 남은 재고 표시)는 그대로 두고 **한도만** 끈다.
+			// 다시 걸려면 이 한 줄:
+			//   add_filter( 'duckhoo_novo_event', fn( $c ) => $c + array( 'limit_on' => true ) );
+			'limit_on' => false,
 			'cat'   => 'novo-liquid',
 			// 한 사람이 하루에 살 수 있는 병 수 — **값을 치르는 병**만 센다.
 			// 10+1 한 세트가 딱 10이라, 세트는 하루 한 번이 된다.
@@ -68,6 +73,22 @@ function config(): array {
 function on(): bool {
 	$c = config();
 	return ! empty( $c['on'] );
+}
+
+/**
+ * **하루 구매 한도**가 걸려 있는가.
+ *
+ * `on()` 과 나눠 둔 이유: 이벤트는 계속 하지만 **한도만** 풀 수 있어야 한다
+ * (사장님 결정 2026-09-10 — 세트 구매 제한 해제). 이것이 꺼지면
+ * 막는 쪽(담기 · 장바구니 · 결제 · Store API)과 **한도를 말하는 글자**
+ * (배너 · 카드 칩 · 상세 안내 · 선택창 상한)가 **함께** 사라진다 —
+ * 한쪽만 꺼지면 「하루 한 세트」라고 써 놓고 안 막거나, 안 써 놓고 막는다.
+ *
+ * @return bool
+ */
+function limiting(): bool {
+	$c = config();
+	return on() && ! empty( $c['limit_on'] );
 }
 
 /**
@@ -142,7 +163,7 @@ function bottles( $p ): int {
  * @return bool
  */
 function limited( $p ): bool {
-	if ( ! is_novo( $p ) ) {
+	if ( ! limiting() || ! is_novo( $p ) ) {
 		return false;
 	}
 	if ( empty( config()['singles'] ) && bottles( $p ) <= 1 ) {
@@ -692,7 +713,7 @@ function over_message( int $adding = 0, string $line = '' ): string {
  * @return bool
  */
 function validate_add( $passed, $pid = 0, $qty = 1 ): bool {
-	if ( ! $passed || ! on() || ! function_exists( 'wc_get_product' ) ) {
+	if ( ! $passed || ! limiting() || ! function_exists( 'wc_get_product' ) ) {
 		return (bool) $passed;
 	}
 	$p    = wc_get_product( (int) $pid );
@@ -719,7 +740,7 @@ function validate_add( $passed, $pid = 0, $qty = 1 ): bool {
  * @return string[]
  */
 function over_messages(): array {
-	if ( ! on() ) {
+	if ( ! limiting() ) {
 		return array();
 	}
 	$out = array();
@@ -818,7 +839,7 @@ function guard_order(): void {
  * @return mixed
  */
 function store_max( $max, $product = null, $cart_item = null ) {
-	if ( ! on() || ! $product instanceof \WC_Product || ! is_array( $cart_item ) || empty( $cart_item['key'] ) ) {
+	if ( ! limiting() || ! $product instanceof \WC_Product || ! is_array( $cart_item ) || empty( $cart_item['key'] ) ) {
 		return $max;
 	}
 	$mine = max_units( $product, (string) $cart_item['key'] );
@@ -878,9 +899,13 @@ function product_notice( $p = null ): void {
 	if ( $cap ) {
 		echo '<b class="dhp-novo__t">노보 10+1 <span>하루 한 세트</span></b>';
 		echo '<p class="dhp-novo__p">물량이 넉넉하지 않습니다. 묶음은 한 분이 하루에 한 세트까지 사실 수 있습니다. 낱병은 제한이 없습니다.</p>';
-	} else {
+	} elseif ( limiting() ) {
 		echo '<b class="dhp-novo__t">노보 낱병 <span>수량 제한 없음</span></b>';
 		echo '<p class="dhp-novo__p">10+1 묶음만 하루 한 세트로 제한됩니다.</p>';
+	} else {
+		// 한도를 푼 뒤에는 **제한이라는 말 자체를 꺼낸다.** 「제한 없음」이라고 적으면
+		// 없던 제한을 손님 머리에 심는다 — 남은 재고만 말한다.
+		echo '<b class="dhp-novo__t">노보 액상</b>';
 	}
 
 	echo '<div class="dhp-novo__rows">';
@@ -964,7 +989,7 @@ add_filter( 'duckhoo_card_extra', __NAMESPACE__ . '\\card_note', 10, 2 );
  * @return void
  */
 function banner(): void {
-	if ( ! on() || ! function_exists( 'is_tax' ) || ! is_tax( 'product_cat', (string) config()['cat'] ) ) {
+	if ( ! limiting() || ! function_exists( 'is_tax' ) || ! is_tax( 'product_cat', (string) config()['cat'] ) ) {
 		return;
 	}
 

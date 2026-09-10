@@ -256,7 +256,10 @@ function screen(): void {
 			esc_html( number_format( (int) $meta['bundle'] ) )
 		);
 	}
-	printf( '<tr><th>이벤트</th><td>%s</td></tr>', on() ? '켜짐' : '<b style="color:#B42318">꺼짐</b> — 한도가 걸리지 않습니다' );
+	printf( '<tr><th>이벤트</th><td>%s</td></tr>', on() ? '켜짐' : '<b style="color:#B42318">꺼짐</b> — 배너 · 안내가 안 나옵니다' );
+	printf( '<tr><th>하루 구매 한도</th><td>%s</td></tr>', limiting()
+		? '켜짐 — 묶음은 한 분당 하루 한 세트'
+		: '<b>꺼짐</b> — 수량 제한 없이 살 수 있습니다 (사장님 결정 2026-09-10). 배너 · 카드 칩 · 상세 안내도 같이 내려갑니다' );
 	echo '</tbody></table>';
 
 	if ( $result ) {

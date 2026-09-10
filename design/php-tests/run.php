@@ -202,9 +202,13 @@ $ok(count($r5->notes) === 1 && !str_contains($r5->notes[0],'자동으로 돌아�
 /* ── 31~ 노보 물량 이벤트 (includes/novo.php) ────────────────────────────── */
 $N = 'Duckhoo\\Redesign\\Novo\\';
 
-// 기본값은 **낱병 제한 없음**(묶음만). 아래 항목들은 낱병까지 세는 경우도 함께 재려고
-// 켜 두고, 기본값은 마지막에 따로 확인한다.
-$singlesOn = function(){ $GLOBALS['__filters']['duckhoo_novo_event'] = [fn($c) => ['singles' => true] + $c]; };
+// **하루 한도는 꺼진 것이 기본이다** (사장님 결정 2026-09-10 — 세트 구매 제한 해제).
+// 한도가 하는 일을 재려면 켜 놓고 봐야 한다. 꺼진 기본값은 맨 끝에서 따로 확인한다.
+// 낱병까지 세는 경우도 함께 재려고 singles 도 켜 두고, 그 기본값도 따로 본다.
+$capOn = function( array $more = [] ) {
+  $GLOBALS['__filters']['duckhoo_novo_event'] = [fn($c) => $more + ['limit_on' => true] + $c];
+};
+$singlesOn = function() use ($capOn) { $capOn(['singles' => true]); };
 $singlesOn();
 
 $mk = function(int $id, string $name, float $price = 9900.0, bool $stock = true, bool $manage = false, ?int $left = null) {
@@ -503,7 +507,7 @@ $oi = new DhrFakeLine($plain, 1);
 $ok(($N.'units_in_order_item')($oi) === 1, '메타가 없으면 1');
 
 // 41-g. 기본값 — 낱병은 제한하지 않는다 (사장님 결정)
-$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+$capOn();
 $GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
 $ok(($N.'limited')($plain) === false && ($N.'limited')($black) === false, '낱병은 한도가 걸리지 않는다');
 $ok(($N.'limited')($bundle) === true && ($N.'limited')($ten) === true, '묶음은 한도가 걸린다');
@@ -621,8 +625,39 @@ $singlesOn();
 add_filter('duckhoo_novo_event', function($c){ $c['on'] = false; return $c; });
 $GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 5]];
 $ok(($N.'validate_add')(true, 238, 99) === true, '이벤트를 끄면 막지 않는다');
+$ok(($N.'limiting')() === false, '이벤트가 꺼지면 한도도 꺼진다');
 $GLOBALS['__filters']['duckhoo_novo_event'] = [];
 $GLOBALS['__cart']->items = [];
+
+// 44. 세트 구매 제한 해제 (사장님 2026-09-10) — 기본값이 「한도 없음」이다.
+//     막는 쪽과 한도를 말하는 글자가 **함께** 사라져야 한다. 한쪽만 꺼지면
+//     「하루 한 세트」라고 써 놓고 안 막거나, 안 써 놓고 막는다.
+$GLOBALS['__filters']['duckhoo_novo_event'] = [];
+$GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__notices'] = [];
+$ok(($N.'on')() === true, '이벤트 자체는 그대로 켜져 있다');
+$ok(($N.'limiting')() === false, '하루 구매 한도는 꺼져 있다');
+$ok(($N.'limited')($bundle) === false && ($N.'limited')($plain) === false, '어느 상품도 한도 대상이 아니다');
+
+$GLOBALS['__logged_in'] = ++$uid;
+$ok(($N.'validate_add')(true, 600, 9) === true, '묶음을 아홉 세트 담아도 막지 않는다');
+$GLOBALS['__cart']->items = [['data' => $bundle, 'quantity' => 9]];
+$ok(($N.'validate_add')(true, 600, 9) === true, '장바구니에 이미 아홉 세트가 있어도 더 담긴다');
+$ok(($N.'over_messages')() === [], '거절할 말이 없다');
+($N.'check_cart_page')();
+$ok(count($GLOBALS['__notices']) === 0, '장바구니 화면에 아무 안내도 안 뜬다');
+$ok(($N.'store_max')(null, $bundle, ['key' => 'k']) === null, 'Store API 상한을 낮추지 않는다');
+($N.'guard_order')();  // 던지면 여기서 죽는다
+$ok(true, '주문 만들기도 막지 않는다');
+
+// 글자도 같이 내려간다
+$ok(str_contains(apply_filters('duckhoo_card_extra', '', $bundle), '하루') === false, '카드에 「하루 한 세트」가 안 나온다');
+$ok(apply_filters('duckhoo_js_config', [])['novo'] ?? null === null, '선택창에 상한을 넘기지 않는다');
+ob_start(); ($N.'product_notice')($bundle); $pn = ob_get_clean();
+$ok('' === trim($pn), '재고 숫자가 없으면 상세에 아무 상자도 안 그린다');
+ob_start(); ($N.'product_notice')($lowst); $pn = ob_get_clean();   // 재고 관리가 켜진 상품
+$ok(!str_contains($pn, '제한') && !str_contains($pn, '하루 한 세트'), '상세 안내가 제한을 말하지 않는다');
+$ok(str_contains($pn, '남은 재고'), '남은 재고를 말할 자리는 남는다');
+$GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
 
 
 /* ── 사진 후기 적립 (includes/review-photos.php) ────────────────────────── */
