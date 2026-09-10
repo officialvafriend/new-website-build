@@ -69,6 +69,7 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 					}
 					if ( $dhp_gated ) {
 						echo '<div class="dhp-gal__slide on">' . $product->get_image( 'woocommerce_single' ) . '</div>'; // phpcs:ignore
+						echo \Duckhoo\Redesign\Product\gate(); // phpcs:ignore — 「19」 위의 문
 					} elseif ( ! $dhp_images ) {
 						echo '<div class="dhp-gal__slide on">' . wc_placeholder_img( 'woocommerce_single' ) . '</div>'; // phpcs:ignore
 					}

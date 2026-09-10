@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -161,6 +161,8 @@ $month = (int) wp_date( 'n' );
 		<?php endforeach; ?>
 	</nav>
 	<?php endif; ?>
+
+	<?php echo gate_note(); // phpcs:ignore — 비로그인: 사진이 왜 안 보이는지 ?>
 
 	<?php if ( $deals ) : ?>
 	<section class="deals"><div class="deals-h"><div><p class="sh-eb"><i></i><?php echo (int) $month; ?>월 특가</p><h2>오늘의 특가</h2></div>

@@ -216,5 +216,6 @@ function archive_title(): void {
 		echo '<span class="dhr-arch__n">' . esc_html( number_format_i18n( $total ) ) . '종</span>';
 	}
 	echo '</header>';
+	echo \Duckhoo\Redesign\Front\gate_note(); // phpcs:ignore — 비로그인: 사진이 왜 안 보이는지
 }
 add_action( 'woocommerce_before_shop_loop', __NAMESPACE__ . '\\archive_title', 5 );

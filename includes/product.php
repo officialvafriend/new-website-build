@@ -95,6 +95,33 @@ function price(): void {
  *
  * @return void
  */
+/**
+ * 비로그인 상세의 사진 자리 — 「19」 위에 얹는 안내판.
+ *
+ * 갤러리는 로그인해야 열린다 (single-product.php 가 get_image() 한 장만 그린다).
+ * 그 한 장이 회색 「19」라 지금은 아무 말도 없다. 왜 가렸는지와 여는 법을 적고,
+ * 가입 · 로그인 뒤 **이 상품으로 돌아오게** 한다. `form.cart` 바깥이라 구매 게이트가
+ * 읽는 칸 이름과는 무관하다.
+ *
+ * @param string $back 돌아올 주소 (기본: 지금 상품).
+ * @return string
+ */
+function gate( string $back = '' ): string {
+	if ( ! \Duckhoo\Redesign\Front\gated() ) {
+		return '';
+	}
+	if ( '' === $back ) {
+		$back = (string) get_permalink();
+	}
+	$pts = number_format_i18n( \Duckhoo\Redesign\Front\signup_points() );
+	return '<div class="dhp-gate">'
+		. '<p class="dhp-gate__t">사진은 성인인증 회원만 볼 수 있어요</p>'
+		. '<p class="dhp-gate__p">19세 미만 판매 금지 품목이라 휴대폰 본인확인 뒤에 열려요. 가입 즉시 ' . esc_html( $pts ) . '원 적립.</p>'
+		. '<a class="dhp-gate__btn" href="' . esc_url( \Duckhoo\Redesign\Front\join_url( $back ) ) . '">가입하고 사진 보기</a>'
+		. '<a class="dhp-gate__login" href="' . esc_url( \Duckhoo\Redesign\Front\login_url( $back ) ) . '">이미 회원이면 로그인</a>'
+		. '</div>';
+}
+
 function benefits(): void {
 	global $product;
 	$rows = array( '30,000원 이상 무료배송 · 우체국택배', '평일 16시 이전 입금 확인 시 당일 출고', '미개봉 7일 이내 교환 · 환불' );

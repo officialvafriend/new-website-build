@@ -843,5 +843,26 @@ $ok($part === false, '시간이 남으면 「일부」가 아니다');
 $GLOBALS['__orders'] = [];
 
 
+// ── 「19」 가림을 벽이 아니라 문으로 (구매 여정 목 1, 2026-09-10) ──────────
+$F = 'Duckhoo\\Redesign\\Front\\';
+$PR = 'Duckhoo\\Redesign\\Product\\';
+$GLOBALS['__logged_in'] = 0;
+$ok(($F.'gated')() === true, '비로그인은 사진이 가려진 손님이다');
+$ok(str_contains(($F.'join_url')('https://duck-hoo.com/product/x/'), '/register/') && str_contains(($F.'join_url')('https://duck-hoo.com/product/x/'), 'redirect_to='), '가입 주소에 돌아올 곳이 붙는다');
+$ok(!str_contains(($F.'join_url')(), 'redirect_to'), '돌아올 곳이 없으면 붙이지 않는다');
+$ok(str_contains(($F.'login_url')('https://duck-hoo.com/p/'), 'redirect_to='), '로그인 주소에도 돌아올 곳이 붙는다');
+$note = ($F.'gate_note')();
+$ok(str_contains($note, '성인인증 회원') && str_contains($note, '/register/') && str_contains($note, '8,800'), '목록 한 줄이 왜 · 어떻게 · 얼마를 말한다');
+$g = ($PR.'gate')('https://duck-hoo.com/product/x/');
+$ok(str_contains($g, 'dhp-gate__btn') && str_contains($g, '가입하고 사진 보기'), '상세 안내판에 가입 버튼이 있다');
+$ok(str_contains($g, 'dhp-gate__login') && str_contains($g, 'redirect_to='), '로그인 길도 있고 이 상품으로 돌아온다');
+$ok(!str_contains($g, '깨진') && !str_contains($g, '<form'), '폼을 만들지 않는다 — 구매 게이트는 form.cart 만 읽는다');
+$GLOBALS['__logged_in'] = 5;
+$ok(($F.'gated')() === false && '' === ($F.'gate_note')() && '' === ($PR.'gate')(), '로그인하면 아무것도 그리지 않는다');
+$GLOBALS['__logged_in'] = 0;
+add_filter('duckhoo_photos_gated', '__return_false');
+$ok(($F.'gated')() === false, '필터로 끌 수 있다');
+$GLOBALS['__filters']['duckhoo_photos_gated'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

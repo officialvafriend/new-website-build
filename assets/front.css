@@ -127,6 +127,13 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .card .fig{aspect-ratio:1/1;position:relative;display:block;margin:.6rem;border-radius:16px;overflow:hidden;background:#F5F5F7}
 .dhr .card .fig img{width:100%;height:100%;object-fit:cover}
 .dhr .card.is-out .fig{filter:saturate(.25) opacity(.7)}
+/* 비로그인 — 「19」 가림 위의 한 줄. 불투명 · 사진 밑변에 붙는 띠. 왜인지는 .dhr-gate 가 한 번만 말한다 */
+.dhr .card .fig .lock{position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;background:#111;color:#fff;font-size:13px;font-weight:700;line-height:1.3;text-align:center;padding:.45rem .5rem;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dhr .dhr-gate{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .9rem;margin:.25rem 0 1.1rem;padding:.8rem 1rem;background:#fff;border:1px solid #E1E5E8;border-left:4px solid #C2410C;border-radius:14px;font-size:15px;line-height:1.55;color:#4E565F;word-break:keep-all}
+.dhr .dhr-gate b{color:#111}
+.dhr .dhr-gate a{color:#C2410C;font-weight:800;text-decoration:none;white-space:nowrap}
+.dhr .dhr-gate a::after{content:" →"}
+.dhr .dhr-gate a:hover,.dhr .dhr-gate a:focus-visible{text-decoration:underline}
 .dhr .eb{position:absolute;top:.7rem;left:.7rem;font-size:13px;font-weight:800;letter-spacing:-.01em;color:#1565C0;background:rgba(255,255,255,.92);padding:.25rem .55rem;border-radius:8px;z-index:1}
 .dhr .eb.out{color:#5F6770}.dhr .eb.sale{color:#B45309}.dhr .eb.best{color:#9F1239}
 .dhr .card .bd{padding:.2rem .95rem 1rem;display:flex;flex-direction:column;gap:.25rem;flex:1 1 auto}

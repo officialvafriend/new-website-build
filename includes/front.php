@@ -405,10 +405,14 @@ function card( \WC_Product $p ): string {
 		$off = '<em class="off">' . (int) round( ( 1 - (float) $p->get_price() / (float) $p->get_regular_price() ) * 100 ) . '%</em>';
 	}
 
-	return '<article class="card' . ( $p->is_in_stock() ? '' : ' is-out' ) . '">'
+	// 비로그인에게는 사진이 「19」로 가려진다 (키플 성인 인증 게이트 — 우회하지 않는다).
+	// 그 위에 한 줄만 얹는다: 벽이 아니라 문이라고. 왜인지는 목록 맨 위 gate_note() 가 말한다.
+	$lock = gated() ? '<span class="lock" aria-hidden="true">가입하면 사진이 열려요</span>' : '';
+
+	return '<article class="card' . ( $p->is_in_stock() ? '' : ' is-out' ) . ( $lock ? ' is-gated' : '' ) . '">'
 		. '<a class="fig" href="' . esc_url( $url ) . '" aria-label="' . esc_attr( $n['title'] ) . '">'
 		. ( $eb ? '<span class="eb ' . esc_attr( $eb[1] ) . '">' . esc_html( $eb[0] ) . '</span>' : '' )
-		. $img . '</a>'
+		. $img . $lock . '</a>'
 		. '<div class="bd"><a class="nm" href="' . esc_url( $url ) . '">' . esc_html( $n['title'] ) . '</a>'
 		. ( $meta ? '<div class="meta">' . implode( '<span class="dot">·</span>', $meta ) . '</div>' : '' )
 		. '<div class="pr">' . $was . $off . $price . '</div>'
@@ -658,6 +662,58 @@ function signup_points(): int {
  *
  * @return string
  */
+/**
+ * 상품 사진이 가려져 보이는 손님인가 (= 비로그인).
+ *
+ * 키플의 성인 인증 게이트가 비로그인에게 모든 상품 사진을 「19」 이미지로 바꾼다.
+ * 그것은 지켜야 한다. 우리가 바꾸는 것은 **그 자리에 말을 얹는 것**뿐이다 —
+ * 지금은 말없는 회색 사각형이라 손님 눈에 「사진이 깨진 가게」로 읽힌다.
+ * 왜 가렸는지 · 어떻게 열리는지를 적으면, 같은 벽이 가입 유인이 된다.
+ *
+ * @return bool
+ */
+function gated(): bool {
+	return (bool) apply_filters( 'duckhoo_photos_gated', ! is_user_logged_in() );
+}
+
+/**
+ * 회원가입으로 가는 주소. 돌아올 곳을 주면 가입 뒤 그리로 온다
+ * (결제가 비로그인을 튕길 때 쓰는 것과 같은 `redirect_to`).
+ *
+ * @param string $back 돌아올 주소.
+ * @return string
+ */
+function join_url( string $back = '' ): string {
+	$url = (string) apply_filters( 'duckhoo_join_url', home_url( '/register/' ) );
+	return '' !== $back ? add_query_arg( 'redirect_to', rawurlencode( $back ), $url ) : $url;
+}
+
+/**
+ * 로그인으로 가는 주소 (돌아올 곳 포함).
+ *
+ * @param string $back 돌아올 주소.
+ * @return string
+ */
+function login_url( string $back = '' ): string {
+	$url = function_exists( 'wc_get_page_permalink' ) ? (string) wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
+	return '' !== $back ? add_query_arg( 'redirect_to', rawurlencode( $back ), $url ) : $url;
+}
+
+/**
+ * 목록 · 홈 맨 위에 한 줄 — 사진이 왜 안 보이는지, 어떻게 열리는지.
+ * 카드마다 붙는 띠는 「무엇」만 말하고, 「왜」는 여기서 한 번만 말한다.
+ *
+ * @return string
+ */
+function gate_note(): string {
+	if ( ! gated() ) {
+		return '';
+	}
+	return '<p class="dhr-gate"><span>상품 사진은 <b>성인인증 회원</b>에게만 보여요.</span> '
+		. '<a href="' . esc_url( join_url() ) . '">가입 즉시 '
+		. esc_html( number_format_i18n( signup_points() ) ) . '원 적립 · 본인확인 1분</a></p>';
+}
+
 function inquiry_url(): string {
 	$board = (string) apply_filters( 'duckhoo_inquiry_page', home_url( '/inquiries/' ) );
 	if ( is_user_logged_in() ) {

@@ -1140,6 +1140,26 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__thumbs button{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__thumbs button.on{ border-color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__thumbs img{ width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* 비로그인 — 「19」 위의 문. 불투명 흰 판이 사진 아래쪽에 앉는다 (블러 없음) */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate{
+  position: absolute; left: .75rem; right: .75rem; bottom: .75rem; z-index: 2;
+  background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8); border-radius: 14px;
+  padding: .95rem 1rem 1rem; display: grid; gap: .35rem; text-align: left; word-break: keep-all;
+  box-shadow: 0 12px 28px -18px rgba(17,17,17,.35);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__t{ margin: 0; font-size: 16px; font-weight: 800; line-height: 1.35; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__p{ margin: 0 0 .35rem; font-size: 13.5px; line-height: 1.55; color: var(--dh-ink-2, #4E565F); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__btn{
+  display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 1.1rem;
+  background: var(--dh-ink, #111); color: #fff !important; font-size: 15px; font-weight: 800; border-radius: 999px; text-decoration: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__btn:hover{ background: var(--dh-accent-warm, #C2410C); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__login{
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; margin: -.15rem 0 -.5rem;
+  font-size: 14px; font-weight: 700; color: var(--dh-ink-2, #4E565F) !important; text-decoration: underline; text-underline-offset: .18em;
+}
+@media (max-width: 420px){ html body.dhr.dhr-wrap.dhr-wrap .dhp-gate{ left: .5rem; right: .5rem; bottom: .5rem; padding: .8rem .85rem .9rem; } }
+
 /* 구매 상자 안의 짧은 설명 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-short{ margin: .6rem 0 0; font-size: 15px; line-height: 1.65; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-short p{ margin: 0; }
