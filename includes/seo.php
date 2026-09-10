@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
 const META      = '_dhr_text';          // 상품 한 줄 설명 (글)
 const OPT_NAVER = 'duckhoo_naver_verify';
 const OPT_RW    = 'duckhoo_seo_rewrite';
-const RW_V      = '2';
+const RW_V      = '3';
 const QV        = 'dhr_brand';
 
 /* ── 1. 네이버 인증 ──────────────────────────────────────────────────────── */
@@ -449,7 +449,7 @@ function rewrite(): void {
 	add_rewrite_tag( '%' . QV . '%', '([^&]+)' );
 	add_rewrite_rule( '^brand/([^/]+)/?$', 'index.php?' . QV . '=$matches[1]', 'top' );
 	add_rewrite_tag( '%dhr_sitemap%', '([a-z]+)' );
-	add_rewrite_rule( '^brand-sitemap\.xml$', 'index.php?dhr_sitemap=brand', 'top' );
+	add_rewrite_rule( '^brands\.xml$', 'index.php?dhr_sitemap=brand', 'top' );
 	if ( RW_V !== (string) get_option( OPT_RW, '' ) && function_exists( 'flush_rewrite_rules' ) ) {
 		flush_rewrite_rules( false );
 		update_option( OPT_RW, RW_V );
@@ -471,7 +471,7 @@ function query_vars( $vars ): array {
 }
 
 /**
- * 브랜드 페이지 사이트맵 `/brand-sitemap.xml`.
+ * 브랜드 페이지 사이트맵 `/brands.xml`. **`…-sitemap.xml` 로 지으면 안 된다** — AIOSEO 가 그 모양을 전부 자기 규칙으로 잡아 모르는 이름에 404 를 낸다 (2026-09-10 확인).
  *
  * AIOSEO 사이트맵은 상품 · 분류 · 글만 안다 — 브랜드 페이지는 워드프레스 글이 아니라
  * 거기 안 실린다. 그래서 따로 낸다. 네이버 · 구글에 한 번 더 제출하면 된다.
@@ -758,7 +758,7 @@ function screen(): void {
 		$u = brand_url( $b );
 		echo '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">' . esc_html( $u ) . '</a><br>';
 	}
-	echo '<span class="description">이름 앞 [브랜드] 로 모은 목록입니다. 푸터 · 홈의 브랜드 링크가 이 주소를 씁니다. AIOSEO 사이트맵에는 안 실리므로 <code>' . esc_html( home_url( '/brand-sitemap.xml' ) ) . '</code> 을 네이버 · 구글에 따로 제출합니다.</span></td></tr>';
+	echo '<span class="description">이름 앞 [브랜드] 로 모은 목록입니다. 푸터 · 홈의 브랜드 링크가 이 주소를 씁니다. AIOSEO 사이트맵에는 안 실리므로 <code>' . esc_html( home_url( '/brands.xml' ) ) . '</code> 을 네이버 · 구글에 따로 제출합니다.</span></td></tr>';
 	echo '<tr><th>상품 구조화 데이터</th><td>브랜드 · 설명을 채웁니다. 가격 · 재고는 워드커머스 값 그대로.</td></tr>';
 	echo '</tbody></table>';
 	echo '<p class="description" style="max-width:720px">글에 쓰지 않는 말: 건강 · 금연 · 순하다 · 해롭지 않다 (담배사업법 광고 제한). 맛 · 용량 · 니코틴 · 기기 호환 · 가격 · 배송만 말합니다.</p>';
