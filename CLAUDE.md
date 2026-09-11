@@ -1405,3 +1405,30 @@ sticky 도 아니다.
 
 검증: `php design/php-tests/run.php` (검색 노출 51개). 라이브는 `/brand/novo/` 의 h1 · 소개 줄 · `<title>` ·
 meta description, 상품의 JSON-LD `description`, 폐호흡 분류의 meta description 을 curl 로 본다.
+
+## 결제 금액 검증은 테마에 있다 — `dh-price-guard.php` (2026-09-11)
+
+사장님 신고: 결제 화면에 「"[리퀴드랩] 핑크 그레이프" 상품의 주문 금액이 올바르게 계산되지
+않았습니다. (정상 금액 19,800원)」. **우리 플러그인에는 그 글자가 없다** — 테마다.
+
+- **어디**: `키플_액상덕후/inc/dh-price-guard.php` (장바구니 · 결제 차단) ·
+  `inc/dh-price-audit.php` (주문 생성 후 검산 + 관리자 화면). 3단계로 막는다:
+  ①결제 단계에서 `WC()->cart->calculate_totals()` 강제 재계산 → ②`wc_add_notice(...,'error')`
+  로 결제 차단(우선순위 99) → ③주문이 생기면 `확인필요`(`wc-need-check`)로 돌리고 주문 메모
+- **무엇을 견주는가**: 옵션 빌더가 있는 줄만 본다.
+  `expected = wd_calculate_builder_total( $cart_item['wd_option_builder'], $base_price )` 대
+  `actual = $cart_item['line_subtotal']`, 1원 미만은 반올림으로 넘긴다.
+  즉 **옵션 행(JSON)이 말하는 금액**과 **워드커머스가 실제로 물린 금액**이 갈리면 막는다
+- 로그: `error_log('[DH 금액오류] 결제 차단 product_id=%d 정상=%s 청구=%s user=%d')`.
+  정상↔청구의 **차액**이 원인을 말해 준다 (옵션값 하나만큼 차이 나면 그 옵션 행이 빠진 것)
+- **옵션 수량 규칙은 또 다른 곳이다** (헷갈리지 말 것): 묶음의 `맛 선택을 총 N개` 는
+  `functions.php:9095`(JS) · `10776`(PHP `woocommerce_check_cart_items`) ·
+  `wd-option-builder.js` · `wd-single-product-checkout-popup.js` 네 군데가 각자 검사한다
+- **이번 건은 사장님이 Codex 로 직접 고쳤다** (2026-09-11). 우리 플러그인은 손대지 않았다.
+  다시 나면 위 로그의 차액부터 본다
+
+### 도구 → 코드 찾기 (`includes/finder.php`)
+
+화면 문구가 어느 코드에서 나오는지 찾는 관리자 화면. 테마(부모 · 자식)의 PHP · JS 와
+Code Snippets 표(`{prefix}snippets`)에서 낱말을 찾아 앞뒤 12줄을 보여 준다. **읽기만 한다.**
+테마 · 스니펫 파일이 이 저장소에 없어 진단 때마다 사장님께 캡처를 부탁하던 것을 대신한다.
