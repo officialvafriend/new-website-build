@@ -173,7 +173,11 @@ function auto_text( \WC_Product $p ): string {
 	$price = (float) $p->get_price();
 	$parts = array();
 
-	$parts[] = trim( $n['brand'] . ' ' . $n['title'] );
+	// 이름이 `[맥스쿨] 맥스쿨 소다…` 처럼 브랜드를 한 번 더 쓴 상품이 많다 —
+	// 그대로 엮으면 「맥스쿨 맥스쿨 소다」가 된다 (2026-09-11).
+	$brand   = trim( $n['brand'] );
+	$title   = trim( $n['title'] );
+	$parts[] = '' !== $brand && 0 === mb_strpos( $title, $brand ) ? $title : trim( $brand . ' ' . $title );
 	if ( $price > 0 ) {
 		$money = number_format( $price ) . '원';
 		if ( $pb['qty'] > 1 ) {

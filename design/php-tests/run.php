@@ -955,6 +955,10 @@ $t = ($S.'auto_text')($GLOBALS['__products'][902]);
 $ok(str_contains($t, '120,000원 (병당 10,900원)') && str_contains($t, '입호흡 액상'), '묶음은 병당 가격을 십원 단위로 붙이고 입호흡을 앞에 둔다');
 $t = ($S.'auto_text')($GLOBALS['__products'][904]);
 $ok(!str_contains($t, '병당'), '기기 + 증정 구성은 병으로 나누지 않는다');
+// 이름이 브랜드를 한 번 더 쓴 상품 — 「맥스쿨 맥스쿨 소다」가 되지 않게.
+$GLOBALS['__products'][905] = new WC_Product(905, '[맥스쿨] 맥스쿨 소다 무니코틴 액상', 11900);
+$t = ($S.'auto_text')($GLOBALS['__products'][905]);
+$ok(str_starts_with($t, '맥스쿨 소다 무니코틴 액상') && 1 === substr_count($t, '맥스쿨'), '이름이 브랜드로 시작하면 브랜드를 두 번 쓰지 않는다');
 $ok(($S.'hand_text')($GLOBALS['__products'][901]) === '', '손으로 쓴 글이 없으면 빈 문자열');
 ob_start(); ($S.'render_text')($GLOBALS['__products'][901]); $h = ob_get_clean();
 $ok($h === '', '손으로 쓴 글이 없으면 화면에 아무것도 안 그린다 (자동 글은 보이는 값의 되풀이)');
