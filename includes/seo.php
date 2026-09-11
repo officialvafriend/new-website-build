@@ -312,22 +312,62 @@ function cap( string $d ): string {
 }
 
 /**
+ * AIOSEO 가 상품 템플릿으로 **자동으로 채운** 설명인가.
+ *
+ * 2026-09-11 측정: 상품 175개 중 137개의 메타 설명이 꼬리까지 똑같았다 —
+ * 「… 상품입니다. 가입 시 적립금 8,800원 증정 + 3만원 이상 무료배송으로 빠르게 만나보세요.」
+ * 이름과 분류만 바뀌는 글이라 맛 · 용량 · 니코틴이 한 글자도 없고, 값이 비어 있을 때만
+ * 우리 글을 쓰던 규칙 때문에 **상품 글이 메타 설명에 나간 적이 한 번도 없었다.**
+ * 사장님이 손으로 쓴 38개는 이 꼬리가 없어 그대로 남는다.
+ *
+ * @param string $d 지금 값.
+ * @return bool
+ */
+function templated( string $d ): bool {
+	foreach ( (array) apply_filters( 'duckhoo_meta_desc_template_marks', array( '상품입니다. 가입 시 적립금' ) ) as $mark ) {
+		$mark = (string) $mark;
+		if ( '' !== $mark && false !== mb_strpos( $d, $mark ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * 검색 결과에서 누를 이유 한 줄. 앞의 상품 글이 먼저고 이것은 꼬리다 —
+ * 160자를 넘으면 cap() 이 문장 끝에서 자르므로 이 꼬리부터 떨어진다.
+ *
+ * @param string $own 우리 상품 글.
+ * @return string
+ */
+function with_shop( string $own ): string {
+	$tail = (string) apply_filters( 'duckhoo_meta_desc_tail', '액상덕후 — 가입 즉시 ' . number_format( (float) signup_points() ) . '원 적립.' );
+	return '' === trim( $tail ) ? $own : rtrim( $own ) . ' ' . trim( $tail );
+}
+
+/**
  * 메타 설명. AIOSEO 가 비워 둔 자리만 채운다 — 사장님이 쓴 설명이 있으면 그대로.
  *
  * @param string $d 지금 값.
  * @return string
  */
 function description( $d ): string {
-	$d = trim( (string) $d );
-	if ( '' !== $d ) {
+	$d    = trim( (string) $d );
+	$prod = function_exists( 'is_product' ) && is_product();
+	if ( '' !== $d && ! ( $prod && templated( $d ) ) ) {
 		return cap( $d );   // 사장님이 쓴 글. 원문은 그대로, 검색 결과로 나갈 때만 줄인다
 	}
 	if ( is_brand_page() ) {
 		return brand_intro( current_brand() );
 	}
-	if ( function_exists( 'is_product' ) && is_product() ) {
+	if ( $prod ) {
 		$p = function_exists( 'wc_get_product' ) ? wc_get_product( get_queried_object_id() ) : null;
-		return $p instanceof \WC_Product ? text( $p ) : '';
+		if ( ! $p instanceof \WC_Product ) {
+			return cap( $d );   // 상품을 못 읽으면 있던 글이라도 둔다 — 비우는 것이 더 나쁘다
+		}
+		$hand = trim( hand_text( $p ) );
+		// auto_text() 는 꼬리(가입 적립 · 무료배송)를 이미 달고 있다 — 두 번 붙이지 않는다.
+		return cap( '' !== $hand ? with_shop( $hand ) : auto_text( $p ) );
 	}
 	if ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() ) {
 		$t = get_queried_object();

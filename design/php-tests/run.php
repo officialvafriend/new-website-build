@@ -988,6 +988,17 @@ $GLOBALS['__qv'] = [];
 $ok(($S.'description')('') === '', '아무 화면도 아니면 비운다');
 $GLOBALS['__is_product'] = true; $GLOBALS['__qid'] = 901;
 $ok(str_starts_with(($S.'description')(''), '라임 두 겹'), '상품 상세는 상품 글');
+$ok(str_contains(($S.'description')(''), '가입 즉시 8,800원 적립'), '손으로 쓴 글에는 누를 이유를 꼬리로 붙인다');
+// AIOSEO 상품 템플릿(175개 중 137개가 이 꼬리였다)은 우리 글로 바꾼다. 손으로 쓴 것은 그대로.
+$tpl = '[펠릭스] 더블라임 - 액상덕후의 입호흡 액상 상품입니다. 가입 시 적립금 8,800원 증정 + 3만원 이상 무료배송으로 빠르게 만나보세요.';
+$ok(($S.'templated')($tpl) === true && ($S.'templated')('사장님이 손으로 쓴 설명입니다.') === false, '템플릿으로 채운 설명을 가려낸다');
+$ok(str_starts_with(($S.'description')($tpl), '라임 두 겹'), '템플릿 설명이면 상품 글로 바꾼다');
+$ok(($S.'description')('사장님이 손으로 쓴 설명입니다.') === '사장님이 손으로 쓴 설명입니다.', '손으로 쓴 설명은 상품 상세에서도 그대로');
+$GLOBALS['__pmeta'][901] = [];
+$GLOBALS['__slugs'][901] = '글-없는-상품';
+$auto = ($S.'description')($tpl);
+$ok(str_contains($auto, '가입 즉시 8,800원 적립') && ! str_contains($auto, '적립.  ') && 1 === substr_count($auto, '액상덕후'), '우리 글이 없으면 사실로 엮은 글 — 꼬리는 한 번만');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
 $GLOBALS['__is_product'] = false; $GLOBALS['__qid'] = 0;
 // 브랜드 페이지
 $ok(($S.'brand_slug')('노보') === 'novo' && ($S.'brand_slug')('조바') === rawurlencode('조바'), '영문 조각이 있으면 그것, 없으면 한글 그대로');
