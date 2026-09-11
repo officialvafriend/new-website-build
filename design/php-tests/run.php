@@ -1047,7 +1047,7 @@ $ok(($S.'hand_text')($GLOBALS['__products'][901]) === '사장님이 상자에 �
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][902] = '노보-10-1';
 $GLOBALS['__slugs'][903] = rawurlencode('노보-블랙-블랙멘솔-9-8mg-30ml');
-$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 14, '노보 10종 글이 실렸다 (모두 14종)');
+$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 32, '노보 10종 · 화이트아웃 · 디오리퀴드 · 펠릭스 · 네스티 글이 실렸다 (주소 32개)');
 $ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
 foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
 
