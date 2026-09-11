@@ -996,7 +996,7 @@ $ok(($S.'brand_from_slug')(rawurlencode('조바')) === '조바', '한글 조각�
 $ok(($S.'brand_from_slug')('nope') === '' && ($S.'brand_from_slug')('') === '', '모르는 조각은 빈 문자열');
 $ok(($S.'brand_url')('노보') === 'https://duck-hoo.com/brand/novo/', '브랜드 주소');
 $ok(apply_filters('duckhoo_brand_url', 'https://duck-hoo.com/?s=노보', '노보') === 'https://duck-hoo.com/brand/novo/', '푸터 · 홈의 브랜드 링크가 이 주소로 바뀐다');
-$ok(($S.'brand_prefixes')('노보') === ['[노보]','[노보 블랙]'], '노보는 노보 블랙까지 함께 잡는다');
+$ok(($S.'brand_prefixes')('노보') === ['[노보]','[노보 블랙]','[노보 리퀴드]','[노보 블랙 리퀴드]'], '노보는 노보 블랙과 10+1 묶음(…리퀴드)까지 함께 잡는다');
 $GLOBALS['__qv'] = ['dhr_brand' => 'novo'];
 $ok(($S.'is_brand_page')() && ($S.'current_brand')() === '노보', '주소 조각이 있으면 브랜드 페이지');
 $ok(($S.'brand_title')() === '노보 액상', '브랜드 페이지 h1');
@@ -1012,7 +1012,7 @@ $q = new DhrFakeQuery(['dhr_brand' => 'novo']);
 ($S.'pre_get_posts')($q);
 $ok($q->get('post_type') === 'product' && $q->is_home === false && $q->is_archive === true && !$q->get('post__in'), '메인 쿼리를 상품 목록으로 바꾸고 is_home 을 끈다');
 $w = ($S.'posts_where')(' AND 1=1', $q);
-$ok(str_contains($w, 'wp_posts.post_title LIKE %s OR wp_posts.post_title LIKE %s') && $GLOBALS['wpdb']->lastArgs === ['[노보]%', '[노보 블랙]%'], '이름 앞 [노보] · [노보 블랙] 으로 고른다');
+$ok(substr_count($w, 'wp_posts.post_title LIKE %s') === 4 && $GLOBALS['wpdb']->lastArgs === ['[노보]%', '[노보 블랙]%', '[노보 리퀴드]%', '[노보 블랙 리퀴드]%'], '이름 앞 [노보] · [노보 블랙] · 10+1 묶음으로 고른다');
 $q2 = new DhrFakeQuery(['dhr_brand' => 'nope']);
 ($S.'pre_get_posts')($q2);
 $ok($q2->get('post__in') === [0], '모르는 브랜드는 빈 결과 (404)');

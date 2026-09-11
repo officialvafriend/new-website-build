@@ -156,7 +156,13 @@ function cat_icon( string $name ): string {
  * @return array<string,string> 갈라진 이름 => 묶을 이름.
  */
 function brand_aliases(): array {
-	return (array) apply_filters( 'duckhoo_brand_aliases', array( '노보 블랙' => '노보' ) );
+	return (array) apply_filters( 'duckhoo_brand_aliases', array(
+		'노보 블랙'           => '노보',
+		// 10+1 묶음은 이름이 `[노보 리퀴드]` · `[노보 블랙 리퀴드]` 라 앞의 둘에 안 걸린다.
+		// 그대로 두면 브랜드가 넷으로 쪼개져 노보 페이지에서 10+1 두 개가 빠진다 (2026-09-11).
+		'노보 리퀴드'         => '노보',
+		'노보 블랙 리퀴드'    => '노보',
+	) );
 }
 
 /**
