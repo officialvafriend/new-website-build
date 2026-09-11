@@ -74,6 +74,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/novo-admin.php';
 	// 매출 대시보드 — 이 가게의 진짜 주문 상태로 센다(관리자 · 읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/sales.php';
+	// 도구 → 코드 찾기 — 화면 문구가 테마 · 스니펫 어디서 나오는지 (읽기 전용).
+	require_once plugin_dir_path( __FILE__ ) . 'includes/finder.php';
 }
 
 
