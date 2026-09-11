@@ -283,6 +283,35 @@ function cat_text( $term ): string {
 }
 
 /**
+ * 메타 설명 길이를 자른다.
+ *
+ * 2026-09-11: 입호흡 분류의 설명이 230자였다. 검색 결과는 한글 기준 80자 안팎에서
+ * 잘리므로 그 뒤는 아무도 못 읽는데, 검색엔진이 자르면 **문장 한가운데**서 끊긴다.
+ * 여기서 **문장 끝**으로 잘라 두면 잘린 티가 안 난다.
+ *
+ * **원문은 건드리지 않는다** — AIOSEO 관리 화면의 글은 그대로 남고, 검색 결과로
+ * 나가는 값만 줄인다. 끄려면 `duckhoo_meta_desc_max` 를 0 으로.
+ *
+ * @param string $d 설명.
+ * @return string
+ */
+function cap( string $d ): string {
+	$d   = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $d ) ) );
+	$max = (int) apply_filters( 'duckhoo_meta_desc_max', 160 );
+	if ( $max < 1 || mb_strlen( $d ) <= $max ) {
+		return $d;
+	}
+	$head = mb_substr( $d, 0, $max );
+	// 문장 끝(마침표 · 물음표 · 느낌표)에서 자른다.
+	if ( preg_match( '/^(.*[.!?])[^.!?]*$/u', $head, $m ) && mb_strlen( $m[1] ) >= (int) ( $max * 0.5 ) ) {
+		return trim( $m[1] );
+	}
+	// 문장 끝이 없으면 낱말 경계에서 자르고 말줄임표를 붙인다.
+	$cut = mb_strrpos( $head, ' ' );
+	return trim( false !== $cut && $cut > $max * 0.5 ? mb_substr( $head, 0, $cut ) : $head ) . '…';
+}
+
+/**
  * 메타 설명. AIOSEO 가 비워 둔 자리만 채운다 — 사장님이 쓴 설명이 있으면 그대로.
  *
  * @param string $d 지금 값.
@@ -291,7 +320,7 @@ function cat_text( $term ): string {
 function description( $d ): string {
 	$d = trim( (string) $d );
 	if ( '' !== $d ) {
-		return $d;
+		return cap( $d );   // 사장님이 쓴 글. 원문은 그대로, 검색 결과로 나갈 때만 줄인다
 	}
 	if ( is_brand_page() ) {
 		return brand_intro( current_brand() );
@@ -304,7 +333,7 @@ function description( $d ): string {
 		$t = get_queried_object();
 		if ( is_object( $t ) && ! empty( $t->name ) ) {
 			$own = trim( wp_strip_all_tags( (string) ( $t->description ?? '' ) ) );
-			return '' !== $own ? mb_substr( $own, 0, 160 ) : cat_text( $t );
+			return cap( '' !== $own ? $own : cat_text( $t ) );
 		}
 	}
 	return '';
@@ -728,11 +757,14 @@ function screen(): void {
 	}
 	// 설명 없는 분류
 	$empty_cats = array();
+	$long_cats  = array();
 	if ( function_exists( 'get_terms' ) ) {
 		$terms = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true ) );
 		foreach ( is_array( $terms ) ? $terms : array() as $t ) {
 			if ( '' === trim( wp_strip_all_tags( (string) $t->description ) ) ) {
 				$empty_cats[] = $t->name;
+			} elseif ( mb_strlen( trim( wp_strip_all_tags( (string) $t->description ) ) ) > 160 ) {
+				$long_cats[] = $t->name . ' (' . mb_strlen( trim( wp_strip_all_tags( (string) $t->description ) ) ) . '자)';
 			}
 		}
 	}
@@ -753,6 +785,7 @@ function screen(): void {
 	echo '<h2>플러그인이 채우는 것</h2><table class="widefat striped" style="max-width:720px"><tbody>';
 	echo '<tr><th>상품 한 줄 설명 (글)</th><td>' . (int) $total . '종 중 <b>' . (int) $no_text . '종</b>이 비어 있습니다. 상품 편집 화면의 「검색에 보이는 한 줄 설명」 상자에 쓰면 상세 · 검색 결과 · 구조화 데이터에 같이 갑니다. 비어 있는 상품은 이름 · 가격 · 분류로 엮은 한 줄이 검색 결과에 갑니다.</td></tr>';
 	echo '<tr><th>분류 설명</th><td>' . ( $empty_cats ? '<b>' . esc_html( implode( ' · ', $empty_cats ) ) . '</b> 은 관리자 설명이 비어 있어 플러그인 글이 검색 결과에 갑니다. 분류 편집의 「설명」을 채우면 그것이 우선입니다 (목록 화면에는 그리지 않습니다).' : '모든 분류에 설명이 있습니다.' ) . '</td></tr>';
+	echo '<tr><th>검색 결과용 길이</th><td>' . ( $long_cats ? '<b>' . esc_html( implode( ' · ', $long_cats ) ) . '</b> 의 설명이 160자를 넘습니다. 원문은 그대로 두고 <b>검색 결과로 나가는 값만</b> 문장 끝에서 잘라 보냅니다 — 검색엔진이 문장 한가운데서 끊는 것을 막기 위해서입니다.' : '모든 설명이 160자 안입니다.' ) . '</td></tr>';
 	echo '<tr><th>브랜드 페이지</th><td>';
 	foreach ( featured_brands( 8 ) as $b ) {
 		$u = brand_url( $b );

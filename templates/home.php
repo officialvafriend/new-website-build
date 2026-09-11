@@ -102,6 +102,13 @@ $month = (int) wp_date( 'n' );
 <main id="content" class="dhr-main">
 <div class="wrap">
 
+	<?php
+	// 홈을 대표하는 제목. 예전에는 히어로 슬라이드 다섯 장이 각각 h1 이라 이 화면이
+	// 무엇을 파는 곳인지 말하는 제목이 하나도 없었다. 화면 디자인은 그대로 두고
+	// 읽어 주는 쪽(검색엔진 · 스크린리더)에만 보이게 한 줄 세운다.
+	?>
+	<h1 class="dhr-h1"><?php echo esc_html( (string) apply_filters( 'duckhoo_home_h1', '액상덕후 — 전자담배 액상 전문몰' ) ); ?></h1>
+
 	<?php // 눌러서 검색창을 연다. 예전에는 빈 검색(?s=) 으로 보내 결과가 0건인 화면이 나왔다. ?>
 	<a class="msearch" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" data-search-open aria-haspopup="dialog" aria-expanded="false" aria-controls="dhr-search"><?php echo icon( 'search' ); // phpcs:ignore ?><span>‘샤인머스캣’ 처럼 찾아보세요</span></a>
 
@@ -118,7 +125,7 @@ $month = (int) wp_date( 'n' );
 					role="group" aria-roledescription="슬라이드" aria-label="<?php echo esc_attr( ( $i + 1 ) . ' / ' . count( $heroes ) ); ?>"
 					<?php echo $i ? 'aria-hidden="true" tabindex="-1"' : ''; ?>>
 					<div class="htxt"><span class="eb2"><?php echo esc_html( $hp_item->is_on_sale() ? '묶음 특가' : '추천 묶음' ); ?></span>
-						<h1><?php echo esc_html( $hn['title'] ); ?></h1>
+						<h3 class="hcard-t"><?php echo esc_html( $hn['title'] ); ?></h3>
 						<p class="hprice"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s><?php endif; ?>
 							<b><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</b></p>
 						<p><?php echo esc_html( $hn['brand'] ? $hn['brand'] . ' · ' : '' ); ?><?php echo $hp['qty'] > 1 ? esc_html( $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' ) : '단품'; ?></p>

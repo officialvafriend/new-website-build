@@ -971,6 +971,17 @@ $ok(str_contains($c, '폐호흡(DL)') && str_contains($c, '22종'), '분류 글�
 $ok(str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '니코틴 없는') && !str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '0종'), '무니코틴 · 0종은 숫자를 뺀다');
 foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($c.$t, $bad), "글에 「{$bad}」이 없다 (담배사업법)"); }
 $ok(($S.'description')('사장님이 쓴 것') === '사장님이 쓴 것', 'AIOSEO 에 값이 있으면 그대로');
+// 메타 설명 길이 자르기 (2026-09-11 — 입호흡 분류가 230자였다)
+$cap = $S.'cap';
+$ok($cap('짧은 설명입니다.') === '짧은 설명입니다.', '짧은 글은 손대지 않는다');
+$long = str_repeat('가나다라마바사아자차', 12) . ' 끝.';
+$ok(mb_strlen($cap($long)) <= 161, '긴 글은 160자 안으로 줄인다');
+$ok(str_ends_with($cap('첫 문장입니다. 둘째 문장입니다. ' . str_repeat('여기는 아주 긴 뒷말입니다 ', 20)), '둘째 문장입니다.'), '문장 끝에서 자른다 — 한가운데서 끊지 않는다');
+$ok(str_ends_with($cap(str_repeat('가나다라마바사아자차차차', 20)), '…'), '문장 끝이 없으면 말줄임표');
+$ok($cap('  <b>태그</b>와   여러   공백  ') === '태그와 여러 공백', '태그를 벗기고 공백을 하나로');
+add_filter('duckhoo_meta_desc_max', fn() => 0);
+$ok($cap($long) === trim(preg_replace('/\s+/u',' ',$long)), '필터로 0 을 주면 자르지 않는다');
+$GLOBALS['__filters']['duckhoo_meta_desc_max'] = [];
 $GLOBALS['__qv'] = [];
 $ok(($S.'description')('') === '', '아무 화면도 아니면 비운다');
 $GLOBALS['__is_product'] = true; $GLOBALS['__qid'] = 901;
