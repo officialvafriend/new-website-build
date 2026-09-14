@@ -1003,6 +1003,17 @@ $GLOBALS['__slugs'][901] = '글-없는-상품';
 $auto = ($S.'description')($tpl);
 $ok(str_contains($auto, '가입 즉시 8,800원 적립') && ! str_contains($auto, '적립.  ') && 1 === substr_count($auto, '액상덕후'), '우리 글이 없으면 사실로 엮은 글 — 꼬리는 한 번만');
 $GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+// 손으로 쓴 글이지만 **틀린** 상품은 덮는다 (노보 데저트에 블랙 설명이 붙어 있었다).
+$GLOBALS['__pmeta'][901]['_dhr_text'] = '우리 글';
+$wrong = '노보 블랙 데저트 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용.';
+$ok(($S.'description')($wrong) === $wrong, '목록에 없으면 손으로 쓴 글 그대로');
+$GLOBALS['__slugs'][901] = rawurlencode('노보-데저트-9-8mg-30ml');
+$ok(($S.'overridden')($GLOBALS['__products'][901]) === true && str_starts_with(($S.'description')($wrong), '우리 글'), '덮을 목록에 있으면 손으로 쓴 글이어도 우리 글로 바꾼다');
+$GLOBALS['__filters']['duckhoo_meta_desc_override'] = [fn($v) => []];
+$ok(($S.'description')($wrong) === $wrong, '필터로 목록을 비우면 도로 사장님 글');
+$GLOBALS['__filters']['duckhoo_meta_desc_override'] = [];
+$GLOBALS['__pmeta'][901] = [];
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
 $GLOBALS['__is_product'] = false; $GLOBALS['__qid'] = 0;
 // 브랜드 페이지
 $ok(($S.'brand_slug')('노보') === 'novo' && ($S.'brand_slug')('조바') === rawurlencode('조바'), '영문 조각이 있으면 그것, 없으면 한글 그대로');

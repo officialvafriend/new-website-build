@@ -350,28 +350,71 @@ function with_shop( string $own ): string {
 }
 
 /**
+ * **사장님(·Codex)이 손으로 쓴 설명인데 틀린 상품.** 여기 적힌 주소는 손으로 쓴 글이라도
+ * 우리 글로 덮는다 — AIOSEO 의 글은 우리 저장소에 없어 고칠 수가 없고, 그대로 두면
+ * 검색 결과에 틀린 말이 계속 나간다 (2026-09-11 확인, 2026-09-14 덮음).
+ *
+ * | 주소 | 무엇이 틀렸나 |
+ * |---|---|
+ * | `노보-데저트-9-8mg-30ml` | 일반 라인인데 「노보 **블랙** 데저트」라고 적혀 있었다 |
+ * | `초특가-노보-10병-병당-8000원-금액-80000원` | 실제 130,000원인데 「병당 7,000원(총 70,000원)」 |
+ *
+ * 사장님이 AIOSEO 상자를 직접 고치시면 이 목록에서 그 주소만 빼면 된다 (필터 한 줄).
+ *
+ * @return string[]
+ */
+function overrides(): array {
+	return array_map(
+		'rawurldecode',
+		(array) apply_filters(
+			'duckhoo_meta_desc_override',
+			array(
+				'노보-데저트-9-8mg-30ml',
+				'초특가-노보-10병-병당-8000원-금액-80000원',
+			)
+		)
+	);
+}
+
+/**
+ * 이 상품의 설명을 덮어야 하는가.
+ *
+ * @param \WC_Product $p 상품.
+ * @return bool
+ */
+function overridden( \WC_Product $p ): bool {
+	if ( ! method_exists( $p, 'get_slug' ) ) {
+		return false;
+	}
+	return in_array( rawurldecode( (string) $p->get_slug() ), overrides(), true );
+}
+
+/**
  * 메타 설명. AIOSEO 가 비워 둔 자리만 채운다 — 사장님이 쓴 설명이 있으면 그대로.
  *
  * @param string $d 지금 값.
  * @return string
  */
 function description( $d ): string {
-	$d    = trim( (string) $d );
-	$prod = function_exists( 'is_product' ) && is_product();
-	if ( '' !== $d && ! ( $prod && templated( $d ) ) ) {
+	$d = trim( (string) $d );
+	$p = function_exists( 'is_product' ) && is_product() && function_exists( 'wc_get_product' )
+		? wc_get_product( get_queried_object_id() )
+		: null;
+	$p    = $p instanceof \WC_Product ? $p : null;
+	$ours = $p && ( templated( $d ) || overridden( $p ) );
+	if ( '' !== $d && ! $ours ) {
 		return cap( $d );   // 사장님이 쓴 글. 원문은 그대로, 검색 결과로 나갈 때만 줄인다
 	}
 	if ( is_brand_page() ) {
 		return brand_intro( current_brand() );
 	}
-	if ( $prod ) {
-		$p = function_exists( 'wc_get_product' ) ? wc_get_product( get_queried_object_id() ) : null;
-		if ( ! $p instanceof \WC_Product ) {
-			return cap( $d );   // 상품을 못 읽으면 있던 글이라도 둔다 — 비우는 것이 더 나쁘다
-		}
+	if ( $p ) {
 		$hand = trim( hand_text( $p ) );
 		// auto_text() 는 꼬리(가입 적립 · 무료배송)를 이미 달고 있다 — 두 번 붙이지 않는다.
 		return cap( '' !== $hand ? with_shop( $hand ) : auto_text( $p ) );
+	}
+	if ( function_exists( 'is_product' ) && is_product() ) {
+		return cap( $d );   // 상품인데 못 읽었다 — 있던 글이라도 둔다. 비우는 것이 더 나쁘다
 	}
 	if ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() ) {
 		$t = get_queried_object();
@@ -383,6 +426,9 @@ function description( $d ): string {
 	return '';
 }
 add_filter( 'aioseo_description', __NAMESPACE__ . '\\description', 20 );
+// og · 트위터 설명도 AIOSEO 가 같은 글로 찍는다 — 한 화면에서 두 말이 갈리면 안 된다.
+add_filter( 'aioseo_og_description', __NAMESPACE__ . '\\description', 20 );
+add_filter( 'aioseo_twitter_description', __NAMESPACE__ . '\\description', 20 );
 
 /**
  * 제목 — 브랜드 페이지만 우리가 정한다. 나머지는 AIOSEO 값 그대로.
