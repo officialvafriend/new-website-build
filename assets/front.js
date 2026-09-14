@@ -200,9 +200,14 @@
       a.addEventListener('click', function(e){ if(e.metaKey || e.ctrlKey) return; e.preventDefault(); open(a); });
     });
   }
-  /* 담긴 직후 — WooCommerce 알림이 "장바구니에 추가" 를 말하면 서랍을 연다 */
-  var msg = document.querySelector('.woocommerce-message');
-  if(msg && /장바구니|cart/i.test(msg.textContent) && !document.body.classList.contains('woocommerce-cart')){ setTimeout(function(){ open(null); }, 350); }
+  /* 담긴 직후 — WooCommerce 알림이 "장바구니에 추가" 를 말하면 서랍을 연다.
+     **장바구니 · 주문서에서는 열지 않는다** — 거기까지 온 손님에게 장바구니를 다시
+     펴 보이는 것은 길을 막는 것이다 (주문서 제외는 2026-09-14). */
+  var msg  = document.querySelector('.woocommerce-message');
+  var here = document.body.classList;
+  if(msg && /장바구니|cart/i.test(msg.textContent) && !here.contains('woocommerce-cart') && !here.contains('woocommerce-checkout')){
+    setTimeout(function(){ open(null); }, 350);
+  }
   window.DHR = D; D.openCart = open;
 })();
 
