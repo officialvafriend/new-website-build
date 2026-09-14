@@ -753,7 +753,7 @@
     var list = rows();
     if(!list.length) return null;
     var cap = sets(list) * PER, g = groups(list);
-    for(var k in g){ if(g[k].free && g[k].qty > cap) return { key: k, cap: cap, box: g[k] }; }
+    for(var k in g){ if(g[k].free && g[k].qty > cap) return { key: k, cap: cap, box: g[k], excess: g[k].qty - cap }; }
     return null;
   }
   function remover(group, label){
@@ -781,14 +781,15 @@
     if(BUSY || (depth || 0) > 8) return;
     var o = over();
     if(!o) return;
-    var btn = null;
-    if(o.box.rows.length > 1){
-      btn = remover(o.key, o.box.rows[0].label || '');           /* 두 가지를 골랐다 → 먼저 것을 뺀다 */
-    }else{
-      var one = remover(o.key, o.box.rows[0].label || '');        /* 한 줄인데 수량이 넘쳤다 → − 로 내린다 */
-      var item = one && one.closest ? one.closest('.wd-option-item') : null;
-      btn = item ? item.querySelector('[class*="minus"]') : null;
-      if(!btn) btn = one;
+    /* **넘친 만큼만** 내린다. 먼저 고른 줄이 넘친 양보다 크면 그 줄을 지우지 않고
+       − 를 눌러 한 칸만 내린다 — 안 그러면 수량 2짜리 줄이 통째로 빠져 필요 이상으로 준다. */
+    var first = o.box.rows[0] || {};
+    var one   = remover(o.key, first.label || '');
+    var btn   = one;
+    if(one && (parseInt(first.qty, 10) || 0) > o.excess){
+      var item = one.closest ? one.closest('.wd-option-item') : null;
+      var minus = item ? item.querySelector('[class*="minus"]') : null;
+      if(minus) btn = minus;
     }
     if(!btn) return;
     BUSY = true;
