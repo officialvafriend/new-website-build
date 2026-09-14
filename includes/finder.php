@@ -42,18 +42,26 @@ add_action( 'admin_menu', __NAMESPACE__ . '\\menu' );
  * @param int    $ctx    앞뒤 줄 수.
  * @return array<int,array{where:string,line:int,text:string}>
  */
-function in_files( string $needle, int $ctx = 12 ): array {
+function in_files( string $needle, int $ctx = 12, bool $all_plugins = false ): array {
 	$out  = array();
-	$dirs = array_unique( array_filter( array(
-		function_exists( 'get_stylesheet_directory' ) ? get_stylesheet_directory() : '',
-		function_exists( 'get_template_directory' ) ? get_template_directory() : '',
+	$dirs = array_unique( array_filter( array_merge(
+		array(
+			function_exists( 'get_stylesheet_directory' ) ? get_stylesheet_directory() : '',
+			function_exists( 'get_template_directory' ) ? get_template_directory() : '',
+		),
+		plugin_dirs( $all_plugins )
 	) ) );
+	// 화면이 멈추는 것보다 「여기까지」가 낫다 — 매출 화면과 같은 생각이다.
+	$deadline = microtime( true ) + (float) apply_filters( 'duckhoo_finder_budget', 12 );
 	foreach ( $dirs as $dir ) {
-		if ( ! is_dir( $dir ) ) {
+		if ( ! is_dir( $dir ) || microtime( true ) > $deadline ) {
 			continue;
 		}
 		$it = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $dir, \FilesystemIterator::SKIP_DOTS ) );
 		foreach ( $it as $f ) {
+			if ( microtime( true ) > $deadline ) {
+				break;
+			}
 			if ( ! preg_match( '/\.(php|js)$/', $f->getFilename() ) || $f->getSize() > 3_000_000 ) {
 				continue;
 			}
@@ -79,6 +87,33 @@ function in_files( string $needle, int $ctx = 12 ): array {
 		}
 	}
 	return $out;
+}
+
+/**
+ * 뒤질 플러그인 폴더.
+ *
+ * **기본은 키플 · 우리 것만** 본다. 플러그인이 53개라 전부 뒤지면 워드커머스만으로도
+ * 수천 개 파일이라 화면이 한참 멈춘다. 사장님이 「플러그인 전부」를 켰을 때만 넓힌다.
+ * 적립금 · 쿠폰처럼 **플러그인 PHP 안에 있는 문구**를 찾느라 여러 번 막혔다 (2026-09-14).
+ *
+ * @param bool $all 전부 볼 것인가.
+ * @return string[]
+ */
+function plugin_dirs( bool $all = false ): array {
+	if ( ! defined( 'WP_PLUGIN_DIR' ) || ! is_dir( WP_PLUGIN_DIR ) ) {
+		return array();
+	}
+	$globs = (array) apply_filters( 'duckhoo_finder_plugins', array( 'keyple-*', 'duckhoo-*' ) );
+	if ( $all ) {
+		$globs = array( '*' );
+	}
+	$out = array();
+	foreach ( $globs as $g ) {
+		foreach ( (array) glob( WP_PLUGIN_DIR . '/' . $g, GLOB_ONLYDIR ) as $d ) {
+			$out[] = $d;
+		}
+	}
+	return array_values( array_unique( $out ) );
 }
 
 /**
@@ -126,19 +161,25 @@ function screen(): void {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$q = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['q'] ) ) : ''; // phpcs:ignore
+	$q   = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['q'] ) ) : ''; // phpcs:ignore
+	$all = ! empty( $_GET['all'] ); // phpcs:ignore
 	echo '<div class="wrap"><h1>코드 찾기</h1>';
-	echo '<p>화면에 뜨는 문구를 그대로 넣으면 테마 파일과 Code Snippets 에서 그 글자가 있는 자리를 보여 줍니다. 읽기만 합니다.</p>';
+	echo '<p>화면에 뜨는 문구를 그대로 넣으면 그 글자가 있는 자리를 보여 줍니다 — <strong>테마 · Code Snippets · 키플 플러그인</strong>. 읽기만 합니다.</p>';
 	echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( SLUG ) . '">';
-	echo '<input type="text" name="q" value="' . esc_attr( $q ) . '" class="regular-text" placeholder="예) 올바르게 계산되지"> <button class="button button-primary">찾기</button></form>';
+	echo '<input type="text" name="q" value="' . esc_attr( $q ) . '" class="regular-text" placeholder="예) 쿠폰함에서 확인"> ';
+	echo '<label style="margin-left:.6em"><input type="checkbox" name="all" value="1"' . checked( $all, true, false ) . '> 플러그인 전부 (느립니다)</label> ';
+	echo '<button class="button button-primary">찾기</button></form>';
 	if ( '' === $q || mb_strlen( $q ) < 3 ) {
 		echo '</div>';
 		return;
 	}
-	$hits = array_merge( in_snippets( $q ), in_files( $q ) );
-	echo '<h2>' . count( $hits ) . '곳</h2>';
+	$t0   = microtime( true );
+	$hits = array_merge( in_snippets( $q ), in_files( $q, 12, $all ) );
+	echo '<h2>' . count( $hits ) . '곳 <small style="font-weight:400">(' . number_format( microtime( true ) - $t0, 1 ) . '초)</small></h2>';
 	if ( ! $hits ) {
-		echo '<p>테마 · 스니펫에 없습니다. 그러면 플러그인 쪽입니다 — 그 문구를 저에게 알려 주세요.</p>';
+		echo '<p>' . ( $all
+			? '어디에도 없습니다. 글자가 조금 다를 수 있으니 <strong>짧은 조각</strong>으로 다시 찾아 보세요 (예: 「쿠폰함」).'
+			: '테마 · 스니펫 · 키플 플러그인에 없습니다. <strong>플러그인 전부</strong>를 켜고 다시 찾아 보세요.' ) . '</p>';
 	}
 	foreach ( $hits as $h ) {
 		echo '<h3 style="margin-bottom:.3em">' . esc_html( $h['where'] ) . ' <small>' . (int) $h['line'] . '행</small></h3>';
