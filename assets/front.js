@@ -763,11 +763,28 @@
     });
     return out;
   }
+  /* 안내는 **방금 고른 칸 바로 아래**에 붙는다. 고른 것이 쌓이는 목록(`.wd-option-builder-list`)은
+     선택칸보다 **위**에 있어서(측정: 목록 1063px · 선택칸 1400px) 거기에 붙이면 손이 있는 자리에서
+     멀고, 화면 밖으로 밀려 못 보는 일이 생긴다. 선택칸이 없을 때만 목록 끝으로 돌아간다. */
+  function host(){
+    var sel = document.querySelector('form.cart select.ppom-input') || document.querySelector('form.cart select');
+    var box = sel ? sel.parentElement : null;
+    if(box){
+      var trigger = box.querySelector('.dhsel');   /* 우리 선택창이 있으면 그 아래 */
+      return { box: box, after: trigger || sel };
+    }
+    var list = document.querySelector('.wd-option-builder-list') || document.querySelector('.wd-option-builder');
+    return list ? { box: list, after: null } : null;
+  }
   function say(cap){
-    var host = document.querySelector('.wd-option-builder-list') || document.querySelector('.wd-option-builder');
-    if(!host) return;
-    var n = host.querySelector('.dhr-onenote');
-    if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); host.appendChild(n); }
+    var h = host();
+    if(!h) return;
+    var n = document.querySelector('.dhr-onenote');
+    if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); }
+    if(n.parentElement !== h.box){
+      if(h.after && h.after.parentElement === h.box) h.box.insertBefore(n, h.after.nextSibling);
+      else h.box.appendChild(n);
+    }
     n.setAttribute('data-l', cap > 1
       ? '지금 수량으로는 ' + cap + '개까지 고를 수 있습니다.'
       : '한 개만 고를 수 있습니다. 방금 고른 것으로 바꿔 드렸어요 — 두 개가 필요하시면 수량을 2로 올려 주세요.');
@@ -796,12 +813,19 @@
     btn.click();
     setTimeout(function(){ BUSY = false; say(o.cap); trim((depth || 0) + 1); }, 260);
   }
-  function soon(){ clearTimeout(TIMER); TIMER = setTimeout(function(){ trim(0); }, 220); }
+  /* **한 번만 보면 놓친다.** `change` 는 테마가 목록 · 숨은 필드를 고치기 **전에** 오고,
+     테마가 옵션 상자를 통째로 다시 그리면 거기 걸어 둔 관찰자도 같이 떨어져 나간다.
+     그래서 몸통(body)을 보고, 고른 뒤에도 세 번 더 다시 본다 (한 번 이 때문에 안 줄어들었다). */
+  function soon(){
+    clearTimeout(TIMER);
+    TIMER = setTimeout(function(){ trim(0); }, 250);
+    [800, 1600].forEach(function(ms){ setTimeout(function(){ trim(0); }, ms); });
+  }
 
   function watch(){
-    var host = document.querySelector('.wd-option-builder');
-    if(!host) return;
-    new MutationObserver(soon).observe(host, { childList: true, subtree: true });
+    if(watch.on) return;
+    watch.on = true;
+    new MutationObserver(soon).observe(document.body, { childList: true, subtree: true });
     document.addEventListener('change', soon, true);
     soon();
   }

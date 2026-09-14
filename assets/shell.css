@@ -2028,16 +2028,19 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip__pick{ min-width: 0 !important; }
 /* 값이 붙지 않는 선택을 세트 수만큼으로 묶을 때의 안내. 글자는 `data-l` 로 그린다 —
    폼 안에 텍스트 노드를 더하면 구매 게이트가 읽는 칸 이름이 바뀔 수 있다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote,
-html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote{
+html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .dhr-onenote{
   margin: .5rem 0 0 !important; padding: 0 !important;
   font-size: 13px !important; line-height: 1.45 !important; font-weight: 600 !important;
   color: var(--dh-accent-warm, #C2410C) !important; word-break: keep-all;
   max-height: 0; overflow: hidden; opacity: 0; transition: max-height .18s ease, opacity .18s ease;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote.is-on,
-html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote.is-on{ max-height: 6rem; opacity: 1; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote.is-on,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .dhr-onenote.is-on{ max-height: 6rem; opacity: 1; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhr-onenote::before,
-html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote::before{ content: attr(data-l); }
+html body.dhr.dhr-wrap.dhr-wrap .wd-option-builder .dhr-onenote::before,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .dhr-onenote::before{ content: attr(data-l); }
 
 /* 폰 검색창 — 테마 화면에서도 같게. 테마의 입력칸 리셋이 이 칸을 잡지 않게 못 박는다
    (위 규칙이 `input[type="search"]:not(.hs input)` 이라 이 칸에 걸린다). */
