@@ -701,6 +701,129 @@
 })();
 
 
+/* 단품에서 「고르는 칸」은 사는 개수만큼만 ───────────────────────────────────
+   `젤로 크리스탈 0.6옴 팟 [블랙/클리어]` 는 **색**을 고르는 칸인데 클리어와 블랙을
+   둘 다 고를 수 있었고 총액은 10,000원 그대로였다 (2026-09-14 재현). 주문 데이터에는
+   두 줄이 그대로 실린다:
+     [{group_key:"addon_pod_0", label:"…클리어팟", qty:1, unit_price:0, type:"addon"},
+      {group_key:"addon_pod_0", label:"…블랙팟",   qty:1, unit_price:0, type:"addon"},
+      {group_key:"required_main", …, unit_price:10000}]
+   팟 두 개를 한 값에 담을 수 있고, 손님도 「둘 다 오는 건가」 하고 헷갈린다.
+
+   위 `.dhx` 규칙과 **같은 생각, 다른 화면**이다. 저쪽은 옛 옵션 UI(묶음 · 이벤트)를
+   보고, 이쪽은 테마 옵션 빌더가 직접 그리는 단품 화면을 본다.
+   **`.dhx` 가 있으면 물러난다** — 묶음의 맛 칸은 세트당 5개가 정상이라 여기서 잡으면
+   안 된다 (확인: 디오 5+5 는 `.dhx-card` 4개, 이 팟은 0개).
+
+   상한은 세트 수(`type:required` 의 수량) × `freeChoicePerSet`. 그래서 2팩을 사면
+   색도 두 개 고를 수 있다 — 막는 규칙이 아니라 **고른 개수 = 사는 개수** 규칙이다.
+   테마 · 스니펫은 건드리지 않는다. 마지막에 고른 것을 남기고 먼저 고른 줄의 `×` 를
+   대신 눌러 준다 (= 색을 바꿔 준다). 안내 글자는 `data-l` + CSS 로 그린다 — 폼 안에
+   텍스트 노드를 더하면 구매 게이트가 읽는 칸 이름이 바뀐다. */
+(function(){
+  var PER = window.DHR && window.DHR.freeChoicePerSet != null ? Number(window.DHR.freeChoicePerSet) : 1;
+  if(!PER) return;
+  var BUSY = false, TIMER = null;
+
+  function rows(){
+    var i = document.querySelector('form.cart input[name="wd_option_builder_json"]');
+    if(!i || !i.value) return [];
+    try{ var a = JSON.parse(i.value); return Array.isArray(a) ? a : []; }catch(err){ return []; }
+  }
+  function sets(list){
+    var n = 0;
+    list.forEach(function(r){ if(r && r.type === 'required') n += parseInt(r.qty, 10) || 0; });
+    return Math.max(1, n);
+  }
+  /* 줄마다 값이 0원인 그룹 = 고르는 칸(색 · 맛). 하나라도 값이 붙으면 유료 추가다. */
+  function groups(list){
+    var g = {};
+    list.forEach(function(r){
+      if(!r || r.type === 'required' || !r.group_key) return;
+      var k = r.group_key;
+      g[k] = g[k] || { qty: 0, free: true, rows: [] };
+      g[k].qty += parseInt(r.qty, 10) || 0;
+      if(Number(r.unit_price) > 0) g[k].free = false;
+      g[k].rows.push(r);
+    });
+    return g;
+  }
+  function over(){
+    if(document.querySelector('.dhx')) return null;   /* 묶음은 위 규칙이 본다 */
+    var list = rows();
+    if(!list.length) return null;
+    var cap = sets(list) * PER, g = groups(list);
+    for(var k in g){ if(g[k].free && g[k].qty > cap) return { key: k, cap: cap, box: g[k] }; }
+    return null;
+  }
+  function remover(group, label){
+    var out = null;
+    document.querySelectorAll('.wd-option-remove').forEach(function(b){
+      if(!out && b.getAttribute('data-group') === group && b.getAttribute('data-label') === label) out = b;
+    });
+    return out;
+  }
+  function say(cap){
+    var host = document.querySelector('.wd-option-builder-list') || document.querySelector('.wd-option-builder');
+    if(!host) return;
+    var n = host.querySelector('.dhr-onenote');
+    if(!n){ n = document.createElement('p'); n.className = 'dhr-onenote'; n.setAttribute('role', 'status'); host.appendChild(n); }
+    n.setAttribute('data-l', cap > 1
+      ? '지금 수량으로는 ' + cap + '개까지 고를 수 있습니다.'
+      : '한 개만 고를 수 있습니다. 방금 고른 것으로 바꿔 드렸어요 — 두 개가 필요하시면 수량을 2로 올려 주세요.');
+    n.classList.add('is-on');
+    clearTimeout(n._t);
+    n._t = setTimeout(function(){ n.classList.remove('is-on'); }, 5000);
+  }
+
+  /* 넘친 만큼 **먼저 고른 쪽**을 내린다. 내리는 일은 테마가 하게 두고 버튼만 눌러 준다. */
+  function trim(depth){
+    if(BUSY || (depth || 0) > 8) return;
+    var o = over();
+    if(!o) return;
+    var btn = null;
+    if(o.box.rows.length > 1){
+      btn = remover(o.key, o.box.rows[0].label || '');           /* 두 가지를 골랐다 → 먼저 것을 뺀다 */
+    }else{
+      var one = remover(o.key, o.box.rows[0].label || '');        /* 한 줄인데 수량이 넘쳤다 → − 로 내린다 */
+      var item = one && one.closest ? one.closest('.wd-option-item') : null;
+      btn = item ? item.querySelector('[class*="minus"]') : null;
+      if(!btn) btn = one;
+    }
+    if(!btn) return;
+    BUSY = true;
+    btn.click();
+    setTimeout(function(){ BUSY = false; say(o.cap); trim((depth || 0) + 1); }, 260);
+  }
+  function soon(){ clearTimeout(TIMER); TIMER = setTimeout(function(){ trim(0); }, 220); }
+
+  function watch(){
+    var host = document.querySelector('.wd-option-builder');
+    if(!host) return;
+    new MutationObserver(soon).observe(host, { childList: true, subtree: true });
+    document.addEventListener('change', soon, true);
+    soon();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch);
+  else watch();
+  window.addEventListener('load', watch);
+
+  /* 마지막 빗장 — 어떤 길로든 넘긴 채 담기까지 가지 않게 한다.
+     담는 데이터에는 손대지 않고 무엇을 고쳐야 하는지만 말한다. */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.single_add_to_cart_button, .wd-direct-checkout-btn');
+    if(!b) return;
+    var o = over();
+    if(!o) return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+    say(o.cap);
+    trim(0);
+    alert('고르신 것이 ' + o.box.qty + '개입니다. 지금 수량으로는 ' + o.cap + '개까지 담을 수 있어요.');
+  }, true);
+})();
+
+
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
    1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
       주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
