@@ -863,6 +863,29 @@ function cart_drawer_html(): void {
  * @param string $template 원래 템플릿.
  * @return string
  */
+/**
+ * 진단 스위치 — 주소에 `?dhr_raw=1` 을 붙이면 **상세 · 목록에서 우리 템플릿이 손을 뗀다.**
+ *
+ * 「이 화면에 안 보이는 것이 우리 템플릿 탓인가, 원래 없는 것인가」를 가르는 데 쓴다.
+ * 상품 후기가 통째로 사라졌던 것(2026-09-09)도, 키플 쿠폰 박스가 안 보이는 것(2026-09-14)도
+ * 같은 물음이었다 — 우리 상세는 `woocommerce_single_product_summary` 를 부르지 않으므로
+ * **그 훅에 붙는 것은 무엇이든 안 그려진다.**
+ *
+ * 테마가 원래 그리던 화면을 그대로 보여 줄 뿐이라 손님에게 해가 없고, 아무것도 저장하지 않는다.
+ * 끄려면 `add_filter( 'duckhoo_raw_switch', '__return_false' );`
+ *
+ * @param bool $take 지금 값.
+ * @return bool
+ */
+function raw_off( $take ) {
+	if ( ! apply_filters( 'duckhoo_raw_switch', true ) ) {
+		return $take;
+	}
+	return isset( $_GET['dhr_raw'] ) ? false : $take; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+}
+add_filter( 'duckhoo_take_product', __NAMESPACE__ . '\\raw_off', 99 );
+add_filter( 'duckhoo_take_archive', __NAMESPACE__ . '\\raw_off', 99 );
+
 function take_front_page( string $template ): string {
 	if ( is_admin() || ! function_exists( 'wc_get_products' ) ) {
 		return $template;
