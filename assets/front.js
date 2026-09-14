@@ -849,6 +849,70 @@
 })();
 
 
+/* 결제 화면의 쿠폰 카드가 아무 일도 하지 않았다 ───────────────────────────────
+   테마 `assets/js/wd-checkout-custom.js` 는 `jQuery(function ($) { … })` 로 열리는데,
+   **마지막 28줄(쿠폰 카드 체크박스 핸들러)이 그 래퍼 밖에** 있다 (183줄에서 닫히고
+   185줄부터 다시 `$` 를 쓴다). 워드프레스는 전역에 `$` 를 주지 않으므로 그 줄에서
+   `$ is not a function` 이 나고 **핸들러가 등록조차 되지 않는다** — 쿠폰함에서 받은
+   쿠폰을 결제 화면에서 체크해도 아무 일도 일어나지 않는다 (2026-09-14 확인).
+
+   테마 파일은 건드리지 않는다. `window.$ = jQuery` 로 전역을 만드는 길도 있지만
+   (그러면 테마의 그 28줄이 스스로 산다) 전역을 하나 더 만드는 대신 **같은 핸들러를
+   우리가 등록**한다. 하는 일은 테마가 하려던 것과 똑같다 — 워드커머스 쿠폰칸에
+   코드를 넣고 적용 버튼을 누른다. 쿠폰 계산은 워드커머스가 한다.
+
+   **테마 쪽이 살아나면 우리는 물러난다** (`alive()`). 그래도 둘 다 걸리는 일이
+   있을 수 있어 같은 코드를 1.5초 안에 두 번 적용하지 않는다. */
+(function(){
+  var $ = window.jQuery;
+  if(!$) return;
+  var last = { code: '', at: 0 };
+
+  /* 테마가 같은 자리에 이미 걸어 두었나 (jQuery 가 document 에 쥔 위임 핸들러를 본다) */
+  function alive(){
+    try{
+      var ev = $._data ? $._data(document, 'events') : null;
+      var list = ( ev && ev.change ) || [];
+      for(var i = 0; i < list.length; i++){
+        if(String(list[i].selector || '').indexOf('wd-checkout-coupon-card') >= 0) return true;
+      }
+    }catch(err){}
+    return false;
+  }
+
+  function apply(code){
+    var now = Date.now();
+    if(code === last.code && now - last.at < 1500) return;   /* 두 번 누르지 않는다 */
+    last = { code: code, at: now };
+    $("[name='coupon_code']").val(code);
+    $("[name='apply_coupon']").trigger('click');
+  }
+
+  function arm(){
+    if(arm.on) return;
+    if(!document.querySelector('.wd-checkout-coupon-card')) return;   /* 결제 화면에만 있다 */
+    if(alive()) return;                                              /* 테마가 하면 우리는 안 한다 */
+    arm.on = true;
+    $(document).on('change.dhrcoupon', ".wd-checkout-coupon-card input[type='checkbox']", function(){
+      var $box = $(this), code = String($box.val() || '');
+      if(!code) return;
+      if($box.is(':checked')){
+        $(".wd-checkout-coupon-card input[type='checkbox']").not($box).prop('checked', false);
+        apply(code);
+      }else{
+        last = { code: '', at: 0 };
+        $(".woocommerce-remove-coupon[data-coupon='" + code.toLowerCase() + "']").trigger('click');
+      }
+    });
+  }
+
+  /* 테마 스크립트가 먼저 돌 자리를 주고 본다. 결제 화면은 `updated_checkout` 으로
+     합계 영역을 통째로 다시 그리므로 그때마다 한 번 더 확인한다. */
+  window.addEventListener('load', function(){ setTimeout(arm, 300); });
+  if(document.readyState !== 'loading') setTimeout(arm, 800);
+  $(document.body).on('updated_checkout', function(){ setTimeout(arm, 100); });
+})();
+
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
    1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
       주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
