@@ -923,6 +923,28 @@ unset($_COOKIE['dhr_back']);
 $GLOBALS['__did'] = [];
 
 
+// ── 우리 상세가 빼먹은 것 다시 그리기 (includes/product.php) ───────────────
+// 우리 템플릿은 `woocommerce_single_product_summary` 를 안 쏜다 → 거기 붙는 키플 쿠폰
+// 박스가 통째로 안 그려졌다 (라이브 확인: `?dhr_raw=1` 이면 4개, 우리 템플릿은 0개).
+function dhr_test_coupon_box(){ echo '[쿠폰박스]'; }
+function dhr_test_other_box(){ echo '[남의것]'; }
+$GLOBALS['wp_filter']['woocommerce_single_product_summary'] = new class {
+	public $callbacks = [];
+};
+$GLOBALS['wp_filter']['woocommerce_single_product_summary']->callbacks = [
+	10 => [ 'a' => ['function' => 'dhr_test_coupon_box'] ],
+	20 => [ 'b' => ['function' => 'strlen'] ],          // 내부 함수 — 파일이 없으니 건너뛴다
+];
+// 이 테스트 파일의 경로에 들어 있는 조각을 「그 플러그인 폴더」로 삼는다.
+$GLOBALS['__filters']['duckhoo_summary_extra_dirs'] = [fn($v) => ['php-tests']];
+ob_start(); ('Duckhoo\\Redesign\\Product\\summary_extras')(); $extra = ob_get_clean();
+$ok(str_contains($extra, '[쿠폰박스]'), '정해 둔 폴더의 콜백만 우리 상세에서 다시 그린다');
+$ok(!str_contains($extra, '[남의것]'), '파일을 못 읽는 콜백(내부 함수)은 건너뛴다');
+ob_start(); ('Duckhoo\\Redesign\\Product\\summary_extras')(); $again = ob_get_clean();
+$ok('' === $again, '한 번만 그린다 (두 번 불러도 비어 있다)');
+$GLOBALS['__filters']['duckhoo_summary_extra_dirs'] = [];
+unset($GLOBALS['wp_filter']['woocommerce_single_product_summary']);
+
 // ── 검색 노출 (includes/seo.php) ─────────────────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/seo.php';
 $S = 'Duckhoo\\Redesign\\Seo\\';

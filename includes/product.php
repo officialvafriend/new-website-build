@@ -181,6 +181,87 @@ function swap(): void {
 add_action( 'wp', __NAMESPACE__ . '\\swap' );
 
 /**
+ * 콜백이 어느 파일에 있는지.
+ *
+ * @param mixed $fn 콜백.
+ * @return string 파일 경로. 못 읽으면 빈 문자열.
+ */
+function cb_file( $fn ): string {
+	try {
+		if ( $fn instanceof \Closure ) {
+			$r = new \ReflectionFunction( $fn );
+		} elseif ( is_array( $fn ) && 2 === count( $fn ) ) {
+			$r = new \ReflectionMethod( $fn[0], (string) $fn[1] );
+		} elseif ( is_string( $fn ) && false !== strpos( $fn, '::' ) ) {
+			$r = new \ReflectionMethod( $fn );
+		} elseif ( is_string( $fn ) && function_exists( $fn ) ) {
+			$r = new \ReflectionFunction( $fn );
+		} else {
+			return '';
+		}
+		return (string) $r->getFileName();
+	} catch ( \Throwable $e ) {
+		return '';
+	}
+}
+
+/**
+ * **우리 상세가 빼먹은 것 중, 정해 둔 플러그인 것만 골라 그린다.**
+ *
+ * 우리 템플릿은 `woocommerce_single_product_summary` 를 쏘지 않는다 (쏘면 테마의
+ * 제목 · 가격 · 구매 버튼이 한 벌 더 그려진다). 그래서 **그 훅에 붙는 것은 무엇이든
+ * 안 그려진다** — 상품 후기가 통째로 없던 것(2026-09-09), 키플 쿠폰 박스
+ * 「다운로드 가능한 쿠폰」이 없던 것(2026-09-14)이 같은 원인이다.
+ *
+ * 확인법 (2026-09-14): 같은 상품을 `?dhr_raw=1` 로 열면 테마가 그리는데 거기엔
+ * `keyple-coupon-box` 가 4개 · 「쿠폰 받기」가 2개 있고, 우리 템플릿에서는 0개였다.
+ *
+ * 훅 전체를 쏘는 대신 **파일 경로가 정해 둔 폴더 안인 콜백만** 부른다
+ * (`duckhoo_summary_extra_dirs`, 기본 `keyple-coupon-manager`). 자리는 판매가 바로
+ * 아래 — 플러그인 설정의 「노출 위치: 판매가 하단(권장)」과 같은 자리다.
+ * `form.cart` 바깥이라 구매 게이트가 읽는 칸 이름과 무관하다.
+ *
+ * 보는 훅은 **우리가 절대 쏘지 않는 것 하나뿐**이다. 구매 폼 안쪽 훅까지 넓히면
+ * 폼이 그릴 것을 우리가 먼저 그려 두 번 나온다.
+ *
+ * @return void
+ */
+function summary_extras(): void {
+	static $done = false;
+	if ( $done ) {
+		return;
+	}
+	$done = true;
+	$dirs = array_filter( array_map( 'strval', (array) apply_filters( 'duckhoo_summary_extra_dirs', array( 'keyple-coupon-manager' ) ) ) );
+	if ( ! $dirs ) {
+		return;
+	}
+	$hooks = (array) apply_filters( 'duckhoo_summary_extra_hooks', array( 'woocommerce_single_product_summary' ) );
+	foreach ( $hooks as $hook ) {
+		$bag = $GLOBALS['wp_filter'][ $hook ] ?? null;
+		if ( ! is_object( $bag ) || ! isset( $bag->callbacks ) || ! is_array( $bag->callbacks ) ) {
+			continue;
+		}
+		foreach ( $bag->callbacks as $cbs ) {
+			foreach ( (array) $cbs as $cb ) {
+				$fn   = $cb['function'] ?? null;
+				$file = null === $fn ? '' : str_replace( '\\', '/', cb_file( $fn ) );
+				if ( '' === $file || ! is_callable( $fn ) ) {
+					continue;
+				}
+				foreach ( $dirs as $d ) {
+					if ( false !== strpos( $file, '/' . trim( $d, '/' ) . '/' ) ) {
+						call_user_func( $fn );
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+add_action( 'duckhoo_product_after_price', __NAMESPACE__ . '\\summary_extras', 30 );
+
+/**
  * 상품 구조화 데이터(Product JSON-LD)를 붙입니다.
  *
  * **왜 필요한가.** 워드커머스는 `woocommerce_single_product_summary` 훅이 돌 때
