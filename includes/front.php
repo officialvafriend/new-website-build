@@ -140,6 +140,7 @@ function cat_icon( string $name ): string {
 		'팟'       => 'device',
 		'코일'     => 'device',
 		'노보'     => 'drop',
+		'타격'     => 'bolt',
 	);
 	foreach ( $map as $needle => $ic ) {
 		if ( false !== mb_strpos( $name, $needle ) ) {
@@ -357,6 +358,8 @@ function icon( string $name ): string {
 			'drop'    => '<path d="M12 3.2c3.6 4.2 6 7.3 6 9.9a6 6 0 0 1-12 0c0-2.6 2.4-5.7 6-9.9z"/>',
 			// 적립금 — 특가와 같은 가격표를 쓰면 두 타일이 같은 것으로 보인다
 			'coin'    => '<circle cx="12" cy="12" r="8.6"/><path d="M10.2 16.2V7.8h2.9a2.3 2.3 0 0 1 0 4.6h-2.9"/>',
+			// 타격감 — 목을 때리는 느낌. 번개 말고는 이 뜻을 한 획으로 그릴 것이 없다
+			'bolt'    => '<path d="M13.2 2.8 5.6 13.4h5.1l-.9 7.8 7.6-10.6h-5.1z"/>',
 		);
 	}
 	return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ( $icons[ $name ] ?? '' ) . '</svg>';
@@ -493,7 +496,7 @@ function header_html(): void {
 	$in    = is_user_logged_in();
 	$pts   = signup_points();
 	// 가입하면 8,800원을 주면서 그 돈을 쓸 곳으로 가는 길이 어디에도 없었다.
-	$cats  = array_values( array_filter( array( $sale, cat_by_name( '노보' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
+	$cats  = array_values( array_filter( array( $sale, cat_by_name( '타격' ), cat_by_name( '노보' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
 	?>
 	<?php if ( ! $in ) : ?>
 	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
@@ -897,7 +900,7 @@ function footer_html(): void {
 	$account = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
 	// 헤더 칩과 같은 순서 — 특가 · 입호흡 · 폐호흡 · 무니코틴 · 기기.
 	$cats    = array_values( array_filter( array(
-		cat_by_name( '특가' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '무니코틴' ), cat_by_name( '기기' ), cat_by_name( '적립금' ), cat_by_name( '랭킹' ),
+		cat_by_name( '특가' ), cat_by_name( '타격' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), cat_by_name( '무니코틴' ), cat_by_name( '기기' ), cat_by_name( '적립금' ), cat_by_name( '랭킹' ),
 	) ) );
 	$brands  = featured_brands( 6 );
 	?>
