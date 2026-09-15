@@ -1278,6 +1278,88 @@
   }
 })();
 
+/* **화면 읽기 — `?dhr_ui=1`** (결제 · 장바구니 · 계정 어디서나).
+
+   결제 화면은 로그인이 있어야 열려 우리가 못 본다. 「UI 가 다른 것 같다」를 고치려면
+   지금 화면이 실제로 어떤 클래스 · 색 · 크기로 그려지는지를 알아야 하는데, 스크린샷만으로는
+   클래스 이름도 정확한 색도 못 읽는다. 이 스위치를 붙이면 그것을 **글자로** 뽑아
+   그대로 복사할 수 있다. 주소에 붙였을 때만 돈다 — 손님 화면에는 없다. */
+(function(){
+  if(!/[?&]dhr_ui=1/.test(location.search)) return;
+
+  function px(v){ return Math.round(parseFloat(v) || 0); }
+  function line(el){
+    var c = getComputedStyle(el), r = el.getBoundingClientRect();
+    if(r.width < 8 && r.height < 8) return null;
+    var name = el.tagName.toLowerCase() +
+      (el.id ? '#' + el.id : '') +
+      (el.className && typeof el.className === 'string'
+        ? '.' + el.className.trim().split(/\s+/).slice(0, 3).join('.') : '');
+    var bits = [
+      Math.round(r.width) + '×' + Math.round(r.height),
+      'font ' + px(c.fontSize) + '/' + c.fontWeight,
+      'color ' + c.color,
+      'bg ' + c.backgroundColor
+    ];
+    if(px(c.borderTopWidth) || px(c.borderLeftWidth)) bits.push('border ' + c.borderTopWidth + ' ' + c.borderTopStyle + ' ' + c.borderTopColor);
+    if(px(c.borderTopLeftRadius)) bits.push('radius ' + px(c.borderTopLeftRadius));
+    if(px(c.paddingTop) || px(c.paddingLeft)) bits.push('padding ' + px(c.paddingTop) + '/' + px(c.paddingLeft));
+    return name + '  ' + bits.join(' · ');
+  }
+
+  function dump(){
+    var out = ['[화면 읽기] ' + location.pathname + '  창 ' + window.innerWidth + 'px'];
+    var want = document.querySelectorAll(
+      '[class*="wd-checkout"], [class*="wd-summary"], #payment, .woocommerce-checkout-payment, ' +
+      'form.checkout, .wd-cpg, [class*="wd-point"], [class*="keyple"], .dhr-cocpn, ' +
+      'h1, h2, h3, h4, input:not([type=hidden]), select, textarea, button, a.button, .button'
+    );
+    var n = 0;
+    for(var i = 0; i < want.length && n < 90; i++){
+      var t = line(want[i]);
+      if(t){ out.push(t); n++; }
+    }
+    /* 분홍 · 형광처럼 우리 팔레트가 아닌 색이 어디에 쓰였는지 */
+    var odd = [], all = document.querySelectorAll('*');
+    for(var k = 0; k < all.length && odd.length < 20; k++){
+      var cs = getComputedStyle(all[k]);
+      [['color', cs.color], ['bg', cs.backgroundColor], ['border', cs.borderTopColor]].forEach(function(pair){
+        var m = /^rgba?\((\d+), ?(\d+), ?(\d+)/.exec(pair[1] || '');
+        if(!m) return;
+        var R = +m[1], G = +m[2], B = +m[3];
+        if(R > 190 && B > 90 && G < 110 && (R - G) > 90){   /* 분홍 · 진분홍 계열 */
+          var w = all[k].tagName.toLowerCase() + (all[k].className && typeof all[k].className === 'string' ? '.' + all[k].className.trim().split(/\s+/)[0] : '');
+          var s2 = w + ' ' + pair[0] + ' ' + pair[1];
+          if(odd.indexOf(s2) < 0) odd.push(s2);
+        }
+      });
+    }
+    if(odd.length) out.push('', '[우리 색이 아닌 것]', odd.join('\n'));
+    return out.join('\n');
+  }
+
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var text = dump();
+      var box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#111;color:#fff;border-radius:12px;padding:10px;max-height:52vh;overflow:auto';
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = '전부 복사';
+      b.style.cssText = 'position:sticky;top:0;float:right;background:#fff;color:#111;border:0;border-radius:999px;padding:6px 14px;font-weight:800;cursor:pointer';
+      b.addEventListener('click', function(){
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ b.textContent = '복사됨'; }); return; }
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+        ta.select(); try{ document.execCommand('copy'); b.textContent = '복사됨'; }catch(err){} ta.remove();
+      });
+      var pre = document.createElement('pre');
+      pre.style.cssText = 'margin:0;white-space:pre-wrap;font-size:11px;line-height:1.5';
+      pre.textContent = text;
+      box.appendChild(b); box.appendChild(pre);
+      document.body.appendChild(box);
+    }, 700);
+  });
+})();
+
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
    1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
       주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
