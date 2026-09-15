@@ -948,7 +948,11 @@
    배송 정보가 날아간다. */
 (function(){
   var $ = window.jQuery; if(!$) return;
-  if(!document.body.classList.contains('woocommerce-checkout')) return;
+  var here = document.body.classList;
+  var isCheckout = here.contains('woocommerce-checkout');
+  /* 상품권 칸은 장바구니에도 나올 수 있어 두 화면에서 돈다. 쿠폰칸을 받는 것은 결제뿐 —
+     장바구니에는 이미 우리 쿠폰칸(`.dhr-cpn`)이 있어 두 번 걸리면 안 된다 */
+  if(!isCheckout && !here.contains('woocommerce-cart')) return;
 
   var nonce = (window.DHR && window.DHR.nonce) || '', busy = false;
 
@@ -977,6 +981,7 @@
 
   function spots(){
     var out = [], used = [];
+    if(!isCheckout) return out;
     var cand = document.querySelectorAll('button, input[type="submit"], input[type="button"], a');
     for(var i = 0; i < cand.length; i++){
       var b = cand[i];
@@ -993,6 +998,7 @@
         if(f.length > 1) break;                    /* 애매하면 손대지 않는다 */
       }
       if(!input || used.indexOf(input) >= 0) continue;
+      if(input.closest('.dhr-cpn')) continue;        /* 우리 장바구니 쿠폰칸은 제 갈 길이 있다 */
 
       /* 「쿠폰」 이라고 적힌 상자 — 위로 네 단계까지 본다.
          **「상품권」 은 어느 단계에서 나오든 물러난다** (그쪽은 다른 시스템이다). */
@@ -1172,7 +1178,50 @@
     }
   }
 
-  function tidy(){ hushToggle(); dropEmptyNote(); }
+  /* **상품권(기프트카드) 코드칸을 화면에서 뺀다** (사장님 2026-09-15 — 「헷갈릴 거 같은데」).
+     `woocommerce-gift-cards` 플러그인이 그리는데 이 가게는 상품권을 팔지 않는다
+     (확인: 상품 검색 0건). 쿠폰칸 바로 옆에 또 코드칸이 있으면 문자로 쿠폰을 받은
+     손님이 어디에 넣을지 헷갈린다. **플러그인은 건드리지 않고 화면에서만 뺀다** —
+     되돌리기는 `add_filter( 'duckhoo_hide_giftcard', '__return_false' );` 한 줄.
+
+     플러그인 클래스(`wc_gc_*`)를 먼저 보고, 못 찾으면 「상품권」 이라고 적힌 상자를 찾는다. */
+  function dropGift(){
+    if(window.DHR && window.DHR.hideGift === false) return;
+    var seeds = document.querySelectorAll(
+      '.wc_gc_cart_redeem, .wc_gc_cart_redeem_form, [id^="wc_gc_cart_redeem"], [name^="wc_gc_"], [class*="wc-gc-redeem"]'
+    );
+    var hit = [];
+    for(var i = 0; i < seeds.length; i++){
+      /* 칸 하나만 숨기면 제목 · 버튼이 남는다 — 「상품권」 이라고 적힌 상자까지 올라간다 */
+      var el = seeds[i], card = null;
+      for(var up = 0; up < 5 && el; up++, el = el.parentElement){
+        var t = words(el);
+        if(t.length > 600) break;
+        if(t.indexOf('상품권') >= 0 || t.indexOf('기프트') >= 0){ card = el; break; }
+      }
+      hit.push(card || seeds[i]);
+    }
+    if(!hit.length){
+      /* 클래스가 다를 수도 있다 — 「상품권」 이 적혀 있고 글자칸을 가진 가장 작은 상자 */
+      var all = document.querySelectorAll('div, section, li, form, p');
+      for(var k = 0; k < all.length; k++){
+        var t2 = words(all[k]);
+        if(t2.indexOf('상품권') < 0 || t2.length > 200) continue;
+        if(t2.indexOf('쿠폰') >= 0) continue;              /* 쿠폰칸까지 같이 숨기면 안 된다 */
+        if(!all[k].querySelector('input')) continue;
+        var inner = false;
+        for(var m = 0; m < all[k].children.length; m++){
+          var c = all[k].children[m];
+          if((c.textContent || '').indexOf('상품권') >= 0 && c.querySelector && c.querySelector('input')){ inner = true; break; }
+        }
+        if(inner) continue;                                 /* 안쪽에 더 작은 상자가 있으면 그쪽이 진짜다 */
+        hit.push(all[k]);
+      }
+    }
+    for(var n = 0; n < hit.length; n++) if(hit[n]) hit[n].classList.add('dhr-hide-note');
+  }
+
+  function tidy(){ hushToggle(); dropEmptyNote(); dropGift(); }
   tidy();
   document.addEventListener('DOMContentLoaded', tidy);
   window.addEventListener('load', function(){ tidy(); setTimeout(tidy, 500); setTimeout(show, 700); });

@@ -1004,6 +1004,13 @@ function js_config( array $extra = array() ): string {
 		// **워드프레스 관리자 로그인(`wp-login.php`)** 으로 보낸다 — 1:1 문의에서 고친 그 문제다.
 		// front.js 가 `KeypleCoupon.login_url` 을 이 주소로 갈아 끼운다 (플러그인은 안 건드린다).
 		'loginUrl' => login_url(),
+		// **상품권(기프트카드) 코드칸을 화면에서 뺀다** (사장님 2026-09-15 — 「헷갈릴 거 같은데」).
+		// `woocommerce-gift-cards` 플러그인이 장바구니 · 결제에 그리는데, 이 가게는 상품권을
+		// 팔지 않는다 (2026-09-15 확인: 상품 검색 0건). 쿠폰칸 바로 옆에 또 코드칸이 있으면
+		// 문자로 쿠폰을 받은 손님이 어디에 넣을지 헷갈린다.
+		// **플러그인은 건드리지 않는다** — 화면에서만 뺀다. 되돌리기는 이 한 줄:
+		// add_filter( 'duckhoo_hide_giftcard', '__return_false' );
+		'hideGift' => (bool) apply_filters( 'duckhoo_hide_giftcard', true ),
 		'cartUrl'  => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
 		'shopUrl'  => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 	);
