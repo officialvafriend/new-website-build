@@ -2264,3 +2264,17 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__x{
   border: 0 !important; background: none !important; padding: 6px !important;
   font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; text-decoration: underline !important; cursor: pointer !important;
 }
+
+/* 결제 화면 쿠폰칸의 안내 한 줄 (front.js 가 넣는다).
+   테마 규칙을 이기려고 여기서도 클래스를 세 번 쓴다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn{
+  margin: 8px 0 0 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--dh-ink-2, #44525C) !important;
+  word-break: keep-all !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn.is-bad{
+  color: var(--dh-accent-warm, #C2410C) !important;
+  font-weight: 700 !important;
+}

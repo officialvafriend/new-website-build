@@ -931,6 +931,95 @@
   $(document.body).on('updated_checkout', function(){ setTimeout(arm, 100); });
 })();
 
+/* **결제 화면의 `쿠폰 적용하기` 가 아무 일도 하지 않았다** (사장님 영상 2026-09-15 —
+   코드를 넣고 눌렀는데 안내도 없고 `쿠폰할인 − 0원` 그대로).
+
+   워드커머스는 그 버튼의 클릭이 아니라 **`form.checkout_coupon` 의 submit** 에 걸려 있다
+   (`checkout.js`). 칸과 버튼이 그 폼 밖에 있거나 버튼이 submit 이 아니면 **눌러도 아무 데도
+   닿지 않는다** — 오류조차 안 난다. 테마 파일은 건드리지 않고, **닿을 수 없을 때만** 우리가 받는다.
+
+   넣는 길은 장바구니 쿠폰칸과 같은 워드커머스 Store API 다 (`apply-coupon`) — 할인 계산은
+   워드커머스가 그대로 한다. 끝나면 `update_checkout` 으로 합계만 다시 그린다.
+   **새로고침하지 않는다** — 손님이 적어 둔 배송 정보가 날아간다. */
+(function(){
+  var $ = window.jQuery; if(!$) return;
+  if(!document.body.classList.contains('woocommerce-checkout')) return;
+
+  function field(){ return document.querySelector('input[name="coupon_code"], #coupon_code'); }
+  function button(){ return document.querySelector('[name="apply_coupon"]'); }
+
+  /* 워드커머스가 이 버튼에 닿을 수 있는가 — 닿을 수 있으면 우리는 물러난다 */
+  function native(){
+    var i = field(), b = button();
+    if(!i || !b) return true;
+    if(!i.closest('form.checkout_coupon')) return false;         /* 폼 밖이면 submit 이 안 난다 */
+    if(String(b.type || '').toLowerCase() !== 'submit') return false;
+    try{
+      var ev = $._data ? $._data(document, 'events') : null, list = (ev && ev.submit) || [];
+      for(var k = 0; k < list.length; k++){
+        if(String(list[k].selector || '').indexOf('checkout_coupon') >= 0) return true;
+      }
+      return false;
+    }catch(err){ return true; }                                   /* 모를 때는 건드리지 않는다 */
+  }
+
+  function note(){
+    var b = button(); if(!b) return null;
+    var seat = b.parentElement || b;
+    if(!seat.parentNode) return null;
+    var n = seat.parentNode.querySelector('.dhr-cocpn');
+    if(!n){ n = document.createElement('p'); n.className = 'dhr-cocpn'; n.setAttribute('role','status'); seat.parentNode.insertBefore(n, seat.nextSibling); }
+    return n;
+  }
+  function plain(t){ var d = document.createElement('textarea'); d.innerHTML = String(t == null ? '' : t).replace(/<[^>]*>/g, ''); return d.value; }
+  function say(t, bad){ var n = note(); if(!n) return; n.textContent = plain(t); n.classList.toggle('is-bad', !!bad); }
+
+  var nonce = (window.DHR && window.DHR.nonce) || '', busy = false, last = { code:'', at:0 };
+
+  function send(code){
+    code = String(code || '').trim();
+    if(!code){ say('코드를 넣어 주세요.', true); return; }
+    var now = Date.now();
+    if(busy || (code === last.code && now - last.at < 1500)) return;  /* 두 번 넣지 않는다 */
+    last = { code: code, at: now }; busy = true;
+    var b = button(); if(b) b.disabled = true;
+    say('적용하는 중…');
+
+    fetch('/wp-json/wc/store/v1/cart/apply-coupon', {
+      method:'POST', credentials:'include',
+      headers: nonce ? {'Content-Type':'application/json', 'Nonce': nonce} : {'Content-Type':'application/json'},
+      body: JSON.stringify({ code: code })
+    })
+    .then(function(r){
+      var h = r.headers.get('Nonce') || r.headers.get('X-WC-Store-API-Nonce'); if(h) nonce = h;
+      return r.json().then(function(j){ return { ok: r.ok, j: j }; });
+    })
+    .then(function(res){
+      busy = false; if(b) b.disabled = false;
+      if(!res.ok){ last = { code:'', at:0 }; say((res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.', true); return; }
+      say('쿠폰을 적용했습니다.');
+      var i = field(); if(i) i.value = '';
+      $(document.body).trigger('update_checkout');   /* 합계만 다시 그린다 — 적어 둔 배송 정보는 그대로 */
+    })
+    .catch(function(){ busy = false; if(b) b.disabled = false; last = { code:'', at:0 }; say('잠시 뒤에 다시 눌러 주세요.', true); });
+  }
+
+  /* 걸어 둔 표시는 **요소에** 남긴다. 결제 화면은 합계를 다시 그릴 때마다 arm() 이
+     다시 도는데, 칸이 그대로면 같은 요소에 핸들러가 한 벌 더 붙는다 */
+  function arm(){
+    var i = field(), b = button();
+    if(!i || !b || b.dataset.dhrCpn) return;
+    if(native()) return;          /* 워드커머스가 할 수 있으면 우리는 안 한다 */
+    b.dataset.dhrCpn = '1';
+    b.addEventListener('click', function(e){ e.preventDefault(); var f = field(); send(f ? f.value : ''); });
+    i.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); send(i.value); } });
+  }
+
+  window.addEventListener('load', function(){ setTimeout(arm, 400); });
+  if(document.readyState !== 'loading') setTimeout(arm, 900);
+  $(document.body).on('updated_checkout', function(){ setTimeout(arm, 150); });
+})();
+
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
    1) 합계와 주문 버튼을 한 덩어리로 묶어 오른쪽에 붙인다. 원래는 상품 표가 끝난 뒤에야
       주문 버튼이 나와서, 담은 게 많으면 한참 내려가야 주문할 수 있었다.
