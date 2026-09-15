@@ -854,6 +854,19 @@
 })();
 
 
+/* 「쿠폰 받기」가 워드프레스 관리자 로그인으로 튄다 ──────────────────────────
+   키플 쿠폰 플러그인은 비로그인이 버튼을 누르면 `KeypleCoupon.login_url`
+   (= `wp-login.php?redirect_to=…`) 로 보낸다. 손님 눈에는 사이트가 통째로 다른 곳으로
+   튄 것처럼 보이고 브랜드도 회원가입으로 가는 길도 없다 — **1:1 문의에서 고친 그 문제**다.
+
+   플러그인은 건드리지 않고 그 값 하나만 우리 로그인 화면으로 갈아 끼운다. 돌아올 곳은
+   지금 보고 있는 화면이다 (로그인 폼의 숨은 `redirect` 필드가 그리로 되돌린다). */
+(function(){
+  var K = window.KeypleCoupon, base = window.DHR && window.DHR.loginUrl;
+  if(!K || !base || !K.login_url || /\/my-account/.test(String(K.login_url))) return;
+  K.login_url = base + (base.indexOf('?') < 0 ? '?' : '&') + 'redirect_to=' + encodeURIComponent(location.href);
+})();
+
 /* 결제 화면의 쿠폰 카드가 아무 일도 하지 않았다 ───────────────────────────────
    테마 `assets/js/wd-checkout-custom.js` 는 `jQuery(function ($) { … })` 로 열리는데,
    **마지막 28줄(쿠폰 카드 체크박스 핸들러)이 그 래퍼 밖에** 있다 (183줄에서 닫히고

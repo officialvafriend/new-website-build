@@ -1000,6 +1000,10 @@ function js_config( array $extra = array() ): string {
 		// 값이 붙지 않는 옵션(기기 색상처럼 +0원인 칸)을 세트당 몇 개까지 고를 수 있는가.
 		// 기본 1 — 한 세트에 기기 한 대다. 0 이면 이 제한을 아예 끈다.
 		'freeChoicePerSet' => (int) apply_filters( 'duckhoo_free_choice_per_set', 1 ),
+		// 우리 로그인 화면. 키플 쿠폰 플러그인은 비로그인이 「쿠폰 받기」를 누르면
+		// **워드프레스 관리자 로그인(`wp-login.php`)** 으로 보낸다 — 1:1 문의에서 고친 그 문제다.
+		// front.js 가 `KeypleCoupon.login_url` 을 이 주소로 갈아 끼운다 (플러그인은 안 건드린다).
+		'loginUrl' => login_url(),
 		'cartUrl'  => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
 		'shopUrl'  => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 	);
