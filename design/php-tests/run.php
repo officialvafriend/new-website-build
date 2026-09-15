@@ -945,6 +945,42 @@ $ok('' === $again, '한 번만 그린다 (두 번 불러도 비어 있다)');
 $GLOBALS['__filters']['duckhoo_summary_extra_dirs'] = [];
 unset($GLOBALS['wp_filter']['woocommerce_single_product_summary']);
 
+// ── 쿠폰 한 번에 만들기 (includes/coupon-admin.php) ────────────────────────
+require_once dirname(__DIR__, 2).'/includes/coupon-admin.php';
+$C = 'Duckhoo\\Redesign\\Coupon\\Admin\\';
+
+$p1 = ($C.'parse_lines')("3000\n5,000원 홍길동\n10000, 9월 단골, hong@example.com\n2000 x 20\n\n# 주석은 건너뛴다\n안녕하세요");
+$ok(count($p1['rows']) === 4, '빈 줄 · 주석은 건너뛰고 네 줄을 읽는다');
+$ok($p1['rows'][0]['amount'] === 3000 && $p1['rows'][0]['count'] === 1, '숫자만 있는 줄');
+$ok($p1['rows'][1]['amount'] === 5000 && $p1['rows'][1]['note'] === '홍길동', '자릿점 · 「원」 을 떼고 나머지는 메모');
+$ok($p1['rows'][2]['amount'] === 10000 && $p1['rows'][2]['email'] === 'hong@example.com', '@ 가 든 낱말은 이메일');
+$ok($p1['rows'][2]['note'] === '9월 단골', '이메일을 뺀 나머지가 메모');
+$ok($p1['rows'][3]['amount'] === 2000 && $p1['rows'][3]['count'] === 20, 'x20 은 스무 장 (2000 을 금액으로, 20 을 장수로)');
+$ok(count($p1['errors']) === 1, '금액이 없는 줄은 만들지 않고 알려 준다');
+$ok(($C.'total')($p1['rows']) === 23, '만들 장수는 x 를 펼쳐서 센다');
+
+$p2 = ($C.'parse_lines')("50\n2000000\n3000");
+$ok(count($p2['rows']) === 1 && count($p2['errors']) === 2, '너무 적거나 많은 금액은 빼고 이유를 적는다');
+
+$code = ($C.'make_code')('DH', 6);
+$ok(strlen($code) === 8 && str_starts_with($code, 'DH'), '코드는 앞글자 + 정해진 글자 수');
+$ok(!preg_match('/[OIL01]/', substr($code, 2)), '헷갈리는 글자(O · I · L · 0 · 1)를 쓰지 않는다');
+$seen = [];
+for ($i = 0; $i < 200; $i++) { $seen[($C.'make_code')('DH', 6)] = 1; }
+$ok(count($seen) > 190, '200번 만들어도 거의 겹치지 않는다');
+
+$ok(($C.'expiry_stored')('2026-09-30') === '2026-10-01', '만료일은 하루를 더해 저장한다 (그날 밤 12시까지 쓰게)');
+$ok(($C.'expiry_stored')('') === '', '만료일이 없으면 빈 값 (만료 없음)');
+$ok(($C.'expiry_stored')('아무거나') === '', '날짜가 아니면 빈 값');
+
+$one = ['code'=>'DH3K7Q', 'amount'=>3000, 'note'=>'홍길동', 'expires'=>'2026-09-30'];
+$txt = ($C.'sms')(($C.'default_sms')(), $one);
+$ok(str_contains($txt, 'DH3K7Q') && str_contains($txt, '3,000') && str_contains($txt, '9월 30일'), '문자 문구에 코드 · 금액 · 만료가 들어간다');
+$ok(($C.'kdate')('2026-09-30') === '9월 30일', '날짜는 문자에 쓰는 말로 적는다');
+$ok(($C.'kdate')('') === '', '만료가 없으면 빈 값');
+$ok(str_contains($txt, '홍길동님'), '메모가 있으면 이름으로 부른다');
+$ok(!str_contains(($C.'sms')(($C.'default_sms')(), ['code'=>'A','amount'=>1000,'note'=>'','expires'=>'']), '님'), '메모가 없으면 「님」 이 남지 않는다');
+
 // ── 메일 · 비밀번호 찾기 (includes/mail.php) ───────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/mail.php';
 $M = 'Duckhoo\\Redesign\\Mail\\';
