@@ -65,6 +65,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/back.php';
 // 검색 노출 — 네이버 인증 메타 · 상품 한 줄 설명(글) · 분류 메타 설명 · 브랜드 페이지 /brand/<slug>/.
 require_once plugin_dir_path( __FILE__ ) . 'includes/seo.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/seo-texts.php'; // 사장님이 승인한 상품 글 (상자가 비었을 때만)
+require_once plugin_dir_path( __FILE__ ) . 'includes/mail.php';       // 메일 발신자 이름 · 비밀번호 찾기 (워드프레스 기본 화면으로 새지 않게)
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.

@@ -54,7 +54,12 @@ function wp_generate_password($l=12,$s=true,$x=false){ return str_repeat('x',$l)
 function wp_check_password($p,$h,$id=''){ return $p==='correct'; }
 function wp_logout(){ $GLOBALS['__logged_in']=0; }
 function wp_safe_redirect($u){ $GLOBALS['__redirect']=$u; throw new \RuntimeException('redirect'); }
-function add_query_arg($k,$v,$u){ return $u.'?'.$k.'='.$v; }
+function add_query_arg($k,$v=null,$u=null){
+  // 워드프레스는 배열 형태도 받는다: add_query_arg( ['a'=>1], $url )
+  if(is_array($k)){ $url=(string)$v; $q=[]; foreach($k as $kk=>$vv){ $q[]=$kk.'='.$vv; }
+    return $url.(strpos($url,'?')===false?'?':'&').implode('&',$q); }
+  return $u.(strpos((string)$u,'?')===false?'?':'&').$k.'='.$v;
+}
 function wp_verify_nonce($n,$a){ return $n==='good'; }
 function wp_nonce_field($a){ echo '<input type="hidden" name="_wpnonce" value="good">'; }
 function set_transient($k,$v,$t){ $GLOBALS['__transients'][$k]=$v; }

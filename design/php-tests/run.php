@@ -945,6 +945,18 @@ $ok('' === $again, '한 번만 그린다 (두 번 불러도 비어 있다)');
 $GLOBALS['__filters']['duckhoo_summary_extra_dirs'] = [];
 unset($GLOBALS['wp_filter']['woocommerce_single_product_summary']);
 
+// ── 메일 · 비밀번호 찾기 (includes/mail.php) ───────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/mail.php';
+$M = 'Duckhoo\\Redesign\\Mail\\';
+$ok(($M.'from_name')('WordPress') === '액상덕후', '보내는 사람이 WordPress 면 가게 이름으로 바꾼다');
+$ok(($M.'from_name')('') === '액상덕후', '비어 있어도 가게 이름');
+$ok(($M.'from_name')('키플 알림') === '키플 알림', '다른 곳이 이미 이름을 넣었으면 그대로 둔다');
+$ok(str_contains(($M.'lost_url')(), 'my-account'), '비밀번호 찾기는 우리 계정 화면');
+$msg = ($M.'reset_message')("원래 메일 본문\nhttps://duck-hoo.com/wp-login.php?action=rp&key=K1&login=u1", 'K1', 'u1');
+$ok(str_contains($msg, '원래 메일 본문') && str_contains($msg, 'wp-login.php'), '원래 주소를 지우지 않는다 (막히면 로그인을 못 한다)');
+$ok(str_contains($msg, 'my-account') && str_contains($msg, 'key=K1'), '우리 주소를 열쇠와 함께 덧붙인다');
+$ok(($M.'reset_message')('본문만', '', '') === '본문만', '열쇠가 없으면 손대지 않는다');
+
 // ── 검색 노출 (includes/seo.php) ─────────────────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/seo.php';
 $S = 'Duckhoo\\Redesign\\Seo\\';
