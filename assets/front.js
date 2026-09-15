@@ -1038,6 +1038,74 @@
   var wl = cpg.querySelector('.wd-cpg-wishlist');
   if(wl && !wl.querySelector('a[href*="/product/"], .wd-cpg-recom__item, li')) wl.classList.add('is-empty');
 
+  /* **합계의 `할인금액` 한 줄에 서로 다른 할인이 뭉쳐 있었다.**
+     16,000원(정가) − 13,000원(판매가) 3,000원 + 쿠폰 1,000원 = `할인금액 4,000원`.
+     문자로 코드를 받아 넣은 손님은 자기 쿠폰이 먹었는지 이 숫자로는 알 수 없다.
+
+     키플 마크업은 그대로 두고 **그 줄을 둘로 나눈다** — 금액을 우리가 만들지 않는다.
+     쿠폰 몫은 워드커머스가 준 `totals.total_discount` 그대로이고, 남는 몫은
+     `상품금액 − total_items` 와 맞을 때만 「상품 할인」이라 부른다 (아니면 「기타 할인」).
+     합계 상자는 한 줄에 한 칸인 격자라 줄이 하나 늘어도 폭이 밀리지 않는다. */
+  (function(){
+    var calc = document.querySelector('.wd-cpg-summary__calc'); if(!calc) return;
+    var nonce = (window.DHR && window.DHR.nonce) || '';
+    var won = function(n){ return Number(n).toLocaleString('ko-KR') + '원'; };
+    var num = function(el){ return el ? Number(String(el.textContent).replace(/[^\d]/g, '')) : 0; };
+    var cell = function(row){ return { n: row.querySelector('strong'), l: row.querySelector('span') }; };
+
+    function split(cart){
+      var row = calc.querySelector('.wd-cpg-summary__item--discount');
+      if(!row || row.dataset.dhrSplit) return;
+
+      var t = (cart && cart.totals) || {};
+      var unit = Math.pow(10, t.currency_minor_unit != null ? t.currency_minor_unit : 0);
+      var coupon = Math.round(Number(t.total_discount || 0) / unit);
+      if(!(coupon > 0)) return;
+
+      var c = cell(row); if(!c.n || !c.l) return;
+      var all = num(c.n); if(!all || coupon > all) return;   /* 못 읽으면 손대지 않는다 */
+      var rest = all - coupon;
+
+      /* 남는 몫이 정가↔판매가 차이와 맞는지 — 맞을 때만 「상품 할인」이라 부른다 */
+      var listed = 0, items = calc.querySelectorAll('.wd-cpg-summary__item');
+      for(var i = 0; i < items.length; i++){
+        if((items[i].querySelector('span') || {}).textContent === '상품금액'){ listed = num(items[i].querySelector('strong')); break; }
+      }
+      var sale = listed ? listed - Math.round(Number(t.total_items || 0) / unit) : -1;
+
+      row.dataset.dhrSplit = '1';
+      if(rest <= 0){ c.n.textContent = won(coupon); c.l.textContent = '쿠폰 할인'; return; }
+
+      c.n.textContent = won(rest);
+      c.l.textContent = rest === sale ? '상품 할인' : '기타 할인';
+
+      var sym = row.previousElementSibling;
+      var add = row.nextSibling;
+      if(sym && sym.classList.contains('wd-cpg-summary__sym')) calc.insertBefore(sym.cloneNode(true), add);
+      var line = row.cloneNode(true);
+      line.dataset.dhrSplit = '1';
+      line.classList.add('dhr-sum-coupon');
+      cell(line).n.textContent = won(coupon);
+      cell(line).l.textContent = '쿠폰 할인';
+      calc.insertBefore(line, add);
+    }
+
+    var tries = 0;
+    function look(){
+      if(++tries > 6) return;   /* 쿠폰이 없을 때 합계가 바뀔 때마다 부르지 않게 */
+      fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(c){ if(c) split(c); }).catch(function(){});
+    }
+    look();
+    /* 수량을 고치면 키플이 합계를 다시 그린다 — 그때 우리 표시가 사라지므로 다시 나눈다 */
+    var mo = new MutationObserver(function(){
+      if(!calc.querySelector('.wd-cpg-summary__item--discount[data-dhr-split]')) look();
+    });
+    mo.observe(calc, { childList: true, subtree: true });
+    setTimeout(function(){ mo.disconnect(); }, 12000);
+  })();
+
   /* 안내 문구는 사장님 스니펫이 우리 뒤에 다시 그린다. 한 번 쓰고 끝내면 옛 문구로
      되돌아가므로, 그 자리를 지켜보다가 우리 것이 아니면 다시 쓴다. */
   /* 규칙이 비었으면 = 이벤트가 꺼졌다. 없는 혜택을 계속 광고하면 손님이 결제에서
