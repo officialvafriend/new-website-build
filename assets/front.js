@@ -949,6 +949,85 @@
     if(applied) side.appendChild(applied);
     side.appendChild(sum); side.appendChild(order);
   }
+  /* **쿠폰 코드를 넣을 자리.** 이 장바구니는 키플이 만든 페이지라 워드커머스의 쿠폰칸이
+     아예 없다 (확인: `coupon_code` 0개). 문자로 코드를 받은 손님이 넣을 데가 없으므로
+     우리가 합계 옆에 하나 세운다.
+
+     넣고 빼는 것은 **워드커머스 Store API** 가 한다 (`apply-coupon` · `remove-coupon`) —
+     장바구니 서랍이 쓰는 그 길이고, 할인 계산도 워드커머스가 그대로 한다. 우리는
+     금액을 만지지 않는다. 끝나면 **화면을 새로 고친다** — 합계 · 주문 버튼은 키플이
+     서버에서 그리므로 그래야 숫자가 갈리지 않는다. */
+  (function(){
+    var side = document.querySelector('.dhr-cartside') || (sum && sum.parentElement);
+    if(!side || document.querySelector('.dhr-cpn')) return;
+    var nonce = (window.DHR && window.DHR.nonce) || '';
+
+    var box = document.createElement('div');
+    box.className = 'dhr-cpn';
+    box.innerHTML =
+      '<label class="dhr-cpn__l" for="dhr-cpn-i">쿠폰 코드</label>' +
+      '<div class="dhr-cpn__row">' +
+        '<input id="dhr-cpn-i" class="dhr-cpn__i" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="문자로 받은 코드">' +
+        '<button type="button" class="dhr-cpn__b">적용</button>' +
+      '</div>' +
+      '<p class="dhr-cpn__msg" role="status"></p>' +
+      '<ul class="dhr-cpn__on"></ul>';
+    side.insertBefore(box, side.firstChild);
+
+    var input = box.querySelector('.dhr-cpn__i'), btn = box.querySelector('.dhr-cpn__b');
+    var msg = box.querySelector('.dhr-cpn__msg'), on = box.querySelector('.dhr-cpn__on');
+
+    function say(t, bad){ msg.textContent = t || ''; box.classList.toggle('is-bad', !!bad); }
+    function esc(v){ return String(v).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+    function head(){ var h = {'Content-Type':'application/json'}; if(nonce) h.Nonce = nonce; return h; }
+    function keep(r){ var h = r.headers.get('Nonce') || r.headers.get('X-WC-Store-API-Nonce'); if(h) nonce = h; return r; }
+
+    /* 이미 걸려 있는 쿠폰을 보여 준다 — 뺄 수도 있어야 한다 */
+    function show(cart){
+      var list = (cart && cart.coupons) || [];
+      on.innerHTML = list.map(function(c){
+        var off = c.totals && c.totals.total_discount
+          ? Math.round(Number(c.totals.total_discount) / Math.pow(10, (c.totals.currency_minor_unit != null ? c.totals.currency_minor_unit : 0))).toLocaleString('ko-KR') + '원 할인'
+          : '적용됨';
+        return '<li><b>' + esc(String(c.code).toUpperCase()) + '</b> <span>' + esc(off) + '</span>' +
+               '<button type="button" class="dhr-cpn__x" data-code="' + esc(c.code) + '" aria-label="쿠폰 빼기">빼기</button></li>';
+      }).join('');
+    }
+    fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}})
+      .then(keep).then(function(r){ return r.ok ? r.json() : null; }).then(function(c){ if(c) show(c); }).catch(function(){});
+
+    function send(url, body, done){
+      btn.disabled = true; box.classList.add('is-busy'); say('');
+      fetch(url, {method:'POST', credentials:'include', headers: head(), body: JSON.stringify(body)})
+        .then(keep).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+        .then(function(res){
+          if(!res.ok){
+            /* 워드커머스가 왜 안 되는지 한국어로 말해 준다 — 그 말을 그대로 보여 준다 */
+            say(String((res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.').replace(/<[^>]*>/g, ''), true);
+            btn.disabled = false; box.classList.remove('is-busy');
+            return;
+          }
+          done();
+        })
+        .catch(function(){ say('잠시 뒤에 다시 눌러 주세요.', true); btn.disabled = false; box.classList.remove('is-busy'); });
+    }
+
+    function apply(){
+      var code = (input.value || '').trim();
+      if(!code){ say('코드를 넣어 주세요.', true); input.focus(); return; }
+      send('/wp-json/wc/store/v1/cart/apply-coupon', { code: code }, function(){
+        say('쿠폰을 적용했습니다. 금액을 다시 계산합니다…');
+        location.reload();   /* 합계 · 주문 버튼은 키플이 서버에서 그린다 */
+      });
+    }
+    btn.addEventListener('click', apply);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); apply(); } });
+    on.addEventListener('click', function(e){
+      var x = e.target.closest('.dhr-cpn__x'); if(!x) return;
+      send('/wp-json/wc/store/v1/cart/remove-coupon', { code: x.dataset.code }, function(){ location.reload(); });
+    });
+  })();
+
   var wl = cpg.querySelector('.wd-cpg-wishlist');
   if(wl && !wl.querySelector('a[href*="/product/"], .wd-cpg-recom__item, li')) wl.classList.add('is-empty');
 

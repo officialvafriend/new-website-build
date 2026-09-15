@@ -2223,3 +2223,44 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph__a{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph__img{
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
+
+/* 장바구니의 쿠폰 코드 칸 — 이 장바구니(키플 페이지)엔 워드커머스 쿠폰칸이 없다.
+   합계 옆(.dhr-cartside) 맨 위에 세운다. 불투명 · 터치 44px. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn{
+  background: #fff !important; border: 1px solid var(--dh-line, #E3E8EC) !important;
+  border-radius: 14px !important; padding: 14px !important; margin: 0 0 12px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__l{
+  display: block !important; margin: 0 0 8px !important;
+  font-size: 14px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__row{ display: flex !important; gap: 8px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__i{
+  flex: 1 1 auto !important; min-width: 0 !important; height: 46px !important;
+  padding: 0 12px !important; border: 1px solid var(--dh-line, #E3E8EC) !important;
+  border-radius: 10px !important; background: #fff !important;
+  font-size: 15px !important; color: var(--dh-ink, #111) !important; text-transform: uppercase;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-bad .dhr-cpn__i{ border-color: var(--dh-accent-warm, #C2410C) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__b{
+  flex: 0 0 auto !important; height: 46px !important; padding: 0 18px !important;
+  border: 0 !important; border-radius: 10px !important; background: #111 !important;
+  color: #fff !important; font-size: 15px !important; font-weight: 800 !important; cursor: pointer !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-busy .dhr-cpn__b{ opacity: .6 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__msg{
+  margin: 8px 0 0 !important; font-size: 13px !important; line-height: 1.5 !important;
+  color: var(--dh-ink-2, #4E565F) !important; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-bad .dhr-cpn__msg{ color: var(--dh-accent-warm, #C2410C) !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__on{ margin: 10px 0 0 !important; padding: 0 !important; list-style: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__on li{
+  display: flex !important; align-items: center !important; gap: 8px !important;
+  padding: 8px 10px !important; margin: 6px 0 0 !important;
+  background: var(--dh-bg, #F4F6F7) !important; border-radius: 10px !important; font-size: 14px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__on li span{ margin-left: auto !important; color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__x{
+  border: 0 !important; background: none !important; padding: 6px !important;
+  font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; text-decoration: underline !important; cursor: pointer !important;
+}
