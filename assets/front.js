@@ -1048,6 +1048,32 @@
     e.preventDefault();
     send(code);
   }, true);
+
+  /* **「사용 가능한 쿠폰이 없습니다…」 한 줄은 뺀다** (사장님 2026-09-15).
+     그것은 키플 쿠폰함(사이트에서 「받기」를 누른 쿠폰) 이야기라, 문자로 코드를 받은
+     손님에게는 틀린 말이다. 바로 아래가 그 코드를 넣는 칸인데 「없습니다」부터 읽게 된다.
+
+     플러그인은 건드리지 않는다 — **글자를 가진 가장 안쪽 요소 하나만** 화면에서 뺀다.
+     받은 쿠폰이 있을 때 그리는 목록은 이 글자가 없으므로 그대로 남는다. */
+  var MARK = '사용 가능한 쿠폰이 없습니다';
+  function dropEmptyNote(){
+    var all = document.querySelectorAll('p, div, span, li, small, em');
+    for(var i = 0; i < all.length; i++){
+      var el = all[i];
+      if(el.classList.contains('dhr-hide-note')) continue;
+      var t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      if(t.indexOf(MARK) !== 0 || t.length > 200) continue;   /* 큰 덩어리는 건드리지 않는다 */
+      var inner = false;
+      for(var k = 0; k < el.children.length; k++){
+        if((el.children[k].textContent || '').indexOf(MARK) >= 0){ inner = true; break; }
+      }
+      if(inner) continue;                                     /* 안쪽에 같은 글자가 있으면 그쪽이 진짜다 */
+      el.classList.add('dhr-hide-note');
+    }
+  }
+  dropEmptyNote();
+  window.addEventListener('load', function(){ setTimeout(dropEmptyNote, 400); });
+  $(document.body).on('updated_checkout', function(){ setTimeout(dropEmptyNote, 150); });
 })();
 
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.

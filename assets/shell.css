@@ -2278,3 +2278,4 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn.is-bad{
   color: var(--dh-accent-warm, #C2410C) !important;
   font-weight: 700 !important;
 }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-hide-note{ display: none !important; }
