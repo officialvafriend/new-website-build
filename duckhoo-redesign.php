@@ -79,6 +79,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/finder.php';
 	// 마케팅 → 쿠폰 한 번에 만들기 — 손님마다 다른 금액의 쿠폰을 한 번에 만들고 문자 목록을 뽑는다.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/coupon-admin.php';
+	// 도구 → 분류 묶기 — 상품 이름을 붙여 넣으면 새 분류를 만들고 그 상품들을 넣는다.
+	require_once plugin_dir_path( __FILE__ ) . 'includes/cat-admin.php';
 }
 
 

@@ -981,6 +981,28 @@ $ok(($C.'kdate')('') === '', '만료가 없으면 빈 값');
 $ok(str_contains($txt, '홍길동님'), '메모가 있으면 이름으로 부른다');
 $ok(!str_contains(($C.'sms')(($C.'default_sms')(), ['code'=>'A','amount'=>1000,'note'=>'','expires'=>'']), '님'), '메모가 없으면 「님」 이 남지 않는다');
 
+// ── 분류 묶기 (includes/cat-admin.php) ────────────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/cat-admin.php';
+$G = 'Duckhoo\\Redesign\\Cat\\Admin\\';
+$GLOBALS['__filters']['duckhoo_cat_catalog'][] = fn($v) => [
+  103 => '[액상덕후] 스모모 흑염룡 시리즈 (0.98MG / 30ml) (멘솔 없음)',
+  249 => '[노보 블랙] 블랙멘솔 (9.8mg / 30ml)',
+  238 => '[노보] 블랙멘솔 (9.8mg / 30ml)',
+  254 => '[펠릭스] 더블라임 (9.8mg / 30ml)',
+  1025 => '[펠릭스] 모드 더블라임 (3mg / 60ml)',
+  2939 => '[액상덕후] 파이낫푸루 흑염룡 시리즈 (0.98MG / 30ml) (멘솔 없음)',
+];
+$rows = ($G.'match_lines')("스모모 흑염룡\n# 주석은 건너뛴다\n\n노보 블랙 블랙멘솔\n더블라임\nid:254\n파이낫푸르 흑염룡\n없는상품이름입니다");
+$ok(count($rows) === 6, '빈 줄과 주석은 세지 않는다');
+$ok($rows[0]['state'] === 'one' && $rows[0]['ids'][0] === 103, '낱말이 다 들어 있는 상품 하나를 집는다');
+$ok($rows[1]['state'] === 'one' && $rows[1]['ids'][0] === 249, '「노보 블랙」 은 「노보」 와 갈린다');
+$ok($rows[2]['state'] === 'many' && count($rows[2]['ids']) === 2, '여럿에 걸리면 건너뛴다 (30ml · 60ml)');
+$ok($rows[3]['state'] === 'one' && $rows[3]['ids'][0] === 254, 'id:254 는 번호로 못 박는다');
+$ok($rows[4]['state'] === 'none' && str_contains($rows[4]['near'], '파이낫푸루'), '한 글자가 달라 못 찾으면 비슷한 것을 귀띔한다');
+$ok($rows[5]['state'] === 'none' && $rows[5]['near'] === '', '아주 다른 이름에는 아무 것도 귀띔하지 않는다');
+$ok(($G.'key')('[노보 블랙] 블랙멘솔 (9.8mg / 30ml)') === '노보블랙블랙멘솔9.8mg30ml', '대괄호 · 괄호 · 띄어쓰기를 걷어내되 용량은 남긴다');
+$GLOBALS['__filters']['duckhoo_cat_catalog'] = [];
+
 // ── 메일 · 비밀번호 찾기 (includes/mail.php) ───────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/mail.php';
 $M = 'Duckhoo\\Redesign\\Mail\\';
