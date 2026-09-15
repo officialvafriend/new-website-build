@@ -1061,9 +1061,32 @@
     .then(function(res){
       busy = false; spot.b.disabled = false;
       if(!res.ok){ say(spot, (res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.', true); return; }
-      ok();
+      ok(res.j);
     })
     .catch(function(){ busy = false; spot.b.disabled = false; say(spot, '잠시 뒤에 다시 눌러 주세요.', true); });
+  }
+
+  /* **주문 요약은 `update_checkout` 으로 안 바뀐다.**
+     테마(`wd-checkout-custom.js`)의 `refreshDiscountSummary()` 는 쿠폰 할인액을
+     `#wd-summary-coupon-discount` **자기 자신에게서 읽어** 다시 써 넣는다 —
+     서버(`form-checkout.php`)가 그린 값을 되쓰는 구조라, 새로고침 전에는 영원히
+     `쿠폰할인 − 0원` 이다 (테마 주석에도 「#order_review 테이블이 이 화면에는 없어서」라고 적혀 있다).
+
+     그래서 **쿠폰을 넣은 뒤 그 두 숫자를 우리가 써 넣는다.** 값은 워드커머스가 준 것 그대로다 —
+     할인액은 `totals.total_discount`, 총액은 `totals.total_price`(주문에 실제로 잡히는 금액).
+     **새로고침하지 않는다** — 손님이 적어 둔 배송 정보가 날아간다.
+     손을 댄 뒤에는 테마가 합계를 다시 그릴 때마다(`updated_checkout`) 다시 맞춰 준다. */
+  var touched = false;
+  function won(n){ return Number(n).toLocaleString('ko-KR') + '원'; }
+  function paint(c){
+    if(!c || !c.totals) return;
+    var t = c.totals, unit = Math.pow(10, t.currency_minor_unit != null ? t.currency_minor_unit : 0);
+    var off = Math.round(Number(t.total_discount || 0) / unit);
+    var total = Math.round(Number(t.total_price || 0) / unit);
+    var el = document.getElementById('wd-summary-coupon-discount');
+    if(el) el.textContent = '- ' + won(off);
+    var tot = document.querySelector('.wd-summary-total strong');
+    if(tot && total > 0) tot.textContent = won(total);
   }
 
   function apply(spot){
@@ -1078,11 +1101,13 @@
           say(spot, '이미 적용된 쿠폰입니다.'); show(); return;      /* 두 번 넣지 않는다 */
         }
       }
-      post('/wp-json/wc/store/v1/cart/apply-coupon', { code: code }, spot, function(){
+      post('/wp-json/wc/store/v1/cart/apply-coupon', { code: code }, spot, function(j){
         say(spot, '쿠폰을 적용했습니다.');
         spot.i.value = '';
+        touched = true;
         show();
-        $(document.body).trigger('update_checkout');   /* 합계만 다시 그린다 */
+        paint(j);
+        $(document.body).trigger('update_checkout');   /* 결제수단 · 배송비는 그쪽이 본다 */
       });
     });
   }
@@ -1098,8 +1123,9 @@
         if(fresh){
           ul.addEventListener('click', function(e){
             var x = e.target.closest('.dhr-cocpn-x'); if(!x || busy) return;
-            post('/wp-json/wc/store/v1/cart/remove-coupon', { code: x.getAttribute('data-code') }, spot, function(){
-              say(spot, '쿠폰을 뺐습니다.'); show(); $(document.body).trigger('update_checkout');
+            post('/wp-json/wc/store/v1/cart/remove-coupon', { code: x.getAttribute('data-code') }, spot, function(j){
+              say(spot, '쿠폰을 뺐습니다.'); touched = true; show(); paint(j);
+              $(document.body).trigger('update_checkout');
             });
           });
         }
@@ -1225,7 +1251,12 @@
   tidy();
   document.addEventListener('DOMContentLoaded', tidy);
   window.addEventListener('load', function(){ tidy(); setTimeout(tidy, 500); setTimeout(show, 700); });
-  $(document.body).on('updated_checkout', function(){ setTimeout(tidy, 150); });
+  $(document.body).on('updated_checkout', function(){
+    setTimeout(tidy, 150);
+    /* 테마가 요약을 다시 계산하면 쿠폰 줄이 도로 0 이 된다 — 손댄 뒤에는 다시 맞춘다.
+       그때의 장바구니를 새로 읽어서 쓴다 (주소 · 배송비가 바뀌었을 수 있다) */
+    if(touched) setTimeout(function(){ cart(paint); }, 0);
+  });
   /* 토스트는 우리보다 뒤에 만들어질 수 있다 — 8초만 지켜본다 */
   var mo = new MutationObserver(function(){ hushToggle(); });
   mo.observe(document.body, { childList: true, subtree: true });
