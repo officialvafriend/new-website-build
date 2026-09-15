@@ -708,6 +708,138 @@ function login_url( string $back = '' ): string {
 }
 
 /**
+ * 추석 이벤트 — 홈 맨 위 한 장 (사장님 2026-09-15).
+ *
+ * 젤로 크리스탈 기기 패키지를 명절 얼굴로 바꿔 첫 화면 맨 위에 세운다.
+ * **상품 데이터는 건드리지 않는다** — 이름 · 가격 · 주소는 워드커머스가 쥔 그대로이고,
+ * 이 함수는 그 위에 **이벤트 이름과 문구만** 얹는다. 상품 이름을 진짜로 바꾸실지는
+ * 관리자에서 사장님이 정하시면 된다.
+ *
+ * 끄기 · 바꾸기는 한 줄:
+ *   add_filter( 'duckhoo_chuseok', fn( $c ) => array( 'on' => false ) + $c );
+ *   add_filter( 'duckhoo_chuseok', fn( $c ) => array( 'title' => '보름달 세트' ) + $c );
+ *
+ * `until` 에 날짜(Y-m-d)를 넣으면 그날이 지나면 저절로 내려간다 — 끝난 이벤트가
+ * 첫 화면에 남아 있는 것이 이 가게에서 이미 한 번 문제였다 (여름 세일 팝업 · 9월 자동 할인).
+ *
+ * @return array<string,mixed>
+ */
+function chuseok(): array {
+	return (array) apply_filters(
+		'duckhoo_chuseok',
+		array(
+			'on'    => true,
+			'id'    => 207,                                   // 젤로 크리스탈 기기 + 액상 5병
+			'find'  => '젤로 크리스탈 기기',                    // id 가 안 맞으면 이름으로 찾는다
+			'eb'    => '추석 이벤트',
+			'title' => '한가위 풀세트',
+			'sub'   => '젤로 크리스탈 기기 + 액상 5병',
+			'note'  => '추석 연휴 전에 받으시려면 서둘러 주세요.',
+			'cta'   => '한가위 풀세트 보러 가기',
+			'until' => '2026-09-30',
+		)
+	);
+}
+
+/**
+ * 추석 이벤트가 지금 보이는가.
+ *
+ * @return bool
+ */
+function chuseok_on(): bool {
+	$c = chuseok();
+	if ( empty( $c['on'] ) ) {
+		return false;
+	}
+	$until = trim( (string) ( $c['until'] ?? '' ) );
+	if ( '' === $until ) {
+		return true;
+	}
+	return (string) current_time( 'Y-m-d' ) <= $until;
+}
+
+/**
+ * 이벤트 상품 — id 로 찾고, 없으면 이름으로 한 번 더 본다.
+ *
+ * 상품이 지워지거나 id 가 바뀌어도 첫 화면이 비지 않게 하려는 것이다.
+ *
+ * @return \WC_Product|null
+ */
+function chuseok_product() {
+	if ( ! function_exists( 'wc_get_product' ) ) {
+		return null;
+	}
+	$c  = chuseok();
+	$id = (int) ( $c['id'] ?? 0 );
+	if ( $id > 0 ) {
+		$p = wc_get_product( $id );
+		if ( $p instanceof \WC_Product && 'publish' === $p->get_status() ) {
+			return $p;
+		}
+	}
+	$find = trim( (string) ( $c['find'] ?? '' ) );
+	if ( '' === $find ) {
+		return null;
+	}
+	foreach ( products( array( 'limit' => 60, 'orderby' => 'popularity' ) ) as $p ) {
+		if ( false !== mb_strpos( $p->get_name(), $find ) ) {
+			return $p;
+		}
+	}
+	return null;
+}
+
+/**
+ * 추석 이벤트 한 장.
+ *
+ * 사진은 **키플의 19 가림을 그대로 거친다** — 비로그인에게는 카드와 같은 자리에
+ * 「가입하면 사진 공개」 띠를 얹는다. 우회하지 않는다.
+ *
+ * @return string
+ */
+function chuseok_html(): string {
+	if ( ! chuseok_on() ) {
+		return '';
+	}
+	$p = chuseok_product();
+	if ( ! $p instanceof \WC_Product ) {
+		return '';
+	}
+	$c    = chuseok();
+	$reg  = (float) $p->get_regular_price();
+	$now  = (float) $p->get_price();
+	$off  = ( $reg > $now && $reg > 0 ) ? (int) round( ( 1 - $now / $reg ) * 100 ) : 0;
+	$link = get_permalink( $p->get_id() );
+
+	$price = '';
+	if ( $reg > $now ) {
+		$price .= '<s>' . esc_html( number_format_i18n( $reg ) ) . '원</s>';
+	}
+	if ( $off > 0 ) {
+		$price .= '<em>' . (int) $off . '%</em>';
+	}
+	$price .= '<b>' . esc_html( number_format_i18n( $now ) ) . '원</b>';
+
+	$note = trim( (string) ( $c['note'] ?? '' ) );
+
+	return '<section class="chu" aria-label="' . esc_attr( (string) $c['eb'] ) . '">'
+		. '<a class="chu__in" href="' . esc_url( $link ) . '">'
+		. '<div class="chu__t">'
+		. '<span class="chu__eb">' . esc_html( (string) $c['eb'] ) . '</span>'
+		. '<h2 class="chu__h">' . esc_html( (string) $c['title'] ) . '</h2>'
+		. '<p class="chu__s">' . esc_html( (string) $c['sub'] ) . '</p>'
+		. '<p class="chu__p">' . $price . '</p>'
+		. ( '' !== $note ? '<p class="chu__n">' . esc_html( $note ) . '</p>' : '' )
+		. '<span class="chu__cta">' . esc_html( (string) $c['cta'] ) . ' ' . icon( 'arrow' ) . '</span>'
+		. '</div>'
+		. '<div class="chu__art"><span class="chu__moon" aria-hidden="true"></span>'
+		. '<span class="chu__fig">' . $p->get_image( 'woocommerce_thumbnail' )
+		. ( gated() ? '<span class="lock" aria-hidden="true">가입하면 사진 공개</span>' : '' )
+		. '</span></div>'
+		. '</a></section>';
+}
+
+/**
  * 목록 · 홈 맨 위에 한 줄 — 사진이 왜 안 보이는지, 어떻게 열리는지.
  * 카드마다 붙는 띠는 「무엇」만 말하고, 「왜」는 여기서 한 번만 말한다.
  *

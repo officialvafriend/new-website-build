@@ -288,7 +288,14 @@ function create( array $rows, array $opts ): array {
 			$c->set_discount_type( 'fixed_cart' );
 			$c->set_amount( (string) $r['amount'] );
 			$c->set_individual_use( ! empty( $opts['individual'] ) );
-			$c->set_usage_limit( 1 );
+			/* **쓰는 방식 두 가지.**
+			   `many` — 코드 하나를 여럿에게 뿌리고 **한 사람당 한 번**. 손님 수만큼 코드를
+			            만들지 않아도 된다 (사장님 2026-09-15: 사람마다 만들면 너무 오래 걸린다).
+			   `once` — 한 장에 딱 한 번. 손님마다 다른 코드를 줄 때.
+			   워드커머스는 `usage_limit` 0 을 「제한 없음」으로 본다. 어느 쪽이든
+			   `usage_limit_per_user` 는 1 이라 한 사람이 두 번 쓰지는 못한다.
+			   **한 사람인지는 로그인 계정으로 본다** — 이 가게는 비로그인 결제가 안 되므로 샐 구멍이 없다. */
+			$c->set_usage_limit( 'once' === (string) ( $opts['mode'] ?? 'many' ) ? 1 : 0 );
 			$c->set_usage_limit_per_user( 1 );
 			$c->set_exclude_sale_items( ! empty( $opts['exclude_sale'] ) );
 			$c->set_free_shipping( false );
@@ -421,6 +428,7 @@ function screen(): void {
 		'expires'      => (string) wp_unslash( $_POST['dhr_exp'] ?? '' ),            // phpcs:ignore WordPress.Security.NonceVerification
 		'min'          => (int) str_replace( ',', '', (string) wp_unslash( $_POST['dhr_min'] ?? '0' ) ), // phpcs:ignore WordPress.Security.NonceVerification
 		'label'        => (string) wp_unslash( $_POST['dhr_label'] ?? '' ),          // phpcs:ignore WordPress.Security.NonceVerification
+		'mode'         => 'once' === sanitize_key( (string) wp_unslash( $_POST['dhr_mode'] ?? '' ) ) ? 'once' : 'many', // phpcs:ignore WordPress.Security.NonceVerification
 		'individual'   => isset( $_POST['dhr_individual'] ),                          // phpcs:ignore WordPress.Security.NonceVerification
 		'exclude_sale' => isset( $_POST['dhr_exclude_sale'] ),                        // phpcs:ignore WordPress.Security.NonceVerification
 	);
@@ -487,9 +495,10 @@ function screen(): void {
 		}
 
 		printf(
-			'<div class="notice notice-success"><p><b>%d장</b> — 묶음 <code>%s</code></p></div>',
+			'<div class="notice notice-success"><p><b>%d장</b> — 묶음 <code>%s</code> · %s</p></div>',
 			count( $result['made'] ),
-			esc_html( (string) $result['batch'] )
+			esc_html( (string) $result['batch'] ),
+			'once' === (string) $opts['mode'] ? '한 장에 한 번만' : '여러 사람이 같은 코드 · 한 사람당 한 번'
 		);
 
 		echo '<table class="widefat striped" style="max-width:900px;margin:1em 0"><thead><tr>'
@@ -564,10 +573,19 @@ function screen(): void {
 		esc_attr( (string) $opts['label'] )
 	);
 	printf(
+		'<tr><th scope="row">쓰는 방식</th><td>'
+		. '<label style="display:block;margin-bottom:6px"><input type="radio" name="dhr_mode" value="many" %s> '
+		. '<b>여러 사람이 같은 코드</b> · 한 사람당 한 번 <span class="description">— 코드 하나를 문자로 뿌립니다. 손님 수만큼 만들 필요가 없습니다.</span></label>'
+		. '<label style="display:block"><input type="radio" name="dhr_mode" value="once" %s> '
+		. '<b>한 장에 한 번만</b> <span class="description">— 손님마다 다른 코드를 줄 때.</span></label>'
+		. '<p class="description">어느 쪽이든 <b>한 사람이 두 번은 못 씁니다</b> (로그인 계정으로 봅니다).</p></td></tr>',
+		checked( 'once' !== (string) $opts['mode'], true, false ),
+		checked( 'once' === (string) $opts['mode'], true, false )
+	);
+	printf(
 		'<tr><th scope="row">그 밖에</th><td>'
 		. '<label><input type="checkbox" name="dhr_individual" %s> 다른 쿠폰과 같이 못 쓰게 (한 번에 하나)</label><br>'
-		. '<label><input type="checkbox" name="dhr_exclude_sale" %s> 할인 중인 상품에는 안 되게</label>'
-		. '<p class="description">모든 쿠폰은 <b>한 번만</b> · <b>한 사람당 한 번만</b> 쓰입니다.</p></td></tr>',
+		. '<label><input type="checkbox" name="dhr_exclude_sale" %s> 할인 중인 상품에는 안 되게</label></td></tr>',
 		checked( (bool) $opts['individual'], true, false ),
 		checked( (bool) $opts['exclude_sale'], true, false )
 	);

@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note, chuseok_html, chuseok, chuseok_on};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,6 +20,12 @@ $rank_cat  = cat_by_name( '랭킹' );
 $shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 
 $deals  = $sale_cat ? products( array( 'category' => array( $sale_cat->slug ), 'limit' => 10, 'orderby' => 'date', 'order' => 'DESC' ) ) : products( array( 'include' => wc_get_product_ids_on_sale(), 'limit' => 10 ) );
+// 추석 이벤트로 맨 위에 세운 상품은 아래 줄에서 뺀다 — 한 화면에 두 번 나오면
+// 맨 위 한 장이 「특별한 것」으로 안 읽힌다.
+$chu_id = chuseok_on() ? (int) ( \Duckhoo\Redesign\Front\chuseok_product()?->get_id() ?? 0 ) : 0;
+if ( $chu_id ) {
+	$deals = array_values( array_filter( $deals, fn( $p ) => (int) $p->get_id() !== $chu_id ) );
+}
 $newest = products( array( 'limit' => 8, 'orderby' => 'date', 'order' => 'DESC', 'stock_status' => 'instock' ) );
 // 입호흡 액상 단품 — 한 병씩 고르는 사람을 위한 줄. 묶음 · 세트 · 기획은 뺀다
 // (묶음은 히어로와 특가 · 주력 브랜드 줄이 이미 맡고 있다).
@@ -33,7 +39,8 @@ $brand_names = featured_brands( 12 );
 // 히어로는 묶음 상품을 넘겨 본다. 묶음이 이 가게의 주력이고, 병당 가격이 내려가는 게
 // 첫 화면에서 보여야 할 이야기다. 사진이 있고 재고가 있는 것만, 최대 5장.
 $heroes    = array();
-$seen_ids  = array();
+// 맨 위 추석 이벤트로 이미 세운 상품은 히어로에서도 뺀다.
+$seen_ids  = $chu_id ? array( $chu_id => true ) : array();
 $hero_pick = function ( array $list ) use ( &$heroes, &$seen_ids ) {
 	foreach ( $list as $p ) {
 		if ( count( $heroes ) >= 5 ) {
@@ -111,6 +118,12 @@ $month = (int) wp_date( 'n' );
 
 	<?php // 눌러서 검색창을 연다. 예전에는 빈 검색(?s=) 으로 보내 결과가 0건인 화면이 나왔다. ?>
 	<a class="msearch" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" data-search-open aria-haspopup="dialog" aria-expanded="false" aria-controls="dhr-search"><?php echo icon( 'search' ); // phpcs:ignore ?><span>‘샤인머스캣’ 처럼 찾아보세요</span></a>
+
+	<?php
+	// 추석 이벤트 — 첫 화면 맨 위 (사장님 2026-09-15). 상품 데이터는 안 건드리고
+	// 이벤트 이름 · 문구만 얹는다. 끄기는 `duckhoo_chuseok` 의 `on` 을 false 로.
+	echo chuseok_html(); // phpcs:ignore WordPress.Security.EscapeOutput — 안에서 escape 한다
+	?>
 
 	<section class="hero2">
 		<?php if ( $heroes ) : ?>
