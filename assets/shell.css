@@ -2298,3 +2298,94 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-x{
   background: #fff !important; color: var(--dh-ink-2, #44525C) !important;
   font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important;
 }
+
+/* ══ 주문서 마무리 — 다른 화면과 같은 얼굴로 (2026-09-15) ══════════════════════
+   사장님: 「여기는 기존 테마와 좀 달라 보이는데 UI 가」. `?dhr_ui=1` 로 실제 값을
+   받아 보니 어긋난 자리가 분명했다. 카드 · 격자 같은 뼈대는 이미 우리 것인데,
+   **안쪽 알맹이가 키플 · 워드커머스 기본값 그대로**였다.
+
+   ① 카드 안에 또 테두리 상자가 겹친다 (`#order_review` 는 **검정** 테두리 · `#payment` 는
+      라운드 5px 인 워드커머스 기본). ② 분홍 세 가지(#E91E63 가격 · #FF4D73 필수표 ·
+      #FF1F79 안내)가 남아 있다. ③ 회색이 우리 것이 아니다 (#222 · #666 · #F8F8F8 · #BDBDBD).
+   ④ 적립금 입력칸만 검은 테두리 · 라운드 12 다 (다른 칸은 전부 #CFD3D8 · 10).
+
+   **마크업 · 폼 필드 이름은 한 글자도 안 건드린다.** 색과 크기만 얹는다. */
+
+/* ① 겹친 상자 — 카드는 바깥 하나로 충분하다 */
+html body.dhr.dhr-wrap.dhr-wrap #order_review,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-order-review{
+  border: 0 !important; border-radius: 0 !important; padding: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap #payment,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout-payment{
+  border: 0 !important; border-radius: 0 !important;
+  padding: .8rem 0 0 !important; background: transparent !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-products-list{
+  border: 0 !important; border-radius: 0 !important; padding: 0 !important;
+}
+
+/* ② 분홍 — 가격은 값이지 경고가 아니다. 검정으로 세운다 */
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-checkout .woocommerce-Price-amount,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-checkout .woocommerce-Price-amount bdi,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-checkout .wd-checkout-product-price,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce-checkout .wd-checkout-products-shipping{
+  color: var(--dh-ink, #111) !important;
+}
+/* 필수 표시는 「빠뜨리면 안 되는 칸」이라 눈에 띄어야 한다 — 우리 포인트 색으로 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-required-mark,
+html body.dhr.dhr-wrap.dhr-wrap abbr.required{ color: var(--dh-accent-warm, #C2410C) !important; }
+/* 입금 안내 상자 — 감싸는 div 자체가 분홍이라 안의 글이 전부 물들었다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice{ color: var(--dh-ink-2, #4E565F) !important; }
+
+/* ③ 우리 회색으로 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-name{ color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-option-text,
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row,
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row span{ color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-option-badge{
+  color: var(--dh-ink-2, #4E565F) !important;
+  border: 1px solid var(--dh-line-strong, #C9CFD4) !important;
+  border-radius: 999px !important; font-size: 13px !important; font-weight: 700 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-placeholder-note{
+  background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important;
+  font-size: 14px !important; line-height: 1.6 !important; border-radius: 12px !important;
+  word-break: keep-all !important;
+}
+
+/* ④ 입력칸 · 버튼을 한 얼굴로 — 적립금 칸만 검은 테두리였다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-point-dummy-input,
+html body.dhr.dhr-wrap.dhr-wrap #wd_point_discount{
+  border: 1px solid var(--dh-line-strong, #C9CFD4) !important;
+  border-radius: 10px !important; font-weight: 700 !important;
+}
+/* 주소찾기만 라운드 12 였다 — 나머지 보조 버튼과 같은 알약으로 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-address-search-btn{ border-radius: 999px !important; }
+
+/* 폰에서 버튼 글자가 세로로 쪼개졌다 — 「전액사용」이 전/액/사/용 네 줄이 됐다.
+   버튼은 줄이지 말고 글자칸이 줄어들게 한다 (min-width:0 이 없으면 칸이 안 줄어든다). */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-coupon-box .button,
+html body.dhr.dhr-wrap.dhr-wrap .wd-address-search-btn,
+html body.dhr.dhr-wrap.dhr-wrap .wd-point-dummy-btn,
+html body.dhr.dhr-wrap.dhr-wrap #wd_point_use_all{
+  white-space: nowrap !important; flex: 0 0 auto !important; word-break: keep-all !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-coupon-box .input-text,
+html body.dhr.dhr-wrap.dhr-wrap .wd-point-dummy-input,
+html body.dhr.dhr-wrap.dhr-wrap #wd_point_discount{ min-width: 0 !important; }
+/* 카드가 테두리 · 여백만큼 밖으로 나가면 폰에서 화면이 옆으로 밀린다 */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-page,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-grid,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-card{ box-sizing: border-box !important; max-width: 100% !important; }
+
+/* **왼쪽 · 오른쪽 줄도 격자다 — 칸 폭을 못 박아야 한다.** `auto` 는 max-content 라
+   안에 줄바꿈이 안 되는 것 하나가 칸을 밀어낸다: 350px 자리에 393px 이 잡혀 카드가
+   화면 밖으로 나가고 폰이 옆으로 밀렸다 (상품 상세 `.dhp-buy` 에서 겪은 그것과 같다). */
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right{ grid-template-columns: minmax(0,1fr) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left > *,
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right > *{ min-width: 0 !important; }
