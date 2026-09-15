@@ -931,137 +931,237 @@
   $(document.body).on('updated_checkout', function(){ setTimeout(arm, 100); });
 })();
 
-/* **결제 화면의 `쿠폰 적용하기` 가 아무 일도 하지 않았다** (사장님 영상 2026-09-15 —
-   코드를 넣고 눌렀는데 안내도 없고 `쿠폰할인 − 0원` 그대로).
+/* **결제 화면의 쿠폰칸이 두 번 헛돌았다** (사장님 영상 · 캡처 2026-09-15).
+   코드를 넣고 눌러도 안내도 오류도 없이 `쿠폰할인 − 0원` 그대로였다.
 
-   워드커머스는 그 버튼의 클릭이 아니라 **`form.checkout_coupon` 의 submit** 에 걸려 있다
-   (`checkout.js`). 칸과 버튼이 그 폼 밖에 있거나 버튼이 submit 이 아니면 **눌러도 아무 데도
-   닿지 않는다** — 오류조차 안 난다. 테마 파일은 건드리지 않고, **닿을 수 없을 때만** 우리가 받는다.
+   처음엔 워드커머스 이름(`coupon_code` · `apply_coupon`)에 걸었는데 **결제 화면은
+   로그인이 있어야 열려 DOM 을 직접 못 본다.** 캡처를 보니 화면에는 코드 넣는 자리가
+   둘이다 — 왼쪽 `쿠폰` 상자와 오른쪽 `상품권이 있나요?` 상자. 이름이 우리가 건 것과
+   다르면 우리 핸들러는 아예 안 깨어난다.
 
-   넣는 길은 장바구니 쿠폰칸과 같은 워드커머스 Store API 다 (`apply-coupon`) — 할인 계산은
-   워드커머스가 그대로 한다. 끝나면 `update_checkout` 으로 합계만 다시 그린다.
-   **새로고침하지 않는다** — 손님이 적어 둔 배송 정보가 날아간다. */
+   그래서 **이름이 아니라 화면에 보이는 것으로 잡는다**: 조상 글자에 `쿠폰` 이 있고
+   `상품권` 은 없는 상자 안의 글자칸 + `적용` 버튼. **상품권 상자는 건드리지 않는다** —
+   그쪽은 다른 시스템이고, 우리가 워드커머스 쿠폰으로 보내면 남의 기능을 망가뜨린다.
+
+   넣는 길은 장바구니 쿠폰칸과 같은 Store API `apply-coupon` 이다 (라이브에서 확인된 길).
+   끝나면 `update_checkout` 으로 **합계만** 다시 그린다 — 새로고침하면 손님이 적어 둔
+   배송 정보가 날아간다. */
 (function(){
   var $ = window.jQuery; if(!$) return;
   if(!document.body.classList.contains('woocommerce-checkout')) return;
 
-  function field(){ return document.querySelector('input[name="coupon_code"], #coupon_code'); }
-  function button(){ return document.querySelector('[name="apply_coupon"]'); }
+  var nonce = (window.DHR && window.DHR.nonce) || '', busy = false;
 
-  /* 워드커머스가 이 버튼에 닿을 수 있는가 — 닿을 수 있으면 우리는 물러난다 */
-  function native(){
-    var i = field(), b = button();
-    if(!i || !b) return true;
-    if(!i.closest('form.checkout_coupon')) return false;         /* 폼 밖이면 submit 이 안 난다 */
-    if(String(b.type || '').toLowerCase() !== 'submit') return false;
-    try{
-      var ev = $._data ? $._data(document, 'events') : null, list = (ev && ev.submit) || [];
-      for(var k = 0; k < list.length; k++){
-        if(String(list[k].selector || '').indexOf('checkout_coupon') >= 0) return true;
-      }
-      return false;
-    }catch(err){ return true; }                                   /* 모를 때는 건드리지 않는다 */
+  function seen(el){
+    if(!el) return false;
+    var r = el.getBoundingClientRect();
+    return !!(el.offsetParent || r.width || r.height);
+  }
+  function words(el){ return (el.textContent || '').replace(/\s+/g, ' ').trim(); }
+
+  /* 쿠폰 코드를 넣는 자리 찾기 — 이름이 아니라 둘레의 글자로 판단한다.
+
+     **버튼에서 시작한다.** 칸에서 시작해 위로 올라가면 배송 주소칸도 「쿠폰」이 적힌
+     큰 조상에 걸려 같은 버튼과 짝지어진다 (가짜 화면 시험에서 실제로 그랬다 —
+     주소칸이 먼저라 코드 대신 빈 값을 읽었다). 버튼에서 내려오면 짝이 하나로 정해진다. */
+  function textIns(el){
+    var out = [], all = el.querySelectorAll('input');
+    for(var i = 0; i < all.length; i++){
+      var t = String(all[i].getAttribute('type') || 'text').toLowerCase();
+      if(t !== 'text' && t !== 'search') continue;
+      if(!seen(all[i])) continue;
+      out.push(all[i]);
+    }
+    return out;
   }
 
-  function note(){
-    var b = button(); if(!b) return null;
-    var seat = b.parentElement || b;
-    if(!seat.parentNode) return null;
-    var n = seat.parentNode.querySelector('.dhr-cocpn');
-    if(!n){ n = document.createElement('p'); n.className = 'dhr-cocpn'; n.setAttribute('role','status'); seat.parentNode.insertBefore(n, seat.nextSibling); }
+  function spots(){
+    var out = [], used = [];
+    var cand = document.querySelectorAll('button, input[type="submit"], input[type="button"], a');
+    for(var i = 0; i < cand.length; i++){
+      var b = cand[i];
+      if(!seen(b)) continue;
+      var label = (b.tagName === 'INPUT' ? String(b.value || '') : words(b)).trim();
+      var strong = /쿠폰\s*적용/.test(label);
+      if(!strong && label !== '적용') continue;
+
+      /* 버튼과 가장 가까운, 글자칸이 **하나뿐인** 상자 */
+      var row = null, input = null, el = b.parentElement;
+      for(var up = 0; up < 4 && el; up++, el = el.parentElement){
+        var f = textIns(el);
+        if(f.length === 1){ row = el; input = f[0]; break; }
+        if(f.length > 1) break;                    /* 애매하면 손대지 않는다 */
+      }
+      if(!input || used.indexOf(input) >= 0) continue;
+
+      /* 「쿠폰」 이라고 적힌 상자 — 위로 네 단계까지 본다.
+         **「상품권」 은 어느 단계에서 나오든 물러난다** (그쪽은 다른 시스템이다). */
+      var card = row, found = null, gift = false;
+      for(var u2 = 0; u2 < 4 && card; u2++, card = card.parentElement){
+        var t = words(card);
+        if(t.length > 600) break;
+        /* **더 가까운 이름이 이긴다.** 위로 계속 올라가면 결국 둘 다 든 조상(body)에
+           닿아 멀쩡한 쿠폰칸까지 물러나게 된다 — 가짜 화면 시험에서 그랬다 */
+        if(t.indexOf('상품권') >= 0){ gift = true; break; }
+        if(t.indexOf('쿠폰') >= 0){ found = card; break; }
+      }
+      if(gift) continue;
+      if(!found && !strong) continue;            /* 그냥 「적용」 은 쿠폰이라는 말이 있어야 받는다 */
+
+      used.push(input);
+      out.push({ i: input, b: b, row: row, box: found || row });
+    }
+    return out;
+  }
+
+  function plain(t){ var d = document.createElement('textarea'); d.innerHTML = String(t == null ? '' : t).replace(/<[^>]*>/g, ''); return d.value; }
+  /* **만든 것은 칸에 매달아 둔다.** 상자를 다시 찾아 `querySelector` 로 뒤지면,
+     안내를 상자 **밖**(줄 다음)에 붙인 경우 못 찾아 부를 때마다 새로 만든다 —
+     가짜 화면 시험에서 안내가 12개까지 늘었다. */
+  function seat(spot, cls, tag){
+    var key = '__dhr_' + cls;
+    var n = spot.i[key];
+    if(n && n.isConnected) return n;
+    n = document.createElement(tag);
+    n.className = cls;
+    if(tag === 'p') n.setAttribute('role', 'status');
+    /* **칸이 있는 줄 바로 아래**에 붙인다. 줄 안에 넣으면 칸 · 버튼과 가로로 늘어선다 */
+    var after = spot.i['__dhr_dhr-cocpn'] && spot.i['__dhr_dhr-cocpn'].isConnected
+      ? spot.i['__dhr_dhr-cocpn'] : (spot.row || spot.box);
+    if(after.parentNode) after.parentNode.insertBefore(n, after.nextSibling);
+    else spot.box.appendChild(n);
+    spot.i[key] = n;
     return n;
   }
-  function plain(t){ var d = document.createElement('textarea'); d.innerHTML = String(t == null ? '' : t).replace(/<[^>]*>/g, ''); return d.value; }
-  function say(t, bad){ var n = note(); if(!n) return; n.textContent = plain(t); n.classList.toggle('is-bad', !!bad); }
+  function note(spot){ return seat(spot, 'dhr-cocpn', 'p'); }
+  function say(spot, t, bad){ var n = note(spot); n.textContent = plain(t); n.classList.toggle('is-bad', !!bad); }
 
-  var nonce = (window.DHR && window.DHR.nonce) || '', busy = false, last = { code:'', at:0 };
+  function cart(then){
+    fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}})
+      .then(function(r){ return r.ok ? r.json() : null; }).then(then).catch(function(){ then(null); });
+  }
 
-  function send(code){
-    code = String(code || '').trim();
-    if(!code){ say('코드를 넣어 주세요.', true); return; }
-    var now = Date.now();
-    if(busy || (code === last.code && now - last.at < 1500)) return;  /* 두 번 넣지 않는다 */
-    last = { code: code, at: now }; busy = true;
-    var b = button(); if(b) b.disabled = true;
-    say('적용하는 중…');
-
-    fetch('/wp-json/wc/store/v1/cart/apply-coupon', {
+  function post(url, body, spot, ok){
+    busy = true; spot.b.disabled = true;
+    fetch(url, {
       method:'POST', credentials:'include',
       headers: nonce ? {'Content-Type':'application/json', 'Nonce': nonce} : {'Content-Type':'application/json'},
-      body: JSON.stringify({ code: code })
+      body: JSON.stringify(body)
     })
     .then(function(r){
       var h = r.headers.get('Nonce') || r.headers.get('X-WC-Store-API-Nonce'); if(h) nonce = h;
       return r.json().then(function(j){ return { ok: r.ok, j: j }; });
     })
     .then(function(res){
-      busy = false; if(b) b.disabled = false;
-      if(!res.ok){ last = { code:'', at:0 }; say((res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.', true); return; }
-      say('쿠폰을 적용했습니다.');
-      var i = field(); if(i) i.value = '';
-      $(document.body).trigger('update_checkout');   /* 합계만 다시 그린다 — 적어 둔 배송 정보는 그대로 */
+      busy = false; spot.b.disabled = false;
+      if(!res.ok){ say(spot, (res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.', true); return; }
+      ok();
     })
-    .catch(function(){ busy = false; if(b) b.disabled = false; last = { code:'', at:0 }; say('잠시 뒤에 다시 눌러 주세요.', true); });
+    .catch(function(){ busy = false; spot.b.disabled = false; say(spot, '잠시 뒤에 다시 눌러 주세요.', true); });
   }
 
-  /* 이미 걸려 있는 쿠폰인가 — 두 번 넣지 않기 위해 */
-  function has(code, then){
-    fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}})
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(c){
-        var list = (c && c.coupons) || [];
-        for(var k = 0; k < list.length; k++){
-          if(String(list[k].code).toLowerCase() === String(code).toLowerCase()){ then(true); return; }
+  function apply(spot){
+    if(busy) return;
+    var code = String(spot.i.value || '').trim();
+    if(!code){ say(spot, '코드를 넣어 주세요.', true); spot.i.focus(); return; }
+    say(spot, '적용하는 중…');
+    cart(function(c){
+      var list = (c && c.coupons) || [];
+      for(var k = 0; k < list.length; k++){
+        if(String(list[k].code).toLowerCase() === code.toLowerCase()){
+          say(spot, '이미 적용된 쿠폰입니다.'); show(); return;      /* 두 번 넣지 않는다 */
         }
-        then(false);
-      })
-      .catch(function(){ then(false); });
+      }
+      post('/wp-json/wc/store/v1/cart/apply-coupon', { code: code }, spot, function(){
+        say(spot, '쿠폰을 적용했습니다.');
+        spot.i.value = '';
+        show();
+        $(document.body).trigger('update_checkout');   /* 합계만 다시 그린다 */
+      });
+    });
   }
 
-  /* **닿을 수 없을 때만 받는다** — 다만 「닿을 수 있어 보이는데 실제로는 안 되는」
-     경우가 남는다. 그래서 눌린 뒤 1.8초 지켜보다 쿠폰이 안 들어갔으면 그때 우리가 넣는다.
-     이미 들어갔으면 아무 것도 하지 않는다 (두 번 넣으면 「이미 적용됨」 오류가 뜬다). */
-  function watch(code){
-    setTimeout(function(){
-      if(busy) return;
-      has(code, function(on){ if(!on) send(code); });
-    }, 1800);
+  /* 지금 걸려 있는 쿠폰 — 뺄 수도 있어야 한다 */
+  function show(){
+    cart(function(c){
+      var list = (c && c.coupons) || [];
+      spots().forEach(function(spot){
+        note(spot);                       /* 안내가 먼저 서야 목록이 그 아래로 간다 */
+        var fresh = !(spot.i['__dhr_dhr-cocpn-on'] && spot.i['__dhr_dhr-cocpn-on'].isConnected);
+        var ul = seat(spot, 'dhr-cocpn-on', 'ul');
+        if(fresh){
+          ul.addEventListener('click', function(e){
+            var x = e.target.closest('.dhr-cocpn-x'); if(!x || busy) return;
+            post('/wp-json/wc/store/v1/cart/remove-coupon', { code: x.getAttribute('data-code') }, spot, function(){
+              say(spot, '쿠폰을 뺐습니다.'); show(); $(document.body).trigger('update_checkout');
+            });
+          });
+        }
+        ul.innerHTML = list.map(function(cp){
+          var unit = Math.pow(10, (cp.totals && cp.totals.currency_minor_unit != null) ? cp.totals.currency_minor_unit : 0);
+          var off = cp.totals && cp.totals.total_discount
+            ? Math.round(Number(cp.totals.total_discount) / unit).toLocaleString('ko-KR') + '원 할인' : '적용됨';
+          var code = String(cp.code).replace(/[&<>"]/g, '');
+          return '<li><b>' + code.toUpperCase() + '</b> <span>' + off + '</span>' +
+                 '<button type="button" class="dhr-cocpn-x" data-code="' + code + '">빼기</button></li>';
+        }).join('');
+      });
+    });
   }
 
-  /* 위임으로 한 번만 건다. 결제 화면은 합계를 다시 그릴 때마다 칸이 바뀔 수 있다. */
+  /* 누르는 것은 위임으로 한 번만 건다 — 합계를 다시 그리면 칸이 바뀔 수 있다 */
   document.addEventListener('click', function(e){
-    var b = e.target.closest && e.target.closest('[name="apply_coupon"]');
-    if(!b) return;
-    var f = field(), code = f ? String(f.value || '').trim() : '';
-    if(!code){ say('코드를 넣어 주세요.', true); return; }
-    if(native()){ watch(code); return; }   /* 워드커머스에게 먼저 맡기고 지켜본다 */
-    e.preventDefault();
-    send(code);
+    if(!e.target.closest) return;
+    var list = spots();
+    for(var k = 0; k < list.length; k++){
+      if(list[k].b === e.target || list[k].b.contains(e.target)){
+        e.preventDefault(); e.stopPropagation();
+        apply(list[k]);
+        return;
+      }
+    }
   }, true);
 
   document.addEventListener('keydown', function(e){
-    if(e.key !== 'Enter') return;
-    var i = e.target.closest && e.target.closest('input[name="coupon_code"], #coupon_code');
-    if(!i) return;
-    var code = String(i.value || '').trim();
-    if(native()){ watch(code); return; }
-    e.preventDefault();
-    send(code);
+    if(e.key !== 'Enter' || !e.target.closest) return;
+    var list = spots();
+    for(var k = 0; k < list.length; k++){
+      if(list[k].i === e.target){ e.preventDefault(); apply(list[k]); return; }
+    }
   }, true);
 
-  /* **「사용 가능한 쿠폰이 없습니다…」 한 줄은 뺀다** (사장님 2026-09-15).
-     그것은 키플 쿠폰함(사이트에서 「받기」를 누른 쿠폰) 이야기라, 문자로 코드를 받은
-     손님에게는 틀린 말이다. 바로 아래가 그 코드를 넣는 칸인데 「없습니다」부터 읽게 된다.
+  /* **「쿠폰이 있으세요? 코드를 입력하려면 여기를 클릭하세요」 알림을 없앤다.**
+     워드커머스가 접어 둔 쿠폰 폼을 여는 안내인데, 사장님 스니펫 #21 이 그것을 토스트로
+     바꿔 결제 화면에 들어갈 때마다 띄운다. 코드 넣는 자리는 이미 화면에 펼쳐져 있으므로
+     이 안내는 할 일이 없다. **스니펫은 건드리지 않는다** — 그쪽이 「이미 처리함」으로
+     보게 `data-wd-toasted` 를 먼저 찍고, 우리는 화면에서만 뺀다. */
+  var TOGGLE = '쿠폰이 있으세요';
+  function hushToggle(){
+    var wrap = document.querySelector('.woocommerce-form-coupon-toggle');
+    if(wrap){
+      wrap.classList.add('dhr-hide-note');
+      var info = wrap.querySelector('.woocommerce-info') || wrap;
+      info.setAttribute('data-wd-toasted', '1');
+    }
+    var all = document.querySelectorAll('.woocommerce-info, #wd-coupon-toast, .wd-coupon-toast');
+    for(var i = 0; i < all.length; i++){
+      if(words(all[i]).indexOf(TOGGLE) < 0) continue;
+      all[i].setAttribute('data-wd-toasted', '1');
+      all[i].classList.add('dhr-hide-note');
+    }
+  }
 
-     플러그인은 건드리지 않는다 — **글자를 가진 가장 안쪽 요소 하나만** 화면에서 뺀다.
-     받은 쿠폰이 있을 때 그리는 목록은 이 글자가 없으므로 그대로 남는다. */
+  /* **「사용 가능한 쿠폰이 없습니다…」 한 줄은 뺀다** (사장님 2026-09-15).
+     키플 쿠폰함(사이트에서 「받기」를 누른 쿠폰) 이야기라, 문자로 코드를 받은 손님에게는
+     틀린 말이다. 바로 아래가 그 코드를 넣는 칸인데 「없습니다」부터 읽게 된다.
+     플러그인은 건드리지 않고 **글자를 가진 가장 안쪽 요소 하나만** 화면에서 뺀다. */
   var MARK = '사용 가능한 쿠폰이 없습니다';
   function dropEmptyNote(){
     var all = document.querySelectorAll('p, div, span, li, small, em');
     for(var i = 0; i < all.length; i++){
       var el = all[i];
       if(el.classList.contains('dhr-hide-note')) continue;
-      var t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      var t = words(el);
       if(t.indexOf(MARK) !== 0 || t.length > 200) continue;   /* 큰 덩어리는 건드리지 않는다 */
       var inner = false;
       for(var k = 0; k < el.children.length; k++){
@@ -1071,9 +1171,31 @@
       el.classList.add('dhr-hide-note');
     }
   }
-  dropEmptyNote();
-  window.addEventListener('load', function(){ setTimeout(dropEmptyNote, 400); });
-  $(document.body).on('updated_checkout', function(){ setTimeout(dropEmptyNote, 150); });
+
+  function tidy(){ hushToggle(); dropEmptyNote(); }
+  tidy();
+  document.addEventListener('DOMContentLoaded', tidy);
+  window.addEventListener('load', function(){ tidy(); setTimeout(tidy, 500); setTimeout(show, 700); });
+  $(document.body).on('updated_checkout', function(){ setTimeout(tidy, 150); });
+  /* 토스트는 우리보다 뒤에 만들어질 수 있다 — 8초만 지켜본다 */
+  var mo = new MutationObserver(function(){ hushToggle(); });
+  mo.observe(document.body, { childList: true, subtree: true });
+  setTimeout(function(){ mo.disconnect(); }, 8000);
+
+  /* 안 될 때 한 장으로 끝내기 위한 읽을거리 — `?dhr_cpn=1` 을 붙였을 때만 그린다 */
+  if(/[?&]dhr_cpn=1/.test(location.search)){
+    window.addEventListener('load', function(){
+      var lines = spots().map(function(s, n){
+        return (n + 1) + ') 칸 name=' + (s.i.name || '-') + ' id=' + (s.i.id || '-') +
+               ' / 버튼 ' + s.b.tagName + ' name=' + (s.b.name || '-') + ' "' + words(s.b).slice(0, 12) + '"' +
+               ' / 폼안=' + (s.i.closest('form.checkout_coupon') ? 'Y' : 'N');
+      });
+      var d = document.createElement('pre');
+      d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#111;color:#fff;font-size:12px;padding:10px;border-radius:10px;white-space:pre-wrap;max-height:40vh;overflow:auto';
+      d.textContent = '[쿠폰칸 진단] 찾은 칸 ' + lines.length + '개\n' + (lines.join('\n') || '(못 찾음)');
+      document.body.appendChild(d);
+    });
+  }
 })();
 
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.

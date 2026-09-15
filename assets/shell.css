@@ -2279,3 +2279,22 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn.is-bad{
   font-weight: 700 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-hide-note{ display: none !important; }
+
+/* 결제 화면 쿠폰칸에 걸린 쿠폰 목록 (front.js 가 넣는다) */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on{
+  margin: 8px 0 0 !important; padding: 0 !important; list-style: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li{
+  display: flex !important; align-items: center !important; gap: 8px !important;
+  padding: 8px 10px !important; margin: 6px 0 0 !important;
+  background: var(--dh-surface-2, #F4F6F7) !important; border-radius: 10px !important;
+  font-size: 13px !important; line-height: 1.4 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li b{ font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li span{ color: var(--dh-ink-2, #44525C) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-x{
+  margin-left: auto !important; min-height: 32px !important; padding: 0 12px !important;
+  border: 1px solid var(--dh-line, #D8DEE3) !important; border-radius: 999px !important;
+  background: #fff !important; color: var(--dh-ink-2, #44525C) !important;
+  font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important;
+}
