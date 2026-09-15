@@ -1004,20 +1004,50 @@
     .catch(function(){ busy = false; if(b) b.disabled = false; last = { code:'', at:0 }; say('잠시 뒤에 다시 눌러 주세요.', true); });
   }
 
-  /* 걸어 둔 표시는 **요소에** 남긴다. 결제 화면은 합계를 다시 그릴 때마다 arm() 이
-     다시 도는데, 칸이 그대로면 같은 요소에 핸들러가 한 벌 더 붙는다 */
-  function arm(){
-    var i = field(), b = button();
-    if(!i || !b || b.dataset.dhrCpn) return;
-    if(native()) return;          /* 워드커머스가 할 수 있으면 우리는 안 한다 */
-    b.dataset.dhrCpn = '1';
-    b.addEventListener('click', function(e){ e.preventDefault(); var f = field(); send(f ? f.value : ''); });
-    i.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); send(i.value); } });
+  /* 이미 걸려 있는 쿠폰인가 — 두 번 넣지 않기 위해 */
+  function has(code, then){
+    fetch('/wp-json/wc/store/v1/cart', {credentials:'include', headers: nonce ? {'Nonce': nonce} : {}})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(c){
+        var list = (c && c.coupons) || [];
+        for(var k = 0; k < list.length; k++){
+          if(String(list[k].code).toLowerCase() === String(code).toLowerCase()){ then(true); return; }
+        }
+        then(false);
+      })
+      .catch(function(){ then(false); });
   }
 
-  window.addEventListener('load', function(){ setTimeout(arm, 400); });
-  if(document.readyState !== 'loading') setTimeout(arm, 900);
-  $(document.body).on('updated_checkout', function(){ setTimeout(arm, 150); });
+  /* **닿을 수 없을 때만 받는다** — 다만 「닿을 수 있어 보이는데 실제로는 안 되는」
+     경우가 남는다. 그래서 눌린 뒤 1.8초 지켜보다 쿠폰이 안 들어갔으면 그때 우리가 넣는다.
+     이미 들어갔으면 아무 것도 하지 않는다 (두 번 넣으면 「이미 적용됨」 오류가 뜬다). */
+  function watch(code){
+    setTimeout(function(){
+      if(busy) return;
+      has(code, function(on){ if(!on) send(code); });
+    }, 1800);
+  }
+
+  /* 위임으로 한 번만 건다. 결제 화면은 합계를 다시 그릴 때마다 칸이 바뀔 수 있다. */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[name="apply_coupon"]');
+    if(!b) return;
+    var f = field(), code = f ? String(f.value || '').trim() : '';
+    if(!code){ say('코드를 넣어 주세요.', true); return; }
+    if(native()){ watch(code); return; }   /* 워드커머스에게 먼저 맡기고 지켜본다 */
+    e.preventDefault();
+    send(code);
+  }, true);
+
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var i = e.target.closest && e.target.closest('input[name="coupon_code"], #coupon_code');
+    if(!i) return;
+    var code = String(i.value || '').trim();
+    if(native()){ watch(code); return; }
+    e.preventDefault();
+    send(code);
+  }, true);
 })();
 
 /* 장바구니 — 마크업은 키플 것이라 손대지 않고, 자리만 고친다.
