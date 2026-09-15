@@ -784,3 +784,27 @@ html body.dhr.dhr.dhr .fbank__copy.is-done{ background: #7DD3FC !important; colo
   .dhr .chu__fig{ width: 200px; height: 200px; }
   .dhr .chu__moon{ width: 164px; height: 164px; right: -22px; top: -26px; }
 }
+
+/* ══ 제목 굵기가 전부 700 으로 눌리고 있었다 (2026-09-15) ═══════════════════════
+   사장님: 「한가위 풀세트 / 10+1 … 나오는 자리 폰트 굵기가 좀 얇은듯?」
+
+   맞다. 우리는 900 · 800 으로 썼는데 **실제로 그려지는 값은 700** 이었다.
+   DevTools 프로토콜로 규칙 순서를 그대로 받아 보니 답이 하나로 나온다:
+
+     h1, h2, h3, h4, h5, h6, .woocommerce h1, … { font-weight: 700 !important; }
+
+   사이트 어딘가(테마 · 스니펫)의 이 한 줄이 `!important` 라 우리 것이 전부 졌다.
+   **폰트는 문제가 아니었다** — Pretendard 900 은 멀쩡히 실려 있다 (확인함).
+
+   그래서 제목 굵기만 같은 무게(`!important`)로 다시 못 박는다. `!important` 끼리는
+   특이도가 이기므로 `body.dhr …` 로 한 단계 올려 둔다. 눌린 것은 이 두 자리만이
+   아니라 **홈의 모든 제목**이었다 — 섹션 제목 · 배너 · 서랍까지 같이 돌아온다.
+   저쪽 한 줄이 없어지면 이 블록은 지워도 된다. */
+body.dhr h1, body.dhr h2, body.dhr h3{ font-weight: 800 !important; }
+body.dhr .chu__h,
+body.dhr .hcard-a .hcard-t,
+body.dhr .hcard-b h2,
+body.dhr .banner h2,
+body.dhr .dhc__head h2,
+body.dhr .dh-leave h2,
+body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
