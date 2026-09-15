@@ -1781,3 +1781,34 @@ $FF -ss 8 -t 14 -i v.mp4 -vf "fps=2,scale=640:-1,tile=5x6" -q:v 3 sheet.jpg   # 
 
 `tile` 로 묶어 한 번에 보고, 자리를 찾은 뒤 `crop` 으로 그 자리만 크게 다시 뽑는다.
 1920px 원본을 그대로 줄이면 한글이 안 읽힌다.
+
+### 상품권 칸을 뺐다 · 주문 요약은 AJAX 로 안 바뀐다 (2026-09-15, 결말)
+
+**상품권.** 결제 화면에 코드 넣는 자리가 둘이었다 — `쿠폰` 과 `상품권이 있나요?`.
+뒤엣것은 `woocommerce-gift-cards` 플러그인이 그리는데 **이 가게는 상품권을 팔지 않는다**
+(확인: 상품권 · 기프트 · gift 검색 0건). 플러그인은 건드리지 않고 화면에서만 뺀다
+(`Front\js_config()` 의 `hideGift` · 필터 `duckhoo_hide_giftcard`). 플러그인 클래스
+(`wc_gc_*`)를 먼저 보고 못 찾으면 「상품권」 이라고 적힌 상자를 찾되 **「쿠폰」 이 같이
+적힌 상자는 건너뛴다.** 칸 하나만 숨기면 제목 · 버튼이 남으므로 상자까지 올라간다.
+
+**주문 요약이 안 따라왔다 — 그리고 `update_checkout` 으로는 영원히 안 바뀐다.**
+쿠폰은 들어갔는데(칸 아래 `DHTEST 1,000원 할인`) 요약은 `쿠폰할인 − 0원` 그대로였다.
+테마 `wd-checkout-custom.js` 의 `refreshDiscountSummary()`:
+
+```js
+couponTotal = Math.abs( parsePrice( $("#wd-summary-coupon-discount").text() ) );  // 자기에게서 읽고
+$("#wd-summary-coupon-discount").text( "- " + formatPrice( couponTotal ) );        // 자기에게 쓴다
+```
+
+**서버(`form-checkout.php`)가 그린 값을 되쓰는 구조**라 AJAX 로는 절대 안 바뀐다
+(테마 주석: 「#order_review 테이블이 이 체크아웃 화면에는 없어서 항상 0으로 계산되던 버그」).
+
+- 그래서 쿠폰을 넣거나 뺀 뒤 **그 두 숫자를 우리가 써 넣는다.** 값은 워드커머스가 준 것
+  그대로 — 할인액 `totals.total_discount`, 총액 `totals.total_price`(주문에 실제로 잡히는 금액).
+  **우리가 계산하지 않는다** — 화면과 결제 금액이 갈리면 안 된다
+- **새로고침하지 않는다** — 손님이 적어 둔 배송 정보가 날아간다
+- 손댄 뒤에는 테마가 요약을 다시 그릴 때마다(`updated_checkout`) 장바구니를 다시 읽어
+  맞춘다. 안 그러면 주소를 고치는 순간 쿠폰 줄이 도로 0 이 된다
+
+**교훈: 이 결제 화면의 요약은 서버가 그린 정적 HTML 이다.** 거기 숫자를 바꾸려면
+`update_checkout` 이 아니라 그 요소를 직접 써야 한다.
