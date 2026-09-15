@@ -977,7 +977,14 @@
     var input = box.querySelector('.dhr-cpn__i'), btn = box.querySelector('.dhr-cpn__b');
     var msg = box.querySelector('.dhr-cpn__msg'), on = box.querySelector('.dhr-cpn__on');
 
-    function say(t, bad){ msg.textContent = t || ''; box.classList.toggle('is-bad', !!bad); }
+    /* 워드커머스가 주는 말에는 `&quot;` 같은 엔티티가 들어 있다 — 풀어서 보여 준다.
+       (안 풀면 손님 화면에 `&quot;test1000&quot; 쿠폰은…` 이라고 그대로 찍힌다) */
+    function plain(t){
+      var d = document.createElement('textarea');
+      d.innerHTML = String(t == null ? '' : t).replace(/<[^>]*>/g, '');
+      return d.value;
+    }
+    function say(t, bad){ msg.textContent = plain(t); box.classList.toggle('is-bad', !!bad); }
     function esc(v){ return String(v).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
     function head(){ var h = {'Content-Type':'application/json'}; if(nonce) h.Nonce = nonce; return h; }
     function keep(r){ var h = r.headers.get('Nonce') || r.headers.get('X-WC-Store-API-Nonce'); if(h) nonce = h; return r; }
@@ -1003,7 +1010,7 @@
         .then(function(res){
           if(!res.ok){
             /* 워드커머스가 왜 안 되는지 한국어로 말해 준다 — 그 말을 그대로 보여 준다 */
-            say(String((res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.').replace(/<[^>]*>/g, ''), true);
+            say((res.j && res.j.message) || '쿠폰을 적용하지 못했습니다.', true);
             btn.disabled = false; box.classList.remove('is-busy');
             return;
           }
