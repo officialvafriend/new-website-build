@@ -1266,6 +1266,16 @@ $rn2 = ($O.'made_pairs')($nbr, [[$nb, $new]], 12000);
 $ok($rn2['name'] === 1 && str_contains($rn2['raw'], $new) && str_contains($rn2['raw'], '"price":"12000"'), '빈칸이 다른 자리도 그 자리의 글자로 바꾼다');
 $ok(!str_contains($rn2['raw'], "\u{00A0}"), '바꾼 뒤에는 그 이상한 빈칸이 남지 않는다');
 
+// 주문 항목 표는 글 종류로 걸러지지 않는다 — 표 이름으로 한 번 더 막는다
+$ok(($O.'off_table')('wp_woocommerce_order_itemmeta') === true, '주문 항목 표는 손대지 않는다');
+$ok(($O.'off_table')('wp_wc_orders') === true && ($O.'off_table')('wp_actionscheduler_logs') === true, '주문 · 예약작업 기록도 손대지 않는다');
+$ok(($O.'off_table')('wp_postmeta') === false && ($O.'off_table')('wp_posts') === false, '글 · 글 메타는 바꾼다');
+
+// 찾은 덩어리에서 누를 수 있는 이름만 떠낸다
+$rowz = [['raw' => '{"group_key":"addon","label":"'.$old.'","price":"8000"}'], ['raw' => '{"label":"'.($O.'json_bare')($old).'"}']];
+$gs = ($O.'label_guesses')($rowz, '브이메이트');
+$ok(in_array($old, $gs, true) && count($gs) === 1, 'escape 된 것도 되돌려 같은 이름 하나로 모은다');
+
 $nd = ($O.'probe_needles')($old);
 $ok($nd[0] === '브이메이트V4팟' && str_contains($nd[1], '\\u') && end($nd) === 'V4', '빈칸 없는 긴 토막 → escape 된 것 → 영문 순으로 훑는다');
 

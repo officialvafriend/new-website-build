@@ -75,6 +75,19 @@ function off_limits( string $type, string $key ): bool {
 }
 
 /**
+ * 손대면 안 되는 **표**인가 — 주문 항목 · 기록 · 로그.
+ *
+ * 주문에 실린 옵션 이름은 `wp_woocommerce_order_itemmeta` 에 있다. 글 종류로는
+ * 걸러지지 않아 표 이름으로 한 번 더 막는다 — **옛 주문은 그때 산 이름 그대로**다.
+ *
+ * @param string $table 표 이름.
+ * @return bool
+ */
+function off_table( string $table ): bool {
+	return (bool) preg_match( '/(order_item|wc_order|_orders|actionscheduler|_log$|_logs$|session)/i', $table );
+}
+
+/**
  * 한 표에서 그 글자가 든 줄을 찾는다.
  *
  * 표마다 칸 이름이 달라 **어디서 찾았는지를 줄마다 들고 다닌다** — 되돌릴 때
@@ -114,7 +127,7 @@ function scan_table( string $table, string $idcol, string $valcol, string $old, 
 			'title'  => (string) ( $r['post_title'] ?? '' ),
 			'raw'    => $raw,
 			'hits'   => substr_count( $raw, $old ),
-			'skip'   => off_limits( $type, $key ),
+			'skip'   => off_limits( $type, $key ) || off_table( $table ),
 		);
 	}
 	return $out;
@@ -268,6 +281,38 @@ function deep( array $needles, int $budget = 25 ): array {
 }
 
 /**
+ * 찾은 글자 덩어리에서 **따옴표로 묶인 이름**만 뽑아낸다.
+ *
+ * JSON 한 줄을 통째로 보여 주고 「복사해 넣으세요」 하면 사람 손으로는 못 한다.
+ * `"label":"…"` 처럼 따옴표 안에 든 것만 떠서 **그대로 누를 수 있게** 준다.
+ *
+ * @param array  $rows   찾은 줄들.
+ * @param string $needle 그 안에 든 글자.
+ * @return array<int,string>
+ */
+function label_guesses( array $rows, string $needle ): array {
+	$out = array();
+	$q   = preg_quote( $needle, '/' );
+	foreach ( $rows as $r ) {
+		if ( ! preg_match_all( '/"((?:[^"\\\\]|\\\\.){0,70}' . $q . '(?:[^"\\\\]|\\\\.){0,70})"/u', (string) $r['raw'], $m ) ) {
+			continue;
+		}
+		foreach ( $m[1] as $bit ) {
+			/* escape 된 채로 잡혔으면 사람이 읽을 수 있게 되돌린다. */
+			$plain = json_decode( '"' . $bit . '"' );
+			$plain = is_string( $plain ) ? $plain : (string) $bit;
+			if ( '' !== $plain && ! in_array( $plain, $out, true ) ) {
+				$out[] = $plain;
+			}
+			if ( count( $out ) >= 10 ) {
+				return $out;
+			}
+		}
+	}
+	return $out;
+}
+
+/**
  * JSON 안에 들어갈 때의 모습 — 한글 한 글자가 `\` + `uBE0C` 여섯 글자로 적혀 있을 수 있다.
  *
  * `wp_json_encode()` 는 기본으로 한글을 이렇게 escape 한다. 그래서 **DB 에는
@@ -354,8 +399,12 @@ function scan( string $old, string $new = '' ): array {
 		$like = count( $bits ) > 1
 			? '%' . implode( '%', array_map( array( $wpdb, 'esc_like' ), $bits ) ) . '%'
 			: '';
-		$re   = count( $bits ) > 1
-			? '/' . implode( '\s{0,4}', array_map( static fn( $b ) => preg_quote( (string) $b, '/' ), $bits ) ) . '/u'
+		/* 사이에 무엇이 끼어 있든 12글자까지 봐 준다 — `\s` 로는 모자란다.
+		   줄바꿈 외에 `&nbsp;` · escape 된 빈칸 · `\/` 같은 것이 들어 있을 수 있는데
+		   PCRE 의 `\s` 는 그런 빈칸을 빈칸으로 치지 않는다. 그래서 찾아 놓고도
+		   다시 뜨지 못해 그 줄을 조용히 버렸다 (2026-09-16). */
+		$re = count( $bits ) > 1
+			? '/' . implode( '.{0,12}', array_map( static fn( $b ) => preg_quote( (string) $b, '/' ), $bits ) ) . '/su'
 			: '';
 
 		foreach ( places() as $p ) {
@@ -937,6 +986,12 @@ function screen(): void {
 
 	// phpcs:disable WordPress.Security.NonceVerification
 	$old   = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_old'] ?? '' ) ) : '브이메이트V4팟 0.7옴(2EA)';
+	/* 「그 자리에 적힌 이름」 단추를 눌렀으면 그것이 이긴다 — 칸도 그 글자로 채운다. */
+	$pick = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_pick'] ?? '' ) ) : '';
+	if ( '' !== $pick ) {
+		$old = $pick;
+		$do  = 'preview';
+	}
 	$new   = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_new'] ?? '' ) ) : '브이메이트V5팟 0.7옴(3EA)';
 	$praw  = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_price'] ?? '' ) ) : '12000';
 	$pfind = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_find'] ?? '' ) ) : '브이메이트';
@@ -1125,9 +1180,22 @@ function screen(): void {
 			$dp = deep( probe_needles( $old ) );
 			if ( $dp['rows'] ) {
 				printf(
-					'<p><b>찾았습니다.</b> <code>%s</code> 가 아래 자리에 있습니다 — 그 글자를 그대로 복사해 위 「지금 이름」에 넣고 다시 미리 보기를 눌러 주세요.</p>',
+					'<p><b>찾았습니다.</b> <code>%s</code> 가 아래 자리에 있습니다.</p>',
 					esc_html( (string) $dp['frag'] )
 				);
+				$guess = label_guesses( $dp['rows'], (string) $dp['frag'] );
+				if ( $guess ) {
+					echo '<p><b>그 자리에 적힌 이름입니다 — 누르면 그 이름으로 다시 찾습니다.</b></p><p>';
+					foreach ( $guess as $g ) {
+						printf(
+							'<button type="submit" name="dhr_opt_pick" value="%s" class="button" '
+							. 'style="margin:0 6px 6px 0">%s</button>',
+							esc_attr( $g ),
+							esc_html( mb_strimwidth( $g, 0, 60, '…' ) )
+						);
+					}
+					echo '</p>';
+				}
 				echo '<table class="widefat striped"><thead><tr><th style="width:280px">어디</th><th>그 자리의 글자</th></tr></thead><tbody>';
 				foreach ( $dp['rows'] as $r ) {
 					printf(
