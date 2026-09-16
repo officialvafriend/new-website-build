@@ -189,6 +189,53 @@ function order_clauses( $clauses, $q = null ): array {
 add_filter( 'posts_clauses', __NAMESPACE__ . '\\order_clauses', 999, 2 );
 
 /**
+ * 검색 결과를 **다른 엔진이 통째로 내주는** 경우 그 자리에서 물러나게 한다.
+ *
+ * 진단으로 확인한 것: `posts_clauses` 에 워드커머스가 이미
+ * `wc_product_meta_lookup.max_price DESC` 를 걸어 두었는데 **그것조차 화면에
+ * 안 먹었다.** 순서를 정하는 것이 SQL 이 아니라는 뜻이다 — 검색 결과를
+ * 내주는 쪽이 따로 있다 (젯팩 검색은 `posts_pre_query` 로 SQL 을 통째로 건너뛴다).
+ *
+ * **기본 검색은 그대로 둔다.** 손님이 가격순을 고른 그 요청에서만 물러나게 해
+ * 워드프레스 · 워드커머스의 정렬이 살아나게 한다 — 평소의 검색 품질은 안 건드린다.
+ *
+ * @param mixed $should 지금까지의 판단.
+ * @param mixed $q      쿼리.
+ * @return mixed
+ */
+function skip_engine( $should, $q = null ) {
+	return ours( $q ) ? false : $should;
+}
+add_filter( 'jetpack_search_should_handle_query', __NAMESPACE__ . '\\skip_engine', 999, 2 );
+
+/**
+ * 그 훅에 걸려 있는 것들의 이름 — 누가 결과를 갈아치우는지 보려고.
+ *
+ * @param string $hook 훅 이름.
+ * @return string
+ */
+function cb_names( string $hook ): string {
+	if ( empty( $GLOBALS['wp_filter'][ $hook ] ) ) {
+		return '(없음)';
+	}
+	$out = array();
+	foreach ( (array) $GLOBALS['wp_filter'][ $hook ]->callbacks as $prio => $set ) {
+		foreach ( (array) $set as $c ) {
+			$f = $c['function'] ?? null;
+			if ( is_string( $f ) ) {
+				$name = $f;
+			} elseif ( is_array( $f ) ) {
+				$name = ( is_object( $f[0] ) ? get_class( $f[0] ) : (string) $f[0] ) . '::' . (string) $f[1];
+			} else {
+				$name = '(익명)';
+			}
+			$out[] = $prio . ':' . $name;
+		}
+	}
+	return implode( ' , ', $out );
+}
+
+/**
  * `?dhr_sort=1` — 정렬이 안 먹을 때 **한 번 받아 보면 되는** 쪽지.
  *
  * 화면 아래 주석으로 무엇을 보고 무엇을 썼는지 적는다. 사람에게 캡처를
@@ -214,6 +261,12 @@ function note(): void {
 		"<!-- dhr-sort 조각: 원래=%s · 우리가 쓴 것=%s -->\n",
 		esc_html( (string) ( $GLOBALS['dhr_sort_was'] ?? '(안 걸림)' ) ),
 		esc_html( order_sql( '', $q ) )
+	);
+	printf(
+		"<!-- dhr-sort 결과를 내주는 쪽: posts_pre_query=[%s] · the_posts=[%s] · posts_results=[%s] -->\n",
+		esc_html( cb_names( 'posts_pre_query' ) ),
+		esc_html( cb_names( 'the_posts' ) ),
+		esc_html( cb_names( 'posts_results' ) )
 	);
 }
 add_action( 'wp_footer', __NAMESPACE__ . '\\note', 99 );
