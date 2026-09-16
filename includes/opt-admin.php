@@ -210,6 +210,10 @@ function places(): array {
 			. " (SELECT post_title FROM {$wpdb->posts} p2 WHERE p2.ID = post_id) AS post_title",
 		),
 		array( $wpdb->options, 'option_id', 'option_value', ', option_name AS meta_key' ),
+		/* PPOM 은 옵션 목록을 **글 본문**에 넣는다 (`ppom[fields][id]` 가 그 글 번호다).
+		   여기를 빼먹어 한 군데도 못 찾은 적이 있다 (2026-09-16). */
+		array( $wpdb->posts, 'ID', 'post_content', ', ID AS post_id, post_type, post_title' ),
+		array( $wpdb->posts, 'ID', 'post_excerpt', ', ID AS post_id, post_type, post_title' ),
 	);
 	foreach ( extra_tables() as $t ) {
 		$out[] = array( $t[0], $t[1], $t[2], '' );
@@ -251,7 +255,34 @@ function scan( string $old, string $new = '' ): array {
 }
 
 /**
- * 못 찾았을 때 — 같은 이름의 **영문 토막**(V4 처럼)으로 한 번 더 훑어본다.
+ * 이름 안에서 다시 훑어볼 **영문 토막**을 고른다.
+ *
+ * **글자가 든 토막을 먼저 쓴다.** 숫자만 있는 토막(`0.7`)은 버전 번호 같은
+ * 엉뚱한 곳에 다 걸린다 — 실제로 `10.7.0` 만 잔뜩 나왔다 (2026-09-16).
+ *
+ * @param string $old 이름.
+ * @return string
+ */
+function probe_frag( string $old ): string {
+	$frag = '';
+	if ( preg_match_all( '/[A-Za-z0-9.]{2,}/', $old, $m ) ) {
+		foreach ( $m[0] as $bit ) {
+			$has  = (bool) preg_match( '/[A-Za-z]/', $bit );
+			$mine = (bool) preg_match( '/[A-Za-z]/', $frag );
+			if ( $has && ! $mine ) {
+				$frag = $bit;
+				continue;
+			}
+			if ( $has === $mine && strlen( $bit ) > strlen( $frag ) ) {
+				$frag = $bit;
+			}
+		}
+	}
+	return $frag;
+}
+
+/**
+ * 못 찾았을 때 — 그 영문 토막으로 한 번 더 훑어본다.
  *
  * 영문 · 숫자는 JSON 에서도 그대로라 **어떤 모습으로 적혀 있든 걸린다.**
  * 자동으로 바꾸지는 않는다 — 어디에 사는지 화면에 적어 줄 뿐이다.
@@ -260,14 +291,7 @@ function scan( string $old, string $new = '' ): array {
  * @return array{frag:string,rows:array<int,array<string,mixed>>}
  */
 function probe( string $old ): array {
-	$frag = '';
-	if ( preg_match_all( '/[A-Za-z0-9.]{2,}/', $old, $m ) ) {
-		foreach ( $m[0] as $bit ) {
-			if ( strlen( $bit ) > strlen( $frag ) ) {
-				$frag = $bit;
-			}
-		}
-	}
+	$frag = probe_frag( $old );
 	if ( '' === $frag ) {
 		return array(
 			'frag' => '',
@@ -484,6 +508,10 @@ function put( array $r, string $raw ): bool {
 	}
 	if ( ! empty( $r['post'] ) ) {
 		wp_cache_delete( (int) $r['post'], 'post_meta' );
+		/* 글 본문을 고쳤으면 글 캐시도 비운다 — 안 비우면 화면이 옛 글을 계속 낸다. */
+		if ( $wpdb->posts === (string) $r['table'] && function_exists( 'clean_post_cache' ) ) {
+			clean_post_cache( (int) $r['post'] );
+		}
 	}
 	if ( $wpdb->options === (string) $r['table'] ) {
 		wp_cache_delete( (string) $r['key'], 'options' );

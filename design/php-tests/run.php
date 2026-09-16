@@ -1255,6 +1255,11 @@ $dec = json_decode($re['raw'], true);
 $ok(is_array($dec) && $dec['opts'][0]['option'] === $new, '풀어 보면 새 이름이 그대로 나온다');
 $ok(count(($O.'variants')($old, $new)) === 2 && count(($O.'variants')('V4', 'V5')) === 1, '영문만 있으면 모습이 하나뿐이다');
 
+// 못 찾았을 때 다시 훑을 토막 — 숫자만 있는 것은 버전 번호에 다 걸린다
+$ok(($O.'probe_frag')($old) === '2EA', '글자가 든 토막을 고른다 (0.7 이 아니라)');
+$ok(($O.'probe_frag')('[부푸] 브이메이트 V4 0.7옴팟') === 'V4', '글자 토막이 하나면 그것을 쓴다');
+$ok(($O.'probe_frag')('맛 선택') === '', '영문이 없으면 빈 값');
+
 // 되돌리기 열쇠 — 어느 표 · 어느 칸 · 어느 줄인지를 그대로 들고 있어야 한다
 $spot = ['table' => 'wp_postmeta', 'idcol' => 'meta_id', 'valcol' => 'meta_value', 'id' => '77', 'post' => 4653, 'key' => '_ppom'];
 $ok(($O.'spot_key')($spot) === 'wp_postmeta|meta_id|meta_value|77|4653|_ppom', '되돌릴 자리를 열쇠 하나에 담는다');
