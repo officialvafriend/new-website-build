@@ -163,32 +163,140 @@ function extra_tables(): array {
 }
 
 /**
+ * JSON 안에 들어갈 때의 모습 — 한글 한 글자가 `\` + `uBE0C` 여섯 글자로 적혀 있을 수 있다.
+ *
+ * `wp_json_encode()` 는 기본으로 한글을 이렇게 escape 한다. 그래서 **DB 에는
+ * 한글이 한 글자도 없을 수 있고**, 화면에 보이는 글자로 찾으면 0건이 나온다.
+ *
+ * @param string $s 글자.
+ * @return string
+ */
+function json_bare( string $s ): string {
+	/* `wp_json_encode()` 를 쓰지 않는다 — 우리가 원하는 것은 **escape 된 모습** 하나이고,
+	   그 함수는 플러그인 설정에 따라 한글을 그대로 둘 수도 있다. */
+	$j = json_encode( $s ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+	return is_string( $j ) && strlen( $j ) > 1 ? substr( $j, 1, -1 ) : $s;
+}
+
+/**
+ * 같은 이름이 DB 에 적혀 있을 수 있는 모습들 — 찾을 것과 넣을 것을 짝으로.
+ *
+ * @param string $old 옛 이름.
+ * @param string $new 새 이름.
+ * @return array<int,array{0:string,1:string}>
+ */
+function variants( string $old, string $new ): array {
+	$out = array( array( $old, $new ) );
+	$jo  = json_bare( $old );
+	if ( $jo !== $old ) {
+		$out[] = array( $jo, json_bare( $new ) );
+	}
+	return $out;
+}
+
+/**
+ * 찾아볼 표들 — 글 메타 · 설정 · 이름에 ppom 이 든 표.
+ *
+ * @return array<int,array{0:string,1:string,2:string,3:string}> 표 · 열쇠 · 글자 칸 · 같이 읽을 칸
+ */
+function places(): array {
+	global $wpdb;
+	$out = array(
+		array(
+			$wpdb->postmeta,
+			'meta_id',
+			'meta_value',
+			", post_id, meta_key, (SELECT post_type FROM {$wpdb->posts} p WHERE p.ID = post_id) AS post_type,"
+			. " (SELECT post_title FROM {$wpdb->posts} p2 WHERE p2.ID = post_id) AS post_title",
+		),
+		array( $wpdb->options, 'option_id', 'option_value', ', option_name AS meta_key' ),
+	);
+	foreach ( extra_tables() as $t ) {
+		$out[] = array( $t[0], $t[1], $t[2], '' );
+	}
+	return $out;
+}
+
+/**
  * 그 글자가 들어 있는 자리를 모두 찾는다 (읽기만 한다).
  *
- * 글 메타 → 설정 → PPOM 이름이 든 표 순으로 본다. **어디에 있든 찾는다** —
- * 옵션이 어느 표에 사는지 밖에서는 알 수 없기 때문이다.
+ * **글자가 적혀 있을 수 있는 모습을 모두** 본다 — 그대로, 그리고 JSON 안에서
+ * 한글이 escape 된 꼴 (`json_bare()`). 혹시 한 자리가 두 모습으로 다 걸리면
+ * 같은 자리는 한 번만 센다.
  *
  * @param string $old 찾을 글자.
+ * @param string $new 새 이름 (모습을 짝 지으려고 받는다 — 여기서 쓰지는 않는다).
  * @return array<int,array<string,mixed>>
  */
-function scan( string $old ): array {
-	global $wpdb;
+function scan( string $old, string $new = '' ): array {
 	if ( '' === trim( $old ) ) {
 		return array();
 	}
-	$rows = scan_table(
-		$wpdb->postmeta,
-		'meta_id',
-		'meta_value',
-		$old,
-		", post_id, meta_key, (SELECT post_type FROM {$wpdb->posts} p WHERE p.ID = post_id) AS post_type,"
-		. " (SELECT post_title FROM {$wpdb->posts} p2 WHERE p2.ID = post_id) AS post_title"
-	);
-	$rows = array_merge( $rows, scan_table( $wpdb->options, 'option_id', 'option_value', $old, ', option_name AS meta_key' ) );
-	foreach ( extra_tables() as $t ) {
-		$rows = array_merge( $rows, scan_table( $t[0], $t[1], $t[2], $old ) );
+	$rows = array();
+	$seen = array();
+	foreach ( variants( $old, '' === $new ? $old : $new ) as $pair ) {
+		foreach ( places() as $p ) {
+			foreach ( scan_table( $p[0], $p[1], $p[2], $pair[0], $p[3] ) as $r ) {
+				$k = spot_key( $r );
+				if ( isset( $seen[ $k ] ) ) {
+					continue;
+				}
+				$seen[ $k ] = true;
+				$r['old']   = $pair[0];
+				$rows[]     = $r;
+			}
+		}
 	}
 	return $rows;
+}
+
+/**
+ * 못 찾았을 때 — 같은 이름의 **영문 토막**(V4 처럼)으로 한 번 더 훑어본다.
+ *
+ * 영문 · 숫자는 JSON 에서도 그대로라 **어떤 모습으로 적혀 있든 걸린다.**
+ * 자동으로 바꾸지는 않는다 — 어디에 사는지 화면에 적어 줄 뿐이다.
+ *
+ * @param string $old 찾던 이름.
+ * @return array{frag:string,rows:array<int,array<string,mixed>>}
+ */
+function probe( string $old ): array {
+	$frag = '';
+	if ( preg_match_all( '/[A-Za-z0-9.]{2,}/', $old, $m ) ) {
+		foreach ( $m[0] as $bit ) {
+			if ( strlen( $bit ) > strlen( $frag ) ) {
+				$frag = $bit;
+			}
+		}
+	}
+	if ( '' === $frag ) {
+		return array(
+			'frag' => '',
+			'rows' => array(),
+		);
+	}
+	$rows = array();
+	$seen = array();
+	foreach ( places() as $p ) {
+		foreach ( scan_table( $p[0], $p[1], $p[2], $frag, $p[3] ) as $r ) {
+			$k = spot_key( $r );
+			if ( isset( $seen[ $k ] ) ) {
+				continue;
+			}
+			$seen[ $k ] = true;
+			$r['old']   = $frag;
+			$rows[]     = $r;
+			if ( count( $rows ) >= 8 ) {
+				return array(
+					'frag' => $frag,
+					'rows' => $rows,
+				);
+			}
+		}
+	}
+	return array(
+		'frag' => $frag,
+		'rows' => $rows,
+	);
 }
 
 /**
@@ -232,20 +340,23 @@ function retag_price( string $s, string $label, int $price, int &$n ): string {
 /**
  * 배열 · 객체 안을 걸어 다니며 이름과 값을 바꾼다.
  *
+ * 이름이 **여러 모습으로** 적혀 있을 수 있어 짝(찾을 것 → 넣을 것)을 받는다.
+ *
  * @param mixed  $node  마디.
- * @param string $old   옛 이름.
- * @param string $new   새 이름.
+ * @param array  $pairs 짝들.
  * @param int    $price 새 값 (음수면 값은 건드리지 않는다).
  * @param array  $stat  센 것 (참조).
  * @return mixed
  */
-function walk( $node, string $old, string $new, int $price, array &$stat ) {
+function walk( $node, array $pairs, int $price, array &$stat ) {
 	if ( is_string( $node ) ) {
-		if ( false !== strpos( $node, $old ) ) {
-			$stat['name'] += substr_count( $node, $old );
-			$node          = str_replace( $old, $new, $node );
-			if ( $price >= 0 ) {
-				$node = retag_price( $node, $new, $price, $stat['price'] );
+		foreach ( $pairs as $p ) {
+			if ( false !== strpos( $node, $p[0] ) ) {
+				$stat['name'] += substr_count( $node, $p[0] );
+				$node          = str_replace( $p[0], $p[1], $node );
+				if ( $price >= 0 ) {
+					$node = retag_price( $node, $p[1], $price, $stat['price'] );
+				}
 			}
 		}
 		return $node;
@@ -255,12 +366,14 @@ function walk( $node, string $old, string $new, int $price, array &$stat ) {
 		$arr  = is_object( $node ) ? get_object_vars( $node ) : $node;
 		$mine = false;
 		foreach ( $arr as $v ) {
-			if ( is_string( $v ) && false !== strpos( $v, $old ) ) {
-				$mine = true;
+			foreach ( $pairs as $p ) {
+				if ( is_string( $v ) && false !== strpos( $v, $p[0] ) ) {
+					$mine = true;
+				}
 			}
 		}
 		foreach ( $arr as $k => $v ) {
-			$arr[ $k ] = walk( $v, $old, $new, $price, $stat );
+			$arr[ $k ] = walk( $v, $pairs, $price, $stat );
 		}
 		/* 이 줄이 그 옵션이면, 같은 줄의 값 칸을 새 값으로. */
 		if ( $mine && $price >= 0 ) {
@@ -298,10 +411,11 @@ function walk( $node, string $old, string $new, int $price, array &$stat ) {
  * @return array{raw:string,name:int,price:int,ok:bool}
  */
 function made( string $raw, string $old, string $new, int $price ): array {
-	$stat = array(
+	$stat  = array(
 		'name'  => 0,
 		'price' => 0,
 	);
+	$pairs = variants( $old, $new );
 
 	if ( is_serialized( $raw ) ) {
 		$data = @unserialize( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
@@ -313,10 +427,10 @@ function made( string $raw, string $old, string $new, int $price ): array {
 				'ok'    => false,
 			);
 		}
-		$data = walk( $data, $old, $new, $price, $stat );
+		$data = walk( $data, $pairs, $price, $stat );
 		$out  = serialize( $data ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
 	} else {
-		$out = walk( $raw, $old, $new, $price, $stat );
+		$out = walk( $raw, $pairs, $price, $stat );
 	}
 
 	return array(
@@ -619,7 +733,7 @@ function screen(): void {
 	$price = '' === $praw ? -1 : (int) preg_replace( '/[^\d]/', '', $praw );
 	$said  = '';
 
-	$rows = scan( $old );
+	$rows = scan( $old, $new );
 
 	if ( 'apply' === $do && '' !== $old && '' !== $new ) {
 		$did  = save( $rows, $old, $new, $price );
@@ -630,11 +744,11 @@ function screen(): void {
 			$did['price'] ? sprintf( ' · 값 <b>%d개</b>', $did['price'] ) : '',
 			$did['fail'] ? sprintf( ' <b style="color:#B54708">%d군데는 못 알아봐서 그냥 두었습니다.</b>', $did['fail'] ) : ''
 		);
-		$rows = scan( $old );
+		$rows = scan( $old, $new );
 	} elseif ( 'undo' === $do ) {
 		$u    = undo();
 		$said = $u['said'];
-		$rows = scan( $old );
+		$rows = scan( $old, $new );
 	} elseif ( 'product' === $do ) {
 		$done = set_product( $pid, $pname, '' === $pprc ? -1 : (int) preg_replace( '/[^\d]/', '', $pprc ) );
 		$said = '' !== $done ? '상품을 바꿨습니다 — ' . esc_html( $done ) : '바뀐 것이 없습니다.';
@@ -690,7 +804,7 @@ function screen(): void {
 		'<button type="submit" name="dhr_opt_do" value="apply" class="button button-primary"%s '
 		. 'onclick="return confirm(\'선택칸의 이름과 값을 바꿉니다. 되돌리기 버튼이 있습니다.\')">%s</button>',
 		$live ? '' : ' disabled',
-		$live ? esc_html( sprintf( '%d군데 바꾸기', $live ) ) : '바꾸기'
+		$live ? esc_html( sprintf( '선택칸 %d군데 바꾸기', $live ) ) : '선택칸 바꾸기 (찾은 것 없음)'
 	);
 	if ( is_array( $bak ) && ! empty( $bak['meta'] ) ) {
 		printf(
@@ -717,6 +831,7 @@ function screen(): void {
 				break;
 			}
 			$made  = $r['skip'] ? null : made( (string) $r['raw'], $old, $new, $price );
+			$hit   = (string) ( $r['old'] ?? $old );
 			$where = sprintf(
 				'%s<br><small style="color:#666">%s · <code>%s</code> · %d곳</small>',
 				esc_html( '' !== $r['title'] ? '#' . (int) $r['post'] . ' ' . $r['title'] : (string) $r['key'] ),
@@ -733,8 +848,8 @@ function screen(): void {
 					'<code style="display:block;color:#8a2c0d;word-break:break-all">%s</code>'
 					. '<code style="display:block;color:#1F5F46;word-break:break-all;margin-top:4px">%s</code>'
 					. '<small style="color:#666">이름 %d곳%s</small>',
-					esc_html( snippet( (string) $r['raw'], $old ) ),
-					esc_html( snippet( (string) $made['raw'], $new ) ),
+					esc_html( snippet( (string) $r['raw'], $hit ) ),
+					esc_html( snippet( (string) $made['raw'], $hit === $old ? $new : json_bare( $new ) ) ),
 					(int) $made['name'],
 					$made['price'] ? esc_html( sprintf( ' · 값 %d곳', (int) $made['price'] ) ) : ' · <b style="color:#B54708">값은 못 찾음 (그대로 둡니다)</b>'
 				);
@@ -746,7 +861,45 @@ function screen(): void {
 			printf( '<p class="description">…그 밖 %d군데는 같은 모양이라 줄였습니다. 바꾸기는 전부에 걸립니다.</p>', count( $rows ) - 40 );
 		}
 	} elseif ( '' !== $old ) {
-		echo '<p><b>그 글자를 가진 선택칸이 없습니다.</b> 상품 화면의 선택칸에 적힌 글자를 그대로 붙여 넣어 주세요.</p>';
+		echo '<div class="notice notice-warning inline" style="margin:1em 0"><p><b>그 글자를 가진 선택칸을 못 찾았습니다.</b> '
+			. '아래에 <b>어디를 찾아봤는지</b>와 <b>비슷한 자리</b>를 적어 둘 테니 그대로 알려 주시면 됩니다.</p></div>';
+
+		$pr = probe( $old );
+		if ( $pr['rows'] ) {
+			printf(
+				'<p><code>%s</code> 로 다시 훑으니 <b>%d군데</b>가 나옵니다. 아래 글자에서 '
+				. '<b>선택칸 이름이 실제로 어떻게 적혀 있는지</b> 보입니다 — 그대로 복사해 위 「지금 이름」에 넣어 보세요.</p>',
+				esc_html( $pr['frag'] ),
+				count( $pr['rows'] )
+			);
+			echo '<table class="widefat striped"><thead><tr><th style="width:280px">어디</th><th>그 자리의 글자</th></tr></thead><tbody>';
+			foreach ( $pr['rows'] as $r ) {
+				printf(
+					'<tr><td>%s<br><small style="color:#666">%s · <code>%s</code></small></td>'
+					. '<td><code style="display:block;word-break:break-all">%s</code></td></tr>',
+					esc_html( '' !== $r['title'] ? '#' . (int) $r['post'] . ' ' . $r['title'] : (string) $r['key'] ),
+					esc_html( '' !== (string) $r['type'] ? (string) $r['type'] : (string) $r['table'] ),
+					esc_html( (string) $r['key'] ),
+					esc_html( snippet( (string) $r['raw'], $pr['frag'], 130 ) )
+				);
+			}
+			echo '</tbody></table>';
+		} else {
+			printf(
+				'<p><code>%s</code> 로 훑어도 나오지 않습니다 — 옵션이 <b>아래 표들 밖</b>에 있다는 뜻입니다.</p>',
+				esc_html( '' !== $pr['frag'] ? $pr['frag'] : $old )
+			);
+		}
+
+		$names = array();
+		foreach ( places() as $p ) {
+			$names[ $p[0] ] = true;
+		}
+		$list = array();
+		foreach ( array_keys( $names ) as $t ) {
+			$list[] = '<code>' . esc_html( (string) $t ) . '</code>';
+		}
+		printf( '<p class="description">찾아본 곳: %s</p>', wp_kses_post( implode( ', ', $list ) ) );
 	}
 
 	/* ── 상품 자체 ── */
@@ -766,9 +919,9 @@ function screen(): void {
 			printf(
 				'<tr><td>#%1$d</td><td>%2$s<br><small style="color:#666">%3$s원</small></td>'
 				. '<td><input type="text" name="dhr_opt_pname[%1$d]" value="%4$s" class="large-text" style="width:100%%"></td>'
-				. '<td><input type="text" name="dhr_opt_pprice[%1$d]" value="%5$s" class="small-text"></td>'
+				. '<td><input type="text" name="dhr_opt_pprice[%1$d]" value="%5$s" class="regular-text" style="width:110px"></td>'
 				. '<td><button type="submit" name="dhr_opt_do" value="product" class="button button-primary" '
-				. 'onclick="return confirm(\'이 상품의 이름과 값을 바꿉니다.\')">바꾸기</button>'
+				. 'onclick="return confirm(\'이 상품 하나의 이름과 값만 바꿉니다.\')">이 상품만 바꾸기</button>'
 				. '<input type="hidden" name="dhr_opt_pid" value="%1$d"></td></tr>',
 				$p->get_id(),
 				esc_html( $p->get_name() ),

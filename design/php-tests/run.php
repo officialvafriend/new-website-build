@@ -1244,6 +1244,17 @@ $ok(($O.'guess_name')('[긱베이프] 소울V2 0.6옴팟', '맛 A', '맛 B') ===
 // 앞뒤 토막
 $ok(str_contains(($O.'snippet')($json, $old), $old), '미리 보기 토막에 그 이름이 들어 있다');
 
+// JSON 안에서 한글이 escape 돼 있는 경우 — DB 에 한글이 한 글자도 없을 수 있다
+$esc = ($O.'json_bare')($old);
+$ok($esc !== $old && str_contains($esc, '\\u'), '한글이 escape 된 모습을 만든다');
+$jesc = '{"opts":[{"option":"'.$esc.'","price":"8000"},{"option":"'.($O.'json_bare')('소울V2 0.6옴 팟(2EA)').'","price":"9000"}]}';
+$re = ($O.'made')($jesc, $old, $new, 12000);
+$ok($re['name'] === 1 && str_contains($re['raw'], ($O.'json_bare')($new)), 'escape 된 글자도 찾아 바꾼다');
+$ok(str_contains($re['raw'], '"price":"12000"') && str_contains($re['raw'], '"price":"9000"'), 'escape 된 JSON 에서도 그 줄의 값만 바꾼다');
+$dec = json_decode($re['raw'], true);
+$ok(is_array($dec) && $dec['opts'][0]['option'] === $new, '풀어 보면 새 이름이 그대로 나온다');
+$ok(count(($O.'variants')($old, $new)) === 2 && count(($O.'variants')('V4', 'V5')) === 1, '영문만 있으면 모습이 하나뿐이다');
+
 // 되돌리기 열쇠 — 어느 표 · 어느 칸 · 어느 줄인지를 그대로 들고 있어야 한다
 $spot = ['table' => 'wp_postmeta', 'idcol' => 'meta_id', 'valcol' => 'meta_value', 'id' => '77', 'post' => 4653, 'key' => '_ppom'];
 $ok(($O.'spot_key')($spot) === 'wp_postmeta|meta_id|meta_value|77|4653|_ppom', '되돌릴 자리를 열쇠 하나에 담는다');
