@@ -1344,6 +1344,9 @@ $ok(($S2.'order_sql')('x', $qn) === 'x', '메인 쿼리가 아니면 손대지 �
 $_GET = [];
 $ok(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)) === 'x', '아무것도 안 골랐으면 원래 순서 그대로');
 $ok(($S2.'order_sql')('x', null) === 'x', '쿼리가 없으면 손대지 않는다');
+$_GET['orderby'] = 'price';
+$ok(str_contains(($S2.'order_sql')('x', $mk(['post_type' => 'product', 'dhr_brand' => 'novo'], false)), '_price'), '브랜드 페이지도 우리가 정렬한다 — 워드커머스가 안 잡는 화면이다');
+$ok(str_ends_with(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)), 'ASC'), '같은 값이면 번호로 한 번 더 가른다 (꼬리)');
 
 // posts_clauses — 워드프레스가 posts_orderby **뒤에** 한 번 더 묻는 자리
 $_GET['orderby'] = 'price';

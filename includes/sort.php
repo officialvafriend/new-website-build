@@ -125,7 +125,13 @@ function ours( $q ): bool {
 	if ( is_admin() || ! is_object( $q ) || ! method_exists( $q, 'is_main_query' ) || ! $q->is_main_query() ) {
 		return false;
 	}
-	if ( ! method_exists( $q, 'is_search' ) || ! $q->is_search() ) {
+	/* 검색 결과와 **브랜드 페이지**. 둘 다 워드커머스가 손대지 않는 화면이다 —
+	   브랜드 페이지는 `pre_get_posts` 에서 상품 목록으로 바꾼 것이라
+	   `is_post_type_archive()` 가 아니어서 워드커머스의 정렬이 걸리지 않는다.
+	   분류 · 전체 목록은 워드커머스가 하니 여기서 손대지 않는다. */
+	$brand  = '' !== (string) $q->get( 'dhr_brand' );
+	$search = method_exists( $q, 'is_search' ) && $q->is_search();
+	if ( ! $search && ! $brand ) {
 		return false;
 	}
 	$pt = $q->get( 'post_type' );
