@@ -164,6 +164,110 @@ function extra_tables(): array {
 }
 
 /**
+ * 이 사이트의 **모든 표**와 글자가 들어갈 수 있는 칸 — 마지막 수단용.
+ *
+ * 그럴듯한 이름(옵션 · ppom · keyple · 상품)을 **먼저** 본다. 표가 수십 개라
+ * 순서가 곧 시간이다.
+ *
+ * @return array<int,array{0:string,1:string,2:string}> 표 · 열쇠 칸 · 글자 칸
+ */
+function all_tables(): array {
+	global $wpdb;
+	$names = $wpdb->get_col( 'SHOW TABLES' ); // phpcs:ignore WordPress.DB
+	$mine  = array();
+	foreach ( (array) $names as $t ) {
+		if ( 0 === strpos( (string) $t, $wpdb->prefix ) ) {
+			$mine[] = (string) $t;
+		}
+	}
+	usort(
+		$mine,
+		static function ( $a, $b ) {
+			$score = static fn( $s ) => (int) ( ! preg_match( '/(ppom|option|keyple|product|meta|field|addon)/i', $s ) );
+			return $score( $a ) <=> $score( $b ) ?: strcmp( $a, $b );
+		}
+	);
+	$out = array();
+	foreach ( $mine as $t ) {
+		$cols = $wpdb->get_results( "SHOW COLUMNS FROM `{$t}`", ARRAY_A ); // phpcs:ignore WordPress.DB
+		$id   = '';
+		$vals = array();
+		foreach ( (array) $cols as $c ) {
+			if ( '' === $id && 'PRI' === (string) ( $c['Key'] ?? '' ) ) {
+				$id = (string) $c['Field'];
+			}
+			if ( preg_match( '/(text|blob|varchar|json)/i', (string) $c['Type'] ) ) {
+				$vals[] = (string) $c['Field'];
+			}
+		}
+		if ( '' === $id ) {
+			continue;
+		}
+		foreach ( $vals as $v ) {
+			$out[] = array( $t, $id, $v );
+		}
+	}
+	return $out;
+}
+
+/**
+ * 표를 하나도 빼놓지 않고 찾아본다 — **읽기만 한다.**
+ *
+ * 시간이 걸려 단추를 눌렀을 때만 돈다. 시간을 넘기면 **본 만큼만** 돌려주고
+ * 어디까지 봤는지 적는다 (매출 화면과 같은 방식).
+ *
+ * @param array $needles 찾을 글자들.
+ * @param int   $budget  초.
+ * @return array{rows:array,looked:int,tables:int,over:bool,frag:string}
+ */
+function deep( array $needles, int $budget = 25 ): array {
+	$t0     = microtime( true );
+	$spots  = all_tables();
+	$rows   = array();
+	$looked = 0;
+	$seen   = array();
+	$frag   = '';
+	$over   = false;
+
+	foreach ( $needles as $needle ) {
+		$frag = (string) $needle;
+		foreach ( $spots as $p ) {
+			if ( microtime( true ) - $t0 > $budget ) {
+				$over = true;
+				break 2;
+			}
+			++$looked;
+			foreach ( scan_table( $p[0], $p[1], $p[2], (string) $needle ) as $r ) {
+				if ( $r['skip'] ) {
+					continue;
+				}
+				$k = spot_key( $r );
+				if ( isset( $seen[ $k ] ) ) {
+					continue;
+				}
+				$seen[ $k ] = true;
+				$r['old']   = (string) $needle;
+				$rows[]     = $r;
+				if ( count( $rows ) >= 12 ) {
+					break 3;
+				}
+			}
+		}
+		if ( $rows ) {
+			break;
+		}
+	}
+
+	return array(
+		'rows'   => $rows,
+		'looked' => $looked,
+		'tables' => count( $spots ),
+		'over'   => $over,
+		'frag'   => $frag,
+	);
+}
+
+/**
  * JSON 안에 들어갈 때의 모습 — 한글 한 글자가 `\` + `uBE0C` 여섯 글자로 적혀 있을 수 있다.
  *
  * `wp_json_encode()` 는 기본으로 한글을 이렇게 escape 한다. 그래서 **DB 에는
@@ -827,7 +931,7 @@ function screen(): void {
 	$posted = isset( $_POST['dhr_opt_do'] ); // phpcs:ignore WordPress.Security.NonceVerification
 	$do     = $posted ? sanitize_key( (string) wp_unslash( $_POST['dhr_opt_do'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
-	if ( in_array( $do, array( 'apply', 'undo', 'product' ), true ) ) {
+	if ( in_array( $do, array( 'apply', 'undo', 'product', 'deep' ), true ) ) {
 		check_admin_referer( 'dhr-opts' );
 	}
 
@@ -1013,6 +1117,43 @@ function screen(): void {
 			$list[] = '<code>' . esc_html( (string) $t ) . '</code>';
 		}
 		printf( '<p class="description">찾아본 곳: %s</p>', wp_kses_post( implode( ', ', $list ) ) );
+
+		echo '<p><button type="submit" name="dhr_opt_do" value="deep" class="button">모든 표에서 찾기 (조금 걸립니다)</button> '
+			. '<span class="description">이 사이트의 <b>표를 하나도 빼놓지 않고</b> 읽어 봅니다. 읽기만 합니다.</span></p>';
+
+		if ( 'deep' === $do ) {
+			$dp = deep( probe_needles( $old ) );
+			if ( $dp['rows'] ) {
+				printf(
+					'<p><b>찾았습니다.</b> <code>%s</code> 가 아래 자리에 있습니다 — 그 글자를 그대로 복사해 위 「지금 이름」에 넣고 다시 미리 보기를 눌러 주세요.</p>',
+					esc_html( (string) $dp['frag'] )
+				);
+				echo '<table class="widefat striped"><thead><tr><th style="width:280px">어디</th><th>그 자리의 글자</th></tr></thead><tbody>';
+				foreach ( $dp['rows'] as $r ) {
+					printf(
+						'<tr><td><code>%s</code> · <code>%s</code><br><small style="color:#666">%s = %s</small></td>'
+						. '<td><code style="display:block;word-break:break-all">%s</code></td></tr>',
+						esc_html( (string) $r['table'] ),
+						esc_html( (string) $r['valcol'] ),
+						esc_html( (string) $r['idcol'] ),
+						esc_html( (string) $r['id'] ),
+						esc_html( snippet( (string) $r['raw'], (string) $r['old'], 130 ) )
+					);
+				}
+				echo '</tbody></table>';
+			} else {
+				printf(
+					'<div class="notice notice-error inline"><p><b>이 사이트의 표 어디에도 그 이름이 없습니다</b> '
+					. '(글자가 들어갈 수 있는 칸 %d곳 가운데 %d곳을 봤습니다%s).<br>'
+					. '남은 곳은 <b>테마 · 스니펫 · 플러그인 코드</b>입니다 — <a href="%s">도구 → 코드 찾기</a> 에서 '
+					. '<code>브이메이트</code> 로 찾아 보시면 어느 파일인지 나옵니다.</p></div>',
+					(int) $dp['tables'],
+					(int) $dp['looked'],
+					$dp['over'] ? ' · 시간이 모자라 여기까지' : '',
+					esc_url( admin_url( 'tools.php?page=duckhoo-finder' ) )
+				);
+			}
+		}
 	}
 
 	/* ── 상품 자체 ── */
