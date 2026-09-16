@@ -209,6 +209,42 @@ function skip_engine( $should, $q = null ) {
 add_filter( 'jetpack_search_should_handle_query', __NAMESPACE__ . '\\skip_engine', 999, 2 );
 
 /**
+ * 그래도 안 물러나면 **그 훅을 이 요청에서만 뗀다.**
+ *
+ * 진단이 이름을 집어 줬다 —
+ * `Automattic\Jetpack\Search\Classic_Search::filter__posts_pre_query` 가
+ * `posts_pre_query` 에서 SQL 결과를 통째로 갈아치운다. 그래서 워드커머스가 건
+ * `max_price DESC` 도, 우리가 쓴 ORDER BY 도 화면에 닿지 못했다.
+ *
+ * 부탁하는 필터(`jetpack_search_should_handle_query`)가 버전에 따라 없을 수
+ * 있어 **클래스 이름으로 찾아 뗀다.** 손님이 가격순을 고른 그 요청에서만 하고,
+ * 기본 검색은 젯팩이 하던 대로 둔다.
+ *
+ * @param mixed $q 쿼리.
+ * @return void
+ */
+function drop_engine( $q ): void {
+	if ( ! ours( $q ) || ! apply_filters( 'duckhoo_sort_drop_engine', true, $q ) ) {
+		return;
+	}
+	if ( empty( $GLOBALS['wp_filter']['posts_pre_query'] ) ) {
+		return;
+	}
+	foreach ( (array) $GLOBALS['wp_filter']['posts_pre_query']->callbacks as $prio => $set ) {
+		foreach ( (array) $set as $c ) {
+			$f   = $c['function'] ?? null;
+			$cls = is_array( $f ) ? ( is_object( $f[0] ) ? get_class( $f[0] ) : (string) $f[0] ) : '';
+			if ( '' === $cls || ! preg_match( '/jetpack.*search|search.*jetpack/i', $cls ) ) {
+				continue;
+			}
+			remove_filter( 'posts_pre_query', $f, (int) $prio );
+			$GLOBALS['dhr_sort_dropped'][] = $cls;
+		}
+	}
+}
+add_action( 'pre_get_posts', __NAMESPACE__ . '\\drop_engine', 999 );
+
+/**
  * 그 훅에 걸려 있는 것들의 이름 — 누가 결과를 갈아치우는지 보려고.
  *
  * @param string $hook 훅 이름.
@@ -261,6 +297,10 @@ function note(): void {
 		"<!-- dhr-sort 조각: 원래=%s · 우리가 쓴 것=%s -->\n",
 		esc_html( (string) ( $GLOBALS['dhr_sort_was'] ?? '(안 걸림)' ) ),
 		esc_html( order_sql( '', $q ) )
+	);
+	printf(
+		"<!-- dhr-sort 떼어낸 것: %s -->\n",
+		esc_html( implode( ' , ', (array) ( $GLOBALS['dhr_sort_dropped'] ?? array( '(없음)' ) ) ) )
 	);
 	printf(
 		"<!-- dhr-sort 결과를 내주는 쪽: posts_pre_query=[%s] · the_posts=[%s] · posts_results=[%s] -->\n",
