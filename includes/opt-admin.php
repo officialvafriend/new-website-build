@@ -281,6 +281,136 @@ function deep( array $needles, int $budget = 25 ): array {
 }
 
 /**
+ * 옵션에 붙어 있는 **고유 ID** 로 그 줄을 찾아 이름과 값만 바꾼다.
+ *
+ * 이 사이트의 옵션은 이렇게 저장돼 있다 (PPOM):
+ *
+ * ```json
+ * {"option":"브이메이트V4팟 0.7옴(2EA)","price":"8000","weight":"","stock":"","id":"_____v4__0_7__2ea_"}
+ * ```
+ *
+ * **ID 는 영문 · 숫자뿐이라 한글이 어떻게 저장돼 있든 반드시 찾힌다.** 한글로
+ * 찾으면 0건이 나오던 것이 이것 때문이었다 — 이름이 escape 돼 있든 빈칸이
+ * 다르든 ID 는 그대로다.
+ *
+ * **ID 자체는 바꾸지 않는다.** 장바구니 · 주문이 그 ID 로 옵션을 알아본다.
+ *
+ * @param string $raw   원본.
+ * @param string $key   옵션 ID.
+ * @param string $label 새 이름.
+ * @param int    $price 새 값 (음수면 값은 그대로).
+ * @return array{raw:string,name:int,price:int,ok:bool}
+ */
+function swap_key( string $raw, string $key, string $label, int $price ): array {
+	$stat = array(
+		'name'  => 0,
+		'price' => 0,
+	);
+
+	if ( is_serialized( $raw ) ) {
+		$data = @unserialize( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( false === $data && 'b:0;' !== $raw ) {
+			return array(
+				'raw'   => $raw,
+				'name'  => 0,
+				'price' => 0,
+				'ok'    => false,
+			);
+		}
+		$data = walk_key( $data, $key, $label, $price, $stat );
+		return array(
+			'raw'   => serialize( $data ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
+			'name'  => (int) $stat['name'],
+			'price' => (int) $stat['price'],
+			'ok'    => true,
+		);
+	}
+
+	/* JSON · 맨 글자: **그 옵션 덩어리 하나만** 손댄다. 나머지는 한 글자도 안 건드린다. */
+	$q   = preg_quote( $key, '/' );
+	$out = (string) preg_replace_callback(
+		'/\{[^{}]*"id"\s*:\s*"' . $q . '"[^{}]*\}/u',
+		static function ( $m ) use ( $label, $price, &$stat ) {
+			$obj = (string) $m[0];
+			$obj = (string) preg_replace_callback(
+				'/"option"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/u',
+				static function ( $o ) use ( $label, &$stat ) {
+					++$stat['name'];
+					/* 저장된 모습을 그대로 따라간다 — escape 돼 있었으면 escape 해서 넣는다. */
+					$enc = false !== strpos( (string) $o[1], '\\u' ) ? json_bare( $label ) : $label;
+					return '"option":"' . $enc . '"';
+				},
+				$obj,
+				1
+			);
+			if ( $price >= 0 ) {
+				$obj = (string) preg_replace_callback(
+					'/"price"\s*:\s*"?(\d+)"?/u',
+					static function ( $o ) use ( $price, &$stat ) {
+						if ( (string) $o[1] !== (string) $price ) {
+							++$stat['price'];
+						}
+						return '"price":"' . $price . '"';
+					},
+					$obj,
+					1
+				);
+			}
+			return $obj;
+		},
+		$raw
+	);
+
+	return array(
+		'raw'   => $out,
+		'name'  => (int) $stat['name'],
+		'price' => (int) $stat['price'],
+		'ok'    => true,
+	);
+}
+
+/**
+ * 묶인 값(serialize) 안을 걸어 다니며 **그 ID 를 가진 줄**의 이름과 값을 바꾼다.
+ *
+ * @param mixed  $node  마디.
+ * @param string $key   옵션 ID.
+ * @param string $label 새 이름.
+ * @param int    $price 새 값.
+ * @param array  $stat  센 것 (참조).
+ * @return mixed
+ */
+function walk_key( $node, string $key, string $label, int $price, array &$stat ) {
+	if ( ! is_array( $node ) ) {
+		return $node;
+	}
+	$mine = isset( $node['id'] ) && (string) $node['id'] === $key;
+	foreach ( $node as $k => $v ) {
+		$node[ $k ] = walk_key( $v, $key, $label, $price, $stat );
+	}
+	if ( ! $mine ) {
+		return $node;
+	}
+	foreach ( array( 'option', 'label', 'title', 'name' ) as $lk ) {
+		if ( isset( $node[ $lk ] ) && is_string( $node[ $lk ] ) ) {
+			$node[ $lk ] = $label;
+			++$stat['name'];
+			break;
+		}
+	}
+	if ( $price >= 0 ) {
+		foreach ( PRICE_KEYS as $pk ) {
+			if ( array_key_exists( $pk, $node ) && is_scalar( $node[ $pk ] ) ) {
+				if ( (string) $node[ $pk ] !== (string) $price ) {
+					++$stat['price'];
+				}
+				$node[ $pk ] = is_int( $node[ $pk ] ) ? $price : (string) $price;
+			}
+		}
+	}
+	return $node;
+}
+
+/**
  * 이름에서 한글만 가장 길게 이어진 토막 (앞 4글자까지).
  *
  * @param string $old 이름.
@@ -483,6 +613,49 @@ function probe_frag( string $old ): string {
 		}
 	}
 	return $best;
+}
+
+/**
+ * 옵션 ID 로 그 줄이 든 자리를 찾는다 — **모든 표**를 본다.
+ *
+ * @param string $key 옵션 ID.
+ * @return array<int,array<string,mixed>>
+ */
+function scan_key( string $key ): array {
+	if ( '' === trim( $key ) ) {
+		return array();
+	}
+	$rows = array();
+	$seen = array();
+	foreach ( all_tables() as $p ) {
+		foreach ( scan_table( $p[0], $p[1], $p[2], $key ) as $r ) {
+			$k = spot_key( $r );
+			if ( isset( $seen[ $k ] ) ) {
+				continue;
+			}
+			$seen[ $k ] = true;
+			$r['old']   = $key;
+			$r['new']   = $key;
+			$rows[]     = $r;
+		}
+	}
+	return $rows;
+}
+
+/**
+ * 한 줄을 바꾼 결과 — 옵션 ID 로 찾았으면 그 방식으로, 아니면 이름으로.
+ *
+ * @param array  $r     줄.
+ * @param string $new   새 이름.
+ * @param int    $price 새 값.
+ * @param string $key   옵션 ID (비어 있으면 이름 방식).
+ * @return array{raw:string,name:int,price:int,ok:bool}
+ */
+function row_made( array $r, string $new, int $price, string $key ): array {
+	if ( '' !== $key ) {
+		return swap_key( (string) $r['raw'], $key, $new, $price );
+	}
+	return made_pairs( (string) $r['raw'], array( array( (string) $r['old'], (string) $r['new'] ) ), $price );
 }
 
 /**
@@ -800,7 +973,7 @@ function spot_key( array $r ): string {
  * @param int    $price 새 값 (음수면 값은 그대로).
  * @return array{rows:int,name:int,price:int,fail:int}
  */
-function save( array $rows, string $old, string $new, int $price ): array {
+function save( array $rows, string $old, string $new, int $price, string $key = '' ): array {
 	$back = array();
 	$did  = array(
 		'rows'  => 0,
@@ -813,7 +986,7 @@ function save( array $rows, string $old, string $new, int $price ): array {
 		if ( $r['skip'] ) {
 			continue;
 		}
-		$made = made_pairs( (string) $r['raw'], array( array( (string) $r['old'], (string) $r['new'] ) ), $price );
+		$made = row_made( $r, $new, $price, $key );
 		if ( ! $made['ok'] || 0 === $made['name'] || $made['raw'] === $r['raw'] ) {
 			++$did['fail'];
 			continue;
@@ -1014,6 +1187,7 @@ function screen(): void {
 	}
 	$new   = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_new'] ?? '' ) ) : '브이메이트V5팟 0.7옴(3EA)';
 	$praw  = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_price'] ?? '' ) ) : '12000';
+	$okey  = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_key'] ?? '' ) ) : '_____v4__0_7__2ea_';
 	$pfind = $posted ? trim( (string) wp_unslash( $_POST['dhr_opt_find'] ?? '' ) ) : '브이메이트';
 	$pid   = $posted ? (int) ( $_POST['dhr_opt_pid'] ?? 0 ) : 0;
 	$pn    = (array) wp_unslash( $_POST['dhr_opt_pname'] ?? array() );
@@ -1025,10 +1199,10 @@ function screen(): void {
 	$price = '' === $praw ? -1 : (int) preg_replace( '/[^\d]/', '', $praw );
 	$said  = '';
 
-	$rows = scan( $old, $new );
+	$rows = '' !== $okey ? scan_key( $okey ) : scan( $old, $new );
 
 	if ( 'apply' === $do && '' !== $old && '' !== $new ) {
-		$did  = save( $rows, $old, $new, $price );
+		$did  = save( $rows, $old, $new, $price, $okey );
 		$said = sprintf(
 			'<b>%d군데</b>에서 이름 <b>%d개</b>를 바꿨습니다%s.%s 상품 화면을 새로고침해 확인해 주세요.',
 			$did['rows'],
@@ -1036,11 +1210,11 @@ function screen(): void {
 			$did['price'] ? sprintf( ' · 값 <b>%d개</b>', $did['price'] ) : '',
 			$did['fail'] ? sprintf( ' <b style="color:#B54708">%d군데는 못 알아봐서 그냥 두었습니다.</b>', $did['fail'] ) : ''
 		);
-		$rows = scan( $old, $new );
+		$rows = '' !== $okey ? scan_key( $okey ) : scan( $old, $new );
 	} elseif ( 'undo' === $do ) {
 		$u    = undo();
 		$said = $u['said'];
-		$rows = scan( $old, $new );
+		$rows = '' !== $okey ? scan_key( $okey ) : scan( $old, $new );
 	} elseif ( 'product' === $do ) {
 		$done = set_product( $pid, $pname, '' === $pprc ? -1 : (int) preg_replace( '/[^\d]/', '', $pprc ) );
 		$said = '' !== $done ? '상품을 바꿨습니다 — ' . esc_html( $done ) : '바뀐 것이 없습니다.';
@@ -1080,6 +1254,14 @@ function screen(): void {
 		'<tr><th scope="row"><label for="dhr_opt_new">새 이름</label></th><td>'
 		. '<input type="text" id="dhr_opt_new" name="dhr_opt_new" value="%s" class="large-text" style="font-family:monospace"></td></tr>',
 		esc_attr( $new )
+	);
+	printf(
+		'<tr><th scope="row"><label for="dhr_opt_key">옵션 ID</label></th><td>'
+		. '<input type="text" id="dhr_opt_key" name="dhr_opt_key" value="%s" class="large-text" style="font-family:monospace">'
+		. '<p class="description"><b>이 칸이 차 있으면 이름 대신 이것으로 찾습니다.</b> 영문 · 숫자뿐이라 '
+		. '한글이 어떻게 저장돼 있든 확실히 찾힙니다. <b>ID 자체는 바꾸지 않습니다</b> — 장바구니 · 주문이 이것으로 옵션을 알아봅니다. '
+		. '이름으로 찾고 싶으면 이 칸을 비우세요.</p></td></tr>',
+		esc_attr( $okey )
 	);
 	printf(
 		'<tr><th scope="row"><label for="dhr_opt_price">새 값(원)</label></th><td>'
@@ -1122,7 +1304,7 @@ function screen(): void {
 			if ( $shown > 40 ) {
 				break;
 			}
-			$made  = $r['skip'] ? null : made_pairs( (string) $r['raw'], array( array( (string) $r['old'], (string) $r['new'] ) ), $price );
+			$made  = $r['skip'] ? null : row_made( $r, $new, $price, $okey );
 			$hit   = (string) ( $r['old'] ?? $old );
 			$where = sprintf(
 				'%s<br><small style="color:#666">%s · <code>%s</code> · %d곳</small>',
@@ -1140,8 +1322,8 @@ function screen(): void {
 					'<code style="display:block;color:#8a2c0d;word-break:break-all">%s</code>'
 					. '<code style="display:block;color:#1F5F46;word-break:break-all;margin-top:4px">%s</code>'
 					. '<small style="color:#666">이름 %d곳%s</small>',
-					esc_html( snippet( (string) $r['raw'], $hit ) ),
-					esc_html( snippet( (string) $made['raw'], $hit === $old ? $new : json_bare( $new ) ) ),
+					esc_html( snippet( (string) $r['raw'], '' !== $okey ? $okey : $hit, '' !== $okey ? 150 : 90 ) ),
+					esc_html( snippet( (string) $made['raw'], '' !== $okey ? $okey : ( $hit === $old ? $new : json_bare( $new ) ), '' !== $okey ? 150 : 90 ) ),
 					(int) $made['name'],
 					$made['price'] ? esc_html( sprintf( ' · 값 %d곳', (int) $made['price'] ) ) : ' · <b style="color:#B54708">값은 못 찾음 (그대로 둡니다)</b>'
 				);

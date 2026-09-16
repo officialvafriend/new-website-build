@@ -1266,6 +1266,25 @@ $rn2 = ($O.'made_pairs')($nbr, [[$nb, $new]], 12000);
 $ok($rn2['name'] === 1 && str_contains($rn2['raw'], $new) && str_contains($rn2['raw'], '"price":"12000"'), '빈칸이 다른 자리도 그 자리의 글자로 바꾼다');
 $ok(!str_contains($rn2['raw'], "\u{00A0}"), '바꾼 뒤에는 그 이상한 빈칸이 남지 않는다');
 
+// 옵션 ID 로 찾아 바꾸기 — 한글이 어떻게 저장돼 있든 ID 는 영문·숫자라 확실하다
+$KEY = '_____v4__0_7__2ea_';
+$grp = ['ppom_inputs' => [['title' => '팟, 코일', 'options' => [
+	['option' => $old, 'price' => '8000', 'weight' => '', 'stock' => '', 'id' => $KEY],
+	['option' => '소울V2 0.6옴 팟(2EA)', 'price' => '9000', 'weight' => '', 'stock' => '', 'id' => '__v2_0_6____2ea_'],
+]]]];
+$sk = ($O.'swap_key')(serialize($grp), $KEY, $new, 12000);
+$sd = unserialize($sk['raw']);
+$ok($sk['ok'] && $sk['name'] === 1 && $sk['price'] === 1, '묶인 값: ID 로 찾아 이름 1곳 · 값 1곳');
+$ok($sd['ppom_inputs'][0]['options'][0]['option'] === $new && $sd['ppom_inputs'][0]['options'][0]['price'] === '12000', '그 줄의 이름과 값이 바뀐다');
+$ok($sd['ppom_inputs'][0]['options'][0]['id'] === $KEY, 'ID 는 그대로 — 장바구니 · 주문이 이것으로 옵션을 알아본다');
+$ok($sd['ppom_inputs'][0]['options'][1]['option'] === '소울V2 0.6옴 팟(2EA)' && $sd['ppom_inputs'][0]['options'][1]['price'] === '9000', '옆 옵션은 한 글자도 안 바뀐다');
+
+$sj = ($O.'swap_key')(json_encode($grp), $KEY, $new, 12000);
+$jd = json_decode($sj['raw'], true);
+$ok($sj['name'] === 1 && $jd['ppom_inputs'][0]['options'][0]['option'] === $new && $jd['ppom_inputs'][0]['options'][0]['price'] === '12000', 'escape 된 JSON 도 ID 로 찾아 바꾼다');
+$ok($jd['ppom_inputs'][0]['options'][1]['price'] === '9000' && str_contains($sj['raw'], '\\u'), '옆 옵션 · escape 된 모습은 그대로 둔다');
+$ok(($O.'swap_key')(json_encode($grp), 'no_such_id', $new, 12000)['name'] === 0, '없는 ID 면 한 글자도 안 바꾼다');
+
 // 한글 검색이 되는지 시험할 토막
 $ok(($O.'ko_bit')($old) === '브이메이' && ($O.'ko_bit')('V4 0.7') === '', '한글만 이어진 토막을 4글자까지 뜬다');
 
