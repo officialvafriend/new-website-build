@@ -281,6 +281,24 @@ function deep( array $needles, int $budget = 25 ): array {
 }
 
 /**
+ * 이름에서 한글만 가장 길게 이어진 토막 (앞 4글자까지).
+ *
+ * @param string $old 이름.
+ * @return string
+ */
+function ko_bit( string $old ): string {
+	$best = '';
+	if ( preg_match_all( '/[가-힣]{2,}/u', $old, $m ) ) {
+		foreach ( $m[0] as $bit ) {
+			if ( mb_strlen( (string) $bit ) > mb_strlen( $best ) ) {
+				$best = (string) $bit;
+			}
+		}
+	}
+	return '' === $best ? '' : mb_substr( $best, 0, 4 );
+}
+
+/**
  * 찾은 글자 덩어리에서 **따옴표로 묶인 이름**만 뽑아낸다.
  *
  * JSON 한 줄을 통째로 보여 주고 「복사해 넣으세요」 하면 사람 손으로는 못 한다.
@@ -364,6 +382,8 @@ function places(): array {
 		   여기를 빼먹어 한 군데도 못 찾은 적이 있다 (2026-09-16). */
 		array( $wpdb->posts, 'ID', 'post_content', ', ID AS post_id, post_type, post_title' ),
 		array( $wpdb->posts, 'ID', 'post_excerpt', ', ID AS post_id, post_type, post_title' ),
+		/* 상품 이름이 사는 자리 — **한글 검색이 되는지를 이것으로 가른다.** */
+		array( $wpdb->posts, 'ID', 'post_title', ', ID AS post_id, post_type, post_title' ),
 	);
 	foreach ( extra_tables() as $t ) {
 		$out[] = array( $t[0], $t[1], $t[2], '' );
@@ -1172,6 +1192,29 @@ function screen(): void {
 			$list[] = '<code>' . esc_html( (string) $t ) . '</code>';
 		}
 		printf( '<p class="description">찾아본 곳: %s</p>', wp_kses_post( implode( ', ', $list ) ) );
+
+		/* ── 한글 검색이 되기는 하는지 스스로 시험한다 ──
+		   상품 이름은 `wp_posts.post_title` 에 반드시 있다. 그것조차 안 걸리면
+		   「그 이름이 없다」가 아니라 **글자를 읽는 길 자체가 막힌 것**이다. */
+		$ko = ko_bit( $old );
+		if ( '' !== $ko ) {
+			$kor = scan( $ko, $ko );
+			if ( $kor ) {
+				printf(
+					'<div class="notice notice-info inline"><p><b>한글 검색은 됩니다.</b> <code>%s</code> 로는 <b>%d군데</b>가 걸립니다 '
+					. '(예: %s). 즉 <b>그 이름만 DB 에 없습니다</b> — 선택 목록이 코드에 박혀 있을 수 있습니다.</p></div>',
+					esc_html( $ko ),
+					count( $kor ),
+					esc_html( implode( ' · ', array_slice( array_map( static fn( $r ) => ( '' !== $r['title'] ? $r['title'] : $r['key'] ), $kor ), 0, 3 ) ) )
+				);
+			} else {
+				printf(
+					'<div class="notice notice-error inline"><p><b>한글로는 한 건도 안 걸립니다.</b> <code>%s</code> 조차 0건입니다 — '
+					. '상품 이름은 DB 에 반드시 있으므로, 이것은 <b>글자를 읽는 길이 막힌 것</b>입니다. 이 화면을 캡처해 알려 주세요.</p></div>',
+					esc_html( $ko )
+				);
+			}
+		}
 
 		echo '<p><button type="submit" name="dhr_opt_do" value="deep" class="button">모든 표에서 찾기 (조금 걸립니다)</button> '
 			. '<span class="description">이 사이트의 <b>표를 하나도 빼놓지 않고</b> 읽어 봅니다. 읽기만 합니다.</span></p>';

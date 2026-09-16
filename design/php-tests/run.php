@@ -1266,6 +1266,9 @@ $rn2 = ($O.'made_pairs')($nbr, [[$nb, $new]], 12000);
 $ok($rn2['name'] === 1 && str_contains($rn2['raw'], $new) && str_contains($rn2['raw'], '"price":"12000"'), '빈칸이 다른 자리도 그 자리의 글자로 바꾼다');
 $ok(!str_contains($rn2['raw'], "\u{00A0}"), '바꾼 뒤에는 그 이상한 빈칸이 남지 않는다');
 
+// 한글 검색이 되는지 시험할 토막
+$ok(($O.'ko_bit')($old) === '브이메이' && ($O.'ko_bit')('V4 0.7') === '', '한글만 이어진 토막을 4글자까지 뜬다');
+
 // 주문 항목 표는 글 종류로 걸러지지 않는다 — 표 이름으로 한 번 더 막는다
 $ok(($O.'off_table')('wp_woocommerce_order_itemmeta') === true, '주문 항목 표는 손대지 않는다');
 $ok(($O.'off_table')('wp_wc_orders') === true && ($O.'off_table')('wp_actionscheduler_logs') === true, '주문 · 예약작업 기록도 손대지 않는다');
