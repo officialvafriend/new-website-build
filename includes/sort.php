@@ -298,6 +298,14 @@ function note(): void {
 		esc_html( (string) ( $GLOBALS['dhr_sort_was'] ?? '(안 걸림)' ) ),
 		esc_html( order_sql( '', $q ) )
 	);
+	/* 실제로 돈 질의의 **정렬 부분만** — 우리가 쓴 것이 거기까지 갔는지 본다.
+	   (앞의 SELECT · WHERE 는 안 찍는다. 볼 것은 ORDER BY 뿐이다.) */
+	$req = is_object( $q ) && isset( $q->request ) ? (string) $q->request : '';
+	$pos = stripos( $req, 'ORDER BY' );
+	printf(
+		"<!-- dhr-sort 실제 질의: %s -->\n",
+		esc_html( false === $pos ? '(정렬 없음 · 질의 ' . ( '' === $req ? '없음' : '있음' ) . ')' : substr( $req, $pos, 220 ) )
+	);
 	printf(
 		"<!-- dhr-sort 떼어낸 것: %s -->\n",
 		esc_html( implode( ' , ', (array) ( $GLOBALS['dhr_sort_dropped'] ?? array( '(없음)' ) ) ) )
