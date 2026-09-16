@@ -85,11 +85,12 @@ function off_limits( string $type, string $key ): bool {
  * @param string $valcol 글자가 든 칸.
  * @param string $old    찾을 글자.
  * @param string $extra  같이 읽을 칸 (SQL 조각, 신뢰된 값만).
+ * @param string $like   찾을 본(pattern). 비우면 `$old` 를 그대로 쓴다.
  * @return array<int,array<string,mixed>>
  */
-function scan_table( string $table, string $idcol, string $valcol, string $old, string $extra = '' ): array {
+function scan_table( string $table, string $idcol, string $valcol, string $old, string $extra = '', string $like = '' ): array {
 	global $wpdb;
-	$like = '%' . $wpdb->esc_like( $old ) . '%';
+	$like = '' !== $like ? $like : '%' . $wpdb->esc_like( $old ) . '%';
 	$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL
 		$wpdb->prepare(
 			"SELECT `{$idcol}` AS dhr_id, `{$valcol}` AS dhr_val {$extra} FROM `{$table}` WHERE `{$valcol}` LIKE %s LIMIT 500",
@@ -233,20 +234,44 @@ function places(): array {
  * @return array<int,array<string,mixed>>
  */
 function scan( string $old, string $new = '' ): array {
+	global $wpdb;
 	if ( '' === trim( $old ) ) {
 		return array();
 	}
 	$rows = array();
 	$seen = array();
+
 	foreach ( variants( $old, '' === $new ? $old : $new ) as $pair ) {
+		$bits = preg_split( '/\s+/u', $pair[0] ) ?: array();
+
+		/* **띄어쓰기를 건너뛰고도 찾는다.** 화면에는 보통 빈칸으로 보이지만 DB 에는
+		   줄바꿈이나 다른 종류의 빈칸이 들어 있을 수 있다 — 그러면 그대로 찾아서는
+		   한 건도 안 나온다. 찾은 뒤 **그 자리의 진짜 글자**를 다시 떠서 그것을 바꾼다. */
+		$like = count( $bits ) > 1
+			? '%' . implode( '%', array_map( array( $wpdb, 'esc_like' ), $bits ) ) . '%'
+			: '';
+		$re   = count( $bits ) > 1
+			? '/' . implode( '\s{0,4}', array_map( static fn( $b ) => preg_quote( (string) $b, '/' ), $bits ) ) . '/u'
+			: '';
+
 		foreach ( places() as $p ) {
-			foreach ( scan_table( $p[0], $p[1], $p[2], $pair[0], $p[3] ) as $r ) {
+			foreach ( scan_table( $p[0], $p[1], $p[2], $pair[0], $p[3], $like ) as $r ) {
 				$k = spot_key( $r );
 				if ( isset( $seen[ $k ] ) ) {
 					continue;
 				}
+				$hit = $pair[0];
+				if ( 0 === (int) $r['hits'] ) {
+					/* 그대로는 없고 빈칸만 다른 경우 — 그 자리의 글자를 그대로 뜬다. */
+					if ( '' === $re || ! preg_match( $re, (string) $r['raw'], $m ) ) {
+						continue;
+					}
+					$hit        = (string) $m[0];
+					$r['hits']  = substr_count( (string) $r['raw'], $hit );
+				}
 				$seen[ $k ] = true;
-				$r['old']   = $pair[0];
+				$r['old']   = $hit;
+				$r['new']   = $pair[1];
 				$rows[]     = $r;
 			}
 		}
@@ -264,21 +289,64 @@ function scan( string $old, string $new = '' ): array {
  * @return string
  */
 function probe_frag( string $old ): string {
-	$frag = '';
+	$best = '';
+	$rank = static function ( string $s ): int {
+		if ( '' === $s ) {
+			return -1;
+		}
+		/* 16진수 글자(0-9 a-f)만 있는 토막은 주문 해시에 다 걸린다 — 실제로
+		   `2EA` 로 훑었더니 `_cart_hash` 만 여덟 줄 나왔다 (2026-09-16). */
+		$hexy = ! preg_match( '/[G-Zg-z]/', $s );
+		$alpha = (bool) preg_match( '/[A-Za-z]/', $s );
+		return ( $hexy ? 0 : 2 ) + ( $alpha ? 1 : 0 );
+	};
 	if ( preg_match_all( '/[A-Za-z0-9.]{2,}/', $old, $m ) ) {
 		foreach ( $m[0] as $bit ) {
-			$has  = (bool) preg_match( '/[A-Za-z]/', $bit );
-			$mine = (bool) preg_match( '/[A-Za-z]/', $frag );
-			if ( $has && ! $mine ) {
-				$frag = $bit;
-				continue;
-			}
-			if ( $has === $mine && strlen( $bit ) > strlen( $frag ) ) {
-				$frag = $bit;
+			$a = $rank( (string) $bit );
+			$b = $rank( $best );
+			if ( $a > $b || ( $a === $b && strlen( (string) $bit ) > strlen( $best ) ) ) {
+				$best = (string) $bit;
 			}
 		}
 	}
-	return $frag;
+	return $best;
+}
+
+/**
+ * 못 찾았을 때 훑어볼 글자들 — 순서대로 하나씩 시도한다.
+ *
+ * ①이름에서 **빈칸 없이 가장 긴 토막** (그대로 · escape 된 꼴) — 빈칸이 달라서
+ * 못 찾는 경우를 가른다. ②마지막이 영문 토막이다.
+ *
+ * @param string $old 찾던 이름.
+ * @return array<int,string>
+ */
+function probe_needles( string $old ): array {
+	$out  = array();
+	$bits = preg_split( '/\s+/u', trim( $old ) ) ?: array();
+	/* **한글이 가장 많은 토막**을 고른다. 길이로만 고르면 `0.7옴(2EA)` 이 뽑히는데
+	   숫자 · 괄호는 아무 데나 있어 걸러지지 않는다 (2026-09-16). */
+	$long = '';
+	$best = -1;
+	foreach ( $bits as $b ) {
+		$n = (int) preg_match_all( '/[가-힣]/u', (string) $b );
+		if ( $n > $best || ( $n === $best && mb_strlen( (string) $b ) > mb_strlen( $long ) ) ) {
+			$best = $n;
+			$long = (string) $b;
+		}
+	}
+	if ( '' !== $long && mb_strlen( $long ) >= 3 ) {
+		$out[] = $long;
+		$esc    = json_bare( $long );
+		if ( $esc !== $long ) {
+			$out[] = $esc;
+		}
+	}
+	$frag = probe_frag( $old );
+	if ( '' !== $frag ) {
+		$out[] = $frag;
+	}
+	return $out;
 }
 
 /**
@@ -291,35 +359,39 @@ function probe_frag( string $old ): string {
  * @return array{frag:string,rows:array<int,array<string,mixed>>}
  */
 function probe( string $old ): array {
-	$frag = probe_frag( $old );
-	if ( '' === $frag ) {
-		return array(
-			'frag' => '',
-			'rows' => array(),
-		);
-	}
-	$rows = array();
-	$seen = array();
-	foreach ( places() as $p ) {
-		foreach ( scan_table( $p[0], $p[1], $p[2], $frag, $p[3] ) as $r ) {
-			$k = spot_key( $r );
-			if ( isset( $seen[ $k ] ) ) {
-				continue;
+	$last = '';
+	foreach ( probe_needles( $old ) as $frag ) {
+		$last = $frag;
+		$rows = array();
+		$seen = array();
+		foreach ( places() as $p ) {
+			foreach ( scan_table( $p[0], $p[1], $p[2], $frag, $p[3] ) as $r ) {
+				/* 주문 · 기록은 진단에도 쓸모가 없다 — 해시가 우연히 걸린 것뿐이다. */
+				if ( $r['skip'] ) {
+					continue;
+				}
+				$k = spot_key( $r );
+				if ( isset( $seen[ $k ] ) ) {
+					continue;
+				}
+				$seen[ $k ] = true;
+				$r['old']   = $frag;
+				$rows[]     = $r;
+				if ( count( $rows ) >= 8 ) {
+					break 2;
+				}
 			}
-			$seen[ $k ] = true;
-			$r['old']   = $frag;
-			$rows[]     = $r;
-			if ( count( $rows ) >= 8 ) {
-				return array(
-					'frag' => $frag,
-					'rows' => $rows,
-				);
-			}
+		}
+		if ( $rows ) {
+			return array(
+				'frag' => $frag,
+				'rows' => $rows,
+			);
 		}
 	}
 	return array(
-		'frag' => $frag,
-		'rows' => $rows,
+		'frag' => $last,
+		'rows' => isset( $rows ) ? $rows : array(),
 	);
 }
 
@@ -435,11 +507,24 @@ function walk( $node, array $pairs, int $price, array &$stat ) {
  * @return array{raw:string,name:int,price:int,ok:bool}
  */
 function made( string $raw, string $old, string $new, int $price ): array {
-	$stat  = array(
+	return made_pairs( $raw, variants( $old, $new ), $price );
+}
+
+/**
+ * `made()` 의 속 — 찾을 것 → 넣을 것 짝을 직접 받는다.
+ *
+ * 줄마다 **그 자리에서 실제로 걸린 글자**로 바꿔야 할 때가 있다 (빈칸이 다른 경우).
+ *
+ * @param string $raw   원본.
+ * @param array  $pairs 짝들.
+ * @param int    $price 새 값 (음수면 값은 그대로).
+ * @return array{raw:string,name:int,price:int,ok:bool}
+ */
+function made_pairs( string $raw, array $pairs, int $price ): array {
+	$stat = array(
 		'name'  => 0,
 		'price' => 0,
 	);
-	$pairs = variants( $old, $new );
 
 	if ( is_serialized( $raw ) ) {
 		$data = @unserialize( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
@@ -555,7 +640,7 @@ function save( array $rows, string $old, string $new, int $price ): array {
 		if ( $r['skip'] ) {
 			continue;
 		}
-		$made = made( (string) $r['raw'], $old, $new, $price );
+		$made = made_pairs( (string) $r['raw'], array( array( (string) $r['old'], (string) $r['new'] ) ), $price );
 		if ( ! $made['ok'] || 0 === $made['name'] || $made['raw'] === $r['raw'] ) {
 			++$did['fail'];
 			continue;
@@ -858,7 +943,7 @@ function screen(): void {
 			if ( $shown > 40 ) {
 				break;
 			}
-			$made  = $r['skip'] ? null : made( (string) $r['raw'], $old, $new, $price );
+			$made  = $r['skip'] ? null : made_pairs( (string) $r['raw'], array( array( (string) $r['old'], (string) $r['new'] ) ), $price );
 			$hit   = (string) ( $r['old'] ?? $old );
 			$where = sprintf(
 				'%s<br><small style="color:#666">%s · <code>%s</code> · %d곳</small>',

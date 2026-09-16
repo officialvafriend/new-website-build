@@ -1256,9 +1256,18 @@ $ok(is_array($dec) && $dec['opts'][0]['option'] === $new, '풀어 보면 새 이
 $ok(count(($O.'variants')($old, $new)) === 2 && count(($O.'variants')('V4', 'V5')) === 1, '영문만 있으면 모습이 하나뿐이다');
 
 // 못 찾았을 때 다시 훑을 토막 — 숫자만 있는 것은 버전 번호에 다 걸린다
-$ok(($O.'probe_frag')($old) === '2EA', '글자가 든 토막을 고른다 (0.7 이 아니라)');
+$ok(($O.'probe_frag')($old) === 'V4', '16진수로만 된 토막(2EA · 0.7)은 피한다 — 주문 해시에 다 걸린다');
 $ok(($O.'probe_frag')('[부푸] 브이메이트 V4 0.7옴팟') === 'V4', '글자 토막이 하나면 그것을 쓴다');
 $ok(($O.'probe_frag')('맛 선택') === '', '영문이 없으면 빈 값');
+// 빈칸이 다른 자리 — 찾은 그 글자 그대로 바꾼다
+$nb  = "브이메이트V4팟\u{00A0}0.7옴(2EA)";
+$nbr = '{"option":"'.$nb.'","price":"8000"}';
+$rn2 = ($O.'made_pairs')($nbr, [[$nb, $new]], 12000);
+$ok($rn2['name'] === 1 && str_contains($rn2['raw'], $new) && str_contains($rn2['raw'], '"price":"12000"'), '빈칸이 다른 자리도 그 자리의 글자로 바꾼다');
+$ok(!str_contains($rn2['raw'], "\u{00A0}"), '바꾼 뒤에는 그 이상한 빈칸이 남지 않는다');
+
+$nd = ($O.'probe_needles')($old);
+$ok($nd[0] === '브이메이트V4팟' && str_contains($nd[1], '\\u') && end($nd) === 'V4', '빈칸 없는 긴 토막 → escape 된 것 → 영문 순으로 훑는다');
 
 // 되돌리기 열쇠 — 어느 표 · 어느 칸 · 어느 줄인지를 그대로 들고 있어야 한다
 $spot = ['table' => 'wp_postmeta', 'idcol' => 'meta_id', 'valcol' => 'meta_value', 'id' => '77', 'post' => 4653, 'key' => '_ppom'];
