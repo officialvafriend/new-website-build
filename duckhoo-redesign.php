@@ -81,6 +81,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/coupon-admin.php';
 	// 도구 → 분류 묶기 — 상품 이름을 붙여 넣으면 새 분류를 만들고 그 상품들을 넣는다.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/cat-admin.php';
+	// 도구 → 옵션 이름 바꾸기 — 다른 상품들의 선택칸에 적힌 옵션 이름 · 값을 한 번에.
+	require_once plugin_dir_path( __FILE__ ) . 'includes/opt-admin.php';
 }
 
 

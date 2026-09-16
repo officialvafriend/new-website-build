@@ -1182,5 +1182,68 @@ $ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') 
 $ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
 foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
 
+
+// ── 옵션 이름 바꾸기 (includes/opt-admin.php) ─────────────────────────────
+if ( ! function_exists('is_serialized') ) {
+	function is_serialized($d){ if(!is_string($d)) return false; $d=trim($d); if('N;'===$d) return true; if(strlen($d)<4||':'!==$d[1]) return false; return (bool) preg_match('/^[aOsbdi]:/',$d); }
+}
+require_once dirname(__DIR__, 2).'/includes/opt-admin.php';
+$O = 'Duckhoo\\Redesign\\Opt\\Admin\\';
+$old = '브이메이트V4팟 0.7옴(2EA)';
+$new = '브이메이트V5팟 0.7옴(3EA)';
+
+// 묶어 놓은 값(serialize) — 길이 숫자까지 다시 맞아야 한다
+$src = serialize(['options' => [
+	['option' => $old, 'price' => '8000', 'optionid' => 'x'],
+	['option' => '소울V2 0.6옴 팟(2EA)', 'price' => '9000', 'optionid' => 'y'],
+]]);
+$r = ($O.'made')($src, $old, $new, 12000);
+$ok($r['ok'] && $r['name'] === 1 && $r['price'] === 1, '묶인 값: 이름 1곳 · 값 1곳');
+$back = unserialize($r['raw']);
+$ok(is_array($back), '바꾼 뒤에도 다시 풀린다 (길이 숫자가 맞다)');
+$ok($back['options'][0]['option'] === $new && $back['options'][0]['price'] === '12000', '그 줄의 이름과 값만 바뀐다');
+$ok($back['options'][1]['price'] === '9000' && $back['options'][1]['option'] === '소울V2 0.6옴 팟(2EA)', '다른 옵션은 한 글자도 안 바뀐다');
+
+// 값을 비워 두면 이름만
+$r2 = ($O.'made')($src, $old, $new, -1);
+$b2 = unserialize($r2['raw']);
+$ok($b2['options'][0]['option'] === $new && $b2['options'][0]['price'] === '8000', '새 값을 비우면 이름만 바꾸고 값은 그대로');
+
+// JSON 글자 — 이름 뒤의 값만 바꾼다
+$json = '{"opts":[{"option":"'.$old.'","price":"8000"},{"option":"젤로맥스0.6옴팟(3EA)","price":"13500"}]}';
+$rj = ($O.'made')($json, $old, $new, 12000);
+$ok(str_contains($rj['raw'], '"'.$new.'","price":"12000"'), 'JSON: 그 옵션의 값만 새 값으로');
+$ok(str_contains($rj['raw'], '"price":"13500"'), 'JSON: 뒤에 오는 다른 옵션의 값은 그대로');
+$ok(is_array(json_decode($rj['raw'], true)), 'JSON 이 깨지지 않는다');
+
+// `이름|8000` 모양
+$pipe = $old."|8000\n소울V2 0.6옴 팟(2EA)|9000";
+$rp = ($O.'made')($pipe, $old, $new, 12000);
+$ok(str_contains($rp['raw'], $new.'|12000') && str_contains($rp['raw'], '팟(2EA)|9000'), '세로줄 모양도 그 줄의 값만');
+
+// 값을 못 찾으면 이름만 바꾸고 조용히 둔다
+$plain = '추가 옵션: '.$old.' 를 드립니다';
+$rn = ($O.'made')($plain, $old, $new, 12000);
+$ok($rn['name'] === 1 && $rn['price'] === 0 && str_contains($rn['raw'], $new), '값이 없으면 이름만 바꾸고 값은 건드리지 않는다');
+
+// 읽을 수 없는 것은 손대지 않는다
+$broken = 'a:1:{s:99:"깨짐";}';
+$rb = ($O.'made')($broken, $old, $new, 12000);
+$ok($rb['ok'] === false && $rb['raw'] === $broken, '풀리지 않는 값은 한 글자도 바꾸지 않는다');
+
+// 주문 · 기록은 건너뛴다
+$ok(($O.'off_limits')('shop_order', '_ppom') === true, '주문은 건너뛴다');
+$ok(($O.'off_limits')('shop_order_refund', 'x') === true && ($O.'off_limits')('product', '_order_key') === true, '환불 · 주문 칸도 건너뛴다');
+$ok(($O.'off_limits')('nm_ppom', '_ppom_fields') === false, 'PPOM 옵션 자리는 바꾼다');
+
+// 상품 이름 미리 채우기
+$ok(($O.'guess_name')('[부푸] 브이메이트 V4 0.7옴팟', $old, $new) === '[부푸] 브이메이트 V5 0.7옴팟', '상품 이름의 V4 → V5 를 미리 채운다');
+$ok(($O.'guess_name')('[부푸] 브이메이트 V4 팟(2EA)', $old, $new) === '[부푸] 브이메이트 V5 팟(3EA)', '(2EA) → (3EA) 도 같이');
+$ok(($O.'guess_name')('[긱베이프] 소울V2 0.6옴팟', '맛 A', '맛 B') === '[긱베이프] 소울V2 0.6옴팟', '다른 토막이 없으면 이름을 그대로 둔다');
+
+// 앞뒤 토막
+$ok(str_contains(($O.'snippet')($json, $old), $old), '미리 보기 토막에 그 이름이 들어 있다');
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
