@@ -166,6 +166,29 @@ function order_sql( $orderby, $q = null ): string {
 add_filter( 'posts_orderby', __NAMESPACE__ . '\\order_sql', 999, 2 );
 
 /**
+ * 조각 전체(`posts_clauses`)에도 같은 것을 쓴다 — **여기가 마지막 자리다.**
+ *
+ * 워드프레스는 `posts_orderby` 를 부른 **뒤에** `posts_clauses` 로 조각을 통째로
+ * 한 번 더 묻는다. 그래서 `posts_orderby` 에 아무리 마지막 우선순위로 써도
+ * 누군가 `posts_clauses` 에서 `orderby` 를 갈아끼우면 조용히 진다 — 실제로
+ * 그렇게 한 번 더 졌다 (2026-09-16, 「우리가 정렬=y」인데 순서는 그대로였다).
+ *
+ * @param array $clauses 조각들.
+ * @param mixed $q       쿼리.
+ * @return array
+ */
+function order_clauses( $clauses, $q = null ): array {
+	$clauses = (array) $clauses;
+	if ( ! ours( $q ) ) {
+		return $clauses;
+	}
+	$GLOBALS['dhr_sort_was'] = (string) ( $clauses['orderby'] ?? '' );
+	$clauses['orderby']      = order_sql( '', $q );
+	return $clauses;
+}
+add_filter( 'posts_clauses', __NAMESPACE__ . '\\order_clauses', 999, 2 );
+
+/**
  * `?dhr_sort=1` — 정렬이 안 먹을 때 **한 번 받아 보면 되는** 쪽지.
  *
  * 화면 아래 주석으로 무엇을 보고 무엇을 썼는지 적는다. 사람에게 캡처를
@@ -186,6 +209,11 @@ function note(): void {
 		esc_html( wp_json_encode( is_object( $q ) ? $q->get( 'post_type' ) : null ) ),
 		ours( $q ) ? 'y' : 'n',
 		is_object( $q ) ? (int) $q->found_posts : 0
+	);
+	printf(
+		"<!-- dhr-sort 조각: 원래=%s · 우리가 쓴 것=%s -->\n",
+		esc_html( (string) ( $GLOBALS['dhr_sort_was'] ?? '(안 걸림)' ) ),
+		esc_html( order_sql( '', $q ) )
 	);
 }
 add_action( 'wp_footer', __NAMESPACE__ . '\\note', 99 );

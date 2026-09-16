@@ -1345,6 +1345,14 @@ $_GET = [];
 $ok(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)) === 'x', '아무것도 안 골랐으면 원래 순서 그대로');
 $ok(($S2.'order_sql')('x', null) === 'x', '쿼리가 없으면 손대지 않는다');
 
+// posts_clauses — 워드프레스가 posts_orderby **뒤에** 한 번 더 묻는 자리
+$_GET['orderby'] = 'price';
+$cl = ($S2.'order_clauses')(['where' => ' AND 1=1', 'orderby' => 'wp_posts.post_date DESC'], $mk(['post_type' => 'product'], true));
+$ok(str_contains($cl['orderby'], "meta_key = '_price'") && $cl['where'] === ' AND 1=1', '조각 전체에도 같은 것을 쓴다 (다른 조각은 그대로)');
+$_GET = [];
+$cl2 = ($S2.'order_clauses')(['orderby' => 'keep me'], $mk(['post_type' => 'product'], true));
+$ok($cl2['orderby'] === 'keep me', '안 골랐으면 조각도 그대로');
+
 // 화면에 그리는 자리
 $GLOBALS['__is_shop'] = true;
 $h = ($S2.'html')();
