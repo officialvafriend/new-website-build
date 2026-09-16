@@ -75,7 +75,98 @@ function off_limits( string $type, string $key ): bool {
 }
 
 /**
+ * 한 표에서 그 글자가 든 줄을 찾는다.
+ *
+ * 표마다 칸 이름이 달라 **어디서 찾았는지를 줄마다 들고 다닌다** — 되돌릴 때
+ * 같은 자리에 그대로 써 넣어야 하기 때문이다.
+ *
+ * @param string $table  표 이름.
+ * @param string $idcol  열쇠 칸.
+ * @param string $valcol 글자가 든 칸.
+ * @param string $old    찾을 글자.
+ * @param string $extra  같이 읽을 칸 (SQL 조각, 신뢰된 값만).
+ * @return array<int,array<string,mixed>>
+ */
+function scan_table( string $table, string $idcol, string $valcol, string $old, string $extra = '' ): array {
+	global $wpdb;
+	$like = '%' . $wpdb->esc_like( $old ) . '%';
+	$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL
+		$wpdb->prepare(
+			"SELECT `{$idcol}` AS dhr_id, `{$valcol}` AS dhr_val {$extra} FROM `{$table}` WHERE `{$valcol}` LIKE %s LIMIT 500",
+			$like
+		),
+		ARRAY_A
+	);
+	$out = array();
+	foreach ( (array) $rows as $r ) {
+		$raw   = (string) $r['dhr_val'];
+		$type  = (string) ( $r['post_type'] ?? '' );
+		$key   = (string) ( $r['meta_key'] ?? $valcol );
+		$out[] = array(
+			'table'  => $table,
+			'idcol'  => $idcol,
+			'valcol' => $valcol,
+			'id'     => (string) $r['dhr_id'],
+			'post'   => (int) ( $r['post_id'] ?? 0 ),
+			'key'    => $key,
+			'type'   => $type,
+			'title'  => (string) ( $r['post_title'] ?? '' ),
+			'raw'    => $raw,
+			'hits'   => substr_count( $raw, $old ),
+			'skip'   => off_limits( $type, $key ),
+		);
+	}
+	return $out;
+}
+
+/**
+ * 이름에 `ppom` 이 든 표들 — 그 플러그인이 옵션을 어디에 두든 찾아내기 위해.
+ *
+ * **표 이름은 DB 에서 받은 것만 쓴다** (사용자 입력을 넣지 않는다).
+ *
+ * @return array<int,array{0:string,1:string,2:string}> 표 · 열쇠 칸 · 글자 칸
+ */
+function extra_tables(): array {
+	global $wpdb;
+	$out  = array();
+	$pat  = apply_filters( 'duckhoo_opt_rename_tables', array( 'ppom', 'nm_ppom', 'product_meta' ) );
+	$seen = array();
+	foreach ( (array) $pat as $needle ) {
+		$like  = '%' . $wpdb->esc_like( (string) $needle ) . '%';
+		$names = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) ); // phpcs:ignore WordPress.DB
+		foreach ( (array) $names as $t ) {
+			$t = (string) $t;
+			if ( isset( $seen[ $t ] ) || 0 !== strpos( $t, $wpdb->prefix ) ) {
+				continue;
+			}
+			$seen[ $t ] = true;
+			$cols       = $wpdb->get_results( "SHOW COLUMNS FROM `{$t}`", ARRAY_A ); // phpcs:ignore WordPress.DB
+			$id         = '';
+			$vals       = array();
+			foreach ( (array) $cols as $c ) {
+				$name = (string) $c['Field'];
+				if ( '' === $id && 'PRI' === (string) ( $c['Key'] ?? '' ) ) {
+					$id = $name;
+				}
+				if ( preg_match( '/(text|blob|varchar)/i', (string) $c['Type'] ) ) {
+					$vals[] = $name;
+				}
+			}
+			foreach ( $vals as $v ) {
+				if ( '' !== $id ) {
+					$out[] = array( $t, $id, $v );
+				}
+			}
+		}
+	}
+	return $out;
+}
+
+/**
  * 그 글자가 들어 있는 자리를 모두 찾는다 (읽기만 한다).
+ *
+ * 글 메타 → 설정 → PPOM 이름이 든 표 순으로 본다. **어디에 있든 찾는다** —
+ * 옵션이 어느 표에 사는지 밖에서는 알 수 없기 때문이다.
  *
  * @param string $old 찾을 글자.
  * @return array<int,array<string,mixed>>
@@ -85,36 +176,19 @@ function scan( string $old ): array {
 	if ( '' === trim( $old ) ) {
 		return array();
 	}
-	$like = '%' . $wpdb->esc_like( $old ) . '%';
-	$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->prepare(
-			"SELECT m.meta_id, m.post_id, m.meta_key, m.meta_value, p.post_type, p.post_title
-			   FROM {$wpdb->postmeta} m
-			   LEFT JOIN {$wpdb->posts} p ON p.ID = m.post_id
-			  WHERE m.meta_value LIKE %s
-			  ORDER BY m.post_id ASC
-			  LIMIT 500",
-			$like
-		),
-		ARRAY_A
+	$rows = scan_table(
+		$wpdb->postmeta,
+		'meta_id',
+		'meta_value',
+		$old,
+		", post_id, meta_key, (SELECT post_type FROM {$wpdb->posts} p WHERE p.ID = post_id) AS post_type,"
+		. " (SELECT post_title FROM {$wpdb->posts} p2 WHERE p2.ID = post_id) AS post_title"
 	);
-	$out = array();
-	foreach ( (array) $rows as $r ) {
-		$type = (string) ( $r['post_type'] ?? '' );
-		$key  = (string) $r['meta_key'];
-		$raw  = (string) $r['meta_value'];
-		$out[] = array(
-			'meta_id' => (int) $r['meta_id'],
-			'post_id' => (int) $r['post_id'],
-			'key'     => $key,
-			'type'    => $type,
-			'title'   => (string) ( $r['post_title'] ?? '' ),
-			'raw'     => $raw,
-			'hits'    => substr_count( $raw, $old ),
-			'skip'    => off_limits( $type, $key ),
-		);
+	$rows = array_merge( $rows, scan_table( $wpdb->options, 'option_id', 'option_value', $old, ', option_name AS meta_key' ) );
+	foreach ( extra_tables() as $t ) {
+		$rows = array_merge( $rows, scan_table( $t[0], $t[1], $t[2], $old ) );
 	}
-	return $out;
+	return $rows;
 }
 
 /**
@@ -275,6 +349,49 @@ function snippet( string $raw, string $find, int $pad = 90 ): string {
 }
 
 /**
+ * 한 줄을 그 자리에 그대로 써 넣는다.
+ *
+ * 표마다 칸 이름이 달라 **줄이 스스로 어디서 왔는지를 들고 다닌다** —
+ * 되돌릴 때 같은 자리에 그대로 써 넣어야 하기 때문이다.
+ *
+ * @param array  $r   줄 (표 · 칸 · 열쇠).
+ * @param string $raw 넣을 글자.
+ * @return bool
+ */
+function put( array $r, string $raw ): bool {
+	global $wpdb;
+	$ok = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		(string) $r['table'],
+		array( (string) $r['valcol'] => $raw ),
+		array( (string) $r['idcol'] => $r['id'] )
+	);
+	if ( false === $ok ) {
+		return false;
+	}
+	if ( ! empty( $r['post'] ) ) {
+		wp_cache_delete( (int) $r['post'], 'post_meta' );
+	}
+	if ( $wpdb->options === (string) $r['table'] ) {
+		wp_cache_delete( (string) $r['key'], 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+	}
+	return true;
+}
+
+/**
+ * 되돌릴 때 같은 자리를 다시 찾기 위한 열쇠.
+ *
+ * @param array $r 줄.
+ * @return string
+ */
+function spot_key( array $r ): string {
+	return implode(
+		'|',
+		array( $r['table'], $r['idcol'], $r['valcol'], $r['id'], (int) ( $r['post'] ?? 0 ), (string) ( $r['key'] ?? '' ) )
+	);
+}
+
+/**
  * 실제로 저장한다.
  *
  * @param array  $rows  scan() 결과.
@@ -284,8 +401,6 @@ function snippet( string $raw, string $find, int $pad = 90 ): string {
  * @return array{rows:int,name:int,price:int,fail:int}
  */
 function save( array $rows, string $old, string $new, int $price ): array {
-	global $wpdb;
-
 	$back = array();
 	$did  = array(
 		'rows'  => 0,
@@ -303,17 +418,11 @@ function save( array $rows, string $old, string $new, int $price ): array {
 			++$did['fail'];
 			continue;
 		}
-		$ok = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->postmeta,
-			array( 'meta_value' => $made['raw'] ),
-			array( 'meta_id' => (int) $r['meta_id'] )
-		);
-		if ( false === $ok ) {
+		if ( ! put( $r, $made['raw'] ) ) {
 			++$did['fail'];
 			continue;
 		}
-		$back[ (int) $r['meta_id'] ] = (string) $r['raw'];
-		wp_cache_delete( (int) $r['post_id'], 'post_meta' );
+		$back[ spot_key( $r ) ] = (string) $r['raw'];
 		++$did['rows'];
 		$did['name']  += $made['name'];
 		$did['price'] += $made['price'];
@@ -342,7 +451,6 @@ function save( array $rows, string $old, string $new, int $price ): array {
  * @return array{rows:int,said:string}
  */
 function undo(): array {
-	global $wpdb;
 	$bak = get_option( BACKUP );
 	if ( ! is_array( $bak ) || empty( $bak['meta'] ) ) {
 		return array(
@@ -351,18 +459,21 @@ function undo(): array {
 		);
 	}
 	$n = 0;
-	foreach ( (array) $bak['meta'] as $mid => $raw ) {
-		$pid = (int) $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_id = %d", (int) $mid ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$ok  = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->postmeta,
-			array( 'meta_value' => (string) $raw ),
-			array( 'meta_id' => (int) $mid )
+	foreach ( (array) $bak['meta'] as $key => $raw ) {
+		$bits = explode( '|', (string) $key );
+		if ( count( $bits ) < 5 ) {
+			continue;
+		}
+		$r = array(
+			'table'  => $bits[0],
+			'idcol'  => $bits[1],
+			'valcol' => $bits[2],
+			'id'     => $bits[3],
+			'post'   => (int) $bits[4],
+			'key'    => (string) ( $bits[5] ?? '' ),
 		);
-		if ( false !== $ok ) {
+		if ( put( $r, (string) $raw ) ) {
 			++$n;
-			if ( $pid ) {
-				wp_cache_delete( $pid, 'post_meta' );
-			}
 		}
 	}
 	delete_option( BACKUP );
@@ -607,10 +718,9 @@ function screen(): void {
 			}
 			$made  = $r['skip'] ? null : made( (string) $r['raw'], $old, $new, $price );
 			$where = sprintf(
-				'#%d %s<br><small style="color:#666">%s · <code>%s</code> · %d곳</small>',
-				(int) $r['post_id'],
-				esc_html( '' !== $r['title'] ? $r['title'] : '(제목 없음)' ),
-				esc_html( (string) $r['type'] ),
+				'%s<br><small style="color:#666">%s · <code>%s</code> · %d곳</small>',
+				esc_html( '' !== $r['title'] ? '#' . (int) $r['post'] . ' ' . $r['title'] : (string) $r['key'] ),
+				esc_html( '' !== (string) $r['type'] ? (string) $r['type'] : (string) $r['table'] ),
 				esc_html( (string) $r['key'] ),
 				(int) $r['hits']
 			);

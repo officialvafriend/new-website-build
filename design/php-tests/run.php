@@ -1244,6 +1244,12 @@ $ok(($O.'guess_name')('[긱베이프] 소울V2 0.6옴팟', '맛 A', '맛 B') ===
 // 앞뒤 토막
 $ok(str_contains(($O.'snippet')($json, $old), $old), '미리 보기 토막에 그 이름이 들어 있다');
 
+// 되돌리기 열쇠 — 어느 표 · 어느 칸 · 어느 줄인지를 그대로 들고 있어야 한다
+$spot = ['table' => 'wp_postmeta', 'idcol' => 'meta_id', 'valcol' => 'meta_value', 'id' => '77', 'post' => 4653, 'key' => '_ppom'];
+$ok(($O.'spot_key')($spot) === 'wp_postmeta|meta_id|meta_value|77|4653|_ppom', '되돌릴 자리를 열쇠 하나에 담는다');
+$bits = explode('|', ($O.'spot_key')($spot));
+$ok(count($bits) === 6 && $bits[0] === 'wp_postmeta' && $bits[3] === '77', '열쇠를 다시 쪼개면 같은 자리가 나온다');
+
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
