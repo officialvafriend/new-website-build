@@ -62,7 +62,11 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 	<?php if ( have_posts() ) : ?>
 		<div class="dha-bar">
 			<span class="dha-bar__n"><?php echo esc_html( number_format_i18n( $dha_total ) ); ?>개 상품</span>
-			<?php woocommerce_catalog_ordering(); ?>
+			<?php
+			/* 워드커머스의 `woocommerce_catalog_ordering()` 은 루프 설정 없이는 아무것도
+			   그리지 않아 화면에 한 번도 나온 적이 없다. 우리가 링크로 그린다. */
+			echo \Duckhoo\Redesign\Sort\html(); // phpcs:ignore
+			?>
 		</div>
 		<div class="grid grid4 dha-grid">
 			<?php

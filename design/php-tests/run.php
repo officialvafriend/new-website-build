@@ -1308,5 +1308,54 @@ $bits = explode('|', ($O.'spot_key')($spot));
 $ok(count($bits) === 6 && $bits[0] === 'wp_postmeta' && $bits[3] === '77', '열쇠를 다시 쪼개면 같은 자리가 나온다');
 
 
+// ── 목록 정렬 (includes/sort.php) ─────────────────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/sort.php';
+$S2 = 'Duckhoo\\Redesign\\Sort\\';
+
+$_GET = [];
+$ok(($S2.'current')() === '', '아무것도 안 고르면 빈 값 (추천순)');
+$_GET['orderby'] = 'price';
+$ok(($S2.'current')() === 'price', '낮은 가격순');
+$_GET['orderby'] = 'nonsense';
+$ok(($S2.'current')() === '', '모르는 값은 무시한다 — 주소를 손으로 바꿔도 안전');
+$_GET = [];
+$ok(array_keys(($S2.'options')()) === ['','price','price-desc','date'], '고를 수 있는 순서 네 가지');
+
+// 검색 결과만 우리가 정렬한다
+$mk = function(array $v, bool $srch) { $q = new DhrFakeQuery($v); $q->is_srch = $srch; return $q; };
+$_GET['orderby'] = 'price';
+$q = $mk(['post_type' => 'product'], true);
+($S2.'search_order')($q);
+$ok($q->get('meta_key') === '_price' && $q->get('orderby') === 'meta_value_num' && $q->get('order') === 'ASC', '검색: 낮은 가격순으로 정렬한다');
+$_GET['orderby'] = 'price-desc';
+$q = $mk(['post_type' => 'product'], true);
+($S2.'search_order')($q);
+$ok($q->get('order') === 'DESC', '검색: 높은 가격순');
+$_GET['orderby'] = 'date';
+$q = $mk(['post_type' => 'product'], true);
+($S2.'search_order')($q);
+$ok($q->get('orderby') === 'date' && $q->get('meta_key', null) === null, '검색: 신상품순은 값 칸을 걸지 않는다');
+$_GET['orderby'] = 'price';
+$q = $mk(['post_type' => 'product'], false);
+($S2.'search_order')($q);
+$ok($q->get('orderby', null) === null, '검색이 아니면 손대지 않는다 — 분류 목록은 워드커머스가 한다');
+$q = $mk(['post_type' => 'post'], true);
+($S2.'search_order')($q);
+$ok($q->get('orderby', null) === null, '상품 검색이 아니면 손대지 않는다');
+$q = $mk(['post_type' => 'product'], true); $q->main = false;
+($S2.'search_order')($q);
+$ok($q->get('orderby', null) === null, '메인 쿼리가 아니면 손대지 않는다');
+$_GET = [];
+$q = $mk(['post_type' => 'product'], true);
+($S2.'search_order')($q);
+$ok($q->get('orderby', null) === null, '아무것도 안 골랐으면 원래 순서 그대로');
+
+// 화면에 그리는 자리
+$GLOBALS['__is_shop'] = true;
+$h = ($S2.'html')();
+$ok(substr_count($h, '<a ') === 4 && str_contains($h, 'aria-current="true"'), '정렬 줄에 네 개 · 지금 것 표시');
+$GLOBALS['__is_shop'] = false; $GLOBALS['__qv'] = [];
+$ok(($S2.'html')() === '', '상품 목록이 아니면 안 그린다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

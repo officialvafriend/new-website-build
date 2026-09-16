@@ -1207,6 +1207,21 @@ html body.dhr.dhr-wrap.dhr-wrap .dha-bar{ display: flex; align-items: center; ju
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar form.woocommerce-ordering{ margin: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar form.woocommerce-ordering select{ width: auto; min-height: 40px; padding: 0 2.2rem 0 .9rem; font-size: 14px; font-weight: 700; border-radius: 999px; }
+/* 정렬 — 분류 칩과 같은 알약이되 한 단 작게. 폰에서는 옆으로 밀린다 (줄바꿈하면 카드가 밀린다). */
+html body.dhr.dhr-wrap.dhr-wrap .dha-sort{ display: flex; gap: .35rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-sort::-webkit-scrollbar{ display: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-sort a{
+  flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 .85rem; border-radius: 999px;
+  border: 1.5px solid var(--dh-line, #E1E5E8); background: var(--dh-surface, #fff); color: var(--dh-ink-2, #4E565F);
+  font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dha-sort a:hover{ border-color: var(--dh-ink-3, #616870); color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dha-sort a.on{ background: var(--dh-primary, #111); border-color: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff); }
+@media (max-width: 599px){
+  /* 건수와 정렬이 한 줄에 다 들어가지 않는다 — 건수를 위로 올린다. */
+  html body.dhr.dhr-wrap.dhr-wrap .dha-bar{ display: grid; grid-template-columns: minmax(0,1fr); gap: .5rem; }
+  html body.dhr.dhr-wrap.dhr-wrap .dha-sort{ min-width: 0; }
+}
 html body.dhr.dhr-wrap.dhr-wrap .dha-grid{ margin-bottom: 1.6rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-empty{ text-align: center; padding: 3.5rem 1rem; background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8); border-radius: 18px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-empty__ic{ display: inline-flex; width: 56px; height: 56px; border-radius: 999px; background: var(--dh-surface-2, #EDF0F2); align-items: center; justify-content: center; color: var(--dh-ink-3, #616870); }

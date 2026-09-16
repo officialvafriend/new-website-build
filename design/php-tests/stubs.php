@@ -382,6 +382,7 @@ if(!function_exists('is_search')) { function is_search(){ return false; } }
 class DhrReq { public function __construct(public array $p){} public function get_param($k){ return $this->p[$k] ?? null; } }
 
 // ── 검색 노출 (includes/seo.php) 스텁 ──
+if(!function_exists('sanitize_key')) { function sanitize_key($k){ return strtolower((string) preg_replace('/[^a-zA-Z0-9_\-]/','',(string)$k)); } }
 if(!function_exists('get_query_var')) { function get_query_var($k,$d=''){ return $GLOBALS['__qv'][$k] ?? $d; } }
 if(!function_exists('get_the_terms')) { function get_the_terms($id,$tax){ return $GLOBALS['__pterms'][(int)$id] ?? []; } }
 if(!function_exists('get_post_meta')) { function get_post_meta($id,$k,$s=false){ return $GLOBALS['__postmeta'][(int)$id][$k] ?? ''; } }
@@ -403,6 +404,8 @@ class DhrFakeQuery {
   public function get($k,$d=''){ return $this->v[$k] ?? $d; }
   public function set($k,$val){ $this->v[$k] = $val; }
   public function is_main_query(){ return $this->main; }
+  public bool $is_srch = false;
+  public function is_search(){ return $this->is_srch; }
 }
 
 // 실제 Front\products() 가 도는 길 — 상품은 $GLOBALS['__products'], 이름 검색은 mb_strpos.
