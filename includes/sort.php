@@ -160,8 +160,11 @@ function order_sql( $orderby, $q = null ): string {
 		return "{$wpdb->posts}.post_date DESC";
 	}
 	$dir = 'price-desc' === current() ? 'DESC' : 'ASC';
+	/* 같은 값이면 **번호로 한 번 더 가른다.** 없으면 값이 같은 상품끼리 순서가
+	   그때그때 달라져 2쪽에 1쪽에서 본 상품이 또 나올 수 있다. */
 	return "(SELECT CAST(dhr_pm.meta_value AS DECIMAL(20,4)) FROM {$wpdb->postmeta} dhr_pm"
-		. " WHERE dhr_pm.post_id = {$wpdb->posts}.ID AND dhr_pm.meta_key = '_price' LIMIT 1) {$dir}";
+		. " WHERE dhr_pm.post_id = {$wpdb->posts}.ID AND dhr_pm.meta_key = '_price' LIMIT 1) {$dir},"
+		. " {$wpdb->posts}.ID {$dir}";
 }
 add_filter( 'posts_orderby', __NAMESPACE__ . '\\order_sql', 999, 2 );
 
