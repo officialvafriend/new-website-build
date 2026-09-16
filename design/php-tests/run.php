@@ -1321,34 +1321,29 @@ $ok(($S2.'current')() === '', '모르는 값은 무시한다 — 주소를 손�
 $_GET = [];
 $ok(array_keys(($S2.'options')()) === ['','price','price-desc','date'], '고를 수 있는 순서 네 가지');
 
-// 검색 결과만 우리가 정렬한다
+// 검색 결과만 우리가 정렬한다 — ORDER BY 를 마지막에 직접 쓴다
+$GLOBALS['wpdb'] = $GLOBALS['wpdb'] ?? new stdClass();
+$GLOBALS['wpdb']->posts = 'wp_posts';
+$GLOBALS['wpdb']->postmeta = 'wp_postmeta';
 $mk = function(array $v, bool $srch) { $q = new DhrFakeQuery($v); $q->is_srch = $srch; return $q; };
+
 $_GET['orderby'] = 'price';
-$q = $mk(['post_type' => 'product'], true);
-($S2.'search_order')($q);
-$ok($q->get('meta_key') === '_price' && $q->get('orderby') === 'meta_value_num' && $q->get('order') === 'ASC', '검색: 낮은 가격순으로 정렬한다');
+$sql = ($S2.'order_sql')('wp_posts.post_date DESC', $mk(['post_type' => 'product'], true));
+$ok(str_contains($sql, "meta_key = '_price'") && str_ends_with($sql, 'ASC'), '검색: 낮은 가격순 ORDER BY 를 쓴다');
+$ok(!str_contains($sql, 'post_date'), '원래 순서를 밀어낸다 — 부탁이 아니라 마지막에 쓴다');
 $_GET['orderby'] = 'price-desc';
-$q = $mk(['post_type' => 'product'], true);
-($S2.'search_order')($q);
-$ok($q->get('order') === 'DESC', '검색: 높은 가격순');
+$ok(str_ends_with(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)), 'DESC'), '검색: 높은 가격순');
 $_GET['orderby'] = 'date';
-$q = $mk(['post_type' => 'product'], true);
-($S2.'search_order')($q);
-$ok($q->get('orderby') === 'date' && $q->get('meta_key', null) === null, '검색: 신상품순은 값 칸을 걸지 않는다');
+$ok(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)) === 'wp_posts.post_date DESC', '검색: 신상품순');
 $_GET['orderby'] = 'price';
-$q = $mk(['post_type' => 'product'], false);
-($S2.'search_order')($q);
-$ok($q->get('orderby', null) === null, '검색이 아니면 손대지 않는다 — 분류 목록은 워드커머스가 한다');
-$q = $mk(['post_type' => 'post'], true);
-($S2.'search_order')($q);
-$ok($q->get('orderby', null) === null, '상품 검색이 아니면 손대지 않는다');
-$q = $mk(['post_type' => 'product'], true); $q->main = false;
-($S2.'search_order')($q);
-$ok($q->get('orderby', null) === null, '메인 쿼리가 아니면 손대지 않는다');
+$ok(!str_contains(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)), 'JOIN'), '값 칸을 JOIN 하지 않는다 — 정렬 때문에 상품이 빠지면 안 된다');
+$ok(($S2.'order_sql')('x', $mk(['post_type' => 'product'], false)) === 'x', '검색이 아니면 손대지 않는다 — 분류 목록은 워드커머스가 한다');
+$ok(($S2.'order_sql')('x', $mk(['post_type' => 'post'], true)) === 'x', '상품 검색이 아니면 손대지 않는다');
+$qn = $mk(['post_type' => 'product'], true); $qn->main = false;
+$ok(($S2.'order_sql')('x', $qn) === 'x', '메인 쿼리가 아니면 손대지 않는다');
 $_GET = [];
-$q = $mk(['post_type' => 'product'], true);
-($S2.'search_order')($q);
-$ok($q->get('orderby', null) === null, '아무것도 안 골랐으면 원래 순서 그대로');
+$ok(($S2.'order_sql')('x', $mk(['post_type' => 'product'], true)) === 'x', '아무것도 안 골랐으면 원래 순서 그대로');
+$ok(($S2.'order_sql')('x', null) === 'x', '쿼리가 없으면 손대지 않는다');
 
 // 화면에 그리는 자리
 $GLOBALS['__is_shop'] = true;

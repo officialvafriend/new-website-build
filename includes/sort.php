@@ -116,39 +116,76 @@ function html(): string {
 }
 
 /**
- * **검색 결과만** 우리가 정렬한다 — 워드커머스가 이 쿼리에는 손대지 않는다.
+ * 이 쿼리가 **우리가 정렬할 상품 검색**인가.
  *
- * 분류 · 전체 목록에서는 아무것도 하지 않는다. 같은 일을 두 번 하면 한쪽이
- * 바뀔 때 두 화면이 갈린다.
- *
- * @param \WP_Query $q 쿼리.
- * @return void
+ * @param mixed $q 쿼리.
+ * @return bool
  */
-function search_order( $q ): void {
+function ours( $q ): bool {
 	if ( is_admin() || ! is_object( $q ) || ! method_exists( $q, 'is_main_query' ) || ! $q->is_main_query() ) {
-		return;
+		return false;
 	}
 	if ( ! method_exists( $q, 'is_search' ) || ! $q->is_search() ) {
-		return;
+		return false;
 	}
 	$pt = $q->get( 'post_type' );
 	$pt = is_array( $pt ) ? $pt : array( $pt );
 	if ( ! in_array( 'product', $pt, true ) ) {
+		return false;
+	}
+	return '' !== current();
+}
+
+/**
+ * **검색 결과만** 우리가 정렬한다 — 워드커머스는 이 쿼리에 손대지 않는다.
+ *
+ * `$q->set( 'orderby', … )` 로 부탁하지 않고 **ORDER BY 를 마지막에 직접 쓴다.**
+ * 부탁하는 방식은 그 뒤에 도는 누군가(테마 · 플러그인)가 도로 덮으면 조용히
+ * 지고, 화면에는 정렬 줄만 켜진 채 순서는 그대로다 — 실제로 그렇게 한 번 졌다
+ * (2026-09-16). 우선순위 999 로 마지막에 쓰면 그 다툼이 없다.
+ *
+ * 값은 **곁붙임 질의**로 읽는다 — `meta_key` 를 걸면 JOIN 과 WHERE 가 따라붙어
+ * 그 칸이 없는 상품이 결과에서 빠질 수 있다. 정렬 때문에 상품이 사라지면 안 된다.
+ *
+ * @param string $orderby 지금까지의 ORDER BY.
+ * @param mixed  $q       쿼리.
+ * @return string
+ */
+function order_sql( $orderby, $q = null ): string {
+	global $wpdb;
+	if ( ! ours( $q ) ) {
+		return (string) $orderby;
+	}
+	if ( 'date' === current() ) {
+		return "{$wpdb->posts}.post_date DESC";
+	}
+	$dir = 'price-desc' === current() ? 'DESC' : 'ASC';
+	return "(SELECT CAST(dhr_pm.meta_value AS DECIMAL(20,4)) FROM {$wpdb->postmeta} dhr_pm"
+		. " WHERE dhr_pm.post_id = {$wpdb->posts}.ID AND dhr_pm.meta_key = '_price' LIMIT 1) {$dir}";
+}
+add_filter( 'posts_orderby', __NAMESPACE__ . '\\order_sql', 999, 2 );
+
+/**
+ * `?dhr_sort=1` — 정렬이 안 먹을 때 **한 번 받아 보면 되는** 쪽지.
+ *
+ * 화면 아래 주석으로 무엇을 보고 무엇을 썼는지 적는다. 사람에게 캡처를
+ * 부탁하지 않고 주소 한 번으로 가른다.
+ *
+ * @return void
+ */
+function note(): void {
+	if ( ! isset( $_GET['dhr_sort'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		return;
 	}
-
-	switch ( current() ) {
-		case 'price':
-		case 'price-desc':
-			/* 워드커머스가 분류 목록에서 쓰는 것과 같은 칸이다 (`_price`). */
-			$q->set( 'meta_key', '_price' ); // phpcs:ignore WordPress.DB.SlowDBQuery
-			$q->set( 'orderby', 'meta_value_num' );
-			$q->set( 'order', 'price' === current() ? 'ASC' : 'DESC' );
-			break;
-		case 'date':
-			$q->set( 'orderby', 'date' );
-			$q->set( 'order', 'DESC' );
-			break;
-	}
+	$q = $GLOBALS['wp_query'] ?? null;
+	printf(
+		"\n<!-- dhr-sort: 고른 것=%s · 검색=%s · 메인=%s · post_type=%s · 우리가 정렬=%s · 건수=%d -->\n",
+		esc_html( current() ),
+		is_object( $q ) && method_exists( $q, 'is_search' ) && $q->is_search() ? 'y' : 'n',
+		is_object( $q ) && method_exists( $q, 'is_main_query' ) && $q->is_main_query() ? 'y' : 'n',
+		esc_html( wp_json_encode( is_object( $q ) ? $q->get( 'post_type' ) : null ) ),
+		ours( $q ) ? 'y' : 'n',
+		is_object( $q ) ? (int) $q->found_posts : 0
+	);
 }
-add_action( 'pre_get_posts', __NAMESPACE__ . '\\search_order', 20 );
+add_action( 'wp_footer', __NAMESPACE__ . '\\note', 99 );
