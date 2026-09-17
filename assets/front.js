@@ -122,6 +122,7 @@
   var list = root.querySelector('[data-cart-list]'), count = root.querySelector('[data-cart-count]'), total = root.querySelector('[data-cart-total]');
   var ship = root.querySelector('[data-cart-ship]'), shipT = root.querySelector('[data-cart-ship-text]'), shipF = root.querySelector('[data-cart-ship-fill]');
   var checkout = root.querySelector('[data-cart-checkout]'), panel = root.querySelector('.dhc__panel');
+  var wall = root.querySelector('.dhr-wall');   /* 비회원 가입 안내 — 담긴 것이 있을 때만 */
   var nonce = D.nonce || '', unit = 0, opener = null, cartUrl = D.cartUrl || '/cart/';
   var won = function(v){ var x = Number(v) / Math.pow(10, unit); return (isFinite(x) ? Math.round(x) : 0).toLocaleString('ko-KR') + '원'; };
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
@@ -156,6 +157,7 @@
       shipF.style.width = Math.min(100, sub / goal * 100) + '%'; ship.classList.toggle('is-ok', left <= 0);
     } else ship.hidden = true;
     if(checkout){ checkout.classList.toggle('is-off', !items.length); checkout.setAttribute('aria-disabled', items.length ? 'false' : 'true'); }
+    if(wall) wall.style.display = items.length ? '' : 'none';   /* 빈 장바구니에 「가입하고 주문하기」는 할 말이 아니다 */
     badge(n);
   }
   function load(){
