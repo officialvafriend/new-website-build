@@ -2404,3 +2404,50 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left,
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right{ grid-template-columns: minmax(0,1fr) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left > *,
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right > *{ min-width: 0 !important; }
+
+/* ===========================================================================
+   송장 상자 — 주문 상세 맨 위 (`Tracking\box_html()`)
+   ---------------------------------------------------------------------------
+   손님이 이 화면에 오는 이유가 대개 이 열세 자리다. 그래서 푸터 계좌 상자와
+   같은 생김새로 세운다 — 검은 면, 큰 흰 숫자, 복사 버튼. 두 곳 다 「받아 적어야
+   하는 숫자」이고, 손님이 이미 한 번 본 모양이다.
+   숫자는 `tabular-nums` 로 자리를 맞춘다 (모노 폰트를 쓰지 않는다).
+   =========================================================================== */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track{
+  background: #111111 !important; color: #FFFFFF !important;
+  border-radius: 14px !important; padding: 1rem 1.15rem 1.15rem !important;
+  margin: 0 0 1.25rem !important; box-sizing: border-box !important; max-width: 100% !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__co{
+  display: flex !important; align-items: center !important; gap: .4rem !important;
+  font-size: 13.5px !important; font-weight: 700 !important; color: #C9CFD4 !important;
+  letter-spacing: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__ic svg{ width: 18px !important; height: 18px !important; display: block !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__row{
+  display: flex !important; align-items: center !important; gap: .6rem !important;
+  flex-wrap: wrap !important; margin-top: .35rem !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__no{
+  font-size: 22px !important; font-weight: 800 !important; color: #FFFFFF !important;
+  font-variant-numeric: tabular-nums !important; letter-spacing: 0 !important; min-width: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__copy{
+  flex: 0 0 auto !important; min-height: 36px !important; padding: 0 .85rem !important;
+  border-radius: 999px !important; border: 1px solid #4E565F !important;
+  background: transparent !important; color: #FFFFFF !important;
+  font-size: 13.5px !important; font-weight: 700 !important; cursor: pointer !important;
+  white-space: nowrap !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__copy.is-done{ background: #FFFFFF !important; color: #111111 !important; border-color: #FFFFFF !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__go{
+  display: inline-flex !important; align-items: center !important; gap: .35rem !important;
+  min-height: 48px !important; margin-top: .85rem !important; padding: 0 1.15rem !important;
+  border-radius: 999px !important; background: #FFFFFF !important; color: #111111 !important;
+  font-size: 15px !important; font-weight: 800 !important; text-decoration: none !important;
+  max-width: 100% !important; box-sizing: border-box !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-track__hint{
+  margin: .75rem 0 0 !important; font-size: 13px !important; line-height: 1.6 !important;
+  color: #C9CFD4 !important; word-break: keep-all !important;
+}

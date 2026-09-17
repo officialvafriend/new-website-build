@@ -1363,5 +1363,67 @@ $ok(substr_count($h, '<a ') === 4 && str_contains($h, 'aria-current="true"'), '�
 $GLOBALS['__is_shop'] = false; $GLOBALS['__qv'] = [];
 $ok(($S2.'html')() === '', '상품 목록이 아니면 안 그린다');
 
+
+/* ── 송장번호 (includes/tracking.php) ──────────────────────────────────────
+   송장이 어느 메타에 있는지 모르는 채로 짓는다. 그래서 「이름을 알 때」와
+   「훑어서 찾을 때」가 둘 다 맞아야 하고, **엉뚱한 숫자를 송장이라고 하면 안 된다** —
+   주문번호 · 금액 · 전화번호가 걸리면 손님이 없는 송장을 조회하게 된다. */
+require_once dirname(__DIR__, 2) . '/includes/tracking.php';
+$T = 'Duckhoo\\Redesign\\Tracking\\';
+
+$ok(($T.'clean_no')('6890174816619') === '6890174816619', '13자리 숫자는 송장');
+$ok(($T.'clean_no')('6890-1748-16619') === '6890174816619', '하이픈 · 빈칸은 떼고 본다');
+$ok(($T.'clean_no')('123') === '', '너무 짧은 숫자는 송장이 아니다');
+$ok(($T.'clean_no')('123456789012345') === '', '너무 긴 숫자도 아니다');
+$ok(($T.'clean_no')(['a']) === '' && ($T.'clean_no')(null) === '', '배열 · 없음은 빈 값');
+
+$ok(($T.'tracking_key')('_keyple_tracking_number') && ($T.'tracking_key')('송장번호'), '이름이 송장인 칸을 알아본다');
+$ok(!($T.'tracking_key')('_wd_point_discount') && !($T.'tracking_key')('_billing_phone'), '적립금 · 전화번호 칸은 송장이 아니다');
+$ok(($T.'courier_of')('우체국택배') === 'epost' && ($T.'courier_of')('CJ대한통운') === 'cj', '택배사 이름을 알아본다');
+$ok(($T.'courier_of')('') === '' && ($T.'courier_of')('아무거나') === '', '모르는 말에는 택배사를 붙이지 않는다');
+
+// 1. 이름이 알려진 칸
+$o = new DhrFakeOrder(3001, ['_keyple_tracking_number' => '6890174816619']);
+$t = ($T.'find')($o);
+$ok($t['no'] === '6890174816619' && $t['key'] === '_keyple_tracking_number', '알려진 칸에서 찾는다');
+$ok($t['name'] === '우체국택배' && str_contains($t['url'], 'epost.go.kr') && str_contains($t['url'], '6890174816619'), '택배사를 못 찾으면 우체국 · 조회 주소가 붙는다');
+
+// 2. 이름을 모르는 칸이어도 훑어서 찾는다 — 이 가게에서 실제로 필요한 길이다
+$o = new DhrFakeOrder(3002, ['_some_plugin_invoice_no' => '6890174816619', '_billing_phone' => '01012345678']);
+$t = ($T.'find')($o);
+$ok($t['no'] === '6890174816619' && $t['key'] === '_some_plugin_invoice_no', '모르는 이름도 훑어서 찾는다');
+
+// 3. **숫자만으로는 송장이라고 하지 않는다** — 이름이 송장을 가리켜야 한다
+$o = new DhrFakeOrder(3003, ['_billing_phone' => '01012345678', '_order_total' => '135000', '_wd_point_discount' => '8800']);
+$ok(($T.'find')($o)['no'] === '', '전화번호 · 금액을 송장으로 읽지 않는다');
+
+// 4. 택배사가 주문에 적혀 있으면 그것을 쓴다
+$o = new DhrFakeOrder(3004, ['_tracking_number' => '123456789012', '_tracking_company' => 'CJ대한통운']);
+$t = ($T.'find')($o);
+$ok($t['courier'] === 'cj' && str_contains($t['url'], 'cjlogistics.com'), '주문에 적힌 택배사를 따라간다');
+
+// 5. 필터가 가장 앞이다
+add_filter('duckhoo_order_tracking', fn($v, $order = null) => ['no' => '999888777666', 'courier' => 'hanjin']);
+$t = ($T.'find')(new DhrFakeOrder(3005, ['_tracking_number' => '111222333444']));
+$ok($t['no'] === '999888777666' && $t['courier'] === 'hanjin', '필터로 못 박으면 그것을 쓴다');
+$GLOBALS['__filters']['duckhoo_order_tracking'] = [];
+
+// 6. 못 찾으면 아무것도 그리지 않는다 — 없는 송장을 「곧 등록됩니다」로 채우지 않는다
+$ok(($T.'box_html')(($T.'find')(new DhrFakeOrder(3006))) === '', '송장이 없으면 상자를 안 그린다');
+
+// 7. 상자
+$h = ($T.'box_html')(($T.'find')(new DhrFakeOrder(3007, ['_tracking_number' => '6890174816619'])));
+$ok(str_contains($h, '6890 1748 16619'), '번호는 네 자리씩 띄어 읽기 쉽게');
+$ok(str_contains($h, 'data-copy="6890174816619"'), '복사하는 값은 숫자 그대로 (띄어쓰기 없이)');
+$ok(str_contains($h, 'target="_blank"') && str_contains($h, 'rel="noopener'), '조회는 새 창 — 주문 화면을 잃지 않는다');
+$ok(str_contains($h, '우체국택배'), '택배사 이름을 적는다');
+
+// 8. 주문 목록 버튼
+$a = ($T.'action')(['view' => ['url' => '#', 'name' => '보기']], new DhrFakeOrder(3008, ['_tracking_number' => '6890174816619']));
+$ok(isset($a['duckhoo-track']) && $a['duckhoo-track']['name'] === '배송조회' && isset($a['view']), '주문 목록에 배송조회 버튼 · 원래 것은 그대로');
+$ok(!isset(($T.'action')([], new DhrFakeOrder(3009))['duckhoo-track']), '송장이 없으면 버튼도 없다');
+$ok(($T.'action')(['view' => 1], null) === ['view' => 1], '주문이 없으면 손대지 않는다');
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

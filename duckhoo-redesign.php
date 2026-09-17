@@ -70,6 +70,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/mail.php';       // 메일 
 // 목록 정렬 — 가격 낮은 순 · 높은 순. 검색 결과는 워드커머스가 정렬하지 않아 우리가 한다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/sort.php';
 
+// 송장번호를 손님 화면에 보여 준다 — 관리자에만 있고 주문 상세에는 없었다. 읽기만 한다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/tracking.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {
@@ -86,6 +89,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/cat-admin.php';
 	// 도구 → 옵션 이름 바꾸기 — 다른 상품들의 선택칸에 적힌 옵션 이름 · 값을 한 번에.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/opt-admin.php';
+	// 도구 → 송장 진단 — 송장번호가 어느 주문 메타에 있는지 한 화면으로 가른다 (읽기 전용).
+	require_once plugin_dir_path( __FILE__ ) . 'includes/tracking-admin.php';
 }
 
 

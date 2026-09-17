@@ -1695,10 +1695,11 @@
 })();
 
 /* 계좌번호 복사 — 계좌이체만 받는 가게라 이 열한 자리를 손으로 옮겨 적는다.
-   한 자리만 틀려도 입금이 안 맞고 사람이 손으로 찾아야 한다. */
+   한 자리만 틀려도 입금이 안 맞고 사람이 손으로 찾아야 한다.
+   송장번호(`.dhr-copy`)도 같은 일이라 같은 손잡이를 쓴다. */
 (function(){
   document.addEventListener('click', function(e){
-    var b = e.target.closest('.fbank__copy');
+    var b = e.target.closest('.fbank__copy, .dhr-copy');
     if(!b) return;
     var v = b.dataset.copy || '';
     var done = function(){
@@ -1922,4 +1923,21 @@
     fetch(C.beacon, { method:'POST', keepalive:true, credentials:'omit',
       headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body: body }).catch(function(){});
   }catch(e){}
+})();
+
+/* 주문 목록의 `배송조회` 는 택배사 화면으로 나간다 — 새 창으로 연다.
+   워드커머스 주문 목록 템플릿은 동작 목록에 `target` 을 넣을 자리를 주지 않아
+   (url · name 뿐이다) 여기서 붙인다. 주소는 우리가 그린 것만 본다. */
+(function(){
+  function mark(){
+    var a = document.querySelectorAll('.woocommerce-orders-table a.duckhoo-track, .woocommerce-orders-table a[href*="epost.go.kr"], .woocommerce-orders-table a[href*="cjlogistics.com"], .woocommerce-orders-table a[href*="hanjin.com"], .woocommerce-orders-table a[href*="ilogen.com"], .woocommerce-orders-table a[href*="lotteglogis.com"]');
+    for(var i = 0; i < a.length; i++){
+      if(a[i].target === '_blank') continue;
+      a[i].target = '_blank';
+      a[i].rel = 'noopener noreferrer';
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mark);
+  else mark();
+  addEventListener('load', mark);
 })();
