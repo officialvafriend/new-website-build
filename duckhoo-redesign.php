@@ -94,6 +94,9 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/opt-admin.php';
 	// 도구 → 송장 진단 — 송장번호가 어느 주문 메타에 있는지 한 화면으로 가른다 (읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/tracking-admin.php';
+	// 도구 → 후기 적립 진단 — 사진 후기에 적립금이 실제로 나가는지 (읽기 전용).
+	// 한 번 확인되면 이 줄과 파일을 지운다.
+	require_once plugin_dir_path( __FILE__ ) . 'includes/review-doctor.php';
 }
 
 
