@@ -857,6 +857,40 @@ function gate_note(): string {
 		. esc_html( number_format_i18n( signup_points() ) ) . '원 적립 · 본인확인 1분</a></p>';
 }
 
+/**
+ * 담은 뒤에 서는 **가입 벽을 문으로** 바꾼다.
+ *
+ * 이 가게는 비로그인으로도 장바구니에 담긴다. 막히는 곳은 결제다 —
+ * `/checkout/` 은 302 로 `/register/` 로 돌려보낸다 (2026-09-04 확인).
+ * 법적 의무(19세 미만 판매 금지)라 그 벽은 지킨다. 문제는 **손님이 다 담고 나서야
+ * 벽을 만나고, 벽이 아무 말도 하지 않는다**는 것이다 — 결제하기를 눌렀는데 갑자기
+ * 가입 화면이 나온다.
+ *
+ * 그래서 담은 그 자리에서 미리 말한다. 사진 가림을 문으로 바꾼 것(`gate_note()`)과
+ * 같은 생각이다: 왜 필요한지 · 무엇을 받는지 · 얼마나 걸리는지.
+ *
+ * 로그인한 손님에게는 아무것도 그리지 않는다.
+ *
+ * @param string $back 가입 뒤 돌아올 곳. 비우면 결제 화면.
+ * @return string
+ */
+function join_wall( string $back = '' ): string {
+	if ( ! gated() ) {
+		return '';
+	}
+	if ( '' === $back ) {
+		$back = function_exists( 'wc_get_checkout_url' ) ? (string) wc_get_checkout_url() : home_url( '/checkout/' );
+	}
+
+	return '<div class="dhr-wall">'
+		. '<p class="dhr-wall__t"><b>주문은 성인인증 회원만</b> 할 수 있어요.</p>'
+		. '<p class="dhr-wall__d">19세 미만 판매 금지 품목이라 휴대폰 본인확인이 필요합니다. <b>가입 즉시 '
+		. esc_html( number_format_i18n( signup_points() ) ) . '원 적립</b> · 본인확인 1분.</p>'
+		. '<a class="btn btn-d dhr-wall__go" href="' . esc_url( join_url( $back ) ) . '">가입하고 주문하기 ' . icon( 'arrow' ) . '</a>'
+		. '<p class="dhr-wall__in">이미 회원이세요? <a href="' . esc_url( login_url( $back ) ) . '">로그인</a></p>'
+		. '</div>';
+}
+
 function inquiry_url(): string {
 	$board = (string) apply_filters( 'duckhoo_inquiry_page', home_url( '/inquiries/' ) );
 	if ( is_user_logged_in() ) {
@@ -977,9 +1011,16 @@ function cart_drawer_html(): void {
 			<div class="dhc__list" data-cart-list><p class="dhc__empty">담긴 상품이 없습니다.</p></div>
 			<footer class="dhc__foot">
 				<div class="dhc__tot"><span>상품 금액</span><b class="n" data-cart-total>0원</b></div>
+				<?php
+				/* 비회원에게는 결제 버튼을 내밀지 않는다 — 눌러도 가입 화면으로 튕긴다.
+				   담은 그 자리에서 왜 가입이 필요한지 말하고 바로 그리로 보낸다. */
+				echo join_wall( $checkout ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				?>
 				<div class="dhc__btns">
 					<a class="btn btn-o" href="<?php echo esc_url( $cart ); ?>">장바구니 보기</a>
+					<?php if ( ! gated() ) : ?>
 					<a class="btn btn-d" href="<?php echo esc_url( $checkout ); ?>" data-cart-checkout>결제하기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a>
+					<?php endif; ?>
 				</div>
 				<p class="dhc__note">무통장입금 전용 · 입금자명을 주문자명과 똑같이</p>
 			</footer>
@@ -1146,6 +1187,9 @@ function js_config( array $extra = array() ): string {
 		// **플러그인은 건드리지 않는다** — 화면에서만 뺀다. 되돌리기는 이 한 줄:
 		// add_filter( 'duckhoo_hide_giftcard', '__return_false' );
 		'hideGift' => (bool) apply_filters( 'duckhoo_hide_giftcard', true ),
+		// 담은 뒤의 가입 벽 안내 (비회원일 때만 글자가 들어 있다). 장바구니 화면은
+		// 키플이 만든 페이지라 PHP 로 끼워 넣을 자리가 없어 front.js 가 합계 상자 위에 붙인다.
+		'joinWall' => join_wall(),
 		'cartUrl'  => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
 		'shopUrl'  => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 	);

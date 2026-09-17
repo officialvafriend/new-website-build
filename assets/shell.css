@@ -2451,3 +2451,15 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-track__hint{
   margin: .75rem 0 0 !important; font-size: 13px !important; line-height: 1.6 !important;
   color: #C9CFD4 !important; word-break: keep-all !important;
 }
+
+/* 가입 벽 안내는 장바구니 화면(테마 껍데기)에도 붙는다 — 거기서는 테마 규칙이
+   `a` 와 버튼을 덮으므로 알약을 다시 못 박는다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wall{ background: #F4F6F7 !important; border: 1px solid #E1E5E8 !important; border-radius: 14px !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__go{
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  min-height: 48px !important; border-radius: 999px !important;
+  background: #111111 !important; color: #FFFFFF !important;
+  font-size: 15px !important; font-weight: 800 !important; text-decoration: none !important;
+  box-shadow: none !important; border: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__in a{ color: #1565C0 !important; }

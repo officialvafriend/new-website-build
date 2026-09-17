@@ -1425,5 +1425,53 @@ $ok(!isset(($T.'action')([], new DhrFakeOrder(3009))['duckhoo-track']), '송장�
 $ok(($T.'action')(['view' => 1], null) === ['view' => 1], '주문이 없으면 손대지 않는다');
 
 
+
+/* ── 담은 뒤의 가입 벽 (Front\join_wall) ─────────────────────────────────
+   비로그인도 담기는 되고 막히는 곳은 결제다 (302 → /register/). 그 벽이 아무 말도
+   하지 않아서 손님은 결제하기를 누른 뒤에야 가입 화면을 본다. 미리 말해 준다. */
+$F2 = 'Duckhoo\\Redesign\\Front\\';
+add_filter('duckhoo_photos_gated', fn($v = null) => true);
+$w = ($F2.'join_wall')('https://x.test/checkout/');
+$ok(str_contains($w, '성인인증 회원만'), '비회원에게는 왜 가입이 필요한지 말한다');
+$ok(str_contains($w, '8,800원 적립'), '무엇을 받는지 같이 적는다');
+$ok(str_contains($w, 'redirect_to=') && str_contains($w, 'register'), '가입 뒤 돌아올 곳을 달고 가입 화면으로 보낸다');
+$ok(str_contains($w, '로그인'), '이미 회원인 사람에게는 로그인 줄');
+$ok(!str_contains($w, '건강') && !str_contains($w, '순한'), '담배사업법이 막는 말을 쓰지 않는다');
+$GLOBALS['__filters']['duckhoo_photos_gated'] = [];
+add_filter('duckhoo_photos_gated', fn($v = null) => false);
+$ok(($F2.'join_wall')('https://x.test/checkout/') === '', '로그인한 손님에게는 아무것도 안 그린다');
+$GLOBALS['__filters']['duckhoo_photos_gated'] = [];
+
+/* ── 깔때기 (includes/funnel.php) ────────────────────────────────────────
+   비회원과 회원은 같은 길을 걷지 않는다 — 비회원은 결제 화면에 들어가지도 못한다.
+   한 표에 몰아 「앞 단계 대비 %」를 적었더니 269% · 500% 가 찍혔다. 그 칸을 뺐다. */
+$FN = 'Duckhoo\\Redesign\\Funnel\\';
+$paths = ($FN.'paths')();
+$ok(!isset($paths['guest']['rows']['checkout']) && !isset($paths['guest']['rows']['order']), '비회원 길에는 결제 · 주문이 없다 — 들어갈 수가 없다');
+$ok($paths['guest']['rows']['signup'] === 'member', '「가입 완료」는 회원 쪽 수로 읽는다 (서버가 그렇게 센다)');
+$ok(!isset($paths['member']['rows']['register']), '회원 길에는 가입 세 장이 없다');
+$stg = ($FN.'stages')();
+foreach ($paths as $pk => $pv) { foreach (array_keys($pv['rows']) as $rk) { if(!isset($stg[$rk])) $fail[] = "모르는 단계 $rk"; } }
+$ok(true, '두 길의 단계 이름이 모두 실재한다');
+
+$ok(($FN.'ratio_text')(12, 25) === '12 / 25 · 48%', '나눈 두 수를 같이 적는다');
+$ok(($FN.'ratio_text')(3, 0) === '—', '나눌 것이 없으면 비율을 만들어 내지 않는다');
+
+$cz = [];
+foreach (array_keys($stg) as $k) $cz[$k] = ['guest' => 0, 'member' => 0];
+$cz['product'] = ['guest' => 200, 'member' => 50];
+$cz['cart_add'] = ['guest' => 40, 'member' => 20];
+$cz['register'] = ['guest' => 10, 'member' => 0];
+$cz['signup'] = ['guest' => 0, 'member' => 4];
+$cz['checkout'] = ['guest' => 0, 'member' => 12];
+$cz['order'] = ['guest' => 0, 'member' => 9];
+$ls = ($FN.'links')($cz);
+$ok(count($ls) === 5, '뜻이 있는 고리 다섯 개');
+$ok($ls[0]['top'] === 60 && $ls[0]['bottom'] === 250, '상품 상세 → 담기는 비회원 · 회원을 합쳐 본다');
+$ok($ls[1]['top'] === 10 && $ls[1]['bottom'] === 40, '담은 비회원 → 가입 시작은 비회원끼리 나눈다');
+$ok($ls[3]['top'] === 12 && $ls[3]['bottom'] === 20, '담은 회원 → 결제 화면은 회원끼리 나눈다');
+$ok($ls[4]['top'] === 9 && $ls[4]['bottom'] === 12, '결제 화면 → 주문 완료');
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

@@ -956,6 +956,7 @@ function styles(): void {
 .dhr-sl-tab table{ margin-top:10px; }
 .dhr-sl-foot{ font-size:13px; color:var(--mut); line-height:1.7; }
 .dhr-sl-h3{ font-size:14px; font-weight:700; margin:14px 0 6px; color:var(--mut); }
+.dhr-sl-h4{ font-size:15px; font-weight:800; margin:18px 0 2px; color:var(--ink); }
 .dhr-sl-ev{ display:inline-block; font-size:13px; font-weight:600; color:var(--mut); border:1px solid var(--line); border-radius:5px; padding:0 5px; margin-left:4px; vertical-align:1px; }
 .dhr-sl-foot p{ margin:0 0 6px; word-break:keep-all; }
 @media (min-width:600px){ .dhr-sl-cards{ grid-template-columns:1fr 1fr; } }

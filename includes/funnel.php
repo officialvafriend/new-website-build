@@ -296,6 +296,104 @@ function since(): string {
 }
 
 /**
+ * 두 갈래 길 — 비회원과 회원은 **같은 깔때기를 걷지 않는다.**
+ *
+ * 이 가게는 비로그인으로 결제 화면에 들어갈 수 없다 (`/checkout/` → 302 → `/register/`).
+ * 그래서 비회원의 길은 **가입 완료에서 끝나고**, 회원의 길은 거기서부터 주문까지다.
+ * 한 표에 몰아 놓고 위에서 아래로 나눠 「앞 단계 대비 %」를 적으면 뜻이 없는 숫자가 된다 —
+ * 실제로 269% · 500% · 284% 가 찍혔다. 손님이 첫 화면을 거치지 않고 상품 상세로 바로
+ * 들어오고, 가입 세 장은 곁가지이기 때문이다. **그 칸을 뺐다.**
+ *
+ * `from` 은 그 줄을 어느 쪽 수로 읽을지다. 「가입 완료」는 서버가 회원으로 세지만
+ * (한 순간 전까지 비회원이었다) 비회원의 길에서 읽어야 뜻이 맞는다.
+ *
+ * @return array<string,array{label:string,note:string,rows:array<string,string>}>
+ */
+function paths(): array {
+	return array(
+		'guest'  => array(
+			'label' => '비회원 — 가입 벽까지',
+			'note'  => '비회원은 결제 화면에 못 들어갑니다 (주소를 쳐도 가입 화면으로 돌려보냅니다). 그래서 이 길은 가입 완료에서 끝납니다. 「가입 완료」는 서버가 회원으로 세므로 회원 쪽 수입니다.',
+			'rows'  => array(
+				'home' => 'guest', 'list' => 'guest', 'product' => 'guest', 'cart_add' => 'guest',
+				'cart' => 'guest', 'register' => 'guest', 'agree' => 'guest', 'join' => 'guest',
+				'signup' => 'member',
+			),
+		),
+		'member' => array(
+			'label' => '회원 — 주문까지',
+			'note'  => '로그인한 손님입니다. 담는 도중에 가입한 사람은 「담기」가 비회원 쪽에, 「결제 화면」이 이쪽에 잡힙니다 — 그때그때의 상태 그대로 셉니다.',
+			'rows'  => array(
+				'home' => 'member', 'list' => 'member', 'product' => 'member', 'cart_add' => 'member',
+				'cart' => 'member', 'checkout' => 'member', 'order' => 'member',
+			),
+		),
+	);
+}
+
+/**
+ * 뜻이 있는 고리만 골라 이름을 붙인다.
+ *
+ * 나누는 두 수를 **화면에 그대로 적는다** — 무엇을 무엇으로 나눈 값인지 보이지 않으면
+ * 비율은 믿을 수가 없다.
+ *
+ * @param array $c counts() 결과.
+ * @return array<int,array{label:string,top:int,bottom:int,note:string}>
+ */
+function links( array $c ): array {
+	$g = fn( string $s ): int => (int) ( $c[ $s ]['guest'] ?? 0 );
+	$m = fn( string $s ): int => (int) ( $c[ $s ]['member'] ?? 0 );
+	$a = fn( string $s ): int => $g( $s ) + $m( $s );
+
+	return array(
+		array(
+			'label'  => '상품을 본 사람 중 담은 사람',
+			'top'    => $a( 'cart_add' ),
+			'bottom' => $a( 'product' ),
+			'note'   => '낮으면 사진 · 가격 · 신뢰의 문제입니다.',
+		),
+		array(
+			'label'  => '담은 비회원 중 가입을 시작한 사람',
+			'top'    => $g( 'register' ),
+			'bottom' => $g( 'cart_add' ),
+			'note'   => '담아 놓고 가입 화면까지 오지 않은 사람이 여기서 빠집니다.',
+		),
+		array(
+			'label'  => '가입을 시작해서 끝낸 사람',
+			'top'    => $m( 'signup' ),
+			'bottom' => $g( 'register' ),
+			'note'   => '낮으면 본인확인 · 약관 · 정보 입력 세 장 중 한 곳입니다.',
+		),
+		array(
+			'label'  => '담은 회원 중 결제 화면까지 간 사람',
+			'top'    => $m( 'checkout' ),
+			'bottom' => $m( 'cart_add' ),
+			'note'   => '회원인데도 결제까지 안 갔다면 장바구니 · 금액 · 배송비를 봅니다.',
+		),
+		array(
+			'label'  => '결제 화면에서 주문을 끝낸 사람',
+			'top'    => $m( 'order' ),
+			'bottom' => $m( 'checkout' ),
+			'note'   => '낮으면 주문서 자체(입력 항목 · 입금 안내)의 문제입니다.',
+		),
+	);
+}
+
+/**
+ * 「12 / 25 · 48%」 — 나눈 두 수를 같이 적는다. 나눌 것이 없으면 「—」.
+ *
+ * @param int $top    위.
+ * @param int $bottom 아래.
+ * @return string
+ */
+function ratio_text( int $top, int $bottom ): string {
+	if ( $bottom <= 0 ) {
+		return '—';
+	}
+	return sprintf( '%s / %s · %d%%', number_format_i18n( $top ), number_format_i18n( $bottom ), (int) round( $top / $bottom * 100 ) );
+}
+
+/**
  * 매출 화면에 그리는 깔때기.
  *
  * @return void
@@ -313,26 +411,43 @@ function render(): void {
 	foreach ( array( 7 => '최근 7일', 30 => '최근 30일' ) as $days => $label ) {
 		$c = counts( $days );
 		echo '<h3 class="dhr-sl-h3">' . esc_html( $label ) . '</h3>';
-		echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>단계</th><th>사람</th><th>비회원</th><th>회원</th><th>앞 단계 대비</th></tr></thead><tbody>';
-		$prev = null;
-		foreach ( stages() as $key => $meta ) {
-			$g   = (int) $c[ $key ]['guest'];
-			$m   = (int) $c[ $key ]['member'];
-			$all = $g + $m;
-			$pct = ( null !== $prev && $prev > 0 ) ? sprintf( '%.0f%%', $all / $prev * 100 ) : '—';
-			printf(
-				'<tr><td>%s%s</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td></tr>',
-				esc_html( $meta['label'] ),
-				$meta['event'] ? ' <span class="dhr-sl-ev">서버</span>' : '',
-				esc_html( number_format_i18n( $all ) ),
-				esc_html( number_format_i18n( $g ) ),
-				esc_html( number_format_i18n( $m ) ),
-				esc_html( $pct )
-			);
-			$prev = $all;
+
+		echo '<div class="dhr-sl-cards">';
+		foreach ( links( $c ) as $l ) {
+			$txt = ratio_text( (int) $l['top'], (int) $l['bottom'] );
+			if ( function_exists( 'Duckhoo\\Redesign\\Sales\\card' ) ) {
+				\Duckhoo\Redesign\Sales\card( (string) $l['label'], $txt, (string) $l['note'] );
+			} else {
+				printf( '<div class="dhr-sl-card"><div class="dhr-sl-card__l">%s</div><div class="dhr-sl-card__v">%s</div><div class="dhr-sl-card__n">%s</div></div>', esc_html( (string) $l['label'] ), esc_html( $txt ), esc_html( (string) $l['note'] ) );
+			}
 		}
-		echo '</tbody></table></div>';
+		echo '</div>';
+
+		foreach ( paths() as $path ) {
+			echo '<h4 class="dhr-sl-h4">' . esc_html( (string) $path['label'] ) . '</h4>';
+			echo '<p class="dhr-sl-note">' . esc_html( (string) $path['note'] ) . '</p>';
+			echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>단계</th><th>사람</th></tr></thead><tbody>';
+			$stages = stages();
+			foreach ( (array) $path['rows'] as $key => $who ) {
+				$n = (int) ( $c[ $key ][ $who ] ?? 0 );
+				printf(
+					'<tr><td>%s%s</td><td class="dhr-sl-num">%s</td></tr>',
+					esc_html( (string) $stages[ $key ]['label'] ),
+					! empty( $stages[ $key ]['event'] ) ? ' <span class="dhr-sl-ev">서버</span>' : '',
+					esc_html( number_format_i18n( $n ) )
+				);
+			}
+			echo '</tbody></table></div>';
+		}
+
+		$stray = (int) ( $c['checkout']['guest'] ?? 0 );
+		if ( $stray > 0 ) {
+			printf(
+				'<div class="dhr-sl-warn">비회원이 결제 화면에 %d명 잡혔습니다. 이 가게는 비로그인 결제가 막혀 있으니 (302 → 가입) 숫자를 다시 봐야 합니다.</div>',
+				$stray
+			);
+		}
 	}
-	echo '<p class="dhr-sl-note">읽는 법 — 「첫 화면 → 상품 상세」가 낮으면 고르기가 문제, 「상품 상세 → 담기」가 낮으면 사진 · 가격 · 신뢰, 「담기 → 가입 완료」가 낮으면 가입 벽, 「결제 화면 → 주문 완료」가 낮으면 주문서, 주문 뒤는 매출 화면의 입금 대기가 말해 줍니다.</p>';
+	echo '<p class="dhr-sl-note">읽는 법 — 위 다섯 장이 각각 어디서 새는지를 말합니다. 두 수를 같이 적어 두었으니 사람 수가 적을 때는 비율보다 <b>두 수</b>를 보세요. 여덟 명 중 넷은 50%이지만 아직 아무 뜻도 아닙니다. 주문 뒤의 이야기(입금이 들어왔는가)는 위의 「지금 묶여 있는 돈」이 말해 줍니다.</p>';
 	echo '</section>';
 }

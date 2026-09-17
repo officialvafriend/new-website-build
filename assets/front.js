@@ -1378,6 +1378,19 @@
     if(applied) side.appendChild(applied);
     side.appendChild(sum); side.appendChild(order);
   }
+  /* **담은 뒤에 서는 가입 벽을 문으로.** 비회원은 이 화면의 `주문하기` 를 눌러도
+     결제 화면이 302 로 가입 화면에 돌려보낸다 — 아무 말 없이. 그 말을 여기서 한다.
+     글자는 서버가 만든다 (`Front\join_wall()`): 로그인한 손님에게는 빈 문자열이다. */
+  (function(){
+    var wall = (window.DHR && window.DHR.joinWall) || '';
+    if(!wall || document.querySelector('.dhr-wall')) return;
+    var side = document.querySelector('.dhr-cartside') || (sum && sum.parentElement);
+    if(!side) return;
+    var box = document.createElement('div');
+    box.innerHTML = wall;
+    var el = box.firstElementChild;
+    if(el) side.insertBefore(el, side.firstChild);
+  })();
   /* **쿠폰 코드를 넣을 자리.** 이 장바구니는 키플이 만든 페이지라 워드커머스의 쿠폰칸이
      아예 없다 (확인: `coupon_code` 0개). 문자로 코드를 받은 손님이 넣을 데가 없으므로
      우리가 합계 옆에 하나 세운다.
