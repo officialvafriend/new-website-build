@@ -127,6 +127,7 @@ class DhrFakeOrder {
   public function get_date_created(){ return null; }
   public function has_status($s){ return in_array($this->status, (array)$s, true); }
   public function add_order_note($t){ $this->notes[]=$t; }
+  public function get_view_order_url(){ return 'https://duck-hoo.com/my-account/view-order/'.$this->id.'/'; }
 }
 if(!function_exists('wc_get_order')) { function wc_get_order($id){ return $GLOBALS['__order_by_id'][$id] ?? null; } }
 
@@ -173,6 +174,7 @@ class WC_Product {
 class DhrFakeLine {
   public function __construct(public ?WC_Product $p = null, public int $q = 1, public array $meta = []){}
   public function get_product(){ return $this->p; }
+  public function get_product_id(){ return $this->p ? (int)$this->p->get_id() : 0; }
   public function get_quantity(){ return $this->q; }
   public function get_meta_data(){ $o=[]; foreach($this->meta as $k=>$v) $o[]=new DhrFakeMeta($k,$v); return $o; }
 }
@@ -310,11 +312,15 @@ if(!function_exists('add_comment_meta')) { function add_comment_meta($id,$k,$v,$
 if(!function_exists('delete_comment_meta')) { function delete_comment_meta($id,$k){ unset($GLOBALS['__cmeta'][(int)$id][$k]); return true; } }
 if(!function_exists('get_comments')) {
   function get_comments($args=[]){
+    /* post_id 를 준 부름은 ID 목록을 (옛 호출), 회원으로만 부르면 객체를 돌려준다
+       — 후기 부르기(ReviewAsk\reviewed)가 회원이 쓴 후기의 상품 번호를 읽는다. */
+    $byUser = !isset($args['post_id']) && isset($args['user_id']);
     $out=[];
     foreach($GLOBALS['__comments'] as $id=>$c){
-      if((int)$c->comment_post_ID !== (int)($args['post_id']??0)) continue;
-      if((int)$c->user_id !== (int)($args['user_id']??0)) continue;
-      $out[]=$id;
+      if(isset($args['post_id']) && (int)$c->comment_post_ID !== (int)$args['post_id']) continue;
+      if(isset($args['user_id']) && (int)$c->user_id !== (int)$args['user_id']) continue;
+      if(!isset($args['post_id']) && !isset($args['user_id'])) continue;
+      $out[] = $byUser ? $c : $id;
     }
     return $out;
   }

@@ -2463,3 +2463,44 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__go{
   box-shadow: none !important; border: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__in a{ color: #1565C0 !important; }
+
+/* ===========================================================================
+   후기 부르기 (`includes/review-ask.php`) — 주문 상세 · 마이페이지 첫 화면
+   ---------------------------------------------------------------------------
+   물건을 받은 손님이 이미 서 있는 자리에서 부른다. 잔소리가 되지 않게 흰 카드
+   한 장으로 조용히 두고, 누를 것만 알약으로 세운다.
+   =========================================================================== */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask{
+  background: #FFFFFF !important; border: 1px solid #E1E5E8 !important;
+  border-radius: 14px !important; padding: 1rem 1.15rem 1.15rem !important;
+  margin: 1.25rem 0 !important; box-sizing: border-box !important; max-width: 100% !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__t{
+  margin: 0 !important; font-size: 17px !important; font-weight: 800 !important;
+  color: #111111 !important; word-break: keep-all !important; letter-spacing: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__d{
+  margin: .35rem 0 0 !important; font-size: 14px !important; line-height: 1.65 !important;
+  color: #4E565F !important; word-break: keep-all !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__l{ list-style: none !important; margin: .9rem 0 0 !important; padding: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__i{
+  display: flex !important; align-items: center !important; gap: .75rem !important;
+  padding: .7rem 0 !important; border-top: 1px solid #EEF1F3 !important; margin: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__i:first-child{ border-top: 0 !important; padding-top: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__n{
+  flex: 1 1 auto !important; min-width: 0 !important; font-size: 14.5px !important;
+  line-height: 1.5 !important; color: #111111 !important; word-break: keep-all !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__go{
+  flex: 0 0 auto !important; display: inline-flex !important; align-items: center !important;
+  justify-content: center !important; min-height: 44px !important; padding: 0 1.05rem !important;
+  border-radius: 999px !important; background: #111111 !important; color: #FFFFFF !important;
+  font-size: 14px !important; font-weight: 800 !important; text-decoration: none !important;
+  white-space: nowrap !important; border: 0 !important; box-shadow: none !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__go--wide{ width: 100% !important; min-height: 48px !important; margin-top: .85rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__done{
+  flex: 0 0 auto !important; font-size: 13.5px !important; font-weight: 700 !important; color: #616870 !important;
+}

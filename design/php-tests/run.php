@@ -1473,5 +1473,66 @@ $ok($ls[3]['top'] === 12 && $ls[3]['bottom'] === 20, '담은 회원 → 결제 �
 $ok($ls[4]['top'] === 9 && $ls[4]['bottom'] === 12, '결제 화면 → 주문 완료');
 
 
+
+/* ── 후기 부르기 (includes/review-ask.php) ───────────────────────────────
+   후기가 0인 이유는 손님이 게으른 것이 아니라 **한 번도 부탁한 적이 없어서**다.
+   쓸 길이 상품 상세 맨 아래 한 곳뿐이고, 받은 손님은 그 페이지에 다시 오지 않는다. */
+require_once dirname(__DIR__, 2).'/includes/review-ask.php';
+$RA = 'Duckhoo\\Redesign\\ReviewAsk\\';
+
+// 「받은」 판정은 후기 구매자 판정과 **같은 목록**을 써야 한다 — 다르면 눌러도 폼이 없다
+$ok(($RA.'statuses')() === \Duckhoo\Redesign\Product\bought_statuses(), '후기 판정과 같은 주문 상태를 본다');
+
+$ok(($RA.'received')(new DhrFakeOrder(4001, [], [], [], 'delivered')), '배송완료는 부른다');
+$ok(!($RA.'received')(new DhrFakeOrder(4002, [], [], [], 'on-hold')), '입금전에는 안 부른다 — 아직 받지도 않았다');
+$ok(!($RA.'received')(null), '주문이 없으면 안 부른다');
+
+$ok(str_contains(($RA.'offer')(), '1,000원'), '얼마를 주는지 적는다');
+add_filter('duckhoo_photo_review_on', fn($v = null) => false);
+$ok(!str_contains(($RA.'offer')(), '원'), '적립이 꺼져 있으면 돈 이야기를 하지 않는다');
+$GLOBALS['__filters']['duckhoo_photo_review_on'] = [];
+
+$ok(str_ends_with(($RA.'write_url')(1), '#respond'), '후기 폼 자리로 바로 보낸다');
+
+// 같은 상품이 두 줄이어도 한 번만 부른다
+$GLOBALS['__products'][701] = new WC_Product(701, '[노보] 데저트');
+$GLOBALS['__products'][702] = new WC_Product(702, '[펠릭스] 더블라임');
+$o = new DhrFakeOrder(4003, [], [], [], 'delivered');
+$o->lines = [ new DhrFakeLine($GLOBALS['__products'][701]), new DhrFakeLine($GLOBALS['__products'][701]), new DhrFakeLine($GLOBALS['__products'][702]) ];
+$pr = ($RA.'products')($o);
+$ok(count($pr) === 2 && $pr[701] === '[노보] 데저트', '같은 상품이 여러 줄이어도 한 번만');
+
+// 이미 쓴 상품은 다시 부르지 않는다
+$GLOBALS['__logged_in'] = 5;
+$GLOBALS['__comments'] = [ 91 => (object) [ 'comment_post_ID' => 701, 'user_id' => 5 ] ];
+$ok(($RA.'reviewed')(5) === [701 => true], '이 회원이 후기를 쓴 상품을 한 번의 질의로 읽는다');
+ob_start(); ($RA.'details')($o); $h = (string) ob_get_clean();
+$ok(substr_count($h, '후기 쓰기') === 1, '안 쓴 상품에만 버튼을 세운다');
+$ok(str_contains($h, '작성함'), '이미 쓴 상품은 고맙다고 적고 버튼을 안 세운다');
+$ok(str_contains($h, '[펠릭스] 더블라임'), '상품 이름을 적는다 — 무엇에 쓰는지 알아야 한다');
+
+// 한 주문에 두 번 그리지 않는다 (훅이 두 곳이다)
+ob_start(); ($RA.'details')($o); $again = (string) ob_get_clean();
+$ok('' === $again, '한 주문에 한 번만 그린다');
+
+// 입금전 주문에는 아예 안 그린다
+$o2 = new DhrFakeOrder(4004, [], [], [], 'on-hold');
+$o2->lines = [ new DhrFakeLine($GLOBALS['__products'][702]) ];
+ob_start(); ($RA.'details')($o2); $ok('' === (string) ob_get_clean(), '받지 않은 주문에는 안 그린다');
+
+// 주문 목록 버튼
+$a = ($RA.'action')(['view' => ['url' => '#', 'name' => '보기']], new DhrFakeOrder(4005, [], [], [], 'delivered'));
+$ok(isset($a['duckhoo-review']) && str_contains($a['duckhoo-review']['name'], '후기'), '배송완료 카드에 후기 버튼');
+$ok(isset($a['view']), '원래 버튼은 그대로');
+$ok(!isset(($RA.'action')([], new DhrFakeOrder(4006, [], [], [], 'on-hold'))['duckhoo-review']), '입금전 카드에는 후기 버튼이 없다');
+
+// 전부 끄기
+add_filter('duckhoo_review_ask_on', fn($v = null) => false);
+ob_start(); ($RA.'details')(new DhrFakeOrder(4007, [], [], [], 'delivered')); $ok('' === (string) ob_get_clean(), '끄면 아무것도 안 그린다');
+$GLOBALS['__filters']['duckhoo_review_ask_on'] = [];
+$GLOBALS['__comments'] = [];
+$GLOBALS['__logged_in'] = 1;
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
