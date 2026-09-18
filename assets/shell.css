@@ -2581,3 +2581,18 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph__img{
   width: 100% !important; height: auto !important; border-radius: 12px !important;
   border: 1px solid var(--dh-line, #E1E5E8) !important; display: block !important;
 }
+
+/* 별을 재 보니 두 가지가 더 남아 있었다 (390px 실측).
+   · 워드커머스가 `.star-rating` 에 **`float: right`** 를 준다 — 별이 이름 줄
+     오른쪽으로 떠서 meta 폭이 282 → 198px 로 줄고 날짜가 별에 붙었다
+   · `span` 안의 「5 중에서 … 로 평가됨」 **텍스트 노드**가 별 뒤에 `5` 로 새어 나왔다.
+     `strong` 만 숨겨서는 모자란다 — 글자 크기를 0 으로 죽이고 `::before` 만 살린다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating{
+  float: none !important; clear: both !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span{
+  font-size: 0 !important; letter-spacing: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span::before{
+  font-size: 15px !important; letter-spacing: 1px !important;
+}
