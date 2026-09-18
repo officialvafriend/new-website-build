@@ -1609,5 +1609,46 @@ $GLOBALS['__comments'] = [];
 $GLOBALS['__logged_in'] = 1;
 
 
+
+/* ── 담아 둔 뒤 값이 바뀐 장바구니 (includes/price-check.php) ──────────────
+   주문 #202609180004850 이 120,000원으로 들어왔다. 지금 담으면 180,000원이다.
+   주문에 실린 `_wd_base_price: 70000` 이 답이다 — 담을 때 굳은 옛 기준가.
+   테마 금액 검증은 「옵션 행 vs 청구액」만 봐서 둘 다 옛 값이면 통과한다. */
+require_once dirname(__DIR__, 2).'/includes/price-check.php';
+$PC = 'Duckhoo\\Redesign\\PriceCheck\\';
+
+$ok(($PC.'stored_base')(['wd_base_price' => 70000]) === 70000.0, '줄에 실린 기준가를 읽는다');
+$ok(($PC.'stored_base')(['wd_option_builder' => '{"_wd_base_price":"70000"}']) === 70000.0, 'JSON 안의 기준가도 읽는다');
+$ok(($PC.'stored_base')(['wd_option_builder' => ['_wd_base_price' => 70000]]) === 70000.0, '배열로 와도 읽는다');
+$ok(($PC.'stored_base')(['quantity' => 2]) === 0.0, '기준가가 없으면 0 — 옵션 없는 평범한 상품');
+
+$novo = new WC_Product(146, '[노보 블랙 리퀴드] 10+1', 130000.0);
+$bad = ($PC.'stale')(['data' => $novo, 'wd_base_price' => 70000]);
+$ok($bad && (int) $bad['gap'] === 60000, '70,000 으로 담은 줄과 지금 130,000 의 차이를 잡는다');
+$ok($bad && str_contains($bad['name'], '노보'), '어느 상품인지 이름을 담는다');
+$ok(($PC.'stale')(['data' => $novo, 'wd_base_price' => 130000]) === null, '지금 값과 같으면 아무 말도 하지 않는다');
+$ok(($PC.'stale')(['data' => $novo, 'wd_base_price' => 129950]) === null, '반올림 오차(100원 미만)는 넘어간다');
+$ok(($PC.'stale')(['data' => $novo]) === null, '**기준가를 못 찾으면 막지 않는다** — 모를 때는 건드리지 않는 쪽');
+$ok(($PC.'stale')(['wd_base_price' => 70000]) === null, '상품이 없으면 막지 않는다');
+
+/* 세일 상품에서 헛발질하면 결제가 통째로 막힌다 — 정가와 같아도 그냥 둔다 */
+$sale = new WC_Product(146, '[노보 블랙 리퀴드] 10+1', 130000.0, true, false, null, 187000.0);
+$ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 187000]) === null, '기준가가 정가와 같으면 막지 않는다 (세일 상품 보호)');
+$ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 130000]) === null, '기준가가 판매가와 같아도 막지 않는다');
+$ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 70000]) !== null, '둘 중 어느 것도 아니면 낡은 것 — 실제 사고의 70,000');
+
+$over = ($PC.'stale')(['data' => $novo, 'wd_base_price' => 200000]);
+$ok($over && (int) $over['gap'] === -70000, '더 받게 되는 쪽도 잡는다 (손님이 손해)');
+
+$msg = ($PC.'notice')('[노보 블랙 리퀴드] 10+1');
+$ok(str_contains($msg, '다시 담아'), '안내는 할 일을 말한다 — 빼고 다시 담기');
+$ok(str_contains($msg, '나머지 상품은'), '나머지는 그대로 둬도 된다고 알려 준다');
+$ok(!str_contains($msg, '<'), 'HTML 을 넣지 않는다 — 예외 메시지가 esc_html 로 나간다');
+
+add_filter('duckhoo_price_check', fn($v = null) => false);
+$ok(($PC.'bad_lines')(null) === [], '끄면 아무것도 안 잡는다');
+$GLOBALS['__filters']['duckhoo_price_check'] = [];
+
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

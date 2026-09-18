@@ -79,6 +79,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/review-ask.php';
 // 후기 화면 — 이름 가리기(김**) · 아바타 빼기 · 날짜 꼴.
 require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
 
+// 담아 둔 뒤 값이 바뀌면 옛 금액으로 주문된다 — 결제에서 막는다.
+require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {
@@ -100,6 +103,8 @@ if ( is_admin() ) {
 	// 도구 → 후기 적립 진단 — 사진 후기에 적립금이 실제로 나가는지 (읽기 전용).
 	// 한 번 확인되면 이 줄과 파일을 지운다.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/review-doctor.php';
+	// 도구 → 금액 점검 — 옛 기준가로 결제된 주문을 찾는다 (읽기 전용).
+	require_once plugin_dir_path( __FILE__ ) . 'includes/price-check-admin.php';
 }
 
 
