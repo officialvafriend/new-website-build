@@ -1637,6 +1637,16 @@ $ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 187000]) === null, '기�
 $ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 130000]) === null, '기준가가 판매가와 같아도 막지 않는다');
 $ok(($PC.'stale')(['data' => $sale, 'wd_base_price' => 70000]) !== null, '둘 중 어느 것도 아니면 낡은 것 — 실제 사고의 70,000');
 
+/* 2026-09-18 18:44 사장님 진단 캡처 — 새로 담은 줄인데 막혔다. 기준가 130,000 은 맞았고
+   장바구니 객체(`data`)의 가격이 **옵션까지 합쳐진 160,000** 이었다. 상품을 새로 읽어 견준다. */
+$GLOBALS['__products'][146] = new WC_Product(146, '[노보 블랙 리퀴드] 10+1', 130000.0, true, false, null, 187000.0);
+$inCart = new WC_Product(146, '[노보 블랙 리퀴드] 10+1', 160000.0, true, false, null, 187000.0);
+$ok(($PC.'stale')(['product_id' => 146, 'data' => $inCart, 'wd_base_price' => 130000]) === null, '**장바구니 객체가 옵션 포함 160,000 이어도** 새로 읽은 130,000 과 견줘 통과 — 사장님을 막았던 그 경우');
+$still = ($PC.'stale')(['product_id' => 146, 'data' => $inCart, 'wd_base_price' => 70000]);
+$ok($still && (int) $still['now'] === 130000 && (int) $still['gap'] === 60000, '사고의 70,000 은 여전히 걸리고, 「지금 값」은 160,000 이 아니라 새로 읽은 130,000 이다');
+$ok(($PC.'stale')(['product_id' => 999, 'data' => $novo, 'wd_base_price' => 130000]) === null, '번호로 못 읽으면 장바구니 객체로 물러난다');
+unset($GLOBALS['__products'][146]);
+
 $over = ($PC.'stale')(['data' => $novo, 'wd_base_price' => 200000]);
 $ok($over && (int) $over['gap'] === -70000, '더 받게 되는 쪽도 잡는다 (손님이 손해)');
 

@@ -50,20 +50,19 @@ function on(): bool {
 }
 
 /**
- * **실제로 막을 것인가.** 기본은 **아니오**다.
+ * **실제로 막을 것인가.**
  *
  * 2026-09-18 18:44 — 배포 직후 사장님이 **지금 값으로 새로 담은** 노보 블랙 10+1 을
- * 결제하려는데 막혔다. 담을 때 굳는 기준가가 「상품 판매가」와 같은 값이 아니라는
- * 뜻이다 — 회원 등급 할인이 얹힌 값이거나 병당 값이거나, 아직 모른다. 모르는
- * 채로 막으면 **정상 주문이 막힌다** — 옛 장바구니 하나가 새는 것보다 훨씬 나쁘다.
- * 그래서 무엇을 견주는지 진단(`diag()`)으로 먼저 보고, 확인된 뒤에 켠다.
+ * 결제하려는데 막혔다. 한 시간 꺼 두고 진단(`diag()`)으로 본 결과: 기준가는 맞았고
+ * (130,000) 비교 상대가 틀렸다 — 장바구니 객체의 가격은 옵션이 합쳐진 160,000 이었다.
+ * `stale()` 이 상품을 새로 읽어 견주도록 고친 뒤 다시 켰다.
  *
- * 켜기: `add_filter( 'duckhoo_price_check_block', '__return_true' );`
+ * 끄기: `add_filter( 'duckhoo_price_check_block', '__return_false' );`
  *
  * @return bool
  */
 function blocking(): bool {
-	return (bool) apply_filters( 'duckhoo_price_check_block', false );
+	return (bool) apply_filters( 'duckhoo_price_check_block', true );
 }
 
 /**
@@ -123,7 +122,15 @@ function stored_base( array $item ): float {
  * @return array{name: string, stored: float, now: float, gap: float}|null
  */
 function stale( array $item ): ?array {
-	$product = $item['data'] ?? null;
+	/* **장바구니 안의 상품 객체(`data`)로 견주면 안 된다.** 테마가 그 객체의 가격을
+	   **옵션까지 합친 값**으로 바꿔 둔다 — 130,000 짜리에 팟 3개를 더하면 `get_price()` 가
+	   160,000 을 돌려준다 (2026-09-18 사장님 진단 캡처). 그것과 기준가 130,000 을 견주면
+	   멀쩡한 주문이 막힌다 — 실제로 한 번 막았다. **상품을 새로 읽어** 그 판매가와 견준다. */
+	$pid     = (int) ( $item['product_id'] ?? 0 );
+	$product = $pid > 0 && function_exists( 'wc_get_product' ) ? wc_get_product( $pid ) : null;
+	if ( ! is_object( $product ) || ! method_exists( $product, 'get_price' ) ) {
+		$product = $item['data'] ?? null; // 번호가 없을 때만 — 거의 없다
+	}
 	if ( ! is_object( $product ) || ! method_exists( $product, 'get_price' ) ) {
 		return null;
 	}
@@ -251,6 +258,9 @@ function diag(): void {
 	static $done = false;
 	if ( $done || ! on() || ! function_exists( 'current_user_can' ) || ! current_user_can( 'manage_woocommerce' ) ) {
 		return;
+	}
+	if ( ! isset( $_GET['dhr_price'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return; // 주소에 ?dhr_price=1 을 붙였을 때만 — 늘 떠 있으면 관리자 화면이 어수선하다
 	}
 	$done = true;
 	if ( ! function_exists( 'WC' ) || ! isset( WC()->cart ) || ! method_exists( WC()->cart, 'get_cart' ) ) {
