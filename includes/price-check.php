@@ -50,6 +50,23 @@ function on(): bool {
 }
 
 /**
+ * **실제로 막을 것인가.** 기본은 **아니오**다.
+ *
+ * 2026-09-18 18:44 — 배포 직후 사장님이 **지금 값으로 새로 담은** 노보 블랙 10+1 을
+ * 결제하려는데 막혔다. 담을 때 굳는 기준가가 「상품 판매가」와 같은 값이 아니라는
+ * 뜻이다 — 회원 등급 할인이 얹힌 값이거나 병당 값이거나, 아직 모른다. 모르는
+ * 채로 막으면 **정상 주문이 막힌다** — 옛 장바구니 하나가 새는 것보다 훨씬 나쁘다.
+ * 그래서 무엇을 견주는지 진단(`diag()`)으로 먼저 보고, 확인된 뒤에 켠다.
+ *
+ * 켜기: `add_filter( 'duckhoo_price_check_block', '__return_true' );`
+ *
+ * @return bool
+ */
+function blocking(): bool {
+	return (bool) apply_filters( 'duckhoo_price_check_block', false );
+}
+
+/**
  * 몇 원부터 어긋난 것으로 볼 것인가 — 반올림 오차를 넘기기 위해.
  *
  * @return int
@@ -189,6 +206,9 @@ function bad_lines( $cart = null ): array {
  * @return void
  */
 function check_cart(): void {
+	if ( ! blocking() ) {
+		return;
+	}
 	foreach ( bad_lines() as $bad ) {
 		if ( function_exists( 'wc_add_notice' ) ) {
 			wc_add_notice( notice( (string) $bad['name'] ), 'error' );
@@ -207,6 +227,9 @@ add_action( 'woocommerce_check_cart_items', __NAMESPACE__ . '\\check_cart', 20 )
  * @throws \Exception 낡은 줄이 있으면.
  */
 function guard_order( $order = null ): void {
+	if ( ! blocking() ) {
+		return;
+	}
 	$bad = bad_lines();
 	if ( ! $bad ) {
 		return;
@@ -214,3 +237,92 @@ function guard_order( $order = null ): void {
 	throw new \Exception( esc_html( notice( (string) $bad[0]['name'] ) ) );
 }
 add_action( 'woocommerce_checkout_create_order', __NAMESPACE__ . '\\guard_order', 5 );
+
+/**
+ * 진단 — **관리자에게만** 장바구니 · 결제 화면 위에 장바구니 줄마다 무엇을 견줬는지 적는다.
+ *
+ * 로그인 화면이라 우리가 못 보므로 사장님 캡처 한 장으로 가른다. 줄마다:
+ * 찾은 기준가(어느 칸에서) · 장바구니 안 상품 객체의 판매가 · 정가 · **새로 읽은** 상품의
+ * 판매가(회원 할인이 장바구니 객체에만 얹혔는지 가른다) · 그 줄에 실린 base 비슷한 칸 전부.
+ *
+ * @return void
+ */
+function diag(): void {
+	static $done = false;
+	if ( $done || ! on() || ! function_exists( 'current_user_can' ) || ! current_user_can( 'manage_woocommerce' ) ) {
+		return;
+	}
+	$done = true;
+	if ( ! function_exists( 'WC' ) || ! isset( WC()->cart ) || ! method_exists( WC()->cart, 'get_cart' ) ) {
+		return;
+	}
+	$rows = array();
+	foreach ( (array) WC()->cart->get_cart() as $key => $item ) {
+		$item = (array) $item;
+		$obj  = $item['data'] ?? null;
+		$pid  = (int) ( $item['product_id'] ?? 0 );
+		$new  = $pid > 0 && function_exists( 'wc_get_product' ) ? wc_get_product( $pid ) : null;
+
+		$found_key = '';
+		foreach ( array( 'wd_base_price', '_wd_base_price' ) as $k ) {
+			if ( isset( $item[ $k ] ) ) {
+				$found_key = $k;
+				break;
+			}
+		}
+		$bag = $item['wd_option_builder'] ?? null;
+		$bag_s = is_string( $bag ) ? $bag : ( is_array( $bag ) ? wp_json_encode( $bag ) : '' );
+		$bases = array();
+		foreach ( $item as $k => $v ) {
+			if ( is_scalar( $v ) && preg_match( '/price|base/i', (string) $k ) ) {
+				$bases[] = $k . '=' . $v;
+			}
+		}
+		$rows[] = array(
+			'name'   => is_object( $obj ) && method_exists( $obj, 'get_name' ) ? (string) $obj->get_name() : ( 'product ' . $pid ),
+			'stored' => stored_base( $item ),
+			'skey'   => '' !== $found_key ? $found_key : ( false !== strpos( $bag_s, 'base' ) ? 'wd_option_builder 안' : '(못 찾음/이름 검색)' ),
+			'cart_p' => is_object( $obj ) && method_exists( $obj, 'get_price' ) ? (float) $obj->get_price() : 0,
+			'cart_r' => is_object( $obj ) && method_exists( $obj, 'get_regular_price' ) ? (float) $obj->get_regular_price() : 0,
+			'new_p'  => is_object( $new ) && method_exists( $new, 'get_price' ) ? (float) $new->get_price() : 0,
+			'new_r'  => is_object( $new ) && method_exists( $new, 'get_regular_price' ) ? (float) $new->get_regular_price() : 0,
+			'sub'    => (float) ( $item['line_subtotal'] ?? 0 ),
+			'keys'   => implode( ' · ', $bases ),
+			'bag'    => (string) preg_replace( '/\s+/', ' ', mb_substr( $bag_s, 0, 400 ) ),
+			'stale'  => stale( $item ) ? '막힘' : '통과',
+		);
+	}
+	if ( ! $rows ) {
+		return;
+	}
+	echo '<div style="margin:12px 0;padding:12px 14px;border:2px dashed #B32D2E;border-radius:10px;background:#fff;font:13px/1.6 -apple-system,sans-serif;color:#111;overflow:auto">';
+	echo '<b>금액 점검 진단</b> (관리자에게만 보입니다 · 막기 ' . ( blocking() ? '켜짐' : '<b>꺼짐</b>' ) . ')<br>';
+	foreach ( $rows as $r ) {
+		printf(
+			'<div style="margin:8px 0;padding:8px;border:1px solid #ddd;border-radius:6px"><b>%s</b> → <b style="color:%s">%s</b><br>'
+			. '찾은 기준가 <b>%s</b> (%s) · 장바구니 객체 판매가 <b>%s</b> · 정가 %s · 새로 읽은 판매가 <b>%s</b> · 정가 %s · 줄 소계 %s<br>'
+			. '<span style="color:#666">가격 비슷한 칸: %s</span><br><span style="color:#666;word-break:break-all">옵션 JSON: %s</span></div>',
+			esc_html( $r['name'] ),
+			'막힘' === $r['stale'] ? '#B32D2E' : '#1E7B34',
+			esc_html( $r['stale'] ),
+			esc_html( number_format( $r['stored'] ) ),
+			esc_html( $r['skey'] ),
+			esc_html( number_format( $r['cart_p'] ) ),
+			esc_html( number_format( $r['cart_r'] ) ),
+			esc_html( number_format( $r['new_p'] ) ),
+			esc_html( number_format( $r['new_r'] ) ),
+			esc_html( number_format( $r['sub'] ) ),
+			esc_html( '' !== $r['keys'] ? $r['keys'] : '(없음)' ),
+			esc_html( '' !== $r['bag'] ? $r['bag'] : '(없음)' )
+		);
+	}
+	echo '</div>';
+}
+add_action( 'woocommerce_before_cart', __NAMESPACE__ . '\\diag', 1 );
+add_action( 'woocommerce_before_checkout_form', __NAMESPACE__ . '\\diag', 1 );
+add_action( 'wp_body_open', function () {
+	// 키플 장바구니 · 결제 페이지는 워드커머스 훅을 안 쏠 수 있다 — 화면 맨 위에도 한 번.
+	if ( ( function_exists( 'is_cart' ) && is_cart() ) || ( function_exists( 'is_checkout' ) && is_checkout() ) ) {
+		diag();
+	}
+}, 99 );
