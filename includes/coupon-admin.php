@@ -110,6 +110,16 @@ function parse_lines( string $raw ): array {
 			$line  = trim( (string) preg_replace( '/[x×*]\s*\d{1,4}\s*(장|개)?\s*$/iu', '', $line ) );
 		}
 
+		/* **몇 명까지 쓸 수 있는가** — 줄 끝의 `50명`.
+		   세그먼트마다 인원이 다르므로(VIP 30명 · 신규 300명) 설정의 한 칸으로는
+		   여섯 장에 같은 값이 들어간다. 줄에서 따로 정하면 그것이 이긴다.
+		   **끝에서만** 본다 — 메모 가운데의 「가족 3명」 같은 말을 상한으로 읽지 않게. */
+		$uses = 0;
+		if ( preg_match( '/(\d{1,5})\s*명\s*$/u', $line, $m ) ) {
+			$uses = (int) $m[1];
+			$line = trim( (string) preg_replace( '/(\d{1,5})\s*명\s*$/u', '', $line ) );
+		}
+
 		// 이메일 — 있으면 그 사람만 쓸 수 있게.
 		$email = '';
 		if ( preg_match( '/[^\s,]+@[^\s,]+\.[^\s,]+/', $line, $m ) ) {
@@ -141,6 +151,7 @@ function parse_lines( string $raw ): array {
 			'note'   => $note,
 			'email'  => $email,
 			'count'  => $count,
+			'uses'   => $uses,
 		);
 	}
 
@@ -341,8 +352,11 @@ function create( array $rows, array $opts ): array {
 			   **한 사람인지는 로그인 계정으로 본다** — 이 가게는 비로그인 결제가 안 되므로 샐 구멍이 없다. */
 			/* 총 몇 번까지 쓰이게 할지. `many` 에서 0 은 제한 없음인데, **공개된 곳에
 			   뿌리는 코드는 상한이 있어야 한다** — 선착순 N명으로 끊는 자리다. */
+			$row_uses = (int) ( $r['uses'] ?? 0 );
 			$c->set_usage_limit(
-				'once' === (string) ( $opts['mode'] ?? 'many' ) ? 1 : max( 0, (int) ( $opts['uses'] ?? 0 ) )
+				'once' === (string) ( $opts['mode'] ?? 'many' )
+					? 1
+					: max( 0, $row_uses > 0 ? $row_uses : (int) ( $opts['uses'] ?? 0 ) )
 			);
 			$c->set_usage_limit_per_user( 1 );
 			$c->set_exclude_sale_items( ! empty( $opts['exclude_sale'] ) );
@@ -593,7 +607,9 @@ function screen(): void {
 	echo '<h2>1. 금액 목록</h2>';
 	echo '<p class="description">한 줄에 한 장. 줄에서 <b>처음 나오는 숫자가 금액</b>이고 나머지는 메모입니다. '
 		. '<code>@</code> 가 든 낱말은 이메일로 보아 <b>그 계정만</b> 쓸 수 있게 합니다. '
-		. '끝에 <code>x5</code> 를 붙이면 같은 금액을 다섯 장 만듭니다.</p>';
+		. '끝에 <code>x5</code> 를 붙이면 같은 금액을 다섯 장 만듭니다. '
+		. '끝에 <code>50명</code> 을 붙이면 <b>그 줄만</b> 50명까지 쓰게 합니다 — 세그먼트마다 인원이 다를 때 씁니다 '
+		. '(「여러 사람이 같은 코드」일 때만 쓰입니다).</p>';
 	printf(
 		'<textarea name="dhr_list" rows="10" style="width:100%%;max-width:900px;font-family:monospace" placeholder="%s">%s</textarea>',
 		esc_attr( "3000\n5,000원 홍길동\n10000, 9월 단골, hong@example.com\n2000 x 20" ),
@@ -686,14 +702,18 @@ function screen(): void {
 		printf( '<div class="notice notice-warning inline"><p>%s</p></div>', esc_html( implode( ' · ', $parsed['errors'] ) ) );
 	}
 	if ( $parsed['rows'] && 'make' !== $do ) {
-		printf( '<p><b>%d장</b>을 만듭니다.</p><table class="widefat striped" style="max-width:700px"><thead><tr><th>금액</th><th>메모</th><th>이 사람만</th><th>장수</th></tr></thead><tbody>', (int) $n );
+		printf( '<p><b>%d장</b>을 만듭니다.</p><table class="widefat striped" style="max-width:820px"><thead><tr><th>금액</th><th>메모</th><th>이 사람만</th><th>장수</th><th>몇 명까지</th></tr></thead><tbody>', (int) $n );
+		$row_default = 'once' === (string) $opts['mode'] ? '1명 (한 장에 한 번)' : ( (int) $opts['uses'] > 0 ? number_format( (int) $opts['uses'] ) . '명' : '제한 없음' );
 		foreach ( $parsed['rows'] as $r ) {
 			printf(
-				'<tr><td>%s원</td><td>%s</td><td>%s</td><td>%d</td></tr>',
+				'<tr><td>%s원</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>',
 				esc_html( number_format( (int) $r['amount'] ) ),
 				esc_html( (string) $r['note'] ),
 				esc_html( (string) $r['email'] ),
-				(int) $r['count']
+				(int) $r['count'],
+				( (int) ( $r['uses'] ?? 0 ) > 0 && 'once' !== (string) $opts['mode'] )
+					? '<b>' . esc_html( number_format( (int) $r['uses'] ) ) . '명</b>'
+					: esc_html( $row_default )
 			);
 		}
 		echo '</tbody></table>';

@@ -981,6 +981,24 @@ $ok(($C.'kdate')('') === '', '만료가 없으면 빈 값');
 $ok(str_contains($txt, '홍길동님'), '메모가 있으면 이름으로 부른다');
 $ok(!str_contains(($C.'sms')(($C.'default_sms')(), ['code'=>'A','amount'=>1000,'note'=>'','expires'=>'']), '님'), '메모가 없으면 「님」 이 남지 않는다');
 
+/* 줄마다 「N명」 — 세그먼트마다 인원이 다르다 (사장님 2026-09-18) */
+$seg = ($C.'parse_lines')("3000 VIP핵심우수 30명\n6000 성장고객 이탈위험 120명\n3000 신규");
+$ok($seg['rows'][0]['uses'] === 30 && $seg['rows'][0]['amount'] === 3000, '줄 끝의 「30명」을 상한으로 읽는다');
+$ok($seg['rows'][0]['note'] === 'VIP핵심우수', '상한은 메모에서 떼어 낸다 — 문자에 「30명」이 나가면 안 된다');
+$ok($seg['rows'][1]['uses'] === 120 && $seg['rows'][1]['note'] === '성장고객 이탈위험', '띄어쓴 메모도 그대로');
+$ok($seg['rows'][2]['uses'] === 0, '안 적은 줄은 0 — 설정의 값을 따른다');
+$ok(($C.'parse_lines')("3000 가족 3명 모임")['rows'][0]['uses'] === 0, '가운데의 「3명」은 상한이 아니다 — 끝에서만 본다');
+
+$GLOBALS['__coupons'] = [];
+($C.'create')($seg['rows'], ['mode'=>'many','uses'=>50,'prefix'=>'SEG','len'=>6]);
+$caps = [];
+foreach ($GLOBALS['__coupons'] as $code => $d) { $caps[(int)$d['amount']][] = $d['usage_limit']; }
+$ok(in_array(30, $caps[3000], true) && in_array(50, $caps[3000], true), '줄에 적은 30명 · 안 적은 줄은 설정값 50명');
+$ok($caps[6000] === [120], '6,000원 줄은 120명');
+foreach ($GLOBALS['__coupons'] as $d) { if ($d['usage_limit_per_user'] !== 1) $fail[] = '1인 1회가 아니다'; }
+$ok(true, '여섯 장 모두 한 사람당 한 번');
+$GLOBALS['__coupons'] = [];
+
 /* 공용 코드 한 장 — 여럿에게 뿌리되 한 사람당 한 번 (사장님 2026-09-18) */
 $ok(($C.'clean_fixed_code')('덕후 9월!') === '덕후9월', '빈칸 · 기호를 뗀다 — 손님이 띄어 적으면 못 찾는다');
 $ok(($C.'clean_fixed_code')('openchat') === 'OPENCHAT', '영문은 대문자로 통일한다');
