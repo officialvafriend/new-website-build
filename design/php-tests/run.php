@@ -1660,5 +1660,15 @@ $ok(($PC.'bad_lines')(null) === [], '끄면 아무것도 안 잡는다');
 $GLOBALS['__filters']['duckhoo_price_check'] = [];
 
 
+/* ── 후기 화면 (includes/review-ui.php) ──────────────────────────────────── */
+require_once dirname(__DIR__, 2).'/includes/review-ui.php';
+$RU = 'Duckhoo\\Redesign\\ReviewUi\\';
+$ok(($RU.'mask')('김시원') === '김**', '이름은 첫 글자만 — 김시원 → 김**');
+$ok(($RU.'mask')('kkuromi1004') === 'k*****', '긴 아이디는 별표 다섯 개까지');
+$ok(($RU.'no_verified_label')('yes') === 'no', '「(인증된 구매자)」 알약은 안 그린다 — 산 사람만 쓰는 가게라 되풀이다');
+add_filter('duckhoo_review_verified_label', fn($v = null) => true);
+$ok(($RU.'no_verified_label')('yes') === 'yes', '필터로 되살리면 설정값 그대로');
+$GLOBALS['__filters']['duckhoo_review_verified_label'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

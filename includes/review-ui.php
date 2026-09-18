@@ -131,3 +131,26 @@ function date_text( $date, $format = '', $comment = null ): string {
 	return (string) mysql2date( $fmt, (string) $comment->comment_date );
 }
 add_filter( 'get_comment_date', __NAMESPACE__ . '\\date_text', 20, 3 );
+
+/**
+ * 「(인증된 구매자)」 알약을 뺀다 — 사장님(2026-09-18): 이상해 보인다.
+ *
+ * 이 가게는 **산 사람만** 후기를 쓴다 (`Product\verified_only()`). 그러니 후기마다
+ * 「인증된 구매자」라고 적는 것은 모두에게 같은 말을 되풀이하는 것이고, 손님 눈에는
+ * 낯선 낱말 하나가 이름 옆에 붙어 있는 것뿐이다. CSS 로 감추는 대신 워드커머스가
+ * 그 글자를 만드는 설정(`woocommerce_review_rating_verification_label`)을 꺼진 것으로
+ * 돌려준다 — 마크업 자체가 안 나온다.
+ *
+ * 되살리려면 `add_filter( 'duckhoo_review_verified_label', '__return_true' );`
+ *
+ * @param mixed $value 저장된 값.
+ * @return mixed
+ */
+function no_verified_label( $value ) {
+	if ( ! on() || apply_filters( 'duckhoo_review_verified_label', false ) ) {
+		return $value;
+	}
+
+	return 'no';
+}
+add_filter( 'option_woocommerce_review_rating_verification_label', __NAMESPACE__ . '\\no_verified_label' );

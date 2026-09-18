@@ -2082,8 +2082,12 @@ $("#wd-summary-coupon-discount").text( "- " + formatPrice( couponTotal ) );     
 - **별점은 워드커머스 폰트(`font-family: WooCommerce`, 글자 `sssss`)를 쓰는데 테마가 그 폰트를
   안 싣고 `display:none` · `float:right` 까지 걸어 뒀다.** 유니코드 ★ 로 다시 그리고
   `float:none`, 읽어 주는 글자 `span` 은 `font-size:0` 으로 화면에서만 뺀다 (스크린리더는 읽는다)
-- 카드 순서: 별 → 이름 + `인증된 구매자` 알약 + 날짜(오른쪽) → 글 → 사진. 카드 밖 회색 상자 ·
+- 카드 순서: 별 → 이름 + 날짜(오른쪽) → 글 → 사진. 카드 밖 회색 상자 ·
   `.comment-text` 의 테두리 · 여백을 0 으로
+- **「(인증된 구매자)」 알약은 뺐다** (사장님 2026-09-18: 이상해 보인다). 산 사람만 쓰는 가게라
+  후기마다 같은 말을 되풀이하는 것이다. CSS 로 감추지 않고 워드커머스 설정
+  `woocommerce_review_rating_verification_label` 을 필터로 `no` 로 돌려줘 **마크업 자체가 안 나온다**.
+  되살리기: `duckhoo_review_verified_label` 을 true 로
 
 **확인 (2026-09-18, 프로덕션 #4327 노보 10+1 · 사장님 후기 1개, 390 · 1280px)**: 이름 `김**` ·
 아바타 없음 · 별 5개가 카드 맨 위(`float:none`, 읽어 주는 글자 0px) · 인증 알약 · 날짜 오른쪽 끝 ·
