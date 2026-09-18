@@ -418,3 +418,32 @@ class DhrFakeQuery {
 if(!function_exists('wc_get_products')) { function wc_get_products($a){ return array_values($GLOBALS['__products'] ?? []); } }
 if(!class_exists('WP_Query')) { class WP_Query { public array $posts = []; public function __construct(array $a = []){ foreach($GLOBALS['__products'] ?? [] as $p){ if(!isset($a['s']) || false !== mb_strpos($p->get_name(), (string)$a['s'])) $this->posts[] = $p->get_id(); } } } }
 if(!function_exists('wp_json_encode')) { function wp_json_encode($v,$f=0){ return json_encode($v, $f | JSON_UNESCAPED_UNICODE); } }
+
+/* 쿠폰 — 「쿠폰 한 번에 만들기」가 실제로 무엇을 저장하는지 재려면 이게 있어야 한다.
+   만들어진 쿠폰은 $GLOBALS['__coupons'] 에 코드로 쌓인다. */
+$GLOBALS['__coupons'] = [];
+if(!class_exists('WC_Coupon')) {
+  class WC_Coupon {
+    public array $d = ['code'=>'','amount'=>'0','usage_limit'=>null,'usage_limit_per_user'=>null,
+      'discount_type'=>'','individual_use'=>false,'exclude_sale_items'=>false,'free_shipping'=>false,
+      'date_expires'=>'','minimum_amount'=>'','email_restrictions'=>[],'description'=>'','meta'=>[]];
+    public function set_code($v){ $this->d['code']=(string)$v; }
+    public function set_discount_type($v){ $this->d['discount_type']=$v; }
+    public function set_amount($v){ $this->d['amount']=$v; }
+    public function set_individual_use($v){ $this->d['individual_use']=(bool)$v; }
+    public function set_usage_limit($v){ $this->d['usage_limit']=(int)$v; }
+    public function set_usage_limit_per_user($v){ $this->d['usage_limit_per_user']=(int)$v; }
+    public function set_exclude_sale_items($v){ $this->d['exclude_sale_items']=(bool)$v; }
+    public function set_free_shipping($v){ $this->d['free_shipping']=(bool)$v; }
+    public function set_date_expires($v){ $this->d['date_expires']=(string)$v; }
+    public function set_minimum_amount($v){ $this->d['minimum_amount']=(string)$v; }
+    public function set_email_restrictions($v){ $this->d['email_restrictions']=(array)$v; }
+    public function set_description($v){ $this->d['description']=(string)$v; }
+    public function update_meta_data($k,$v){ $this->d['meta'][$k]=$v; }
+    public function save(){ $GLOBALS['__coupons'][mb_strtoupper($this->d['code'])] = $this->d; return 1; }
+  }
+}
+if(!function_exists('wc_get_coupon_id_by_code')) {
+  function wc_get_coupon_id_by_code($code){ return isset($GLOBALS['__coupons'][mb_strtoupper((string)$code)]) ? 1 : 0; }
+}
+if(!function_exists('is_email')) { function is_email($e){ return (bool)filter_var($e, FILTER_VALIDATE_EMAIL); } }

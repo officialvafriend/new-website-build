@@ -179,6 +179,27 @@ function make_code( string $prefix, int $len ): string {
 }
 
 /**
+ * 사장님이 직접 적은 **공용 코드**를 다듬는다.
+ *
+ * 오픈채팅방이나 단체 문자에 뿌리는 코드는 무작위 글자보다 **외울 수 있는 말**이라야
+ * 손님이 옮겨 적다 틀리지 않는다 (`덕후9월` · `OPENCHAT`). 워드커머스 쿠폰 코드는
+ * 대소문자를 가리지 않으므로 영문은 대문자로 통일해 보여 주고, 한글은 그대로 둔다.
+ *
+ * 빈칸 · 기호는 뗀다 — 손님이 「덕후 9월」처럼 띄어 적으면 못 찾는다.
+ * 헷갈리는 글자(0 O 1 I L)는 **막지 않는다** — 사장님이 고른 말이 먼저다.
+ *
+ * @param string $raw 적어 넣은 값.
+ * @return string 다듬은 코드. 쓸 수 없으면 빈 문자열.
+ */
+function clean_fixed_code( string $raw ): string {
+	$code = (string) preg_replace( '/[^A-Za-z0-9가-힣]/u', '', $raw );
+	$code = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $code, 'UTF-8' ) : strtoupper( $code );
+	$len  = function_exists( 'mb_strlen' ) ? mb_strlen( $code, 'UTF-8' ) : strlen( $code );
+
+	return ( $len >= 4 && $len <= 20 ) ? $code : '';
+}
+
+/**
  * 이미 있는 코드인가.
  *
  * @param string $code 코드.
@@ -262,6 +283,29 @@ function create( array $rows, array $opts ): array {
 	$cap     = max_batch();
 	$n       = 0;
 
+	/* **공용 코드 한 장.** 코드를 직접 적었으면 그것 하나만 만든다 — 같은 코드를
+	   두 장 만들 수는 없으므로 목록이 여러 줄이면 아예 만들지 않고 말해 준다.
+	   (금액이 여럿인데 코드가 하나면 어느 금액이 나갈지 우리가 정하게 된다) */
+	$fixed = clean_fixed_code( (string) ( $opts['code'] ?? '' ) );
+	if ( '' !== $fixed ) {
+		if ( count( $rows ) > 1 || (int) ( $rows[0]['count'] ?? 1 ) > 1 ) {
+			return array(
+				'made'   => array(),
+				'errors' => array( '코드를 직접 정하면 <b>한 장만</b> 만듭니다. 금액 줄을 하나만 남겨 주세요 (끝의 <code>x5</code> 도 빼 주세요).' ),
+				'batch'  => $batch,
+			);
+		}
+		if ( code_taken( $fixed ) ) {
+			return array(
+				'made'   => array(),
+				'errors' => array( sprintf( '<b>%s</b> 코드는 이미 있습니다. 다른 말로 지어 주세요.', esc_html( $fixed ) ) ),
+				'batch'  => $batch,
+			);
+		}
+		$rows = array( $rows[0] );
+		$rows[0]['count'] = 1;
+	}
+
 	foreach ( $rows as $r ) {
 		for ( $k = 0; $k < max( 1, (int) $r['count'] ); $k++ ) {
 			if ( $n >= $cap ) {
@@ -269,9 +313,9 @@ function create( array $rows, array $opts ): array {
 				break 2;
 			}
 
-			// 겹치지 않는 코드를 찾는다.
-			$code = '';
-			for ( $try = 0; $try < 50; $try++ ) {
+			// 겹치지 않는 코드를 찾는다 (직접 적은 코드가 있으면 그것을 쓴다).
+			$code = $fixed;
+			for ( $try = 0; '' === $code && $try < 50; $try++ ) {
 				$try_code = make_code( $prefix, $len );
 				if ( ! code_taken( $try_code ) ) {
 					$code = $try_code;
@@ -295,7 +339,11 @@ function create( array $rows, array $opts ): array {
 			   워드커머스는 `usage_limit` 0 을 「제한 없음」으로 본다. 어느 쪽이든
 			   `usage_limit_per_user` 는 1 이라 한 사람이 두 번 쓰지는 못한다.
 			   **한 사람인지는 로그인 계정으로 본다** — 이 가게는 비로그인 결제가 안 되므로 샐 구멍이 없다. */
-			$c->set_usage_limit( 'once' === (string) ( $opts['mode'] ?? 'many' ) ? 1 : 0 );
+			/* 총 몇 번까지 쓰이게 할지. `many` 에서 0 은 제한 없음인데, **공개된 곳에
+			   뿌리는 코드는 상한이 있어야 한다** — 선착순 N명으로 끊는 자리다. */
+			$c->set_usage_limit(
+				'once' === (string) ( $opts['mode'] ?? 'many' ) ? 1 : max( 0, (int) ( $opts['uses'] ?? 0 ) )
+			);
 			$c->set_usage_limit_per_user( 1 );
 			$c->set_exclude_sale_items( ! empty( $opts['exclude_sale'] ) );
 			$c->set_free_shipping( false );
@@ -428,6 +476,8 @@ function screen(): void {
 		'expires'      => (string) wp_unslash( $_POST['dhr_exp'] ?? '' ),            // phpcs:ignore WordPress.Security.NonceVerification
 		'min'          => (int) str_replace( ',', '', (string) wp_unslash( $_POST['dhr_min'] ?? '0' ) ), // phpcs:ignore WordPress.Security.NonceVerification
 		'label'        => (string) wp_unslash( $_POST['dhr_label'] ?? '' ),          // phpcs:ignore WordPress.Security.NonceVerification
+		'code'         => (string) wp_unslash( $_POST['dhr_code'] ?? '' ),          // phpcs:ignore WordPress.Security.NonceVerification
+		'uses'         => (int) str_replace( ',', '', (string) wp_unslash( $_POST['dhr_uses'] ?? '0' ) ), // phpcs:ignore WordPress.Security.NonceVerification
 		'mode'         => 'once' === sanitize_key( (string) wp_unslash( $_POST['dhr_mode'] ?? '' ) ) ? 'once' : 'many', // phpcs:ignore WordPress.Security.NonceVerification
 		'individual'   => isset( $_POST['dhr_individual'] ),                          // phpcs:ignore WordPress.Security.NonceVerification
 		'exclude_sale' => isset( $_POST['dhr_exclude_sale'] ),                        // phpcs:ignore WordPress.Security.NonceVerification
@@ -575,12 +625,29 @@ function screen(): void {
 	printf(
 		'<tr><th scope="row">쓰는 방식</th><td>'
 		. '<label style="display:block;margin-bottom:6px"><input type="radio" name="dhr_mode" value="many" %s> '
-		. '<b>여러 사람이 같은 코드</b> · 한 사람당 한 번 <span class="description">— 코드 하나를 문자로 뿌립니다. 손님 수만큼 만들 필요가 없습니다.</span></label>'
+		. '<b>여러 사람이 같은 코드</b> · 한 사람당 한 번 <span class="description">— 코드 하나를 오픈채팅 · 단체 문자에 뿌립니다. 손님 수만큼 만들 필요가 없습니다.</span></label>'
 		. '<label style="display:block"><input type="radio" name="dhr_mode" value="once" %s> '
 		. '<b>한 장에 한 번만</b> <span class="description">— 손님마다 다른 코드를 줄 때.</span></label>'
-		. '<p class="description">어느 쪽이든 <b>한 사람이 두 번은 못 씁니다</b> (로그인 계정으로 봅니다).</p></td></tr>',
+		. '<p class="description">어느 쪽이든 <b>한 사람이 두 번은 못 씁니다</b> (로그인 계정으로 봅니다 — 이 가게는 비로그인 결제가 안 되므로 샐 구멍이 없습니다).</p></td></tr>',
 		checked( 'once' !== (string) $opts['mode'], true, false ),
 		checked( 'once' === (string) $opts['mode'], true, false )
+	);
+	printf(
+		'<tr><th scope="row"><label for="dhr_code">공용 코드 직접 정하기</label></th><td>'
+		. '<input type="text" id="dhr_code" name="dhr_code" value="%s" class="regular-text" placeholder="예: 덕후9월  ·  OPENCHAT"> '
+		. '<p class="description">비워 두면 위의 앞글자 + 무작위로 만듭니다. '
+		. '<b>여럿에게 뿌리는 코드는 외울 수 있는 말이 낫습니다</b> — 옮겨 적다 틀리지 않습니다. '
+		. '한글 · 영문 · 숫자 4~20자, 빈칸과 기호는 뗍니다. <b>적으면 한 장만 만듭니다</b> (금액 줄 하나 · <code>x5</code> 없이).</p>'
+		. '<p class="description"><b>영문 + 숫자를 권합니다</b> (<code>DUCKHOO9</code>) — 손님이 폰에서 자판을 바꾸지 않아도 되고, 문자 · 채팅으로 옮길 때 깨지지 않습니다. '
+		. '한글 코드도 만들어지지만 <b>라이브에서 확인한 적은 없습니다</b> — 쓰시려면 한 장 만들어 장바구니에서 한 번 넣어 보세요.</p></td></tr>',
+		esc_attr( (string) $opts['code'] )
+	);
+	printf(
+		'<tr><th scope="row"><label for="dhr_uses">총 사용 횟수</label></th><td>'
+		. '<input type="number" id="dhr_uses" name="dhr_uses" value="%d" min="0" step="1" style="width:120px"> 번'
+		. '<p class="description">0 이면 제한 없음. <b>공개된 곳(오픈채팅 · SNS)에 뿌릴 때는 꼭 넣으세요</b> — 코드가 밖으로 퍼져도 여기서 끊깁니다. 선착순 N명이 됩니다. '
+		. '<span class="description">「한 장에 한 번만」을 고르면 이 칸은 무시하고 1번입니다.</span></p></td></tr>',
+		(int) $opts['uses']
 	);
 	printf(
 		'<tr><th scope="row">그 밖에</th><td>'

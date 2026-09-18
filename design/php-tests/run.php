@@ -981,6 +981,42 @@ $ok(($C.'kdate')('') === '', '만료가 없으면 빈 값');
 $ok(str_contains($txt, '홍길동님'), '메모가 있으면 이름으로 부른다');
 $ok(!str_contains(($C.'sms')(($C.'default_sms')(), ['code'=>'A','amount'=>1000,'note'=>'','expires'=>'']), '님'), '메모가 없으면 「님」 이 남지 않는다');
 
+/* 공용 코드 한 장 — 여럿에게 뿌리되 한 사람당 한 번 (사장님 2026-09-18) */
+$ok(($C.'clean_fixed_code')('덕후 9월!') === '덕후9월', '빈칸 · 기호를 뗀다 — 손님이 띄어 적으면 못 찾는다');
+$ok(($C.'clean_fixed_code')('openchat') === 'OPENCHAT', '영문은 대문자로 통일한다');
+$ok(($C.'clean_fixed_code')('덕후') === '', '너무 짧은 코드는 쓰지 않는다');
+$ok(($C.'clean_fixed_code')(str_repeat('A', 21)) === '', '너무 긴 코드도 쓰지 않는다');
+$ok(($C.'clean_fixed_code')('') === '', '비워 두면 빈 값 — 무작위로 만든다');
+
+$GLOBALS['__coupons'] = [];
+$rows = ($C.'parse_lines')("5000 오픈채팅 단골")['rows'];
+$r1 = ($C.'create')($rows, ['code'=>'덕후9월','mode'=>'many','uses'=>100,'expires'=>'2026-09-30','min'=>30000]);
+$ok(count($r1['made']) === 1 && $r1['made'][0]['code'] === '덕후9월', '적어 넣은 코드 그대로 한 장을 만든다');
+$made = $GLOBALS['__coupons']['덕후9월'];
+$ok($made['usage_limit'] === 100, '총 사용 횟수는 적은 대로 (선착순 100명)');
+$ok($made['usage_limit_per_user'] === 1, '**한 사람당 한 번** — 공용 코드의 핵심');
+$ok($made['minimum_amount'] === '30000', '최소 주문금액이 걸린다');
+$ok($made['date_expires'] === '2026-10-01', '만료일은 하루를 더해 저장 (그날 밤 12시까지)');
+$ok($made['amount'] === '5000', '금액');
+
+// 같은 코드를 또 만들지 않는다
+$r2 = ($C.'create')($rows, ['code'=>'덕후9월','mode'=>'many','uses'=>100]);
+$ok(!$r2['made'] && str_contains($r2['errors'][0] ?? '', '이미 있습니다'), '같은 코드가 이미 있으면 만들지 않고 말해 준다');
+
+// 코드를 정했는데 금액 줄이 여럿이면 만들지 않는다 — 어느 금액이 나갈지 우리가 정하면 안 된다
+$r3 = ($C.'create')(($C.'parse_lines')("3000\n5000")['rows'], ['code'=>'단골감사','mode'=>'many']);
+$ok(!$r3['made'] && str_contains($r3['errors'][0] ?? '', '한 장만'), '코드를 정하면 금액 줄은 하나여야 한다');
+$r4 = ($C.'create')(($C.'parse_lines')("3000 x 5")['rows'], ['code'=>'단골감사','mode'=>'many']);
+$ok(!$r4['made'], 'x5 도 마찬가지 — 같은 코드를 다섯 장 만들 수는 없다');
+
+// 제한 없음 · 한 장에 한 번
+$GLOBALS['__coupons'] = [];
+($C.'create')(($C.'parse_lines')("4000")['rows'], ['code'=>'무제한코드','mode'=>'many','uses'=>0]);
+$ok($GLOBALS['__coupons']['무제한코드']['usage_limit'] === 0, '0 이면 총 횟수 제한 없음');
+($C.'create')(($C.'parse_lines')("4000")['rows'], ['code'=>'한번만코드','mode'=>'once','uses'=>100]);
+$ok($GLOBALS['__coupons']['한번만코드']['usage_limit'] === 1, '「한 장에 한 번만」은 총 횟수 칸을 무시하고 1');
+$GLOBALS['__coupons'] = [];
+
 // ── 분류 묶기 (includes/cat-admin.php) ────────────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/cat-admin.php';
 $G = 'Duckhoo\\Redesign\\Cat\\Admin\\';
