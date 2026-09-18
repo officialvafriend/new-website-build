@@ -1385,13 +1385,20 @@
      글자는 서버가 만든다 (`Front\join_wall()`): 로그인한 손님에게는 빈 문자열이다. */
   (function(){
     var wall = (window.DHR && window.DHR.joinWall) || '';
-    if(!wall || document.querySelector('.dhr-wall')) return;
+    if(!wall) return;
     var side = document.querySelector('.dhr-cartside') || (sum && sum.parentElement);
     if(!side) return;
+    /* **이미 붙였는지는 이 상자 안에서만 본다.** 문서 전체를 보면 푸터의 장바구니
+       서랍이 가진 같은 안내(`.dhc .dhr-wall`)에 걸려, 장바구니 화면에는 한 번도
+       안 그려졌다 — 어제 서랍만 확인하고 넘어가 놓친 자리다. */
+    if(side.querySelector('.dhr-wall')) return;
     var box = document.createElement('div');
     box.innerHTML = wall;
     var el = box.firstElementChild;
-    if(el) side.insertBefore(el, side.firstChild);
+    if(!el) return;
+    /* 자리는 합계 다음 · 주문하기 바로 위 — 누르려는 그 자리에서 말해 준다. */
+    if(order && order.parentElement === side) side.insertBefore(el, order);
+    else side.insertBefore(el, side.firstChild);
   })();
   /* **쿠폰 코드를 넣을 자리.** 이 장바구니는 키플이 만든 페이지라 워드커머스의 쿠폰칸이
      아예 없다 (확인: `coupon_code` 0개). 문자로 코드를 받은 손님이 넣을 데가 없으므로
