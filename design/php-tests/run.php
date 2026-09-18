@@ -981,6 +981,27 @@ $ok(($C.'kdate')('') === '', '만료가 없으면 빈 값');
 $ok(str_contains($txt, '홍길동님'), '메모가 있으면 이름으로 부른다');
 $ok(!str_contains(($C.'sms')(($C.'default_sms')(), ['code'=>'A','amount'=>1000,'note'=>'','expires'=>'']), '님'), '메모가 없으면 「님」 이 남지 않는다');
 
+/* 줄마다 코드 직접 정하기 — 무작위 여덟 글자는 불러 주기 불편하다 (사장님 2026-09-18) */
+$cl = ($C.'parse_lines')("VIPGOLD: 3000 VIP(핵심우수) 64명\n3000 무작위로");
+$ok($cl['rows'][0]['code'] === 'VIPGOLD', '줄 맨 앞의 「코드:」 를 읽는다');
+$ok($cl['rows'][0]['amount'] === 3000 && $cl['rows'][0]['uses'] === 64, '코드를 떼어도 금액 · 인원은 그대로');
+$ok($cl['rows'][0]['note'] === 'VIP(핵심우수)', '코드는 메모에 남지 않는다');
+$ok($cl['rows'][1]['code'] === '', '안 적은 줄은 무작위');
+$ok(($C.'parse_lines')("3000 두시 30분 모임")['rows'][0]['code'] === '', '금액이 먼저 오면 코드로 읽지 않는다');
+
+$bad = ($C.'parse_lines')("NEW: 3000");
+$ok(!$bad['rows'] && str_contains($bad['errors'][0] ?? '', '쓸 수 없습니다'), '너무 짧은 코드는 거절하고 이유를 적는다');
+$x3 = ($C.'parse_lines')("VIPGOLD: 3000 x 3");
+$ok(!$x3['rows'] && str_contains($x3['errors'][0] ?? '', '한 장만'), '코드를 정하면 x3 은 안 된다 — 같은 코드를 셋 만들 수 없다');
+
+$GLOBALS['__coupons'] = [];
+($C.'create')(($C.'parse_lines')("VIPGOLD: 3000 64명")['rows'], ['mode'=>'many']);
+$ok(isset($GLOBALS['__coupons']['VIPGOLD']) && $GLOBALS['__coupons']['VIPGOLD']['usage_limit'] === 64, '적은 코드 그대로 · 상한도 그대로');
+$dup = ($C.'create')(($C.'parse_lines')("VIPGOLD: 3000 10명\nGROWBACK: 6000 62명")['rows'], ['mode'=>'many']);
+$ok(count($dup['made']) === 1 && $dup['made'][0]['code'] === 'GROWBACK', '겹치는 코드만 건너뛰고 나머지는 만든다');
+$ok(str_contains(strip_tags(implode(' ', $dup['errors'])), 'VIPGOLD'), '건너뛴 코드를 이름으로 알려 준다');
+$GLOBALS['__coupons'] = [];
+
 /* 줄마다 「N명」 — 세그먼트마다 인원이 다르다 (사장님 2026-09-18) */
 $seg = ($C.'parse_lines')("3000 VIP핵심우수 30명\n6000 성장고객 이탈위험 120명\n3000 신규");
 $ok($seg['rows'][0]['uses'] === 30 && $seg['rows'][0]['amount'] === 3000, '줄 끝의 「30명」을 상한으로 읽는다');

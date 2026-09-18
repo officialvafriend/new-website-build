@@ -103,6 +103,20 @@ function parse_lines( string $raw ): array {
 			continue;
 		}
 
+		/* **줄마다 코드를 직접 정한다** — 맨 앞에 `VIPGOLD:` 처럼 적는다.
+		   무작위 여덟 글자는 문자로 보낼 때는 복사되니 괜찮지만, 전화로 불러 주거나
+		   손으로 옮겨 적을 때 불편하다. 쌍점(`:`) 앞이라 메모와 헷갈리지 않는다.
+		   설정의 「공용 코드」 칸은 한 장일 때 쓰고, 여러 줄이면 이쪽을 쓴다. */
+		$code = '';
+		if ( preg_match( '/^([A-Za-z0-9가-힣]{2,24})\s*[:：]\s*/u', $line, $m ) ) {
+			$code = clean_fixed_code( $m[1] );
+			$line = trim( (string) preg_replace( '/^([A-Za-z0-9가-힣]{2,24})\s*[:：]\s*/u', '', $line ) );
+			if ( '' === $code ) {
+				$errors[] = sprintf( '%d번째 줄의 코드 「%s」 는 쓸 수 없습니다 (한글 · 영문 · 숫자 4~20자).', $i + 1, $m[1] );
+				continue;
+			}
+		}
+
 		// 몇 장 만들지 (x5 · ×5 · *5) — 먼저 떼어 낸다. 그래야 금액으로 잘못 읽지 않는다.
 		$count = 1;
 		if ( preg_match( '/[x×*]\s*(\d{1,4})\s*(장|개)?\s*$/iu', $line, $m ) ) {
@@ -145,6 +159,10 @@ function parse_lines( string $raw ): array {
 			$errors[] = sprintf( '%d번째 줄의 장수 %d 는 만들지 않았습니다.', $i + 1, $count );
 			continue;
 		}
+		if ( '' !== $code && $count > 1 ) {
+			$errors[] = sprintf( '%d번째 줄: 코드를 정하면 한 장만 만듭니다. 「%s」 의 x%d 를 빼 주세요.', $i + 1, $code, $count );
+			continue;
+		}
 
 		$rows[] = array(
 			'amount' => $amount,
@@ -152,6 +170,7 @@ function parse_lines( string $raw ): array {
 			'email'  => $email,
 			'count'  => $count,
 			'uses'   => $uses,
+			'code'   => $code,
 		);
 	}
 
@@ -324,8 +343,12 @@ function create( array $rows, array $opts ): array {
 				break 2;
 			}
 
-			// 겹치지 않는 코드를 찾는다 (직접 적은 코드가 있으면 그것을 쓴다).
-			$code = $fixed;
+			// 줄에 적은 코드 → 설정 칸의 코드 → 겹치지 않는 무작위.
+			$code = '' !== (string) ( $r['code'] ?? '' ) ? (string) $r['code'] : $fixed;
+			if ( '' !== $code && code_taken( $code ) ) {
+				$errors[] = sprintf( '<b>%s</b> 코드는 이미 있어 건너뛰었습니다.', esc_html( $code ) );
+				continue;
+			}
 			for ( $try = 0; '' === $code && $try < 50; $try++ ) {
 				$try_code = make_code( $prefix, $len );
 				if ( ! code_taken( $try_code ) ) {
@@ -609,7 +632,9 @@ function screen(): void {
 		. '<code>@</code> 가 든 낱말은 이메일로 보아 <b>그 계정만</b> 쓸 수 있게 합니다. '
 		. '끝에 <code>x5</code> 를 붙이면 같은 금액을 다섯 장 만듭니다. '
 		. '끝에 <code>50명</code> 을 붙이면 <b>그 줄만</b> 50명까지 쓰게 합니다 — 세그먼트마다 인원이 다를 때 씁니다 '
-		. '(「여러 사람이 같은 코드」일 때만 쓰입니다).</p>';
+		. '(「여러 사람이 같은 코드」일 때만 쓰입니다).</p>'
+		. '<p class="description">맨 앞에 <code>VIPGOLD:</code> 처럼 적으면 <b>그 줄의 코드를 직접 정합니다</b> — 무작위 여덟 글자 대신 '
+		. '읽어 줄 수 있는 말이 됩니다. 한글 · 영문 · 숫자 4~20자.</p>';
 	printf(
 		'<textarea name="dhr_list" rows="10" style="width:100%%;max-width:900px;font-family:monospace" placeholder="%s">%s</textarea>',
 		esc_attr( "3000\n5,000원 홍길동\n10000, 9월 단골, hong@example.com\n2000 x 20" ),
@@ -702,11 +727,12 @@ function screen(): void {
 		printf( '<div class="notice notice-warning inline"><p>%s</p></div>', esc_html( implode( ' · ', $parsed['errors'] ) ) );
 	}
 	if ( $parsed['rows'] && 'make' !== $do ) {
-		printf( '<p><b>%d장</b>을 만듭니다.</p><table class="widefat striped" style="max-width:820px"><thead><tr><th>금액</th><th>메모</th><th>이 사람만</th><th>장수</th><th>몇 명까지</th></tr></thead><tbody>', (int) $n );
+		printf( '<p><b>%d장</b>을 만듭니다.</p><table class="widefat striped" style="max-width:820px"><thead><tr><th>코드</th><th>금액</th><th>메모</th><th>이 사람만</th><th>장수</th><th>몇 명까지</th></tr></thead><tbody>', (int) $n );
 		$row_default = 'once' === (string) $opts['mode'] ? '1명 (한 장에 한 번)' : ( (int) $opts['uses'] > 0 ? number_format( (int) $opts['uses'] ) . '명' : '제한 없음' );
 		foreach ( $parsed['rows'] as $r ) {
 			printf(
-				'<tr><td>%s원</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>',
+				'<tr><td>%s</td><td>%s원</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>',
+				'' !== (string) ( $r['code'] ?? '' ) ? '<code><b>' . esc_html( (string) $r['code'] ) . '</b></code>' : '<span style="color:#666">무작위</span>',
 				esc_html( number_format( (int) $r['amount'] ) ),
 				esc_html( (string) $r['note'] ),
 				esc_html( (string) $r['email'] ),
