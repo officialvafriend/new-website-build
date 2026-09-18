@@ -76,6 +76,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/tracking.php';
 // 후기를 부른다 — 쓸 길이 상품 상세 한 곳뿐이라 받은 손님이 찾아갈 수가 없었다. 읽기만 한다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/review-ask.php';
 
+// 후기 화면 — 이름 가리기(김**) · 아바타 빼기 · 날짜 꼴.
+require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
+
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
 if ( is_admin() ) {

@@ -2504,3 +2504,80 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__go--wide{ width: 100% !important; min-
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__done{
   flex: 0 0 auto !important; font-size: 13.5px !important; font-weight: 700 !important; color: #616870 !important;
 }
+
+/* ===========================================================================
+   후기 카드 다시 (2026-09-18) — 사장님: 「레이아웃이 깔끔하지 않고 이상한 둥그런 아이콘」
+   ---------------------------------------------------------------------------
+   실측으로 원인 넷을 찾았다 (프로덕션 390px):
+     · `.star-rating` 이 **`display:none`** — 테마가 접어 둬서 별이 아예 안 보였다
+     · `.comment-text` 에 테두리 1px + radius 4 + padding 15 — **카드 안에 카드**
+     · `img.avatar` 32px 그라바타 무늬 — 손님이 고른 것이 아니라 이메일에서 나온 그림
+     · `p.meta` 가 flex 인데 폭 200px 라 이름 · 배지 · 대시 · 날짜가 두 줄로 접혔다
+   별은 **유니코드로 그린다** — 워드커머스 글꼴(`font-family: WooCommerce`)이 안 실리면
+   글자가 `SSSSS` 로 나오거나 아무것도 안 보인다. ★ 은 글꼴이 없어도 그려진다.
+   =========================================================================== */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment_container{
+  display: block !important; background: #fff !important;
+  border: 1px solid var(--dh-line, #E1E5E8) !important; border-radius: 16px !important;
+  padding: 16px 18px 18px !important; overflow: visible !important;
+}
+/* 카드 안의 카드를 없앤다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-text{
+  border: 0 !important; border-radius: 0 !important; padding: 0 !important;
+  margin: 0 !important; background: none !important; overflow: visible !important;
+}
+/* 그라바타 무늬 — 서버에서 이미 빼지만 캐시된 화면을 위해 한 번 더 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev img.avatar{ display: none !important; }
+
+/* 별 — 테마가 접어 둔 것을 펴고 우리가 그린다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating{
+  display: block !important; position: relative !important;
+  width: 5.6em !important; height: 1.3em !important; line-height: 1.3 !important;
+  font-size: 15px !important; letter-spacing: 1px !important; overflow: hidden !important;
+  font-family: var(--dh-font) !important; margin: 0 0 6px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating::before{
+  content: "★★★★★" !important; font-family: var(--dh-font) !important;
+  color: #DDE2E6 !important; position: absolute !important; left: 0 !important; top: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span{
+  position: absolute !important; left: 0 !important; top: 0 !important;
+  overflow: hidden !important; white-space: nowrap !important; text-indent: 0 !important;
+  padding-top: 0 !important; font-size: inherit !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span::before{
+  content: "★★★★★" !important; font-family: var(--dh-font) !important;
+  color: #F59E0B !important; position: static !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span strong{ display: none !important; }
+
+/* 이름 · 배지 · 날짜 한 줄 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-text p.meta{
+  display: flex !important; align-items: center !important; flex-wrap: wrap !important;
+  gap: 6px !important; margin: 0 0 8px !important; font-size: 13px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__author{
+  color: var(--dh-ink, #111) !important; font-weight: 800 !important; font-size: 15px !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__verified{
+  font-style: normal !important; font-size: 12px !important; font-weight: 700 !important;
+  color: var(--dh-accent-warm, #C2410C) !important; background: #FDF0E8 !important;
+  border-radius: 999px !important; padding: 2px 8px !important; line-height: 1.5 !important;
+}
+/* 이름과 날짜 사이의 대시는 필요 없다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__dash{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__published-date{
+  margin-left: auto !important; color: var(--dh-ink-3, #616870) !important; font-size: 13px !important;
+}
+
+/* 사진 — 94px 는 무엇을 찍었는지 안 보인다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph{
+  display: flex !important; flex-wrap: wrap !important; gap: 8px !important; margin: 10px 0 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph__a{
+  display: block !important; width: min(220px, 62%) !important; line-height: 0 !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .dhr-rev-ph__img{
+  width: 100% !important; height: auto !important; border-radius: 12px !important;
+  border: 1px solid var(--dh-line, #E1E5E8) !important; display: block !important;
+}
