@@ -1770,9 +1770,9 @@ $GLOBALS['__products'] = [
 ];
 $NV = 'Duckhoo\\Redesign\\Novo\\';
 $pl = ($NV.'price_lines')();
-$ok(count($pl) === 4 && $pl[0]['label'] === '노보 낱병' && $pl[0]['price'] == 13000 && $pl[1]['label'] === '노보 블랙 낱병' && $pl[2]['label'] === '노보 10+1 묶음(11병)' && $pl[2]['price'] == 120000 && $pl[3]['price'] == 130000, '현재 판매가 네 줄 — 라인 × 낱병/묶음, 재고 있는 것의 최저가 (품절 9,000 제외)');
+$ok(count($pl) === 4 && $pl[0]['label'] === '노보 낱병' && $pl[0]['price'] == 13000 && $pl[1]['label'] === '노보 블랙 낱병' && $pl[2]['label'] === '노보 10+1 (11병)' && $pl[2]['price'] == 120000 && $pl[3]['price'] == 130000, '현재 판매가 네 줄 — 라인 × 낱병/묶음, 재고 있는 것의 최저가 (품절 9,000 제외)');
 $pn = ($NV.'price_notice_text')();
-$ok(str_starts_with($pn, '노보 액상 가격이 인상되었습니다.') && str_contains($pn, '노보 낱병 13,000원') && str_contains($pn, '노보 블랙 10+1 묶음(11병) 130,000원') && !str_contains($pn, '9,000') && str_contains($pn, '다시 담아'), '가격 인상 안내 글은 현재 판매가를 상품에서 읽어 엮는다 · 다시 담기 안내');
+$ok(str_starts_with($pn, '노보 액상 가격이 인상되었습니다.') && str_contains($pn, '노보 낱병 13,000원') && str_contains($pn, '노보 블랙 10+1 (11병) 130,000원') && !str_contains($pn, '9,000') && str_contains($pn, '다시 담아'), '가격 인상 안내 글은 현재 판매가를 상품에서 읽어 엮는다 · 다시 담기 안내');
 $GLOBALS['__options']['duckhoo_novo_price_notice'] = '사장님이 쓴 안내';
 $ok(($NV.'price_notice_text')() === '사장님이 쓴 안내', '관리자에 쓴 글이 있으면 그것');
 $GLOBALS['__options']['duckhoo_novo_price_notice'] = '';

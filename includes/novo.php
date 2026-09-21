@@ -1183,7 +1183,8 @@ function price_lines(): array {
 		}
 		$label = (string) ( config()['lines'][ $ln ]['label'] ?? '노보' );
 		if ( $b > 1 ) {
-			$label .= preg_match( '/(\d+\s*\+\s*\d+)/u', (string) $p->get_name(), $m ) ? ' ' . preg_replace( '/\s+/', '', $m[1] ) . ' 묶음(' . $b . '병)' : ' 묶음(' . $b . '병)';
+			// 「10+1 (11병)」 — 「10+1 묶음(11병)」은 폰의 값 줄에서 두 줄이 됐다.
+			$label .= preg_match( '/(\d+\s*\+\s*\d+)/u', (string) $p->get_name(), $m ) ? ' ' . preg_replace( '/\s+/', '', $m[1] ) . ' (' . $b . '병)' : ' 묶음 (' . $b . '병)';
 		} else {
 			$label .= ' 낱병';
 		}

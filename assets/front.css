@@ -861,7 +861,7 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .nvs__main{display:grid;gap:.6rem;justify-items:start;min-width:0}
 .dhr .nvs__eb{margin:0;font-size:13px;font-weight:800;color:#C2410C;letter-spacing:.02em}
 .dhr .nvs__h{margin:0;font-size:clamp(1.45rem,1.05rem + 2vw,2.2rem);font-weight:900;line-height:1.2;letter-spacing:-.02em;word-break:keep-all}
-.dhr .nvs__h em{font-style:normal;color:#C2410C}
+.dhr .nvs__h em{display:inline-block;font-style:normal;color:#C2410C}
 .dhr .nvs__p{margin:0;font-size:15px;line-height:1.6;color:#374151;word-break:keep-all}
 .dhr .nvs__notes{list-style:none;margin:.1rem 0 0;padding:0;display:grid;gap:.3rem;font-size:13.5px;line-height:1.5;color:#4E565F;word-break:keep-all}
 .dhr .nvs__notes li{position:relative;padding-left:.9rem}
