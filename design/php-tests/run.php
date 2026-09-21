@@ -1701,6 +1701,8 @@ $d = ($S2.'description')('노보(NOVO) 액상 가격 안내: 10병 묶음 특가
 $ok(str_contains($d, '재고가 있습니다') && str_contains($d, '낱병 13,000원부터') && str_contains($d, '10+1 묶음(11병) 120,000원') && str_contains($d, '병당 약 10,900원'), '설명의 값은 상품에서 읽는다 — 낱병 최저가 · 묶음 · 병당');
 $ok(!str_contains($d, '7,000'), '손으로 쓴 옛 값(7,000원)은 검색 결과로 나가지 않는다');
 $ok(!preg_match('/건강|금연|순하|해롭지/u', $d), '광고 제한 낱말이 없다');
+ob_start(); ($S2.'head')(); $hh = ob_get_clean();
+$ok(str_contains($hh, 'og:title" content="노보 액상 3종 전 라인 재고 보유 | 액상덕후"') && str_contains($hh, 'og:description" content="다른 곳에서 품절이어도'), '노보 분류에는 og 를 우리가 찍는다 — 카카오톡 미리보기용 (AIOSEO 가 분류에는 안 찍는다)');
 $GLOBALS['__qobj'] = (object) ['slug' => 'other-cat', 'name' => '입호흡 액상', 'description' => ''];
 $ok(($S2.'title')('그대로') === '그대로' && str_contains(($S2.'description')('사장님 글'), '사장님 글'), '다른 분류는 손대지 않는다');
 $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];

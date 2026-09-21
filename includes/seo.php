@@ -100,6 +100,25 @@ function head(): void {
 		}
 		return;
 	}
+	$nc = noted_cat();
+	if ( $nc ) {
+		// 분류 페이지에는 AIOSEO 가 og 를 안 찍는다 (2026-09-21 프로덕션 확인 — og 태그 0개).
+		// 카카오톡 · 오픈채팅에 이 주소를 붙이면 미리보기가 여기서 나온다. 설명은 필터로 이미 우리 것.
+		$d = cat_note_text( $nc );
+		echo '<meta property="og:type" content="website">' . "\n";
+		echo '<meta property="og:title" content="' . esc_attr( cat_title( $nc ) ) . '">' . "\n";
+		echo '<meta property="og:description" content="' . esc_attr( $d ) . '">' . "\n";
+		if ( function_exists( 'get_term_link' ) ) {
+			$u = get_term_link( $nc );
+			if ( is_string( $u ) ) {
+				echo '<meta property="og:url" content="' . esc_url( $u ) . '">' . "\n";
+			}
+		}
+		if ( function_exists( 'get_site_icon_url' ) && '' !== (string) get_site_icon_url( 512 ) ) {
+			echo '<meta property="og:image" content="' . esc_url( (string) get_site_icon_url( 512 ) ) . '">' . "\n";
+		}
+		return;
+	}
 	// AIOSEO 가 없을 때만 우리가 설명을 찍는다. 있으면 필터로 그쪽 값을 채운다.
 	if ( ! has_aioseo() ) {
 		$d = description( '' );
