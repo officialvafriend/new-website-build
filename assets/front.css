@@ -819,3 +819,35 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .dhr-wall__go svg{width:18px;height:18px}
 .dhr .dhr-wall__in{margin:.6rem 0 0;text-align:center;font-size:13px;color:#4E565F}
 .dhr .dhr-wall__in a{color:#1565C0;font-weight:700}
+
+/* ── 안내 띠 (.dhn) — 헤더 바로 아래, 모든 화면 (2026-09-21) ───────────────────
+   응대 시간 · 주말 출고 규칙 · 노보 가격 인상. 불투명 · 폰은 세 줄 · 데스크톱은 한 줄에 셋.
+   제목을 누르면 아래로 펼쳐지고 × 는 그날 하루만 닫는다 (front.js). */
+.dhr .dhn{background:#FFF6EE;border-bottom:1px solid #F3D5BF;color:#111}
+.dhr .dhn[hidden]{display:none}
+.dhr .dhn-in{display:flex;align-items:flex-start;gap:.55rem;padding-top:.3rem;padding-bottom:.3rem}
+.dhr .dhn__eb{flex:0 0 auto;margin-top:.55rem;padding:.15rem .55rem;border-radius:999px;background:#C2410C;color:#fff;font-size:13px;font-weight:800;line-height:1.4;letter-spacing:0}
+.dhr .dhn__list{flex:1 1 auto;min-width:0;list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.dhr .dhn__it{border-top:1px solid #F3D5BF;min-width:0}
+.dhr .dhn__it:first-child{border-top:0}
+.dhr .dhn__k{display:flex;align-items:center;gap:.45rem;width:100%;min-height:40px;margin:0;padding:.15rem 0;background:none;border:0;border-radius:0;box-shadow:none;text-align:left;font:inherit;font-size:14px;font-weight:700;line-height:1.35;color:#111;cursor:pointer;word-break:keep-all}
+.dhr .dhn__k svg{width:18px;height:18px;flex:0 0 auto;color:#C2410C;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dhr .dhn__k svg:last-child{margin-left:auto;color:#6B7280;transform:rotate(90deg);transition:transform 160ms}
+.dhr .dhn__k[aria-expanded=true] svg:last-child{transform:rotate(-90deg)}
+.dhr .dhn__k:hover span{text-decoration:underline;text-underline-offset:3px}
+.dhr .dhn__p{padding:0 0 .75rem 1.6rem;font-size:14px;line-height:1.55;color:#374151;word-break:keep-all}
+.dhr .dhn__p p{margin:0}
+.dhr .dhn__p a{display:inline-block;margin-top:.4rem;padding:0;background:none;font-weight:700;color:#C2410C;text-decoration:underline;text-underline-offset:3px}
+.dhr .dhn__x{flex:0 0 auto;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:999px;background:none;box-shadow:none;color:#6B7280;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dhr .dhn__x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.dhr .dhn__x:hover{background:#F3D5BF;color:#111}
+@media(min-width:880px){
+  .dhr .dhn__list{flex-direction:row;flex-wrap:wrap;gap:0 1.6rem}
+  .dhr .dhn__it{border-top:0;flex:1 1 0}
+  .dhr .dhn__p{padding-bottom:.6rem}
+}
+/* 노보 분류 배너 — 현재 판매가 한 줄 */
+.dhr .nvb__price{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .6rem;margin:.6rem 0 0;font-size:14px;line-height:1.4}
+.dhr .nvb__price>b{padding:.1rem .5rem;border-radius:999px;background:#FFE02E;color:#12328F;font-weight:800}
+.dhr .nvb__price span b{font-weight:800;font-variant-numeric:tabular-nums}
+.dhr .nvb__price i{width:1px;height:14px;background:currentColor;opacity:.35}

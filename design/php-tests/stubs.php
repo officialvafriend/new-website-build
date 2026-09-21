@@ -448,3 +448,5 @@ if(!function_exists('wc_get_coupon_id_by_code')) {
   function wc_get_coupon_id_by_code($code){ return isset($GLOBALS['__coupons'][mb_strtoupper((string)$code)]) ? 1 : 0; }
 }
 if(!function_exists('is_email')) { function is_email($e){ return (bool)filter_var($e, FILTER_VALIDATE_EMAIL); } }
+if(!function_exists('sanitize_html_class')) { function sanitize_html_class($s){ return preg_replace('/[^A-Za-z0-9_-]/', '', $s); } }
+if(!defined('OBJECT')) define('OBJECT','OBJECT');

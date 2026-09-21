@@ -1753,5 +1753,65 @@ add_filter('duckhoo_review_verified_label', fn($v = null) => true);
 $ok(($RU.'no_verified_label')('yes') === 'yes', '필터로 되살리면 설정값 그대로');
 $GLOBALS['__filters']['duckhoo_review_verified_label'] = [];
 
+/* ── 응대 시간 · 출고 규칙 · 안내 띠 (includes/front.php · novo.php · pages.php) ─── */
+$F = 'Duckhoo\\Redesign\\Front\\';
+$ok(($F.'hours_text')() === '평일 11:00–18:00 · 점심 12:00–13:00 · 주말 · 법정 공휴일 휴무', '응대 시간은 평일 11–18시 (사장님 2026-09-21)');
+$ok(($F.'hours_lines')()[1] === '주말 · 법정 공휴일 휴무', '두 번째 줄은 휴무');
+$ok(str_contains(($F.'ship_rule')(), '금요일 오후 4시 이후') && str_contains(($F.'ship_rule')(), '월요일 오후 4시'), '출고 규칙: 금요일 마감 뒤 · 주말 주문은 월요일 오후 4시');
+$keepP2 = $GLOBALS['__products']; $GLOBALS['__transients'] = [];
+$GLOBALS['__products'] = [
+  238 => new WC_Product(238, '[노보] 블랙멘솔 (9.8mg / 30ml)', 13000.0, true),
+  242 => new WC_Product(242, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000.0, true),
+  247 => new WC_Product(247, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, true),
+  4327 => new WC_Product(4327, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true),
+  146 => new WC_Product(146, '[노보 블랙 리퀴드] 10+1 | 금액 130,000원', 130000.0, true),
+  9 => new WC_Product(9, '[노보] 품절맛 (9.8mg / 30ml)', 9000.0, false),
+  901 => new WC_Product(901, '[펠릭스] 더블라임 (9.8mg / 30ml)', 20000.0, true),
+];
+$NV = 'Duckhoo\\Redesign\\Novo\\';
+$pl = ($NV.'price_lines')();
+$ok(count($pl) === 4 && $pl[0]['label'] === '노보 낱병' && $pl[0]['price'] == 13000 && $pl[1]['label'] === '노보 블랙 낱병' && $pl[2]['label'] === '노보 10+1 묶음(11병)' && $pl[2]['price'] == 120000 && $pl[3]['price'] == 130000, '현재 판매가 네 줄 — 라인 × 낱병/묶음, 재고 있는 것의 최저가 (품절 9,000 제외)');
+$pn = ($NV.'price_notice_text')();
+$ok(str_starts_with($pn, '노보 액상 가격이 인상되었습니다.') && str_contains($pn, '노보 낱병 13,000원') && str_contains($pn, '노보 블랙 10+1 묶음(11병) 130,000원') && !str_contains($pn, '9,000') && str_contains($pn, '다시 담아'), '가격 인상 안내 글은 현재 판매가를 상품에서 읽어 엮는다 · 다시 담기 안내');
+$GLOBALS['__options']['duckhoo_novo_price_notice'] = '사장님이 쓴 안내';
+$ok(($NV.'price_notice_text')() === '사장님이 쓴 안내', '관리자에 쓴 글이 있으면 그것');
+$GLOBALS['__options']['duckhoo_novo_price_notice'] = '';
+$GLOBALS['__now'] = strtotime('2026-09-21 12:00:00');
+$ns = ($F.'notices')();
+$ok(count($ns) === 3 && $ns[0]['id'] === 'hours' && $ns[1]['id'] === 'ship' && $ns[2]['id'] === 'novo-price', '안내 세 개 — 응대 시간 · 출고 규칙 · 노보 가격');
+$ok(str_contains($ns[0]['k'], '11:00–18:00') && str_contains($ns[1]['k'], '월요일') && str_contains($ns[0]['t'], '바뀌었습니다'), '제목 한 줄에 핵심이 있다');
+$GLOBALS['__options']['duckhoo_novo_price_until'] = '2026-09-20';
+$ok(count(($F.'notices')()) === 2, '종료일이 지나면 노보 가격 안내는 빠진다');
+$GLOBALS['__options']['duckhoo_novo_price_until'] = '2026-09-21';
+$ok(count(($F.'notices')()) === 3, '종료일 당일까지는 보인다');
+$GLOBALS['__options']['duckhoo_novo_price_until'] = '';
+$h = ($F.'notice_bar_html')();
+$ok(substr_count($h, 'class="dhn__it"') === 3 && str_contains($h, 'data-dhn="') && str_contains($h, 'data-dhn-close') && str_contains($h, 'aria-controls="dhn-p-ship"') && str_contains($h, 'id="dhn-p-ship" hidden'), '띠: 항목 셋 · 해시 · 닫기 · 펼침 자리');
+$ok(str_contains($h, '/shipping/') && str_contains($h, '노보 액상 보기'), '출고 규칙은 배송 안내로, 가격 안내는 노보 목록으로 이어진다');
+$GLOBALS['__filters']['duckhoo_notices'] = [fn($v) => []];
+$ok(($F.'notice_bar_html')() === '', '필터로 다 빼면 띠 자체가 없다');
+$GLOBALS['__filters']['duckhoo_notices'] = [];
+foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($h, $bad), "띠에 「{$bad}」 없음"); }
+$GLOBALS['__products'] = $keepP2; $GLOBALS['__transients'] = [];
+// 안내 페이지 — 우리가 넣은 뒤 손대지 않은 것만 새 글로
+if (!function_exists('get_page_by_path')) { function get_page_by_path($slug, $o = null, $t = 'page'){ return $GLOBALS['__pages'][$slug] ?? null; } }
+if (!function_exists('wp_insert_post')) { function wp_insert_post($a){ $GLOBALS['__inserted'][] = $a; return 500 + count($GLOBALS['__inserted']); } }
+if (!function_exists('wp_update_post')) { function wp_update_post($a){ $GLOBALS['__updated'][] = $a; return (int)$a['ID']; } }
+require_once dirname(__DIR__, 2).'/includes/pages.php';
+$PG = 'Duckhoo\\Redesign\\Pages\\';
+$defs = ($PG.'definitions')();
+$ok(str_contains($defs['shipping']['content'], '월요일 오후 4시') && str_contains($defs['shipping']['content'], '11:00–18:00') && !str_contains($defs['shipping']['content'], '10:00'), '배송 안내 페이지 글에 주말 규칙 · 새 응대 시간');
+$mk = fn($id, $slug, $content, $mod, $meta = '') => (object)['ID' => $id, 'post_name' => $slug, 'post_content' => $content, 'post_date_gmt' => '2026-09-04 01:00:00', 'post_modified_gmt' => $mod];
+$GLOBALS['__pages'] = ['shipping' => $mk(11, 'shipping', '옛 글', '2026-09-04 01:00:00'), 'terms' => $mk(12, 'terms', '사장님이 고친 글', '2026-09-10 09:00:00'), 'privacy' => $mk(13, 'privacy', '옛 글', '2026-09-04 01:00:00')];
+$GLOBALS['__postmeta'][13]['_dhr_pages_hash'] = md5('우리가 마지막에 쓴 글'); // 해시가 다르다 = 사람이 고쳤다
+$GLOBALS['__options']['duckhoo_pages_version'] = 1; $GLOBALS['__updated'] = []; $GLOBALS['__inserted'] = [];
+($PG.'ensure')();
+$ok(count($GLOBALS['__updated']) === 1 && $GLOBALS['__updated'][0]['ID'] === 11 && str_contains($GLOBALS['__updated'][0]['post_content'], '월요일 오후 4시'), '손대지 않은 배송 페이지만 새 글로 바꾼다 (약관은 수정된 흔적 · 개인정보는 해시가 달라 그대로)');
+$ok(($GLOBALS['__postmeta'][11]['_dhr_pages_hash'] ?? '') === md5(trim($defs['shipping']['content'])) && $GLOBALS['__options']['duckhoo_pages_version'] === 2 && !$GLOBALS['__inserted'], '바꾼 글의 해시를 남기고 버전을 올린다 · 새로 만들지는 않는다');
+$GLOBALS['__options']['duckhoo_pages_version'] = 2; $GLOBALS['__updated'] = [];
+($PG.'ensure')();
+$ok(!$GLOBALS['__updated'], '버전이 같으면 아무것도 안 한다');
+$GLOBALS['__pages'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

@@ -341,6 +341,7 @@ function icon( string $name ): string {
 			'user'    => '<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>',
 			'search'  => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
 			'close'   => '<path d="M6 6 18 18M18 6 6 18"/>',
+			'clock'   => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
 			'chev'    => '<path d="m9 5 7 7-7 7"/>',
 			'check'   => '<path d="m4.5 12.5 5 5 10-11"/>',
 			'heart'   => '<path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 7.5 2.5c0 5.4-7.5 10-7.5 10z"/>',
@@ -541,6 +542,7 @@ function header_html(): void {
 	</div></nav>
 	</header>
 	<?php
+	echo notice_bar_html(); // phpcs:ignore WordPress.Security.EscapeOutput — 안에서 escape 한다
 	search_panel_html( $cats, $shop );
 }
 
@@ -962,7 +964,8 @@ function footer_html(): void {
 			<?php // 고객센터는 접지 않는다 — 전화번호와 영업시간은 찾으러 온 사람이 바로 봐야 한다 ?>
 			<div class="fcol fcol--open"><b>고객센터</b>
 				<a href="tel:010-5133-5852" class="n">010-5133-5852</a>
-				<span class="fmuted">평일 10:00–19:00 · 점심 12:00–13:00<br>주말 · 법정 공휴일 휴무</span>
+				<?php $hl = hours_lines(); ?>
+				<span class="fmuted"><?php echo esc_html( $hl[0] ); ?><br><?php echo esc_html( $hl[1] ); ?></span>
 				<?php // 알약 링크만 가로로 흐른다. 전화번호 · 시간은 위에 한 줄씩 — 줄바꿈이 잘리지 않게 한다 ?>
 				<div class="fcol__pills">
 					<a href="<?php echo esc_url( inquiry_url() ); ?>">1:1 문의</a>
@@ -1198,6 +1201,165 @@ function js_config( array $extra = array() ): string {
 	// 다른 파일이 값을 더할 자리 (노보 이벤트가 남은 수량을 넣는다).
 	$cfg = (array) apply_filters( 'duckhoo_js_config', $cfg );
 	return 'window.DHR=' . wp_json_encode( array_merge( $cfg, $extra ) ) . ';';
+}
+
+/* ── 응대 시간 · 출고 규칙 · 안내 띠 (2026-09-21) ──────────────────────────
+   사장님: 문의가 너무 많이 온다 — 응대 시간(평일 11–18시) · 주말 출고 규칙 · 노보 가격 인상,
+   이 셋을 **모든 손님이** 보게 하자. 같은 사실이 여러 자리에 흩어져 적혀 있으면 하나만
+   고치고 나머지가 옛 말로 남는다 (응대 시간이 푸터 · 안내 페이지 세 장에 각각 박혀 있었다).
+   그래서 값은 한 곳(`hours()` · `ship_rule()`)에 두고 푸터 · 안내 페이지 · 상품 상세 ·
+   띠가 전부 그것을 읽는다. */
+
+/**
+ * 고객센터 응대 시간. 2026-09-21 사장님: 평일 10–19 → **11–18**. 점심 · 휴무는 그대로.
+ *
+ * @return array{days:string,open:string,close:string,lunch:string,off:string}
+ */
+function hours(): array {
+	return (array) apply_filters(
+		'duckhoo_hours',
+		array(
+			'days'  => '평일',
+			'open'  => '11:00',
+			'close' => '18:00',
+			'lunch' => '12:00–13:00',
+			'off'   => '주말 · 법정 공휴일 휴무',
+		)
+	);
+}
+
+/**
+ * 응대 시간 두 줄 — `['평일 11:00–18:00 · 점심 12:00–13:00', '주말 · 법정 공휴일 휴무']`.
+ *
+ * @return array{0:string,1:string}
+ */
+function hours_lines(): array {
+	$h  = hours();
+	$l1 = trim( (string) $h['days'] . ' ' . (string) $h['open'] . '–' . (string) $h['close'] );
+	if ( '' !== trim( (string) ( $h['lunch'] ?? '' ) ) ) {
+		$l1 .= ' · 점심 ' . trim( (string) $h['lunch'] );
+	}
+	return array( $l1, trim( (string) ( $h['off'] ?? '' ) ) );
+}
+
+/**
+ * 응대 시간 한 줄.
+ *
+ * @param string $sep 두 줄 사이.
+ * @return string
+ */
+function hours_text( string $sep = ' · ' ): string {
+	return implode( $sep, array_filter( hours_lines() ) );
+}
+
+/**
+ * 주말 · 금요일 마감 뒤 주문의 출고 규칙 (사장님 2026-09-21).
+ * 평일 규칙(오후 4시 이전 입금 확인 → 당일 출고)은 곳곳에 이미 있고, 빠져 있던 것은 이것이다.
+ *
+ * @return string
+ */
+function ship_rule(): string {
+	return trim( (string) apply_filters(
+		'duckhoo_ship_rule',
+		'금요일 오후 4시 이후에 입금이 확인된 주문과 토 · 일요일 주문은 다음 주 월요일 오후 4시에 출고됩니다.'
+	) );
+}
+
+/**
+ * 짧게 — 카드 · 혜택 줄용.
+ *
+ * @return string
+ */
+function ship_rule_short(): string {
+	return trim( (string) apply_filters( 'duckhoo_ship_rule_short', '금요일 16시 이후 · 주말 주문은 월요일 16시 출고' ) );
+}
+
+/**
+ * 모든 화면 헤더 아래 안내 띠에 실을 것. 항목: `id` · `k`(한 줄 제목) · `t`(펼치면 나오는 글) ·
+ * `url`(선택) · `until`(선택, Y-m-d — 지나면 저절로 빠진다. 끝난 안내가 첫 화면에 남는 것이
+ * 이 가게에서 이미 두 번 문제였다).
+ *
+ * 빼거나 더하기: `duckhoo_notices`. 전부 빼면 띠 자체가 안 그려진다.
+ *
+ * @return array<int,array<string,string>>
+ */
+function notices(): array {
+	$items = array();
+	$items[] = array(
+		'id'   => 'hours',
+		'icon' => 'clock',
+		'k'    => '고객센터 ' . hours_lines()[0],
+		't'    => '고객센터 응대 시간이 ' . hours_lines()[0] . ' 로 바뀌었습니다. ' . hours_lines()[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
+		'url'  => inquiry_url(),
+		'more' => '1:1 문의 남기기',
+	);
+	$items[] = array(
+		'id'   => 'ship',
+		'icon' => 'truck',
+		'k'    => ship_rule_short(),
+		't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
+		'url'  => home_url( '/shipping/' ),
+		'more' => '배송 안내 보기',
+	);
+	if ( function_exists( '\\Duckhoo\\Redesign\\Novo\\price_notice_text' ) ) {
+		$txt = \Duckhoo\Redesign\Novo\price_notice_text();
+		if ( '' !== $txt ) {
+			$novo    = cat_by_name( '노보' );
+			$items[] = array(
+				'id'    => 'novo-price',
+				'icon'  => 'tag',
+				'k'     => '노보 액상 가격 인상 안내',
+				't'     => $txt,
+				'url'   => $novo && is_string( get_term_link( $novo ) ) ? (string) get_term_link( $novo ) : brand_url( '노보' ),
+				'more'  => '노보 액상 보기',
+				'until' => trim( (string) get_option( 'duckhoo_novo_price_until', '' ) ),
+			);
+		}
+	}
+	$items = (array) apply_filters( 'duckhoo_notices', $items );
+	$today = (string) current_time( 'Y-m-d' );
+	$out   = array();
+	foreach ( $items as $it ) {
+		if ( ! is_array( $it ) || '' === trim( (string) ( $it['k'] ?? '' ) ) ) {
+			continue;
+		}
+		$until = trim( (string) ( $it['until'] ?? '' ) );
+		if ( '' !== $until && $today > $until ) {
+			continue;
+		}
+		$out[] = $it;
+	}
+	return $out;
+}
+
+/**
+ * 안내 띠 — 헤더 바로 아래, 홈 · 테마 화면 전부. 폰은 세 줄, 데스크톱은 한 줄에 셋.
+ * 제목을 누르면 그 아래로 글이 펼쳐지고, × 는 그날 하루만 닫는다 (front.js, `localStorage['dhr-nb']`).
+ * 글이 바뀌면 `data-dhn`(내용의 해시)이 달라져 닫아 둔 사람에게도 다시 보인다.
+ *
+ * @return string
+ */
+function notice_bar_html(): string {
+	$items = notices();
+	if ( ! $items ) {
+		return '';
+	}
+	$hash = substr( md5( wp_json_encode( array_map( fn( $i ) => array( $i['k'], $i['t'] ?? '' ), $items ) ) ), 0, 8 );
+	$h    = '<section class="dhn" aria-label="안내" data-dhn="' . esc_attr( $hash ) . '"><div class="wrap dhn-in">'
+		. '<span class="dhn__eb">안내</span><ul class="dhn__list">';
+	foreach ( $items as $it ) {
+		$id  = 'dhn-p-' . sanitize_html_class( (string) ( $it['id'] ?? md5( (string) $it['k'] ) ) );
+		$h  .= '<li class="dhn__it">'
+			. '<button type="button" class="dhn__k" aria-expanded="false" aria-controls="' . esc_attr( $id ) . '">'
+			. icon( (string) ( $it['icon'] ?? 'tag' ) ) . '<span>' . esc_html( (string) $it['k'] ) . '</span>' . icon( 'chev' ) . '</button>'
+			. '<div class="dhn__p" id="' . esc_attr( $id ) . '" hidden><p>' . esc_html( (string) ( $it['t'] ?? '' ) ) . '</p>';
+		if ( '' !== trim( (string) ( $it['url'] ?? '' ) ) ) {
+			$h .= '<a href="' . esc_url( (string) $it['url'] ) . '">' . esc_html( (string) ( $it['more'] ?? '자세히 보기' ) ) . '</a>';
+		}
+		$h .= '</div></li>';
+	}
+	$h .= '</ul><button type="button" class="dhn__x" aria-label="안내 닫기 (오늘 하루)" data-dhn-close>' . icon( 'close' ) . '</button></div></section>';
+	return $h;
 }
 
 /**

@@ -18,7 +18,7 @@ namespace Duckhoo\Redesign\Pages;
 defined( 'ABSPATH' ) || exit;
 
 const VERSION_OPTION = 'duckhoo_pages_version';
-const VERSION        = 1;
+const VERSION        = 2;
 
 /**
  * 가게 정보. 한 곳에서 고치면 세 페이지가 같이 바뀐다.
@@ -36,7 +36,7 @@ function shop(): array {
 			'biz_no'   => '642-08-02808',
 			'sale_no'  => '제 2025-대구중구-0487 호',
 			'tel'      => '010-5133-5852',
-			'hours'    => '평일 10:00–19:00 (점심 12:00–13:00) · 주말 · 법정 공휴일 휴무',
+			'hours'    => function_exists( '\\Duckhoo\\Redesign\\Front\\hours_text' ) ? \Duckhoo\Redesign\Front\hours_text() : '평일 11:00–18:00 · 점심 12:00–13:00 · 주말 · 법정 공휴일 휴무',
 			'ship_fee' => '2,500원',
 			'ship_free'=> '30,000원',
 		)
@@ -79,7 +79,7 @@ function shipping_content( array $s ): string {
 <li>배송비는 ' . $s['ship_fee'] . ' 이며, ' . $s['ship_free'] . ' 이상 구매하시면 무료입니다.</li>
 <li>평일 오후 4시 이전에 <strong>입금이 확인된 주문</strong>은 당일 출고합니다.</li>
 <li>출고일 기준 1~2일 이내에 받아보실 수 있습니다.</li>
-<li>주말과 법정 공휴일에는 출고 · 배송이 되지 않습니다.</li>
+<li>주말과 법정 공휴일에는 출고 · 배송이 되지 않습니다. <strong>' . ( function_exists( '\\Duckhoo\\Redesign\\Front\\ship_rule' ) ? \Duckhoo\Redesign\Front\ship_rule() : '금요일 오후 4시 이후에 입금이 확인된 주문과 토 · 일요일 주문은 다음 주 월요일 오후 4시에 출고됩니다.' ) . '</strong></li>
 <li>택배사는 우체국택배입니다. 송장번호가 등록되면 주문내역에서 조회하실 수 있습니다.</li>
 </ul>
 
@@ -262,22 +262,48 @@ function ensure(): void {
 		return;
 	}
 	foreach ( definitions() as $slug => $def ) {
+		$content  = trim( $def['content'] );
 		$existing = get_page_by_path( $slug, OBJECT, 'page' );
 		if ( $existing ) {
+			// 2026-09-21: 응대 시간 · 주말 출고 규칙이 바뀌었는데 이 페이지는 DB 에 있어 파일을 고쳐도
+			// 안 따라왔다. **우리가 넣은 뒤 사람이 손대지 않은 페이지만** 새 글로 바꾼다 —
+			// 관리자에서 고친 글을 덮어쓰면 안 된다.
+			if ( untouched( $existing ) && trim( (string) $existing->post_content ) !== $content ) {
+				wp_update_post( array( 'ID' => (int) $existing->ID, 'post_content' => $content ) );
+				update_post_meta( (int) $existing->ID, '_dhr_pages_hash', md5( $content ) );
+			}
 			continue;
 		}
-		wp_insert_post(
+		$id = wp_insert_post(
 			array(
 				'post_type'      => 'page',
 				'post_name'      => $slug,
 				'post_title'     => $def['title'],
-				'post_content'   => trim( $def['content'] ),
+				'post_content'   => $content,
 				'post_status'    => 'publish',
 				'comment_status' => 'closed',
 				'ping_status'    => 'closed',
 			)
 		);
+		if ( is_int( $id ) && $id > 0 ) {
+			update_post_meta( $id, '_dhr_pages_hash', md5( $content ) );
+		}
 	}
 	update_option( VERSION_OPTION, VERSION, false );
+}
+
+/**
+ * 우리가 넣은 글 그대로인가. 우리가 마지막으로 쓴 글의 해시(`_dhr_pages_hash`)와 지금 글이
+ * 같으면 그렇다. 해시가 없는 옛 페이지는 만든 뒤 한 번도 수정되지 않았을 때만 (post_modified = post_date).
+ *
+ * @param object $post 페이지.
+ * @return bool
+ */
+function untouched( $post ): bool {
+	$hash = (string) get_post_meta( (int) $post->ID, '_dhr_pages_hash', true );
+	if ( '' !== $hash ) {
+		return md5( trim( (string) $post->post_content ) ) === $hash;
+	}
+	return (string) ( $post->post_modified_gmt ?? '' ) === (string) ( $post->post_date_gmt ?? '' );
 }
 add_action( 'admin_init', __NAMESPACE__ . '\\ensure' );

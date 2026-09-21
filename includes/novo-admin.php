@@ -233,6 +233,9 @@ function screen(): void {
 		update_option( 'duckhoo_novo_banner_img', esc_url_raw( wp_unslash( $_POST['dhr_novo_img'] ?? '' ) ) );
 		update_option( 'duckhoo_novo_banner_img_m', esc_url_raw( wp_unslash( $_POST['dhr_novo_img_m'] ?? '' ) ) );
 		update_option( 'duckhoo_novo_show_stock', empty( $_POST['dhr_novo_show_stock'] ) ? '0' : '1' );
+		update_option( 'duckhoo_novo_price_notice', sanitize_textarea_field( wp_unslash( $_POST['dhr_novo_price_notice'] ?? '' ) ) );
+		$u = sanitize_text_field( wp_unslash( $_POST['dhr_novo_price_until'] ?? '' ) );
+		update_option( 'duckhoo_novo_price_until', preg_match( '/^\d{4}-\d{2}-\d{2}$/', $u ) ? $u : '' );
 		$saved = true;
 	}
 
@@ -338,6 +341,17 @@ function screen(): void {
 		'1' === (string) get_option( 'duckhoo_novo_show_stock', '0' ) ? ' checked' : ''
 	);
 	printf(
+		'<tr><th scope="row"><label for="dhr_novo_price_notice">가격 인상 안내</label></th><td>'
+		. '<textarea class="large-text" rows="3" id="dhr_novo_price_notice" name="dhr_novo_price_notice" placeholder="%s">%s</textarea>'
+		. '<p class="description">모든 화면 헤더 아래 안내 띠 「노보 액상 가격 인상 안내」를 펼치면 나오는 글입니다. '
+		. '비워 두면 위 칸의 회색 글(현재 판매가를 상품에서 읽어 엮은 것)이 나갑니다. 값이 바뀌면 저절로 따라갑니다.</p>'
+		. '<p><label>안내 종료일 <input type="date" name="dhr_novo_price_until" value="%s"></label> '
+		. '<span class="description">— 이 날이 지나면 띠에서 저절로 빠집니다. 비워 두면 계속 보입니다.</span></p></td></tr>',
+		esc_attr( price_notice_text_auto() ),
+		esc_textarea( (string) get_option( 'duckhoo_novo_price_notice', '' ) ),
+		esc_attr( (string) get_option( 'duckhoo_novo_price_until', '' ) )
+	);
+	printf(
 		'<tr><th scope="row"><label for="dhr_novo_img">배너 이미지</label></th><td>'
 		. '<input type="url" class="regular-text code" id="dhr_novo_img" name="dhr_novo_img" value="%s" placeholder="https://…">'
 		. ' <button type="button" class="button dhr-pick" data-target="dhr_novo_img">미디어에서 고르기</button>'
@@ -381,4 +395,16 @@ jQuery(function($){ $(".dhr-pick").on("click", function(e){ e.preventDefault();
 		. '지금 있는 <code>노보 10병</code> 묶음은 병 수가 달라 대상이 아닙니다 — 10+1 로 바꾸시려면 상품 이름과 옵션 수를 11병으로 고쳐 주세요.</p>';
 
 	echo '</div>';
+}
+
+/**
+ * 관리자 칸의 placeholder — 옵션을 비웠을 때 나갈 자동 글.
+ *
+ * @return string
+ */
+function price_notice_text_auto(): string {
+	add_filter( 'pre_option_duckhoo_novo_price_notice', '__return_empty_string' );
+	$t = price_notice_text();
+	remove_filter( 'pre_option_duckhoo_novo_price_notice', '__return_empty_string' );
+	return $t;
 }

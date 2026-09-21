@@ -1963,3 +1963,31 @@
   else mark();
   addEventListener('load', mark);
 })();
+
+/* 안내 띠 (.dhn) — 헤더 아래. 제목을 누르면 그 글이 펼쳐지고(한 번에 하나), × 는 그날 하루만
+   닫는다. 글이 바뀌면 data-dhn(내용 해시)이 달라져 닫아 둔 사람에게도 다시 보인다.
+   서버가 늘 그리므로 JS 가 죽어도 안내는 보인다 — 없어지는 것은 접기 · 닫기뿐이다. */
+(function(){
+  var bar = document.querySelector('[data-dhn]');
+  if (!bar) return;
+  var KEY = 'dhr-nb', v = bar.getAttribute('data-dhn') || '';
+  var d = new Date(), today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && s.v === v && s.d === today) { bar.hidden = true; return; }
+  } catch (e) {}
+  var ks = Array.prototype.slice.call(bar.querySelectorAll('.dhn__k'));
+  function shut(k){ k.setAttribute('aria-expanded', 'false'); var p = document.getElementById(k.getAttribute('aria-controls')); if (p) p.hidden = true; }
+  ks.forEach(function(k){
+    k.addEventListener('click', function(){
+      var open = k.getAttribute('aria-expanded') === 'true';
+      ks.forEach(shut);
+      if (!open) { k.setAttribute('aria-expanded', 'true'); var p = document.getElementById(k.getAttribute('aria-controls')); if (p) p.hidden = false; }
+    });
+  });
+  var x = bar.querySelector('[data-dhn-close]');
+  if (x) x.addEventListener('click', function(){
+    bar.hidden = true;
+    try { localStorage.setItem(KEY, JSON.stringify({ v: v, d: today })); } catch (e) {}
+  });
+})();

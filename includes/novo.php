@@ -1095,7 +1095,8 @@ function stock_banner(): void {
 			'head'  => array( '노보 전 라인 ', '재고 있음' ),
 			'set'   => array( '낱병 13종', '10+1 묶음 (11병)' ),
 			'lead'  => '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있습니다. 전 맛을 지금 바로 주문하실 수 있습니다.',
-			'notes' => array( '평일 오후 4시 이전 입금 확인 시 당일 출고', '10병 이상은 10+1 묶음이 병당 더 저렴합니다' ),
+			'price' => price_lines(),
+			'notes' => array( '평일 오후 4시 이전 입금 확인 시 당일 출고 · ' . \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상은 10+1 묶음이 병당 더 저렴합니다' ),
 		)
 	);
 	if ( ! $b ) {
@@ -1117,6 +1118,14 @@ function stock_banner(): void {
 	if ( '' !== (string) ( $b['lead'] ?? '' ) ) {
 		echo '<p class="nvb__p">' . esc_html( (string) $b['lead'] ) . '</p>';
 	}
+	if ( ! empty( $b['price'] ) ) {
+		// 가격 인상 뒤 「현재 판매가」를 한 줄로 — 값은 상품에서 읽은 것이라 적어 둔 숫자가 아니다.
+		echo '<p class="nvb__price"><b>현재 판매가</b>';
+		foreach ( (array) $b['price'] as $i => $row ) {
+			echo ( $i ? '<i aria-hidden="true"></i>' : '' ) . '<span>' . esc_html( (string) $row['label'] ) . ' <b>' . esc_html( number_format_i18n( (float) $row['price'] ) ) . '원</b></span>';
+		}
+		echo '</p>';
+	}
 	if ( ! empty( $b['notes'] ) ) {
 		echo '<ul class="nvb__notes">';
 		foreach ( (array) $b['notes'] as $n ) {
@@ -1125,6 +1134,67 @@ function stock_banner(): void {
 		echo '</ul>';
 	}
 	echo '</section>';
+}
+
+/* ── 가격 인상 안내 (2026-09-21) ────────────────────────────────────────── */
+
+/**
+ * 지금 팔리는 노보 값 — 라인(노보 · 노보 블랙) × 낱병/묶음마다 **재고 있는 상품의 최저가**.
+ * 숫자를 적어 두지 않고 상품에서 읽는다 — 값이 또 바뀌어도 안내가 거짓이 되지 않는다.
+ *
+ * @return array<int,array{label:string,price:float,bottles:int}>
+ */
+function price_lines(): array {
+	$rows = array();
+	foreach ( \Duckhoo\Redesign\Front\products( array( 'limit' => -1 ) ) as $p ) {
+		if ( ! is_novo( $p ) || ! $p->is_in_stock() ) {
+			continue;
+		}
+		$ln = line( $p );
+		if ( '' === $ln ) {
+			continue;
+		}
+		$price = (float) $p->get_price();
+		if ( $price <= 0 ) {
+			continue;
+		}
+		$b   = max( 1, bottles( $p ) );
+		$key = $ln . ( $b > 1 ? '_bundle' : '_single' );
+		if ( isset( $rows[ $key ] ) && $rows[ $key ]['price'] <= $price ) {
+			continue;
+		}
+		$label = (string) ( config()['lines'][ $ln ]['label'] ?? '노보' );
+		if ( $b > 1 ) {
+			$label .= preg_match( '/(\d+\s*\+\s*\d+)/u', (string) $p->get_name(), $m ) ? ' ' . preg_replace( '/\s+/', '', $m[1] ) . ' 묶음(' . $b . '병)' : ' 묶음(' . $b . '병)';
+		} else {
+			$label .= ' 낱병';
+		}
+		$rows[ $key ] = array( 'label' => $label, 'price' => $price, 'bottles' => $b );
+	}
+	$order = array( 'plain_single', 'black_single', 'plain_bundle', 'black_bundle' );
+	uksort( $rows, fn( $a, $b ) => (int) array_search( $a, $order, true ) <=> (int) array_search( $b, $order, true ) );
+	return array_values( $rows );
+}
+
+/**
+ * 가격 인상 안내 글 — 헤더 아래 안내 띠에 실린다. 관리자(도구 → 노보 이벤트)에 쓴 글이
+ * 있으면 그것, 없으면 현재 판매가를 읽어 엮는다. 끄려면 종료일(`duckhoo_novo_price_until`)을
+ * 지난 날짜로 두거나 필터 `duckhoo_novo_price_notice` 로 빈 문자열.
+ *
+ * @return string
+ */
+function price_notice_text(): string {
+	$own = trim( (string) get_option( 'duckhoo_novo_price_notice', '' ) );
+	if ( '' === $own ) {
+		$parts = array();
+		foreach ( price_lines() as $r ) {
+			$parts[] = $r['label'] . ' ' . number_format_i18n( (float) $r['price'] ) . '원';
+		}
+		$own = '노보 액상 가격이 인상되었습니다. '
+			. ( $parts ? '현재 판매가는 ' . implode( ' · ', $parts ) . ' 입니다. ' : '현재 판매가는 상품 페이지에서 확인해 주세요. ' )
+			. '가격이 바뀌기 전에 장바구니에 담아 두신 상품은 비우고 다시 담아 주세요.';
+	}
+	return trim( (string) apply_filters( 'duckhoo_novo_price_notice', $own ) );
 }
 
 /* ── 노보를 금액대별 자동 할인에서 뺀다 ────────────────────────────────────

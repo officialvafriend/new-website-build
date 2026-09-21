@@ -124,7 +124,7 @@ function gate( string $back = '' ): string {
 
 function benefits(): void {
 	global $product;
-	$rows = array( '30,000원 이상 무료배송 · 우체국택배', '평일 16시 이전 입금 확인 시 당일 출고', '미개봉 7일 이내 교환 · 환불' );
+	$rows = array( '30,000원 이상 무료배송 · 우체국택배', '평일 16시 이전 입금 확인 시 당일 출고', \Duckhoo\Redesign\Front\ship_rule_short(), '미개봉 7일 이내 교환 · 환불' );
 	if ( ! is_user_logged_in() ) {
 		array_unshift( $rows, '첫 가입 시 ' . number_format_i18n( \Duckhoo\Redesign\Front\signup_points() ) . '원 적립 · 본인확인 1분' );
 	}
@@ -145,7 +145,7 @@ function trust(): void {
 		'duckhoo_product_trust',
 		array(
 			array( 'bank', '무통장입금 전용', '<b>입금자명을 주문자명과 똑같이</b> 넣어 주세요. 같으면 자동으로 확인됩니다.' ),
-			array( 'truck', '평일 16시 이전 입금 확인 시 당일 출고', '30,000원 이상 무료배송 · 우체국택배' ),
+			array( 'truck', '평일 16시 이전 입금 확인 시 당일 출고', esc_html( \Duckhoo\Redesign\Front\ship_rule_short() ) . ' · 30,000원 이상 무료배송 · 우체국택배' ),
 			array( 'shield', '19세 미만 판매 금지', '구매 시 휴대폰 본인확인이 필요합니다 · 니코틴은 중독성이 있는 물질입니다' ),
 		)
 	);

@@ -144,7 +144,7 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 			<h2>배송 · 교환 · 환불</h2>
 			<div class="dhp-faq">
 				<details open><summary>언제 출발하나요? <?php echo icon( 'chev' ); // phpcs:ignore ?></summary>
-					<p>평일 오후 4시 이전에 입금이 확인된 주문은 당일 우체국택배로 출고합니다. 그 뒤 확인분은 다음 영업일에 나갑니다. 30,000원 이상은 무료배송, 미만은 2,500원입니다.</p></details>
+					<p>평일 오후 4시 이전에 입금이 확인된 주문은 당일 우체국택배로 출고합니다. <?php echo esc_html( \Duckhoo\Redesign\Front\ship_rule() ); ?> 30,000원 이상은 무료배송, 미만은 2,500원입니다.</p></details>
 				<details><summary>입금했는데 확인이 안 떠요 <?php echo icon( 'chev' ); // phpcs:ignore ?></summary>
 					<p>입금자명이 주문자명과 다르면 자동으로 확인되지 않습니다. 1:1 문의나 전화로 입금자명을 알려 주시면 바로 처리합니다.</p></details>
 				<details><summary>교환 · 환불은요? <?php echo icon( 'chev' ); // phpcs:ignore ?></summary>
