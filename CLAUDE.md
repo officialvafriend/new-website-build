@@ -2250,3 +2250,37 @@ AIOSEO 기본 「[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후」 에는 �
 검증: `php design/php-tests/run.php` (템플릿 꼬리 · 제목 · og 12개 추가) · 프로덕션 15종 전부
 curl — `<title>` · og:title · twitter:title · meta description · og:description · `.dhp-about` · JSON-LD
 가 같은 글, 펠릭스 · `/shop/` 제목은 그대로.
+
+## 모든 화면 안내 띠 — 응대 시간 · 주말 출고 · 노보 가격 인상 (2026-09-21)
+
+사장님: **문의가 너무 많이 온다.** ①응대 시간이 평일 10–19 → **11–18** 로 바뀌었고 ②금요일 마감 뒤 ·
+토 · 일 주문은 **다음 주 월요일 오후 4시 출고**이며 ③**노보 가격 인상**을 모든 손님이 보게 하자.
+
+- **값은 한 곳에** — `Front\hours()`(필터 `duckhoo_hours`) · `ship_rule()`(`duckhoo_ship_rule`).
+  응대 시간이 푸터 · 안내 페이지 세 장에 각각 박혀 있어 하나만 고치면 나머지가 옛 말로 남는 구조였다.
+  푸터 고객센터 · `/shipping/` `/terms/` `/privacy/` · 상품 상세 혜택 줄(`benefits()`) · 사는 방법(`trust()`) ·
+  「언제 출발하나요?」 · 노보 분류 배너가 전부 이것을 읽는다
+- **안내 띠 `.dhn`** (`Front\notices()` → `notice_bar_html()`, 필터 `duckhoo_notices`) — `header_html()` 이
+  `</header>` 바로 뒤에 찍으므로 홈 · 테마 화면 전부에 나온다. 폰은 세 줄(높이 ≈130px) · 데스크톱은 한 줄에 셋.
+  제목을 누르면 그 아래로 글이 펼쳐지고(한 번에 하나), × 는 **그날 하루만** 닫는다 (`localStorage['dhr-nb']`,
+  `data-dhn` = 글의 해시라 글이 바뀌면 닫아 둔 사람에게도 다시 보인다). 서버가 늘 그리므로 JS 가 죽어도 보인다.
+  항목에 `until`(Y-m-d)을 주면 지나면 저절로 빠진다 — 끝난 안내가 첫 화면에 남는 것이 이 가게에서 두 번 문제였다.
+  **제목은 폰 257px 에서 한 줄**이라야 한다 — `11:00–18:00` 꼴은 두 줄이 되어 `11–18시` 로 줄였다 (`hours_short()`).
+  정확한 시각은 펼친 글에 있다
+- **노보 가격 인상 글은 숫자를 적어 두지 않는다.** `Novo\price_lines()` 가 재고 있는 노보 상품에서 라인 × 낱병/묶음의
+  최저가를 읽어 「현재 판매가는 노보 낱병 13,000원 · … 」로 엮는다 (`price_notice_text()`). 값이 또 바뀌어도 거짓이
+  안 된다. 노보 분류 배너에도 같은 줄(`.nvb__price`). **도구 → 노보 이벤트**에 글(옵션 `duckhoo_novo_price_notice`,
+  비우면 자동) · 종료일(`duckhoo_novo_price_until`) 칸. 「가격이 바뀌기 전에 담아 두신 상품은 비우고 다시 담아 주세요」
+  한 줄은 금액 점검(2026-09-18)이 옛 기준가 장바구니를 막기 때문이다
+- **안내 페이지(`pages.php`)는 DB 에 있어 파일을 고쳐도 안 따라온다.** `VERSION` 2 — `ensure()` 가
+  **우리가 넣은 뒤 사람이 손대지 않은 페이지만** 새 글로 바꾼다 (`_dhr_pages_hash` 가 지금 글과 같거나, 해시가 없는
+  옛 페이지는 `post_modified_gmt == post_date_gmt`). 관리자에서 고친 글은 덮지 않는다. **`admin_init` 에 걸려 있어
+  사장님이 관리자 화면을 한 번 열어야 돈다** — 그 전까지 `/shipping/` 본문은 옛 글이다 (헤더 띠 · 상품 상세는 이미 새 글)
+- 테마 화면에서 테마의 `button` 규칙(!important)이 띠의 제목 · × 를 덮으므로 shell.css 가
+  `html body.dhr.dhr-wrap.dhr-wrap .dhn__k` 로 도로 편다. 확인: 상품 · 장바구니 · 노보 분류 · 홈, 390/1280 — 가로 넘침 0
+
+검증: `php design/php-tests/run.php` (응대 시간 · 출고 규칙 · 안내 띠 · 현재 판매가 · 페이지 갱신 18개) ·
+`scratchpad/live/shot.mjs`(네 화면 × 두 폭 스크린샷 · 펼침 · 닫기 · 새로고침 뒤에도 닫힘 · 폭 측정).
+**스크린샷은 Node 22 내장 fetch 로 받는다** — `NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`
+를 주고 Playwright `route` 에서 `fetch` 로 대신 받아 `fulfill` 한다 (undici 를 따로 깔 필요가 없다).
+사장님 팝업(`#pop-dim`)은 우리가 지운 뒤에도 스니펫이 다시 만든다 — 누르기 직전에 다시 지우고 `force` 로 누른다.
