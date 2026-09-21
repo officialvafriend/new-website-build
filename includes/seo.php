@@ -734,7 +734,7 @@ function brand_notes(): array {
 	return (array) apply_filters( 'duckhoo_brand_notes', array(
 		'노보' => array(
 			'title' => '전 라인 재고 보유',
-			'lead'  => '다른 곳에서 품절이어도 액상덕후에는 노보 전 라인 재고가 있습니다.',
+			'lead'  => '액상덕후는 노보 전 라인 재고를 보유하고 있습니다.',
 		),
 	) );
 }
@@ -829,7 +829,7 @@ function cat_note_text( $t ): string {
 		$price[] = '10+1 묶음(' . (int) $c['bundle_n'] . '병) ' . number_format( $c['bundle'] ) . '원'
 			. ( $c['bundle_n'] > 0 ? ' (병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원)' : '' );
 	}
-	$t = '다른 곳에서 품절이어도 액상덕후에는 노보 · 노보 블랙 전 라인 재고가 있습니다.'
+	$t = '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있습니다.'
 		. ( $price ? ' ' . implode( ' · ', $price ) . '.' : '' )
 		. ' 30ml · 니코틴 9.8mg · 입호흡(MTL). 평일 오후 4시 이전 입금 확인 시 당일 출고, '
 		. number_format( free_ship() ) . '원 이상 무료배송.';

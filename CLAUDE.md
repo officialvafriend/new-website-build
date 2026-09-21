@@ -2087,7 +2087,7 @@ $("#wd-summary-coupon-discount").text( "- " + formatPrice( couponTotal ) );     
 
 - **홈 띠** `Front\announce()` → `노보 액상 전 라인 재고 있음 · 낱병 13종 · 10+1 묶음`
 - **브랜드 페이지** `/brand/novo/`: `Seo\brand_notes()`(필터 `duckhoo_brand_notes`)가 브랜드별
-  한 줄을 준다 — 제목 꼬리 「전 라인 재고 보유」 · 소개 첫 문장 「다른 곳에서 품절이어도…」.
+  한 줄을 준다 — 제목 꼬리 「전 라인 재고 보유」 · 소개 첫 문장 「액상덕후는 노보 전 라인 재고를 보유…」(「다른 곳에서 품절이어도」는 사장님이 뺌 — 남 얘기).
   네이버 검색 결과에 그대로 찍히는 글자다. **품절이 풀리면 이 배열에서 노보를 뺀다**
 - **노보 분류 배너** `Novo\stock_banner()` — 한도가 꺼져 있을 때 「노보 전 라인 재고 있음」
   글자판(`nvb--stock`, 필터 `duckhoo_novo_stock_banner`). **사장님 이미지 배너는 여기서 안 쓴다** —
