@@ -2261,7 +2261,7 @@ curl — `<title>` · og:title · twitter:title · meta description · og:descri
   푸터 고객센터 · `/shipping/` `/terms/` `/privacy/` · 상품 상세 혜택 줄(`benefits()`) · 사는 방법(`trust()`) ·
   「언제 출발하나요?」 · 노보 분류 배너가 전부 이것을 읽는다
 - **안내 띠 `.dhn`** (`Front\notices()` → `notice_bar_html()`, 필터 `duckhoo_notices`) — `header_html()` 이
-  `</header>` 바로 뒤에 찍으므로 홈 · 테마 화면 전부에 나온다. 폰은 세 줄(높이 ≈130px) · 데스크톱은 한 줄에 셋.
+  `</header>` 바로 뒤에 찍으므로 홈 · 테마 화면 전부에 나온다. 폰은 세 줄(높이 133px · 「안내」 알약 대신 왼쪽 주황 선 — 알약 50px 을 빼야 제목이 한 줄씩 들어간다) · 데스크톱은 한 줄에 셋(51px).
   제목을 누르면 그 아래로 글이 펼쳐지고(한 번에 하나), × 는 **그날 하루만** 닫는다 (`localStorage['dhr-nb']`,
   `data-dhn` = 글의 해시라 글이 바뀌면 닫아 둔 사람에게도 다시 보인다). 서버가 늘 그리므로 JS 가 죽어도 보인다.
   항목에 `until`(Y-m-d)을 주면 지나면 저절로 빠진다 — 끝난 안내가 첫 화면에 남는 것이 이 가게에서 두 번 문제였다.
