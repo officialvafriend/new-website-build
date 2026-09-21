@@ -1660,6 +1660,14 @@ $ok(($PC.'bad_lines')(null) === [], '끄면 아무것도 안 잡는다');
 $GLOBALS['__filters']['duckhoo_price_check'] = [];
 
 
+/* ── 쿠폰 사용 현황 글자 ───────────────────────────────────────────────── */
+$CA = 'Duckhoo\\Redesign\\Coupon\\Admin\\';
+$ok(strip_tags(($CA.'used_text')(17, 64)) === '17 / 64명', '공용 코드는 「쓴 수 / 한도」 — 64명 중 17명');
+$ok(strip_tags(($CA.'used_text')(64, 64)) === '64 / 64명 (다 씀)', '한도를 다 채우면 「다 씀」');
+$ok(strip_tags(($CA.'used_text')(0, 64)) === '— / 64명', '아직 안 썼으면 대시 · 한도는 보인다');
+$ok(strip_tags(($CA.'used_text')(3, 0)) === '3회', '한도 없는 코드는 횟수만');
+$ok(($CA.'used_text')(0, 0) === '—', '한도도 없고 안 썼으면 대시');
+
 /* ── 후기 화면 (includes/review-ui.php) ──────────────────────────────────── */
 require_once dirname(__DIR__, 2).'/includes/review-ui.php';
 $RU = 'Duckhoo\\Redesign\\ReviewUi\\';

@@ -417,6 +417,28 @@ function create( array $rows, array $opts ): array {
 }
 
 /**
+ * 쓴 횟수를 글자로 — `17 / 64명` · `3회` · `—`.
+ *
+ * 처음엔 「사용됨」 한 낱말이었다. 한 사람에 한 장인 쿠폰에는 맞지만 **64명이 같이 쓰는
+ * 코드는 몇 명이 썼는지가 곧 현황**이다 (사장님 2026-09-21: 사용 현황은 어디서 보나).
+ * 한도가 있으면 `쓴 수 / 한도`, 없으면 횟수만. 0 은 `—`.
+ *
+ * @param int $used  쓴 횟수 (`usage_count`).
+ * @param int $limit 한도 (`usage_limit`, 0 = 없음).
+ * @return string HTML.
+ */
+function used_text( int $used, int $limit = 0 ): string {
+	if ( $used <= 0 ) {
+		return $limit > 0 ? '— / ' . esc_html( number_format( $limit ) ) . '명' : '—';
+	}
+	$n = '<b style="color:#B42318">' . esc_html( number_format( $used ) ) . '</b>';
+	if ( $limit > 0 ) {
+		return $n . ' / ' . esc_html( number_format( $limit ) ) . '명' . ( $used >= $limit ? ' <span style="color:#667085">(다 씀)</span>' : '' );
+	}
+	return $n . '회';
+}
+
+/**
  * 만든 묶음들 — 몇 장 만들어 몇 장이 쓰였는지.
  *
  * @return array<int,object>
@@ -431,10 +453,13 @@ function batches(): array {
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			"SELECT pm.meta_value AS batch, COUNT(*) AS n,
 			        SUM( CASE WHEN CAST( COALESCE( uc.meta_value, '0' ) AS UNSIGNED ) > 0 THEN 1 ELSE 0 END ) AS used,
+			        SUM( CAST( COALESCE( uc.meta_value, '0' ) AS UNSIGNED ) ) AS uses,
+			        SUM( CAST( COALESCE( ul.meta_value, '0' ) AS UNSIGNED ) ) AS cap,
 			        MIN( p.post_date ) AS made
 			 FROM {$wpdb->postmeta} pm
 			 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_type = 'shop_coupon' AND p.post_status = 'publish'
 			 LEFT JOIN {$wpdb->postmeta} uc ON uc.post_id = p.ID AND uc.meta_key = 'usage_count'
+			 LEFT JOIN {$wpdb->postmeta} ul ON ul.post_id = p.ID AND ul.meta_key = 'usage_limit'
 			 WHERE pm.meta_key = %s
 			 GROUP BY pm.meta_value ORDER BY made DESC LIMIT 40",
 			BATCH
@@ -554,6 +579,7 @@ function screen(): void {
 				'email'   => implode( ' ', (array) $c->get_email_restrictions() ),
 				'expires' => $exp ? gmdate( 'Y-m-d', $exp->getTimestamp() - DAY_IN_SECONDS ) : '',
 				'used'    => (int) $c->get_usage_count(),
+				'limit'   => (int) $c->get_usage_limit(),
 			);
 		}
 		$result = array( 'made' => $made, 'errors' => array(), 'batch' => $batch );
@@ -602,7 +628,7 @@ function screen(): void {
 				esc_html( (string) $m['note'] ),
 				esc_html( (string) ( $m['email'] ?? '' ) ),
 				esc_html( (string) $m['expires'] ),
-				isset( $m['used'] ) ? ( (int) $m['used'] > 0 ? '<b style="color:#B42318">사용됨</b>' : '—' ) : '—'
+				isset( $m['used'] ) ? used_text( (int) $m['used'], (int) ( $m['limit'] ?? 0 ) ) : '—'
 			);
 		}
 		echo '</tbody></table>';
@@ -750,13 +776,13 @@ function screen(): void {
 	$list = batches();
 	if ( $list ) {
 		echo '<hr><h2>만든 묶음</h2><table class="widefat striped" style="max-width:900px"><thead><tr>'
-			. '<th>묶음</th><th>만든 날</th><th>장수</th><th>쓴 장수</th><th></th></tr></thead><tbody>';
+			. '<th>묶음</th><th>만든 날</th><th>장수</th><th>쓴 횟수</th><th></th></tr></thead><tbody>';
 		foreach ( $list as $b ) {
 			echo '<tr>';
 			printf( '<td><code>%s</code></td>', esc_html( (string) $b->batch ) );
 			printf( '<td>%s</td>', esc_html( substr( (string) $b->made, 0, 16 ) ) );
 			printf( '<td>%d</td>', (int) $b->n );
-			printf( '<td>%d</td>', (int) $b->used );
+			echo '<td>' . used_text( (int) $b->uses, (int) $b->cap ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput
 			echo '<td><form method="post" style="display:inline">';
 			wp_nonce_field( 'dhr-coupons' );
 			printf( '<input type="hidden" name="dhr_batch" value="%s">', esc_attr( (string) $b->batch ) );
