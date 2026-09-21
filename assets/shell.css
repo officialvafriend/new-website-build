@@ -2597,9 +2597,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span::before{
   font-size: 15px !important; letter-spacing: 1px !important;
 }
 
-/* 안내 띠 (.dhn) — 테마 화면에서 테마의 button · a 규칙(!important)을 이긴다. 모양은 front.css 가 그린다. */
-html body.dhr.dhr-wrap.dhr-wrap .dhn__k,html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:none!important;border:0!important;box-shadow:none!important;color:#111!important;font-size:14px!important;font-weight:700!important;line-height:1.35!important;text-transform:none!important;letter-spacing:0!important;min-width:0!important;height:auto!important;padding:.15rem 0!important;margin:0!important;width:100%!important;border-radius:0!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn__x{width:40px!important;height:40px!important;border-radius:999px!important;color:#6B7280!important;padding:0!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn__p a{display:inline-block!important;margin:.4rem 0 0!important;padding:0!important;background:none!important;border:0!important;color:#C2410C!important;font-size:14px!important;text-decoration:underline!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn ul{list-style:none!important;margin:0!important;padding:0!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn p{margin:0!important}
+/* 안내 띠 (.dhn) — 테마 화면에서 테마의 a · button 규칙(!important)을 이긴다. 모양은 front.css 가 그린다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhn ul{list-style:none!important;margin:0!important;padding:0 0 .1rem!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn li{margin:0!important;padding:0!important}
+html body.dhr.dhr-wrap.dhr-wrap a.dhn__card,html body.dhr.dhr-wrap.dhr-wrap a.dhn__card:hover{color:#111!important;text-decoration:none!important;background:#fff!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__k,html body.dhr.dhr-wrap.dhr-wrap .dhn__eb,html body.dhr.dhr-wrap.dhr-wrap .dhn__s{margin:0!important;padding:0!important;letter-spacing:0!important;text-transform:none!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:#fff!important;border:0!important;box-shadow:0 1px 0 #E2E4E8!important;color:#6B7280!important;width:32px!important;height:32px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
+

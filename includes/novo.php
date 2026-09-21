@@ -1196,6 +1196,22 @@ function price_lines(): array {
 }
 
 /**
+ * 현재 판매가를 한 줄로 — 안내 카드용. 「낱병 13,000원 · 블랙 13,500원 · 10+1 120,000원 · 블랙 10+1 130,000원」.
+ * 이름의 「노보 」는 뗀다 (카드 이름표가 이미 노보 액상이다).
+ *
+ * @return string
+ */
+function price_brief(): string {
+	$parts = array();
+	foreach ( price_lines() as $r ) {
+		$label   = (string) preg_replace( '/^노보\s*/u', '', (string) $r['label'] );
+		$label   = (string) preg_replace( '/\s*\(\d+병\)/u', '', $label );
+		$parts[] = trim( $label ) . ' ' . number_format_i18n( (float) $r['price'] ) . '원';
+	}
+	return implode( ' · ', $parts );
+}
+
+/**
  * 가격 인상 안내 글 — 헤더 아래 안내 띠에 실린다. 관리자(도구 → 노보 이벤트)에 쓴 글이
  * 있으면 그것, 없으면 현재 판매가를 읽어 엮는다. 끄려면 종료일(`duckhoo_novo_price_until`)을
  * 지난 날짜로 두거나 필터 `duckhoo_novo_price_notice` 로 빈 문자열.

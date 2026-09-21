@@ -1300,34 +1300,42 @@ function hours_short(): string {
  * @return array<int,array<string,string>>
  */
 function notices(): array {
+	$hl    = hours_lines();
 	$items = array();
 	$items[] = array(
 		'id'   => 'hours',
 		'icon' => 'clock',
-		'k'    => hours_short(),
-		't'    => '고객센터 응대 시간이 ' . hours_lines()[0] . ' 로 바뀌었습니다. ' . hours_lines()[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
+		'eb'   => '고객센터',
+		'k'    => '평일 ' . (string) hours()['open'] . '–' . (string) hours()['close'],
+		's'    => ( '' !== trim( (string) ( hours()['lunch'] ?? '' ) ) ? '점심 ' . trim( (string) hours()['lunch'] ) . ' · ' : '' ) . $hl[1] . ' · 그 외 시간 문의는 다음 영업일에 답해 드립니다',
+		't'    => '고객센터 응대 시간이 ' . $hl[0] . ' 로 바뀌었습니다. ' . $hl[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
 		'url'  => inquiry_url(),
-		'more' => '1:1 문의 남기기',
+		'more' => '1:1 문의',
 	);
 	$items[] = array(
 		'id'   => 'ship',
 		'icon' => 'truck',
-		'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금 16시 이후 · 주말 주문은 월요일 출고' ) ),
+		'eb'   => '배송',
+		'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금요일 16시 이후 · 주말 주문은 월요일 16시 출고' ) ),
+		's'    => '평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다',
 		't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
 		'url'  => home_url( '/shipping/' ),
-		'more' => '배송 안내 보기',
+		'more' => '배송 안내',
 	);
 	if ( function_exists( '\\Duckhoo\\Redesign\\Novo\\price_notice_text' ) ) {
 		$txt = \Duckhoo\Redesign\Novo\price_notice_text();
 		if ( '' !== $txt ) {
 			$novo    = cat_by_name( '노보' );
+			$brief   = function_exists( '\\Duckhoo\\Redesign\\Novo\\price_brief' ) ? \Duckhoo\Redesign\Novo\price_brief() : '';
 			$items[] = array(
 				'id'    => 'novo-price',
 				'icon'  => 'tag',
-				'k'     => '노보 액상 가격 인상 안내',
+				'eb'    => '노보 액상',
+				'k'     => '가격이 인상되었습니다',
+				's'     => '' !== $brief ? $brief : '현재 판매가는 상품 페이지에서 확인해 주세요',
 				't'     => $txt,
 				'url'   => $novo && is_string( get_term_link( $novo ) ) ? (string) get_term_link( $novo ) : brand_url( '노보' ),
-				'more'  => '노보 액상 보기',
+				'more'  => '노보 보기',
 				'until' => trim( (string) get_option( 'duckhoo_novo_price_until', '' ) ),
 			);
 		}
@@ -1349,8 +1357,10 @@ function notices(): array {
 }
 
 /**
- * 안내 띠 — 헤더 바로 아래, 홈 · 테마 화면 전부. 폰은 세 줄, 데스크톱은 한 줄에 셋.
- * 제목을 누르면 그 아래로 글이 펼쳐지고, × 는 그날 하루만 닫는다 (front.js, `localStorage['dhr-nb']`).
+ * 안내 띠 — 헤더 바로 아래, 홈 · 테마 화면 전부. **카드 세 장, 접지 않는다** (2026-09-21 두 번째 판 —
+ * 첫 판의 아코디언은 「너무 별로」였고, 문의를 줄이려면 누르지 않아도 읽혀야 한다).
+ * 카드 하나 = 아이콘 · 이름표(`eb`) · 굵은 한 줄(`k`) · 회색 한 줄(`s`) · 이어지는 곳(`url` · `more`).
+ * 폰은 옆으로 넘기는 카드 줄, 데스크톱은 한 줄에 셋. × 는 그날 하루만 닫는다 (front.js, `localStorage['dhr-nb']`).
  * 글이 바뀌면 `data-dhn`(내용의 해시)이 달라져 닫아 둔 사람에게도 다시 보인다.
  *
  * @return string
@@ -1360,19 +1370,22 @@ function notice_bar_html(): string {
 	if ( ! $items ) {
 		return '';
 	}
-	$hash = substr( md5( wp_json_encode( array_map( fn( $i ) => array( $i['k'], $i['t'] ?? '' ), $items ) ) ), 0, 8 );
-	$h    = '<section class="dhn" aria-label="안내" data-dhn="' . esc_attr( $hash ) . '"><div class="wrap dhn-in">'
-		. '<span class="dhn__eb">안내</span><ul class="dhn__list">';
+	$hash = substr( md5( wp_json_encode( array_map( fn( $i ) => array( $i['k'], $i['s'] ?? '', $i['t'] ?? '' ), $items ) ) ), 0, 8 );
+	$h    = '<section class="dhn" aria-label="안내" data-dhn="' . esc_attr( $hash ) . '"><div class="wrap dhn-in"><ul class="dhn__list">';
 	foreach ( $items as $it ) {
-		$id  = 'dhn-p-' . sanitize_html_class( (string) ( $it['id'] ?? md5( (string) $it['k'] ) ) );
-		$h  .= '<li class="dhn__it">'
-			. '<button type="button" class="dhn__k" aria-expanded="false" aria-controls="' . esc_attr( $id ) . '">'
-			. icon( (string) ( $it['icon'] ?? 'tag' ) ) . '<span>' . esc_html( (string) $it['k'] ) . '</span>' . icon( 'chev' ) . '</button>'
-			. '<div class="dhn__p" id="' . esc_attr( $id ) . '" hidden><p>' . esc_html( (string) ( $it['t'] ?? '' ) ) . '</p>';
-		if ( '' !== trim( (string) ( $it['url'] ?? '' ) ) ) {
-			$h .= '<a href="' . esc_url( (string) $it['url'] ) . '">' . esc_html( (string) ( $it['more'] ?? '자세히 보기' ) ) . '</a>';
+		$url  = trim( (string) ( $it['url'] ?? '' ) );
+		$tag  = '' !== $url ? 'a' : 'div';
+		$h   .= '<li><' . $tag . ' class="dhn__card"' . ( '' !== $url ? ' href="' . esc_url( $url ) . '"' : '' ) . '>'
+			. '<span class="dhn__ic" aria-hidden="true">' . icon( (string) ( $it['icon'] ?? 'tag' ) ) . '</span>'
+			. '<span class="dhn__tx">'
+			. ( '' !== trim( (string) ( $it['eb'] ?? '' ) ) ? '<span class="dhn__eb">' . esc_html( (string) $it['eb'] ) . '</span>' : '' )
+			. '<b class="dhn__k">' . esc_html( (string) $it['k'] ) . '</b>'
+			. ( '' !== trim( (string) ( $it['s'] ?? '' ) ) ? '<span class="dhn__s">' . esc_html( (string) $it['s'] ) . '</span>' : '' )
+			. '</span>';
+		if ( '' !== $url ) {
+			$h .= '<span class="dhn__more">' . esc_html( (string) ( $it['more'] ?? '자세히' ) ) . icon( 'chev' ) . '</span>';
 		}
-		$h .= '</div></li>';
+		$h .= '</' . $tag . '></li>';
 	}
 	$h .= '</ul><button type="button" class="dhn__x" aria-label="안내 닫기 (오늘 하루)" data-dhn-close>' . icon( 'close' ) . '</button></div></section>';
 	return $h;
