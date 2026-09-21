@@ -839,14 +839,13 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .dhn__eb{font-size:13px;font-weight:800;color:#C2410C;line-height:1.3}
 .dhr .dhn__k{font-size:15px;font-weight:800;line-height:1.35;color:#111}
 .dhr .dhn__s{font-size:13.5px;line-height:1.45;color:#4E565F}
-.dhr .dhn__more{flex:0 0 auto;align-self:center;display:inline-flex;align-items:center;gap:.1rem;font-size:13px;font-weight:700;color:#111;white-space:nowrap}
+.dhr .dhn__more{justify-self:start;margin-top:.2rem;display:inline-flex;align-items:center;gap:.05rem;font-size:13px;font-weight:800;color:#C2410C;white-space:nowrap}
 .dhr .dhn__more svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .dhr a.dhn__card:hover .dhn__more{text-decoration:underline;text-underline-offset:3px}
 .dhr .dhn__x{position:absolute;right:calc(var(--dh-gutter,16px) - 6px);top:-.15rem;width:32px;height:32px;margin:0;padding:0;border:0;border-radius:999px;background:#fff;box-shadow:0 1px 0 #E2E4E8;color:#6B7280;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1}
 .dhr .dhn__x svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .dhr .dhn__x:hover{color:#111;background:#F4F6F7}
 @media(max-width:879px){
-  .dhr .dhn__more{display:none}
   .dhr .dhn-in{padding-top:.85rem}
   .dhr .dhn__x{top:.2rem}
 }
