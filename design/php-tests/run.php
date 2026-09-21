@@ -1195,6 +1195,39 @@ $ok(($S.'description')($wrong) === $wrong, '필터로 목록을 비우면 도로
 $GLOBALS['__filters']['duckhoo_meta_desc_override'] = [];
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+// 2026-09-21 — 코덱스가 노보 13개에 규격대로 찍은 꼬리도 템플릿이다 (맛이 없고 다섯 개는 남의 맛).
+$codex = '노보 블랙 데저트 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용. 액상덕후에서 3만원 이상 무료배송, 신규 가입 시 적립금 8,800원 증정.';
+$codex2 = '노보 타박멘솔 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용. 액상덕후 노보 액상 판매량 1위 제품. 3만원 이상 무료배송, 가입 시 적립금 8,800원.';
+$codex3 = '노보 액상 30ml 10병을 병당 7,000원(총 70,000원)에. 맛 조합 선택 가능한 입호흡 전자담배 액상 묶음 상품. 무료배송, 가입 시 적립금 8,800원.';
+$felix = '[펠릭스] 더블라임 20,000원 - 입호흡 전용 더블라임 향 액상(9.8mg/30ml). 3만원 이상 무료배송, 신규가입 적립금 8,800원 증정. 액상덕후.';
+$ok(($S.'templated')($codex) && ($S.'templated')($codex2) && ($S.'templated')($codex3), '코덱스 규격 꼬리 세 가지를 템플릿으로 본다');
+$ok(!($S.'templated')($felix) && !($S.'templated')('라임 두 겹. 액상덕후 — 가입 즉시 8,800원 적립.'), '펠릭스 손글(「신규가입」 빈칸 없음) · 우리 꼬리는 안 걸린다');
+$GLOBALS['__slugs'][901] = rawurlencode('노보-블랙-타박멘솔-9-8mg-30ml');
+$d = ($S.'description')($codex);
+$ok(str_starts_with($d, '담배 잎의 구수함') && !str_contains($d, '데저트'), '블랙 타박멘솔에 붙어 있던 「데저트」 설명이 우리 글로 바뀐다');
+$GLOBALS['__slugs'][901] = rawurlencode('노보-엠에스블랜드-9-8mg-30ml');
+$ok(str_starts_with(($S.'description')($codex2), '구수한 연초') && !str_contains(($S.'description')($codex2), '판매량 1위'), '엠에스블랜드에 붙어 있던 「타박멘솔 판매량 1위」가 우리 글로 바뀐다');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$ok(($S.'description')($felix) === $felix, '펠릭스 손글은 그대로');
+// 노보 상품 제목 — 값 · 병 수는 상품에서 읽는다
+$GLOBALS['__products'][905] = new WC_Product(905, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000);
+$GLOBALS['__products'][906] = new WC_Product(906, '[노보 블랙 리퀴드] 10+1 | 금액 130,000원', 130000);
+$GLOBALS['__products'][907] = new WC_Product(907, '[노보 블랙] 엠에스블랜드 (9.8mg / 30ml)', 13500);
+$ok(($S.'product_title')($GLOBALS['__products'][905]) === '노보 타박멘솔 입호흡 액상 9.8mg 30ml 13,000원 | 액상덕후', '노보 낱병 제목: 브랜드 · 맛 · 입호흡 액상 · 규격 · 값');
+$ok(($S.'product_title')($GLOBALS['__products'][906]) === '노보 블랙 액상 10+1 묶음 11병 130,000원 입호흡 | 액상덕후', '노보 10+1 제목: 「리퀴드」를 떼고 병 수 · 값');
+$ok(($S.'product_title')($GLOBALS['__products'][907]) === '노보 블랙 엠에스블랜드 입호흡 액상 9.8mg 30ml 13,500원 | 액상덕후', '노보 블랙 낱병 제목');
+$ok(($S.'product_title')($GLOBALS['__products'][901]) === '', '펠릭스는 제목을 안 정한다 (AIOSEO 값 그대로)');
+$GLOBALS['__qid'] = 905;
+$ok(($S.'title')('[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후') === '노보 타박멘솔 입호흡 액상 9.8mg 30ml 13,000원 | 액상덕후', 'title 필터가 노보 상품에서 우리 제목을 준다');
+$tags = ($S.'social_title')(['og:title' => '[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후', 'og:type' => 'product']);
+$ok($tags['og:title'] === '노보 타박멘솔 입호흡 액상 9.8mg 30ml 13,000원 | 액상덕후' && $tags['og:type'] === 'product' && !isset($tags['twitter:title']), 'og:title 만 바꾸고 없는 칸은 만들지 않는다');
+$GLOBALS['__qid'] = 901;
+$ok(($S.'title')('[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후') === '[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후', '펠릭스 제목은 AIOSEO 값 그대로');
+$GLOBALS['__filters']['duckhoo_product_title_brands'] = [fn($v) => []];
+$GLOBALS['__qid'] = 905;
+$ok(($S.'title')('원래 제목') === '원래 제목', '필터로 브랜드를 비우면 노보도 AIOSEO 값');
+$GLOBALS['__filters']['duckhoo_product_title_brands'] = [];
+unset($GLOBALS['__products'][905], $GLOBALS['__products'][906], $GLOBALS['__products'][907]);
 $GLOBALS['__is_product'] = false; $GLOBALS['__qid'] = 0;
 // 브랜드 페이지
 $ok(($S.'brand_slug')('노보') === 'novo' && ($S.'brand_slug')('조바') === rawurlencode('조바'), '영문 조각이 있으면 그것, 없으면 한글 그대로');
@@ -1271,7 +1304,7 @@ $ok(($S.'hand_text')($GLOBALS['__products'][901]) === '사장님이 상자에 �
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][902] = '노보-10-1';
 $GLOBALS['__slugs'][903] = rawurlencode('노보-블랙-블랙멘솔-9-8mg-30ml');
-$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 60, '상품 글이 실렸다 (주소 60개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다)');
+$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 63, '상품 글이 실렸다 (주소 63개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다)');
 $ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
 foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
 

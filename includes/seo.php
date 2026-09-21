@@ -347,7 +347,13 @@ function cap( string $d ): string {
  * @return bool
  */
 function templated( string $d ): bool {
-	foreach ( (array) apply_filters( 'duckhoo_meta_desc_template_marks', array( '상품입니다. 가입 시 적립금' ) ) as $mark ) {
+	// 2026-09-21: 두 번째 꼬리. 코덱스가 2026-09-11 에 노보 13개에 「노보 X 액상 30ml, 니코틴 9.8mg
+	// 입호흡(MTL) 전용. 액상덕후에서 3만원 이상 무료배송, (신규) 가입 시 적립금 8,800원(증정).」
+	// 을 규격대로 찍었다 — 맛이 없고, 다섯 개는 남의 맛(데저트 · 타박멘솔)이 붙었다. 전체 상품을
+	// 다시 받아 세어 보니 이 꼬리는 노보 13개뿐이다. 펠릭스 · 네스티의 손글(「신규가입 적립금」,
+	// 빈칸 없음)은 안 걸린다.
+	$marks = array( '상품입니다. 가입 시 적립금', '무료배송, 신규 가입 시 적립금', '무료배송, 가입 시 적립금' );
+	foreach ( (array) apply_filters( 'duckhoo_meta_desc_template_marks', $marks ) as $mark ) {
 		$mark = (string) $mark;
 		if ( '' !== $mark && false !== mb_strpos( $d, $mark ) ) {
 			return true;
@@ -464,6 +470,10 @@ function title( $t ): string {
 	if ( $nc ) {
 		return cat_title( $nc );
 	}
+	$pt = product_title_here();
+	if ( '' !== $pt ) {
+		return $pt;
+	}
 	if ( ! is_brand_page() ) {
 		return (string) $t;
 	}
@@ -474,6 +484,89 @@ function title( $t ): string {
 }
 add_filter( 'aioseo_title', __NAMESPACE__ . '\\title', 20 );
 add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 20 );
+
+/**
+ * 제목을 우리가 정하는 브랜드. 기본은 노보뿐 — 검색에서 「노보 액상」으로 들어오는
+ * 손님이 지금 가장 많고(2026-09-21), AIOSEO 기본 제목 「[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후」
+ * 에는 「액상」도 「입호흡」도 값도 없다. 다른 브랜드까지 넓히려면 필터에 이름을 더한다.
+ *
+ * @return string[]
+ */
+function title_brands(): array {
+	return (array) apply_filters( 'duckhoo_product_title_brands', array( '노보' ) );
+}
+
+/**
+ * 상품 제목 — `노보 타박멘솔 입호흡 액상 9.8mg 30ml 13,000원 | 액상덕후`.
+ * 묶음은 `노보 액상 10+1 묶음 11병 120,000원 입호흡 | 액상덕후`.
+ * 값 · 병 수는 상품에서 그때그때 읽는다 — 적어 두면 값이 바뀔 때 거짓이 된다 (2026-09-11 의 7,000원).
+ * 제목을 정하지 않는 브랜드면 빈 문자열 (AIOSEO 값 그대로).
+ *
+ * @param \WC_Product $p 상품.
+ * @return string
+ */
+function product_title( \WC_Product $p ): string {
+	$n     = split_name( $p );
+	$brand = brand_aliases()[ $n['brand'] ] ?? $n['brand'];
+	if ( '' === $brand || ! in_array( $brand, title_brands(), true ) ) {
+		return '';
+	}
+	$line  = trim( (string) preg_replace( '/\s*리퀴드\s*$/u', '', $n['brand'] ) );   // 노보 · 노보 블랙
+	$title = $n['title'];
+	$spec  = '';
+	if ( preg_match( '/\(([^)]*)\)/u', $title, $m ) ) {
+		$spec = trim( (string) preg_replace( '/\s+/u', ' ', str_replace( '/', ' ', $m[1] ) ) );   // (9.8mg / 30ml) → 9.8mg 30ml
+	}
+	$flavor = trim( (string) preg_replace( '/\s*\([^)]*\)\s*|\s*\|\s*금액.*$/u', '', $title ) );
+	$price  = (float) $p->get_price();
+	$won    = $price > 0 ? number_format( $price ) . '원' : '';
+	$pb     = per_bottle( $p );
+	if ( $pb['qty'] > 1 ) {
+		$parts = array( $line . ' 액상 ' . $flavor . ( false === mb_strpos( $flavor, '묶음' ) ? ' 묶음' : '' ) . ' ' . $pb['qty'] . '병', $won, '입호흡' );
+	} else {
+		$parts = array( $line . ' ' . $flavor . ' 입호흡 액상', $spec, $won );
+	}
+	return trim( implode( ' ', array_filter( $parts, fn( $x ) => '' !== trim( (string) $x ) ) ) ) . ' | ' . get_bloginfo( 'name' );
+}
+
+/**
+ * 지금 화면이 상품 상세이고 제목을 우리가 정하는 브랜드면 그 제목, 아니면 빈 문자열.
+ *
+ * @return string
+ */
+function product_title_here(): string {
+	if ( ! function_exists( 'is_product' ) || ! is_product() || ! function_exists( 'wc_get_product' ) ) {
+		return '';
+	}
+	$p = wc_get_product( get_queried_object_id() );
+	return $p instanceof \WC_Product ? product_title( $p ) : '';
+}
+
+/**
+ * og:title · twitter:title 도 같은 제목. AIOSEO 는 소셜 제목을 `aioseo_title` 로 안 거치고
+ * 태그 배열째로 내주므로(`aioseo_facebook_tags` · `aioseo_twitter_tags`) 거기서 바꾼다.
+ * 있는 칸만 바꾼다 — 없는 칸을 새로 만들지 않는다.
+ *
+ * @param mixed $tags 태그 배열.
+ * @return mixed
+ */
+function social_title( $tags ) {
+	if ( ! is_array( $tags ) ) {
+		return $tags;
+	}
+	$t = product_title_here();
+	if ( '' === $t ) {
+		return $tags;
+	}
+	foreach ( array( 'og:title', 'twitter:title' ) as $k ) {
+		if ( isset( $tags[ $k ] ) ) {
+			$tags[ $k ] = $t;
+		}
+	}
+	return $tags;
+}
+add_filter( 'aioseo_facebook_tags', __NAMESPACE__ . '\\social_title', 20 );
+add_filter( 'aioseo_twitter_tags', __NAMESPACE__ . '\\social_title', 20 );
 
 /**
  * canonical — 브랜드 페이지만.
