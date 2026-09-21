@@ -232,6 +232,7 @@ function screen(): void {
 		check_admin_referer( 'dhr-novo' );
 		update_option( 'duckhoo_novo_banner_img', esc_url_raw( wp_unslash( $_POST['dhr_novo_img'] ?? '' ) ) );
 		update_option( 'duckhoo_novo_banner_img_m', esc_url_raw( wp_unslash( $_POST['dhr_novo_img_m'] ?? '' ) ) );
+		update_option( 'duckhoo_novo_show_stock', empty( $_POST['dhr_novo_show_stock'] ) ? '0' : '1' );
 		$saved = true;
 	}
 
@@ -324,11 +325,18 @@ function screen(): void {
 	if ( $saved ) {
 		echo '<div class="notice notice-success"><p>배너를 저장했습니다.</p></div>';
 	}
-	echo '<p>노보 분류 목록 맨 위에 그립니다. 이미지를 고르면 그 이미지를, 비워 두면 플러그인이 그린 글자판을 씁니다. '
+	echo '<p>노보 분류 목록 맨 위에 그립니다. 지금은 한도가 꺼져 있어 <b>「전 라인 재고 있음」 글자판</b>이 나갑니다 (이미지 배너에는 「1인 1세트」가 적혀 있어 한도를 켰을 때만 씁니다). '
 		. '<a href="' . esc_url( (string) get_term_link( (string) $c['cat'], 'product_cat' ) ) . '" target="_blank" rel="noopener">화면 보기</a></p>';
 	echo '<form method="post" style="margin:0 0 2em">';
 	wp_nonce_field( 'dhr-novo' );
 	echo '<table class="form-table" role="presentation"><tbody>';
+	printf(
+		'<tr><th scope="row">남은 수량 표시</th><td><label><input type="checkbox" name="dhr_novo_show_stock" value="1"%s> '
+		. '카드 · 상세에 「남은 수량 N개」를 손님에게 보여 줍니다</label>'
+		. '<p class="description">숫자는 위 표의 <b>재고</b> 열 그대로입니다 (상품 → 재고 수량). '
+		. '<b>실재고와 맞춘 뒤에만 켜세요</b> — 틀린 숫자는 없는 것보다 나쁩니다. 꺼 두면 「재고 있음」만 말합니다.</p></td></tr>',
+		'1' === (string) get_option( 'duckhoo_novo_show_stock', '0' ) ? ' checked' : ''
+	);
 	printf(
 		'<tr><th scope="row"><label for="dhr_novo_img">배너 이미지</label></th><td>'
 		. '<input type="url" class="regular-text code" id="dhr_novo_img" name="dhr_novo_img" value="%s" placeholder="https://…">'

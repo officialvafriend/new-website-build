@@ -864,6 +864,21 @@ if ( function_exists( 'add_filter' ) ) {
    칸 이름을 정하기 때문에, form.cart 안에 글자가 늘면 판정이 어긋난다. */
 
 /**
+ * 남은 수량을 **손님에게** 보여 줄 것인가.
+ *
+ * 사장님(2026-09-21): 사이트의 재고 숫자와 실재고가 다르다. 틀린 숫자는 없는 것보다
+ * 나쁘다 — 관리자에서 숫자를 맞추기 전까지는 카드 · 상세에 「남은 수량」을 안 적는다.
+ * `도구 → 노보 이벤트` 의 체크박스(옵션 `duckhoo_novo_show_stock`)로 켠다.
+ * 관리자 화면의 표는 이것과 무관하게 늘 숫자를 보여 준다 (맞추라고 있는 표다).
+ *
+ * @return bool
+ */
+function show_stock(): bool {
+	$opt = function_exists( 'get_option' ) ? (string) get_option( 'duckhoo_novo_show_stock', '0' ) : '0';
+	return (bool) apply_filters( 'duckhoo_novo_show_stock', '1' === $opt );
+}
+
+/**
  * 남은 재고. 워드커머스 재고 관리가 켜진 상품만 숫자가 있다.
  *
  * @param \WC_Product|null $p 상품.
@@ -887,7 +902,7 @@ function product_notice( $p = null ): void {
 	if ( ! on() || ! is_novo( $p ) ) {
 		return;
 	}
-	$stock = stock_left( $p );
+	$stock = show_stock() ? stock_left( $p ) : null;
 	$cap   = limited( $p );
 	if ( ! $cap && null === $stock ) {
 		return; // 낱병이고 재고 숫자도 없으면 할 말이 없다.
@@ -966,7 +981,7 @@ function card_note( string $extra, $p = null ): string {
 	if ( ! on() || ! is_novo( $p ) || ! $p->is_in_stock() ) {
 		return $extra;
 	}
-	$stock = stock_left( $p );
+	$stock = show_stock() ? stock_left( $p ) : null;
 	$parts = array();
 	if ( null !== $stock ) {
 		$parts[] = '<b>남은 수량 ' . (int) $stock . '개</b>';
@@ -989,7 +1004,11 @@ add_filter( 'duckhoo_card_extra', __NAMESPACE__ . '\\card_note', 10, 2 );
  * @return void
  */
 function banner(): void {
-	if ( ! limiting() || ! function_exists( 'is_tax' ) || ! is_tax( 'product_cat', (string) config()['cat'] ) ) {
+	if ( ! on() || ! function_exists( 'is_tax' ) || ! is_tax( 'product_cat', (string) config()['cat'] ) ) {
+		return;
+	}
+	if ( ! limiting() ) {
+		stock_banner();
 		return;
 	}
 
@@ -1054,6 +1073,59 @@ function banner(): void {
 	echo '</section>';
 }
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
+
+/**
+ * 한도가 꺼져 있을 때의 배너 — **재고가 있다**는 말 하나.
+ *
+ * 2026-09-21 사장님: 다른 사이트에서 노보 품절이 나고 있다, 물 들어올 때 노 젓자.
+ * 노보를 찾아 들어온 손님에게 「여기는 있다」고 말하는 자리가 사이트 어디에도 없었다.
+ * 예전 배너(1인 1세트 제한)는 한도와 함께 내려갔고, 사장님 이미지 배너에도 그 문구가
+ * 있어 **여기서는 이미지를 쓰지 않는다** — 글자판만.
+ *
+ * 문구는 `duckhoo_novo_stock_banner`. 빈 배열을 돌려주면 안 그린다.
+ * 출고 조건은 `/shipping/` 안내와 같은 말이어야 한다 (평일 오후 4시 · 입금 확인 기준).
+ *
+ * @return void
+ */
+function stock_banner(): void {
+	$b = (array) apply_filters(
+		'duckhoo_novo_stock_banner',
+		array(
+			'eb'    => '노보 액상 재고 안내',
+			'head'  => array( '노보 전 라인 ', '재고 있음' ),
+			'set'   => array( '낱병 13종', '10+1 묶음 (11병)' ),
+			'lead'  => '다른 곳에서 품절이어도 액상덕후에는 있습니다. 노보 · 노보 블랙 전 맛을 지금 주문하실 수 있습니다.',
+			'notes' => array( '평일 오후 4시 이전 입금 확인 시 당일 출고', '10병 이상은 10+1 묶음이 병당 더 저렴합니다' ),
+		)
+	);
+	if ( ! $b ) {
+		return;
+	}
+	echo '<section class="nvb nvb--stock" aria-labelledby="nvb-h">';
+	if ( '' !== (string) ( $b['eb'] ?? '' ) ) {
+		echo '<p class="nvb__eb">' . esc_html( (string) $b['eb'] ) . '</p>';
+	}
+	echo '<h2 class="nvb__h" id="nvb-h">' . esc_html( (string) ( $b['head'][0] ?? '' ) )
+		. '<mark>' . esc_html( (string) ( $b['head'][1] ?? '' ) ) . '</mark></h2>';
+	if ( ! empty( $b['set'] ) ) {
+		echo '<p class="nvb__set">';
+		foreach ( (array) $b['set'] as $i => $row ) {
+			echo ( $i ? '<i aria-hidden="true"></i>' : '' ) . '<span>' . esc_html( (string) $row ) . '</span>';
+		}
+		echo '</p>';
+	}
+	if ( '' !== (string) ( $b['lead'] ?? '' ) ) {
+		echo '<p class="nvb__p">' . esc_html( (string) $b['lead'] ) . '</p>';
+	}
+	if ( ! empty( $b['notes'] ) ) {
+		echo '<ul class="nvb__notes">';
+		foreach ( (array) $b['notes'] as $n ) {
+			echo '<li>' . esc_html( (string) $n ) . '</li>';
+		}
+		echo '</ul>';
+	}
+	echo '</section>';
+}
 
 /* ── 노보를 금액대별 자동 할인에서 뺀다 ────────────────────────────────────
    9월 이벤트는 10만원 이상 10,000원 한 단계이고 **노보는 대상이 아니다** (사장님).

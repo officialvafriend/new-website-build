@@ -92,6 +92,7 @@ function wc_get_orders($args){
 if(!function_exists('plugin_dir_path')) { function plugin_dir_path($f){ return dirname($f).'/'; } }
 if(!function_exists('plugin_dir_url')) { function plugin_dir_url($f){ return 'https://example.test/wp-content/plugins/new-website-build/'; } }
 if(!function_exists('wp_enqueue_style')) { function wp_enqueue_style(...$a){} } if(!function_exists('wp_enqueue_script')) { function wp_enqueue_script(...$a){} } if(!function_exists('wp_add_inline_script')) { function wp_add_inline_script(...$a){} } if(!function_exists('wp_dequeue_style')) { function wp_dequeue_style(...$a){} } if(!function_exists('plugins_url')) { function plugins_url(...$a){ return ''; } }
+if(!function_exists('is_tax')) { function is_tax($t='',$term=''){ return !empty($GLOBALS['__is_tax']); } }
 if(!function_exists('is_admin')) { function is_admin(){ return false; } } if(!function_exists('is_front_page')) { function is_front_page(){ return false; } } if(!function_exists('is_page')) { function is_page($s=''){ return false; } }
 if(!function_exists('get_terms')) { function get_terms($a){ return []; } } if(!function_exists('is_wp_error')) { function is_wp_error($x){ return false; } } if(!function_exists('wp_timezone')) { function wp_timezone(){ return new DateTimeZone('Asia/Seoul'); } }
 if(!function_exists('get_theme_mod')) { function get_theme_mod($k){ return 0; } } if(!function_exists('wp_get_attachment_image')) { function wp_get_attachment_image(...$a){ return ''; } } if(!function_exists('get_bloginfo')) { function get_bloginfo($k){ return '액상덕후'; } }

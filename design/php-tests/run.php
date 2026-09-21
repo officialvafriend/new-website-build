@@ -308,10 +308,12 @@ $singlesOn();
 // 40. 남은 재고는 재고 관리가 켜진 상품만
 $ok(($N.'stock_left')($lowst) === 4 && ($N.'stock_left')($plain) === null, '재고 관리가 켜진 상품만 남은 수량이 있다');
 
-// 41. 카드 한 줄
+// 41. 카드 한 줄 — 남은 수량은 기본으로 **안 보인다** (2026-09-21: 사이트 재고 ≠ 실재고). 옵션으로 켠다
 $GLOBALS['__cart']->items = [];
+$ok(!str_contains(apply_filters('duckhoo_card_extra', '', $lowst), '남은 수량'), '남은 수량은 기본으로 카드에 안 적는다 — 틀린 숫자는 없는 것보다 나쁘다');
+$GLOBALS['__options']['duckhoo_novo_show_stock'] = '1';
 $note = apply_filters('duckhoo_card_extra', '', $lowst);
-$ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 10병'), '낱병 카드에 남은 재고와 하루 한도를 적는다');
+$ok(str_contains($note, '남은 수량 4개') && str_contains($note, '하루 10병'), '옵션을 켜면 낱병 카드에 남은 재고와 하루 한도를 적는다');
 $ok(str_contains(apply_filters('duckhoo_card_extra', '', $bundle), '하루 한 세트'), '묶음 카드는 "하루 한 세트" 라고 적는다');
 $ok(apply_filters('duckhoo_card_extra', '', $other) === '', '노보가 아닌 카드에는 붙지 않는다');
 
@@ -543,10 +545,10 @@ $ok(str_contains($T(10, 11),'낱병은 제한 없습니다'), '낱병은 살 수
 $ok(($N.'nword')(1) === '한' && ($N.'nword')(2) === '두' && ($N.'nword')(9) === '9', '1~5 는 한글 수관형사로 쓴다');
 $ok(($N.'sets_of')(10) === 1 && ($N.'sets_of')(20) === 2, '병 수를 세트 수로 센다');
 
-// 홈 공지 띠 — 이벤트가 끝났으면 「진행 중」이 떠 있으면 안 된다
-$ok(str_contains(($F.'announce')(), '조기 종료'), '공지 띠가 이벤트가 끝났다고 말한다');
-$ok(!str_contains(($F.'announce')(), '진행 중'), '「진행 중」이라고 말하지 않는다');
-$ok(str_contains(($F.'announce')(), '10만원 이상'), '손님이 본 이름 그대로 쓴다');
+// 홈 공지 띠 — 2026-09-21 노보 재고 안내. 끝난 할인 이야기는 더 이상 없어야 한다
+$ok(str_contains(($F.'announce')(), '노보') && str_contains(($F.'announce')(), '재고 있음'), '공지 띠가 노보 재고를 말한다');
+$ok(!str_contains(($F.'announce')(), '진행 중') && !str_contains(($F.'announce')(), '할인'), '끝난 할인 · 「진행 중」을 말하지 않는다');
+$ok(mb_strlen(($F.'announce')()) <= 40, '폰에서 한 줄 — 40자 안');
 
 // 상품 후기 — 상품의 댓글이 닫혀 있어도 리뷰는 열어 준다 (가져온 상품이 그렇다)
 $R = 'Duckhoo\\Redesign\\Product\\';
@@ -578,7 +580,6 @@ $GLOBALS['__filters']['duckhoo_force_product_reviews'] = [];
 $GLOBALS['__options']['woocommerce_enable_reviews'] = 'no';
 $ok(($R.'reviews_on')() === false && ($R.'open_reviews')(false, 7) === false, '전체 설정이 꺼져 있으면 열지 않는다');
 $GLOBALS['__options']['woocommerce_enable_reviews'] = 'yes';
-$ok(str_contains(($F.'announce')(), '9월 9일'), '언제부터인지 적는다');
 $ok(!str_contains(($F.'announce')(), '그동안 이용해'), '가게가 문 닫는 것처럼 읽힐 말은 쓰지 않는다');
 $ok(($F.'take_announce')() === true, '기본으로 우리가 띠를 맡는다');
 $ok(in_array('dhr-ann', ($F.'announce_body_class')([]), true), '맡는 동안 몸통에 표시를 남긴다');
@@ -654,9 +655,22 @@ $ok(str_contains(apply_filters('duckhoo_card_extra', '', $bundle), '하루') ===
 $ok(apply_filters('duckhoo_js_config', [])['novo'] ?? null === null, '선택창에 상한을 넘기지 않는다');
 ob_start(); ($N.'product_notice')($bundle); $pn = ob_get_clean();
 $ok('' === trim($pn), '재고 숫자가 없으면 상세에 아무 상자도 안 그린다');
-ob_start(); ($N.'product_notice')($lowst); $pn = ob_get_clean();   // 재고 관리가 켜진 상품
+$GLOBALS['__options']['duckhoo_novo_show_stock'] = '0';
+ob_start(); ($N.'product_notice')($lowst); $pn = ob_get_clean();   // 재고 관리가 켜진 상품 — 옵션이 꺼져 있으면
+$ok('' === trim($pn), '남은 수량 표시가 꺼져 있으면 재고 숫자가 있어도 상세에 안 그린다');
+$GLOBALS['__options']['duckhoo_novo_show_stock'] = '1';
+ob_start(); ($N.'product_notice')($lowst); $pn = ob_get_clean();
 $ok(!str_contains($pn, '제한') && !str_contains($pn, '하루 한 세트'), '상세 안내가 제한을 말하지 않는다');
-$ok(str_contains($pn, '남은 재고'), '남은 재고를 말할 자리는 남는다');
+$ok(str_contains($pn, '남은 재고'), '옵션을 켜면 남은 재고를 말할 자리는 남는다');
+$GLOBALS['__options']['duckhoo_novo_show_stock'] = '0';
+// 한도가 꺼진 노보 분류에는 「재고 있음」 글자판이 선다 (2026-09-21) — 이미지 배너(1인 1세트)는 안 쓴다
+$GLOBALS['__is_tax'] = true; $GLOBALS['__options']['duckhoo_novo_banner_img'] = 'https://x/y.png';
+ob_start(); ($N.'banner')(); $bn = ob_get_clean();
+$ok(str_contains($bn, 'nvb--stock') && str_contains($bn, '재고 있음') && !str_contains($bn, '<img') && !str_contains($bn, '1세트') && !str_contains($bn, '제한'), '한도가 꺼져 있으면 「전 라인 재고 있음」 글자판 — 이미지 · 제한 문구 없음');
+add_filter('duckhoo_novo_stock_banner', fn($v = null) => []);
+ob_start(); ($N.'banner')(); $bn = ob_get_clean();
+$ok('' === trim($bn), '빈 배열을 돌려주면 배너를 안 그린다');
+$GLOBALS['__filters']['duckhoo_novo_stock_banner'] = []; $GLOBALS['__is_tax'] = false; unset($GLOBALS['__options']['duckhoo_novo_banner_img']);
 $GLOBALS['__cart']->items = []; $GLOBALS['__orders'] = []; $GLOBALS['__logged_in'] = 0;
 
 
@@ -1193,13 +1207,17 @@ $ok(($S.'brand_prefixes')('노보') === ['[노보]','[노보 블랙]','[노보 �
 $GLOBALS['__qv'] = ['dhr_brand' => 'novo'];
 $ok(($S.'is_brand_page')() && ($S.'current_brand')() === '노보', '주소 조각이 있으면 브랜드 페이지');
 $ok(($S.'brand_title')() === '노보 액상', '브랜드 페이지 h1');
-$ok(($S.'title')('AIOSEO 제목') === '노보 액상 2종 | 액상덕후', '브랜드 페이지 제목은 우리가 정한다 (노보 블랙 포함 2종)');
+$ok(($S.'title')('AIOSEO 제목') === '노보 액상 2종 전 라인 재고 보유 | 액상덕후', '브랜드 페이지 제목은 우리가 정한다 — 노보는 「재고 보유」까지 (2026-09-21)');
+$ok(str_contains(($S.'brand_intro')('노보'), '품절이어도'), '노보 소개 첫 문장이 재고를 말한다 — 검색 결과에 그대로 찍힌다');
+add_filter('duckhoo_brand_notes', fn($v = null) => []);
+$ok(($S.'title')('x') === '노보 액상 2종 | 액상덕후' && !str_contains(($S.'brand_intro')('노보'), '품절'), '품절이 풀리면 필터 하나로 제목 · 소개가 원래대로');
+$GLOBALS['__filters']['duckhoo_brand_notes'] = [];
 $bi = ($S.'brand_intro')('노보');
 $ok(str_contains($bi, '노보 액상 2종') && str_contains($bi, '입호흡 액상') && !str_contains($bi, '특가'), '소개 한 줄은 개수와 실제 분류를 말한다');
 $ok(($S.'description')('') === $bi && ($S.'canonical')('x') === 'https://duck-hoo.com/brand/novo/', '메타 설명 · canonical 도 브랜드 것');
 $ok(str_contains(($S.'brand_intro_html')(), 'class="dhr-brandintro"'), '화면에 글자로 그린다');
 ob_start(); ($S.'head')(); $h = ob_get_clean();
-$ok(substr_count($h, 'name="description"') === 1 && str_contains($h, 'og:title" content="노보 액상 2종 | 액상덕후"') && str_contains($h, 'og:url" content="https://duck-hoo.com/brand/novo/"'), '브랜드 페이지는 설명 · og 를 우리가 찍는다 (AIOSEO 가 이 화면을 모른다)');
+$ok(substr_count($h, 'name="description"') === 1 && str_contains($h, 'og:title" content="노보 액상 2종 전 라인 재고 보유 | 액상덕후"') && str_contains($h, 'og:url" content="https://duck-hoo.com/brand/novo/"'), '브랜드 페이지는 설명 · og 를 우리가 찍는다 (AIOSEO 가 이 화면을 모른다)');
 $ok(($S.'take_archive')(false) === true && ($S.'funnel_stage')('') === 'list', '목록 템플릿 · 깔때기 목록 단계');
 $q = new DhrFakeQuery(['dhr_brand' => 'novo']);
 ($S.'pre_get_posts')($q);

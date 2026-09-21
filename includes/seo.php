@@ -440,9 +440,10 @@ function title( $t ): string {
 	if ( ! is_brand_page() ) {
 		return (string) $t;
 	}
-	$b = current_brand();
-	$n = brands()[ $b ] ?? 0;
-	return $b . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . ' | ' . get_bloginfo( 'name' );
+	$b    = current_brand();
+	$n    = brands()[ $b ] ?? 0;
+	$note = (string) ( brand_notes()[ $b ]['title'] ?? '' );
+	return $b . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . ( '' !== $note ? ' ' . $note : '' ) . ' | ' . get_bloginfo( 'name' );
 }
 add_filter( 'aioseo_title', __NAMESPACE__ . '\\title', 20 );
 add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 20 );
@@ -693,6 +694,24 @@ add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
  * @param string $brand 브랜드.
  * @return string
  */
+/**
+ * 브랜드별 한 줄 — 지금 이 브랜드에 대해 꼭 해야 할 말.
+ *
+ * 2026-09-21: 다른 사이트에서 노보 품절. 「노보 액상」을 찾는 검색이 9월에 1.5배 뛰었고
+ * (네이버 DataLab), 그 사람이 검색 결과에서 보는 글자가 제목 · 설명이다. 거기에
+ * 「재고 있음」이 없으면 우리 페이지는 남들과 같은 줄에 선다. 품절이 풀리면 여기서 뺀다.
+ *
+ * @return array<string,array{title:string,lead:string}>
+ */
+function brand_notes(): array {
+	return (array) apply_filters( 'duckhoo_brand_notes', array(
+		'노보' => array(
+			'title' => '전 라인 재고 보유',
+			'lead'  => '다른 곳에서 품절이어도 액상덕후에는 노보 전 라인 재고가 있습니다.',
+		),
+	) );
+}
+
 function brand_intro( string $brand ): string {
 	if ( '' === $brand ) {
 		return '';
@@ -709,7 +728,9 @@ function brand_intro( string $brand ): string {
 	}
 	arsort( $cats );
 	$cats = array_slice( array_keys( $cats ), 0, 3 );
-	$t    = $brand . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . '을 한자리에 모았습니다.'
+	$lead = (string) ( brand_notes()[ $brand ]['lead'] ?? '' );
+	$t    = ( '' !== $lead ? $lead . ' ' : '' )
+		. $brand . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . '을 한자리에 모았습니다.'
 		. ( $cats ? ' ' . implode( ' · ', $cats ) . '.' : '' )
 		. ' 묶음 할인과 병당 가격을 같이 보여 드려요. 가입 즉시 ' . number_format( signup_points() ) . '원 적립, '
 		. number_format( free_ship() ) . '원 이상 무료배송.';

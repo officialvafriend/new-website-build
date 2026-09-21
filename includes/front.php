@@ -1228,7 +1228,9 @@ function js_config( array $extra = array() ): string {
 function announce(): string {
 	return trim( (string) apply_filters(
 		'duckhoo_announce',
-		'10만원 이상 1만원 자동 할인 이벤트가 9월 9일부로 조기 종료되었습니다.'
+		// 2026-09-21 — 다른 사이트에서 노보 품절. 노보를 찾아 온 사람에게 첫 줄에서 말한다.
+		// (9월 9일자 「자동 할인 조기 종료」 공지는 12일 지나 내렸다.)
+		'노보 액상 전 라인 재고 있음 · 낱병 13종 · 10+1 묶음'
 	) );
 }
 

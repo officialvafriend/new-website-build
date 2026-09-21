@@ -58,6 +58,14 @@ $hero_pick = function ( array $list ) use ( &$heroes, &$seen_ids ) {
 		$heroes[]        = $p;
 	}
 };
+// 0순위 (2026-09-21): 노보 10+1 묶음 — 다른 사이트에서 노보 품절, 첫 화면에서 노보가 먼저 보여야 한다.
+$novo_cat = cat_by_name( '노보' );
+if ( $novo_cat ) {
+	$hero_pick( array_filter(
+		products( array( 'category' => array( $novo_cat->slug ), 'limit' => 12, 'orderby' => 'popularity' ) ),
+		fn( $p ) => (bool) preg_match( '/묶음|세트|\d+\s*병|\d\s*\+\s*\d/u', $p->get_name() )
+	) );
+}
 // 1순위: 특가 분류의 묶음, 2순위: 이름이 묶음인 것, 3순위: 최신
 if ( $sale_cat ) {
 	$hero_pick( products( array( 'category' => array( $sale_cat->slug ), 'limit' => 12, 'orderby' => 'popularity' ) ) );
@@ -172,7 +180,8 @@ $month = (int) wp_date( 'n' );
 	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
 	// 타격감은 사장님이 직접 고른 묶음이라 특가 바로 다음에 세운다 (2026-09-15).
 	// 폰은 4열 두 줄이라 여덟 개가 딱 맞는다.
-	$qc = array_values( array_filter( array( $sale_cat, cat_by_name( '타격' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), cat_by_name( '적립금' ), cat_by_name( '노보' ) ) ) );
+	// 노보를 맨 앞에 (2026-09-21 — 다른 사이트 품절, 찾아 오는 사람이 많다). 원래 자리는 맨 뒤였다.
+	$qc = array_values( array_filter( array( cat_by_name( '노보' ), $sale_cat, cat_by_name( '타격' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic_cat, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
 	if ( $qc ) : ?>
 	<nav class="qcats" aria-label="분류 바로 가기">
 		<?php foreach ( $qc as $c ) : ?>
