@@ -1686,6 +1686,28 @@ $ok(strip_tags(($CA.'used_text')(0, 64)) === '— / 64명', '아직 안 썼으�
 $ok(strip_tags(($CA.'used_text')(3, 0)) === '3회', '한도 없는 코드는 횟수만');
 $ok(($CA.'used_text')(0, 0) === '—', '한도도 없고 안 썼으면 대시');
 
+/* ── 노보 분류 페이지 제목 · 설명 — 손으로 쓴 「병당 7,000원」을 대신한다 (2026-09-21) ─── */
+$S2 = 'Duckhoo\\Redesign\\Seo\\';
+$keepP = $GLOBALS['__products'];
+$GLOBALS['__products'] = [
+  238 => new WC_Product(238, '[노보] 블랙멘솔 (9.8mg / 30ml)', 13000.0, true, false, null, 16000.0),
+  247 => new WC_Product(247, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, true, false, null, 17000.0),
+  4327 => new WC_Product(4327, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true, false, null, 176000.0),
+  9 => new WC_Product(9, '[노보] 품절맛 (9.8mg / 30ml)', 9000.0, false),
+];
+$GLOBALS['__is_ptax'] = true; $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
+$ok(($S2.'title')('노보 액상 가격 8종 | 10병 특가 병당7,000원') === '노보 액상 3종 전 라인 재고 보유 | 액상덕후', '노보 분류 제목은 우리가 쓴다 — 종수는 재고 있는 상품만 센다 (품절 1개 제외)');
+$d = ($S2.'description')('노보(NOVO) 액상 가격 안내: 10병 묶음 특가 병당 7,000원');
+$ok(str_contains($d, '재고가 있습니다') && str_contains($d, '낱병 13,000원부터') && str_contains($d, '10+1 묶음(11병) 120,000원') && str_contains($d, '병당 약 10,900원'), '설명의 값은 상품에서 읽는다 — 낱병 최저가 · 묶음 · 병당');
+$ok(!str_contains($d, '7,000'), '손으로 쓴 옛 값(7,000원)은 검색 결과로 나가지 않는다');
+$ok(!preg_match('/건강|금연|순하|해롭지/u', $d), '광고 제한 낱말이 없다');
+$GLOBALS['__qobj'] = (object) ['slug' => 'other-cat', 'name' => '입호흡 액상', 'description' => ''];
+$ok(($S2.'title')('그대로') === '그대로' && str_contains(($S2.'description')('사장님 글'), '사장님 글'), '다른 분류는 손대지 않는다');
+$GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
+add_filter('duckhoo_cat_notes', fn($v = null) => []);
+$ok(($S2.'title')('그대로') === '그대로' && str_contains(($S2.'description')('사장님 글'), '사장님 글'), '필터를 비우면 AIOSEO 글로 돌아간다');
+$GLOBALS['__filters']['duckhoo_cat_notes'] = []; $GLOBALS['__is_ptax'] = false; unset($GLOBALS['__qobj']); $GLOBALS['__products'] = $keepP;
+
 /* ── 후기 화면 (includes/review-ui.php) ──────────────────────────────────── */
 require_once dirname(__DIR__, 2).'/includes/review-ui.php';
 $RU = 'Duckhoo\\Redesign\\ReviewUi\\';

@@ -383,7 +383,7 @@ if(!function_exists('rest_ensure_response')) { function rest_ensure_response($r)
 if(!function_exists('update_option')) { function update_option($k,$v,$a=null){ $GLOBALS['__options'][$k]=$v; return true; } }
 if(!function_exists('is_shop')) { function is_shop(){ return (bool)($GLOBALS['__is_shop'] ?? false); } }
 if(!function_exists('is_product')) { function is_product(){ return (bool)($GLOBALS['__is_product'] ?? false); } }
-if(!function_exists('is_product_taxonomy')) { function is_product_taxonomy(){ return false; } }
+if(!function_exists('is_product_taxonomy')) { function is_product_taxonomy(){ return !empty($GLOBALS['__is_ptax']); } }
 if(!function_exists('is_cart')) { function is_cart(){ return false; } }
 if(!function_exists('is_search')) { function is_search(){ return false; } }
 class DhrReq { public function __construct(public array $p){} public function get_param($k){ return $this->p[$k] ?? null; } }

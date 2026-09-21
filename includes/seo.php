@@ -402,6 +402,10 @@ function description( $d ): string {
 		: null;
 	$p    = $p instanceof \WC_Product ? $p : null;
 	$ours = $p && ( templated( $d ) || overridden( $p ) );
+	$nc   = noted_cat();
+	if ( $nc ) {
+		return cap( cat_note_text( $nc ) );   // 노보 분류 — 손으로 쓴 글이 틀린 값(병당 7,000원)이라 대신 쓴다
+	}
 	if ( '' !== $d && ! $ours ) {
 		return cap( $d );   // 사장님이 쓴 글. 원문은 그대로, 검색 결과로 나갈 때만 줄인다
 	}
@@ -437,6 +441,10 @@ add_filter( 'aioseo_twitter_description', __NAMESPACE__ . '\\description', 20 );
  * @return string
  */
 function title( $t ): string {
+	$nc = noted_cat();
+	if ( $nc ) {
+		return cat_title( $nc );
+	}
 	if ( ! is_brand_page() ) {
 		return (string) $t;
 	}
@@ -710,6 +718,103 @@ function brand_notes(): array {
 			'lead'  => '다른 곳에서 품절이어도 액상덕후에는 노보 전 라인 재고가 있습니다.',
 		),
 	) );
+}
+
+/**
+ * 분류 페이지에서 **사장님이 쓴 AIOSEO 글을 우리가 대신하는 곳** — 지금은 노보 하나.
+ *
+ * 2026-09-21 네이버 「노보 액상」 검색에서 우리 것은 `/product-category/novo-liquid/` 하나가
+ * 21번째로 나오는데, 찍힌 제목이 「노보 액상 가격 8종 | 10병 특가 병당7,000원」이었다.
+ * 8종이 아니라 15종이고 병당 7,000원은 지금 파는 값이 아니다 (낱병 13,000 · 10+1 120,000).
+ * 검색에서 7,000원을 보고 들어온 사람이 13,000원을 보면 나간다. **손으로 쓴 글은 그대로
+ * 둔다**는 규칙의 예외다 — 틀린 값이라서. 값은 여기 적지 않고 상품에서 읽는다.
+ *
+ * 필터 `duckhoo_cat_notes`: slug → true. 비우면 AIOSEO 글로 돌아간다.
+ *
+ * @return array<string,bool>
+ */
+function cat_notes(): array {
+	return (array) apply_filters( 'duckhoo_cat_notes', array( 'novo-liquid' => true ) );
+}
+
+/**
+ * 지금 화면이 우리가 제목 · 설명을 대신 쓰는 분류인가. 맞으면 그 term.
+ *
+ * @return object|null
+ */
+function noted_cat() {
+	if ( ! function_exists( 'is_product_taxonomy' ) || ! is_product_taxonomy() ) {
+		return null;
+	}
+	$t = get_queried_object();
+	if ( ! is_object( $t ) || empty( $t->slug ) || empty( cat_notes()[ (string) $t->slug ] ) ) {
+		return null;
+	}
+	return $t;
+}
+
+/**
+ * 분류 안의 값 — 낱병 최저가 · 묶음 최저가 · 종수. **상품에서 읽는다**, 적어 두지 않는다.
+ *
+ * @param object $t 분류.
+ * @return array{n:int,single:float,bundle:float,bundle_n:int}
+ */
+function cat_prices( $t ): array {
+	$out = array( 'n' => 0, 'single' => 0.0, 'bundle' => 0.0, 'bundle_n' => 0 );
+	foreach ( products( array( 'category' => array( (string) $t->slug ), 'limit' => -1 ) ) as $p ) {
+		if ( ! $p->is_in_stock() ) {
+			continue;
+		}
+		++$out['n'];
+		$price = (float) $p->get_price();
+		if ( $price <= 0 ) {
+			continue;
+		}
+		$each = (int) ( per_bottle( $p )['qty'] ?? 1 );
+		if ( $each > 1 ) {
+			if ( 0.0 === $out['bundle'] || $price < $out['bundle'] ) {
+				$out['bundle']   = $price;
+				$out['bundle_n'] = $each;
+			}
+		} elseif ( 0.0 === $out['single'] || $price < $out['single'] ) {
+			$out['single'] = $price;
+		}
+	}
+	return $out;
+}
+
+/**
+ * 노보 분류의 제목 — 「노보 액상 15종 전 라인 재고 보유 | 액상덕후」.
+ *
+ * @param object $t 분류.
+ * @return string
+ */
+function cat_title( $t ): string {
+	$c = cat_prices( $t );
+	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' 전 라인 재고 보유 | ' . get_bloginfo( 'name' );
+}
+
+/**
+ * 노보 분류의 검색 설명 — 값은 상품에서 읽은 그대로.
+ *
+ * @param object $t 분류.
+ * @return string
+ */
+function cat_note_text( $t ): string {
+	$c     = cat_prices( $t );
+	$price = array();
+	if ( $c['single'] > 0 ) {
+		$price[] = '낱병 ' . number_format( $c['single'] ) . '원부터';
+	}
+	if ( $c['bundle'] > 0 ) {
+		$price[] = '10+1 묶음(' . (int) $c['bundle_n'] . '병) ' . number_format( $c['bundle'] ) . '원'
+			. ( $c['bundle_n'] > 0 ? ' (병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원)' : '' );
+	}
+	$t = '다른 곳에서 품절이어도 액상덕후에는 노보 · 노보 블랙 전 라인 재고가 있습니다.'
+		. ( $price ? ' ' . implode( ' · ', $price ) . '.' : '' )
+		. ' 30ml · 니코틴 9.8mg · 입호흡(MTL). 평일 오후 4시 이전 입금 확인 시 당일 출고, '
+		. number_format( free_ship() ) . '원 이상 무료배송.';
+	return (string) apply_filters( 'duckhoo_cat_note_text', $t );
 }
 
 function brand_intro( string $brand ): string {
