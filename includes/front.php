@@ -496,7 +496,8 @@ function header_html(): void {
 	$in    = is_user_logged_in();
 	$pts   = signup_points();
 	// 가입하면 8,800원을 주면서 그 돈을 쓸 곳으로 가는 길이 어디에도 없었다.
-	$cats  = array_values( array_filter( array( $sale, cat_by_name( '타격' ), cat_by_name( '노보' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
+	// 노보를 맨 앞에 (2026-09-21 — 다른 사이트 품절). 원래는 특가 · 타격감 다음이었다.
+	$cats  = array_values( array_filter( array( cat_by_name( '노보' ), $sale, cat_by_name( '타격' ), cat_by_name( '입호흡' ), cat_by_name( '폐호흡' ), $nonic, cat_by_name( '기기' ), cat_by_name( '적립금' ) ) ) );
 	?>
 	<?php if ( ! $in ) : ?>
 	<a class="promo" href="<?php echo esc_url( home_url( '/register/' ) ); ?>" data-promo>
@@ -521,6 +522,7 @@ function header_html(): void {
 		</form>
 		<nav class="dnav">
 			<a href="<?php echo esc_url( $shop ); ?>">전체 상품</a>
+			<?php $novo_nav = cat_by_name( '노보' ); if ( $novo_nav ) : ?><a href="<?php echo esc_url( get_term_link( $novo_nav ) ); ?>">노보</a><?php endif; ?>
 			<?php $mtl = cat_by_name( '입호흡' ); if ( $mtl ) : ?><a href="<?php echo esc_url( get_term_link( $mtl ) ); ?>">입호흡</a><?php endif; ?>
 			<?php if ( $sale ) : ?><a href="<?php echo esc_url( get_term_link( $sale ) ); ?>"><?php echo esc_html( short_cat( $sale->name ) ); ?></a><?php endif; ?>
 		</nav>

@@ -146,7 +146,15 @@ $month = (int) wp_date( 'n' );
 					role="group" aria-roledescription="슬라이드" aria-label="<?php echo esc_attr( ( $i + 1 ) . ' / ' . count( $heroes ) ); ?>"
 					<?php echo $i ? 'aria-hidden="true" tabindex="-1"' : ''; ?>>
 					<div class="htxt"><span class="eb2"><?php echo esc_html( $hp_item->is_on_sale() ? '묶음 특가' : '추천 묶음' ); ?></span>
-						<h3 class="hcard-t"><?php echo esc_html( $hn['title'] ); ?></h3>
+						<?php
+						// 「[노보 리퀴드] 10+1 | 금액 120,000원」 → 「노보 리퀴드 10+1」. 브랜드를 떼면 노보 슬라이드는
+						// 「10+1 | 금액 120,000원」이 되어 무슨 상품인지 모른다. 금액 꼬리는 아래 가격 줄이 이미 말한다.
+						$ht = trim( (string) preg_replace( '/\s*\|\s*금액\s*[\d,]+\s*원\s*$/u', '', $hn['title'] ) );
+						if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && (bool) preg_match( '/^\s*\d/u', $ht ) ) {
+							$ht = $hn['brand'] . ' ' . $ht;
+						}
+						?>
+						<h3 class="hcard-t"><?php echo esc_html( $ht ); ?></h3>
 						<p class="hprice"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s><?php endif; ?>
 							<b><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</b></p>
 						<p><?php echo esc_html( $hn['brand'] ? $hn['brand'] . ' · ' : '' ); ?><?php echo $hp['qty'] > 1 ? esc_html( $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' ) : '단품'; ?></p>
