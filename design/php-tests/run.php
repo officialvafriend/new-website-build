@@ -1779,7 +1779,7 @@ $GLOBALS['__options']['duckhoo_novo_price_notice'] = '';
 $GLOBALS['__now'] = strtotime('2026-09-21 12:00:00');
 $ns = ($F.'notices')();
 $ok(count($ns) === 3 && $ns[0]['id'] === 'hours' && $ns[1]['id'] === 'ship' && $ns[2]['id'] === 'novo-price', '안내 세 개 — 응대 시간 · 출고 규칙 · 노보 가격');
-$ok(str_contains($ns[0]['k'], '11:00–18:00') && str_contains($ns[1]['k'], '월요일') && str_contains($ns[0]['t'], '바뀌었습니다'), '제목 한 줄에 핵심이 있다');
+$ok($ns[0]['k'] === '고객센터 평일 11–18시 · 점심 12–13시' && $ns[1]['k'] === '금 16시 이후 · 주말 주문은 월요일 출고' && str_contains($ns[0]['t'], '11:00–18:00') && str_contains($ns[0]['t'], '바뀌었습니다'), '제목 한 줄은 폰 한 줄에 들어가게 짧게 · 펼친 글에 정확한 시각');
 $GLOBALS['__options']['duckhoo_novo_price_until'] = '2026-09-20';
 $ok(count(($F.'notices')()) === 2, '종료일이 지나면 노보 가격 안내는 빠진다');
 $GLOBALS['__options']['duckhoo_novo_price_until'] = '2026-09-21';

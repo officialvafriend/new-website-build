@@ -1275,6 +1275,22 @@ function ship_rule_short(): string {
 }
 
 /**
+ * 응대 시간 — 띠의 한 줄용 (폰 257px 에서 한 줄에 들어가야 한다. `11:00–18:00` 꼴은 두 줄이 됐다).
+ *
+ * @return string
+ */
+function hours_short(): string {
+	$h  = hours();
+	$hm = fn( string $t ): string => (string) preg_replace( '/^0?(\d+):00$/', '$1', trim( $t ) );   // 11:00 → 11
+	$l  = '고객센터 ' . (string) $h['days'] . ' ' . $hm( (string) $h['open'] ) . '–' . $hm( (string) $h['close'] ) . '시';
+	if ( '' !== trim( (string) ( $h['lunch'] ?? '' ) ) ) {
+		$parts = array_map( $hm, explode( '–', (string) $h['lunch'] ) );
+		$l    .= ' · 점심 ' . implode( '–', $parts ) . '시';
+	}
+	return trim( (string) apply_filters( 'duckhoo_hours_short', $l ) );
+}
+
+/**
  * 모든 화면 헤더 아래 안내 띠에 실을 것. 항목: `id` · `k`(한 줄 제목) · `t`(펼치면 나오는 글) ·
  * `url`(선택) · `until`(선택, Y-m-d — 지나면 저절로 빠진다. 끝난 안내가 첫 화면에 남는 것이
  * 이 가게에서 이미 두 번 문제였다).
@@ -1288,7 +1304,7 @@ function notices(): array {
 	$items[] = array(
 		'id'   => 'hours',
 		'icon' => 'clock',
-		'k'    => '고객센터 ' . hours_lines()[0],
+		'k'    => hours_short(),
 		't'    => '고객센터 응대 시간이 ' . hours_lines()[0] . ' 로 바뀌었습니다. ' . hours_lines()[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
 		'url'  => inquiry_url(),
 		'more' => '1:1 문의 남기기',
@@ -1296,7 +1312,7 @@ function notices(): array {
 	$items[] = array(
 		'id'   => 'ship',
 		'icon' => 'truck',
-		'k'    => ship_rule_short(),
+		'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금 16시 이후 · 주말 주문은 월요일 출고' ) ),
 		't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
 		'url'  => home_url( '/shipping/' ),
 		'more' => '배송 안내 보기',
