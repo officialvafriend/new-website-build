@@ -846,15 +846,36 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
   .dhr .dhn__it{border-top:0;flex:1 1 0}
   .dhr .dhn__p{padding-bottom:.6rem}
 }
-/* 노보 분류 배너 — 현재 판매가 한 줄 */
-.dhr .nvb__price{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .6rem;margin:.6rem 0 0;font-size:14px;line-height:1.4}
-.dhr .nvb__price>b{padding:.1rem .5rem;border-radius:999px;background:#FFE02E;color:#12328F;font-weight:800}
-.dhr .nvb__price span b{font-weight:800;font-variant-numeric:tabular-nums}
-.dhr .nvb__price i{width:1px;height:14px;background:currentColor;opacity:.35}
 /* 폰에서는 「안내」 알약을 빼고 왼쪽 주황 선으로 대신한다 — 그 50px 이 있어야 세 제목이 한 줄씩 들어간다 (257 → 307px) */
 @media(max-width:879px){
   .dhr .dhn__eb{display:none}
   .dhr .dhn__list{border-left:3px solid #C2410C;padding-left:.6rem}
   .dhr .dhn__k{gap:.4rem}
   .dhr .dhn__k svg:first-child{width:17px;height:17px}
+}
+
+/* ── 노보 분류 배너 — 재고 있음 + 가격 인상 (2026-09-21, 테마에 맞춰 다시 지음) ────────
+   흰 카드 · 검정 · 번트 오렌지 — 상품 카드 · 안내 띠와 같은 옷. 감청 · 노랑(노보 브랜드 색)은
+   사이트와 안 어울렸다 (사장님). 폰은 위아래, 880px 부터 왼쪽 재고 · 오른쪽 가격. */
+.dhr .nvs{display:grid;gap:1.1rem;margin:0 0 1.4rem;padding:clamp(1.2rem,1rem + 1.6vw,1.8rem);background:#fff;border:1px solid #E2E4E8;border-radius:20px;color:#111}
+.dhr .nvs__main{display:grid;gap:.6rem;justify-items:start;min-width:0}
+.dhr .nvs__eb{margin:0;font-size:13px;font-weight:800;color:#C2410C;letter-spacing:.02em}
+.dhr .nvs__h{margin:0;font-size:clamp(1.45rem,1.05rem + 2vw,2.2rem);font-weight:900;line-height:1.2;letter-spacing:-.02em;word-break:keep-all}
+.dhr .nvs__h em{font-style:normal;color:#C2410C}
+.dhr .nvs__p{margin:0;font-size:15px;line-height:1.6;color:#374151;word-break:keep-all}
+.dhr .nvs__notes{list-style:none;margin:.1rem 0 0;padding:0;display:grid;gap:.3rem;font-size:13.5px;line-height:1.5;color:#4E565F;word-break:keep-all}
+.dhr .nvs__notes li{position:relative;padding-left:.9rem}
+.dhr .nvs__notes li::before{content:"";position:absolute;left:0;top:.58em;width:5px;height:5px;border-radius:50%;background:#C2410C}
+.dhr .nvs__price{display:grid;gap:.7rem;align-content:start;padding:1rem;background:#FFF6EE;border:1px solid #F3D5BF;border-radius:14px;min-width:0}
+.dhr .nvs__pt{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .6rem;font-size:14px;line-height:1.45;color:#374151;word-break:keep-all}
+.dhr .nvs__pt b{padding:.15rem .6rem;border-radius:999px;background:#C2410C;color:#fff;font-size:13px;font-weight:800}
+.dhr .nvs__grid{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.dhr .nvs__grid>div{margin:0;padding:.6rem .75rem;background:#fff;border:1px solid #F3D5BF;border-radius:10px;min-width:0}
+.dhr .nvs__grid dt{margin:0;font-size:13px;font-weight:700;color:#4E565F;word-break:keep-all}
+.dhr .nvs__grid dd{margin:.15rem 0 0;font-size:18px;font-weight:900;color:#111;font-variant-numeric:tabular-nums;line-height:1.2}
+.dhr .nvs__grid dd small{font-size:13px;font-weight:700;margin-left:1px}
+.dhr .nvs__note{margin:0;font-size:13px;line-height:1.5;color:#4E565F;word-break:keep-all}
+@media(min-width:880px){
+  .dhr .nvs{grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:1.6rem;align-items:start}
+  .dhr .nvs__p{font-size:16px}
 }

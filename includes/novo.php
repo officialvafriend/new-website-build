@@ -1075,12 +1075,11 @@ function banner(): void {
 add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
 
 /**
- * 한도가 꺼져 있을 때의 배너 — **재고가 있다**는 말 하나.
+ * 노보 분류 맨 위 — 재고 있음 + 가격 인상 안내 (2026-09-21 사장님 피드백으로 다시 지음).
  *
- * 2026-09-21 사장님: 다른 사이트에서 노보 품절이 나고 있다, 물 들어올 때 노 젓자.
- * 노보를 찾아 들어온 손님에게 「여기는 있다」고 말하는 자리가 사이트 어디에도 없었다.
- * 예전 배너(1인 1세트 제한)는 한도와 함께 내려갔고, 사장님 이미지 배너에도 그 문구가
- * 있어 **여기서는 이미지를 쓰지 않는다** — 글자판만.
+ * 처음엔 노보 브랜드 색(감청 · 노랑)으로 그렸는데 **사이트 테마와 안 어울리고 글도 어색했다**
+ * (사장님). 이제 흰 카드 · 검정 · 번트 오렌지 — 상품 카드 · 안내 띠와 같은 옷이다.
+ * 왼쪽은 「재고 있음」, 오른쪽은 「가격 인상 안내」와 현재 판매가 네 줄. 값은 상품에서 읽는다.
  *
  * 문구는 `duckhoo_novo_stock_banner`. 빈 배열을 돌려주면 안 그린다.
  * 출고 조건은 `/shipping/` 안내와 같은 말이어야 한다 (평일 오후 4시 · 입금 확인 기준).
@@ -1088,50 +1087,69 @@ add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
  * @return void
  */
 function stock_banner(): void {
+	$singles = 0;
+	$bundles = 0;
+	foreach ( \Duckhoo\Redesign\Front\products( array( 'limit' => -1 ) ) as $p ) {
+		if ( ! is_novo( $p ) || ! $p->is_in_stock() ) {
+			continue;
+		}
+		if ( bottles( $p ) > 1 ) {
+			++$bundles;
+		} else {
+			++$singles;
+		}
+	}
+	$what = $singles > 0
+		? '낱병 ' . $singles . '종' . ( $bundles > 0 ? '과 10+1 묶음' : '' )
+		: '전 맛';
 	$b = (array) apply_filters(
 		'duckhoo_novo_stock_banner',
 		array(
-			'eb'    => '노보 액상 재고 안내',
-			'head'  => array( '노보 전 라인 ', '재고 있음' ),
-			'set'   => array( '낱병 13종', '10+1 묶음 (11병)' ),
-			'lead'  => '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있습니다. 전 맛을 지금 바로 주문하실 수 있습니다.',
-			'price' => price_lines(),
-			'notes' => array( '평일 오후 4시 이전 입금 확인 시 당일 출고 · ' . \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상은 10+1 묶음이 병당 더 저렴합니다' ),
+			'eb'         => '노보 액상',
+			'head'       => array( '노보 · 노보 블랙 ', '전 라인 재고 있습니다' ),
+			'lead'       => $what . ' 모두 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
+			'notes'      => array( \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상 사시면 10+1 묶음이 병당 더 저렴합니다' ),
+			'price_head' => '가격 인상 안내',
+			'price_lead' => '노보 액상 판매가가 올랐습니다. 지금 가격은 아래와 같습니다.',
+			'price'      => price_lines(),
+			'price_note' => '가격이 바뀌기 전에 장바구니에 담아 두신 상품은 비우고 다시 담아 주세요.',
 		)
 	);
 	if ( ! $b ) {
 		return;
 	}
-	echo '<section class="nvb nvb--stock" aria-labelledby="nvb-h">';
+	echo '<section class="nvs" aria-labelledby="nvs-h"><div class="nvs__main">';
 	if ( '' !== (string) ( $b['eb'] ?? '' ) ) {
-		echo '<p class="nvb__eb">' . esc_html( (string) $b['eb'] ) . '</p>';
+		echo '<p class="nvs__eb">' . esc_html( (string) $b['eb'] ) . '</p>';
 	}
-	echo '<h2 class="nvb__h" id="nvb-h">' . esc_html( (string) ( $b['head'][0] ?? '' ) )
-		. '<mark>' . esc_html( (string) ( $b['head'][1] ?? '' ) ) . '</mark></h2>';
-	if ( ! empty( $b['set'] ) ) {
-		echo '<p class="nvb__set">';
-		foreach ( (array) $b['set'] as $i => $row ) {
-			echo ( $i ? '<i aria-hidden="true"></i>' : '' ) . '<span>' . esc_html( (string) $row ) . '</span>';
-		}
-		echo '</p>';
-	}
+	echo '<h2 class="nvs__h" id="nvs-h">' . esc_html( (string) ( $b['head'][0] ?? '' ) )
+		. '<em>' . esc_html( (string) ( $b['head'][1] ?? '' ) ) . '</em></h2>';
 	if ( '' !== (string) ( $b['lead'] ?? '' ) ) {
-		echo '<p class="nvb__p">' . esc_html( (string) $b['lead'] ) . '</p>';
-	}
-	if ( ! empty( $b['price'] ) ) {
-		// 가격 인상 뒤 「현재 판매가」를 한 줄로 — 값은 상품에서 읽은 것이라 적어 둔 숫자가 아니다.
-		echo '<p class="nvb__price"><b>현재 판매가</b>';
-		foreach ( (array) $b['price'] as $i => $row ) {
-			echo ( $i ? '<i aria-hidden="true"></i>' : '' ) . '<span>' . esc_html( (string) $row['label'] ) . ' <b>' . esc_html( number_format_i18n( (float) $row['price'] ) ) . '원</b></span>';
-		}
-		echo '</p>';
+		echo '<p class="nvs__p">' . esc_html( (string) $b['lead'] ) . '</p>';
 	}
 	if ( ! empty( $b['notes'] ) ) {
-		echo '<ul class="nvb__notes">';
+		echo '<ul class="nvs__notes">';
 		foreach ( (array) $b['notes'] as $n ) {
 			echo '<li>' . esc_html( (string) $n ) . '</li>';
 		}
 		echo '</ul>';
+	}
+	echo '</div>';
+	if ( ! empty( $b['price'] ) ) {
+		echo '<div class="nvs__price">';
+		echo '<p class="nvs__pt"><b>' . esc_html( (string) ( $b['price_head'] ?? '가격 안내' ) ) . '</b>';
+		if ( '' !== (string) ( $b['price_lead'] ?? '' ) ) {
+			echo '<span>' . esc_html( (string) $b['price_lead'] ) . '</span>';
+		}
+		echo '</p><dl class="nvs__grid">';
+		foreach ( (array) $b['price'] as $row ) {
+			echo '<div><dt>' . esc_html( (string) $row['label'] ) . '</dt><dd>' . esc_html( number_format_i18n( (float) $row['price'] ) ) . '<small>원</small></dd></div>';
+		}
+		echo '</dl>';
+		if ( '' !== (string) ( $b['price_note'] ?? '' ) ) {
+			echo '<p class="nvs__note">' . esc_html( (string) $b['price_note'] ) . '</p>';
+		}
+		echo '</div>';
 	}
 	echo '</section>';
 }

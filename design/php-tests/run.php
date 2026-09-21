@@ -666,7 +666,7 @@ $GLOBALS['__options']['duckhoo_novo_show_stock'] = '0';
 // 한도가 꺼진 노보 분류에는 「재고 있음」 글자판이 선다 (2026-09-21) — 이미지 배너(1인 1세트)는 안 쓴다
 $GLOBALS['__is_tax'] = true; $GLOBALS['__options']['duckhoo_novo_banner_img'] = 'https://x/y.png';
 ob_start(); ($N.'banner')(); $bn = ob_get_clean();
-$ok(str_contains($bn, 'nvb--stock') && str_contains($bn, '재고 있음') && !str_contains($bn, '<img') && !str_contains($bn, '1세트') && !str_contains($bn, '제한'), '한도가 꺼져 있으면 「전 라인 재고 있음」 글자판 — 이미지 · 제한 문구 없음');
+$ok(str_contains($bn, 'class="nvs"') && str_contains($bn, '재고 있습니다') && str_contains($bn, '가격 인상 안내') && !str_contains($bn, '<img') && !str_contains($bn, '1세트') && !str_contains($bn, '제한'), '한도가 꺼져 있으면 「전 라인 재고 있음」 글자판 — 이미지 · 제한 문구 없음');
 add_filter('duckhoo_novo_stock_banner', fn($v = null) => []);
 ob_start(); ($N.'banner')(); $bn = ob_get_clean();
 $ok('' === trim($bn), '빈 배열을 돌려주면 배너를 안 그린다');
