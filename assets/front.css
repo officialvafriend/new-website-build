@@ -879,3 +879,9 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
   .dhr .nvs{grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:1.6rem;align-items:start}
   .dhr .nvs__p{font-size:16px}
 }
+/* 폰에서는 값 네 줄을 한 줄에 하나씩 — 두 칸이면 「120,000 원」의 원이 아랫줄로 떨어진다 */
+@media(max-width:639px){
+  .dhr .nvs__grid{grid-template-columns:minmax(0,1fr);gap:.4rem}
+  .dhr .nvs__grid>div{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:.5rem .75rem}
+  .dhr .nvs__grid dd{margin:0;white-space:nowrap;font-size:17px}
+}
