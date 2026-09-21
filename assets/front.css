@@ -851,3 +851,10 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .nvb__price>b{padding:.1rem .5rem;border-radius:999px;background:#FFE02E;color:#12328F;font-weight:800}
 .dhr .nvb__price span b{font-weight:800;font-variant-numeric:tabular-nums}
 .dhr .nvb__price i{width:1px;height:14px;background:currentColor;opacity:.35}
+/* 폰에서는 「안내」 알약을 빼고 왼쪽 주황 선으로 대신한다 — 그 50px 이 있어야 세 제목이 한 줄씩 들어간다 (257 → 307px) */
+@media(max-width:879px){
+  .dhr .dhn__eb{display:none}
+  .dhr .dhn__list{border-left:3px solid #C2410C;padding-left:.6rem}
+  .dhr .dhn__k{gap:.4rem}
+  .dhr .dhn__k svg:first-child{width:17px;height:17px}
+}
