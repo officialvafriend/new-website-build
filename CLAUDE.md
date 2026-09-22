@@ -2335,3 +2335,45 @@ curl — `<title>` · og:title · twitter:title · meta description · og:descri
 - 첫 판 · 둘째 판의 잔재: `hours_short()` · `duckhoo_ship_rule_chip` · `price_brief()` — 마지막 것은 지금도 쓴다
 
 검증: `php design/php-tests/run.php` · `scratchpad/live/shot.mjs`(홈 · 상품 · 장바구니 · 노보 분류 × 390/1280, 닫기 · 새로고침).
+
+## 「PDF 파일 보는 느낌」— 글꼴이 아니라 자간 · 굵기였다 (2026-09-22)
+
+사장님: 「전체적인 웹사이트 폰트가 PDF 파일 보는 느낌」. 라이브에서 재 보니 **Pretendard 400–900 은
+전부 잘 실려 있었다.** 문제는 조판이다 — 본문까지 음수 자간(−0.01em, 제목 −0.025~−0.045em)에
+800 · 900 굵기가 깔리고 `antialiased` 까지 걸려 인쇄물처럼 빽빽했다. 디자인 규칙(음수 자간 금지)을
+우리 CSS 자신이 어기고 있었다 (front.css 37곳 · shell.css 53곳).
+
+- **우리 CSS 의 음수 자간은 전부 0**, 굵기는 **900→800 · 800→700 · 700→600** 한 단계씩, 본문 행간
+  1.55 → 1.6, `-webkit-font-smoothing: antialiased` 제거 (perl 한 번으로 세 파일을 통째로)
+- **사장님 Customizer 「추가 CSS」(DB · `wp-custom-css`, 홈에도 실린다)** 가 `body · button · input ·
+  .woocommerce` 에 −0.01em, `h1~h6` 에 −0.025em, 버튼에 −0.01em, antialiased 를 **전부 !important** 로
+  깔아 둔다. 그 파일은 못 고치므로 front.css 맨 위 `html body.dhr,html body.dhr *{letter-spacing:0 !important;
+  -webkit-font-smoothing:auto !important}` (0,2,1) 로 이긴다 — 추가 CSS 는 (0,0,1)~(0,1,2) 라 진다.
+  **양수 자간(대문자 눈썹 `.eb2` · `.sh-eb` · `.nvs__eb` · 계좌 번호 `.fbank .n`)은 파일 끝에서 같은
+  특이도 + !important 로 되살린다** — 뒤에 있어 이긴다. shell.css 의 양수 자간도 !important 를 붙였다
+- 그 추가 CSS 가 `font-family: 'PretendardVariable', 'Pretendard'` 를 부르는데 **PretendardVariable 은
+  아무도 싣지 않는다** → 정적 Pretendard 로 떨어진다. 사장님 기기에 그 글꼴이 깔려 있으면 다르게 보일 수 있다
+- 확인(390 · 1280, 홈 · 상품 · 장바구니): 화면 위 2,000px 안에 음수 자간 요소 **0개**, 본문 자간 normal ·
+  행간 25.6px · smoothing auto, 가로 넘침 0. 굵기 800 이상 요소는 홈 17 · 상품 7 · 장바구니 6
+
+**교훈: 글꼴이 이상하다는 말은 먼저 컴퓨티드 스타일로 잰다** (`getComputedStyle` 의 letterSpacing ·
+fontWeight · webkitFontSmoothing). 글꼴 파일이 실렸는지만 보면 「다 정상」으로 끝난다.
+
+## 추석 연휴 출고 안내 (2026-09-22)
+
+사장님: 9/24(목)–27(일) 택배 출고 없음 · 23(수)은 출고되지만 배송 안 됨 · 연휴 뒤 28(월)은 밀린 물량으로
+출고 지연 가능 — **「진짜 다 볼 수 있게」**. `Front\holiday()` (필터 `duckhoo_holiday`: name · show_from ·
+ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday()` → `9월 24일(목)`). 다음 연휴는 날짜만 바꾼다.
+
+- **세 자리에 같은 글**: 안내 띠 맨 앞 줄(`dhn__row--holiday`, 이름표만 주황) · 홈 검은 띠(`announce()` 가
+  연휴 동안 「추석 연휴 9월 24일(목)–27일(일) 택배 출고 없음」, 지나면 노보 문구로) · 상품 상세 혜택 줄
+  (`benefits()` — 평소 출고 두 줄 대신). 상품 페이지는 사는 자리라 띠를 닫아 둔 사람도 여기서 본다
+- **연휴 중에는 평소 출고 규칙 줄(「금요일 16시 이후 · 주말은 월요일 16시」)을 뺀다** — 그 주에는 틀린 말이다
+- 글이 날짜에 따라 바뀐다: 23일까지 「23일(수) 출고분은 연휴 뒤에 도착」이 붙고, 24~27일은 28일 지연 안내만,
+  **28일 당일은 「연휴 동안 밀린 물량으로 출고가 늦어질 수 있습니다」**, 29일부터 저절로 빠진다
+- 글이 바뀔 때마다 `data-dhn` 해시가 달라져 **띠를 닫아 둔 사람에게도 다시 보인다**
+- 폰에서 띠는 215 → 260px (연휴 줄이 세 줄). 연휴 동안만이라 그대로 둔다
+- `/shipping/` 페이지에는 안 넣었다 (DB 글 · 연휴가 지나면 도로 고쳐야 한다). 띠의 「배송 안내」가 거기로 간다
+
+검증: `php design/php-tests/run.php` (연휴 10개 — 날짜별 문구 · 줄 순서 · 해시 변화 · 홈 띠 40자 · 필터로 끄기) ·
+`scratchpad/live/ty.mjs`(홈 · 상품 · 장바구니 × 390/1280 — 자간 · 굵기 · 띠 · 혜택 줄).
