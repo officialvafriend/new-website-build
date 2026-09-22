@@ -1786,7 +1786,7 @@ $GLOBALS['__options']['duckhoo_novo_price_until'] = '2026-09-21';
 $ok(count(($F.'notices')()) === 3, '종료일 당일까지는 보인다');
 $GLOBALS['__options']['duckhoo_novo_price_until'] = '';
 $h = ($F.'notice_bar_html')();
-$ok(substr_count($h, 'class="dhn__row"') === 3 && substr_count($h, '<a class="dhn__row"') === 3 && str_contains($h, 'data-dhn="') && str_contains($h, 'data-dhn-close') && !str_contains($h, 'aria-expanded') && !str_contains($h, 'dhn__ic') && substr_count($h, 'class="dhn__s"') === 3, '띠: 줄 셋(전부 링크) · 해시 · 닫기 · 접는 것 · 아이콘 없음');
+$ok(substr_count($h, 'class="dhn__row dhn__row--') === 3 && substr_count($h, '<a class="dhn__row ') === 3 && str_contains($h, 'dhn__row--novo-price') && str_contains($h, 'data-dhn="') && str_contains($h, 'data-dhn-close') && !str_contains($h, 'aria-expanded') && !str_contains($h, 'dhn__ic') && substr_count($h, 'class="dhn__s"') === 3, '띠: 줄 셋(전부 링크) · 해시 · 닫기 · 접는 것 · 아이콘 없음');
 $ok(str_contains($h, '/shipping/') && str_contains($h, '노보 보기'), '출고 규칙은 배송 안내로, 가격 안내는 노보 목록으로 이어진다');
 $GLOBALS['__filters']['duckhoo_notices'] = [fn($v) => []];
 $ok(($F.'notice_bar_html')() === '', '필터로 다 빼면 띠 자체가 없다');
