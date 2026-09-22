@@ -2598,9 +2598,12 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span::before{
 }
 
 /* 안내 띠 (.dhn) — 테마 화면에서 테마의 a · button 규칙(!important)을 이긴다. 모양은 front.css 가 그린다. */
-html body.dhr.dhr-wrap.dhr-wrap .dhn ul{list-style:none!important;margin:0!important;padding:0 0 .1rem!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn ul{list-style:none!important;margin:0!important}
 html body.dhr.dhr-wrap.dhr-wrap .dhn li{margin:0!important;padding:0!important}
-html body.dhr.dhr-wrap.dhr-wrap a.dhn__card,html body.dhr.dhr-wrap.dhr-wrap a.dhn__card:hover{color:#111!important;text-decoration:none!important;background:#fff!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn__k,html body.dhr.dhr-wrap.dhr-wrap .dhn__eb,html body.dhr.dhr-wrap.dhr-wrap .dhn__s{margin:0!important;padding:0!important;letter-spacing:0!important;text-transform:none!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:#fff!important;border:0!important;box-shadow:0 1px 0 #E2E4E8!important;color:#6B7280!important;width:32px!important;height:32px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
+html body.dhr.dhr-wrap.dhr-wrap a.dhn__row,html body.dhr.dhr-wrap.dhr-wrap a.dhn__row:hover{color:#111!important;text-decoration:none!important;background:none!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__eb,html body.dhr.dhr-wrap.dhr-wrap .dhn__tx,html body.dhr.dhr-wrap.dhr-wrap .dhn__tx strong{margin:0!important;padding:0!important;letter-spacing:0!important;text-transform:none!important;font-family:inherit!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__tx{color:#4E565F!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__tx strong{color:#111!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:#F4F6F7!important;border:0!important;box-shadow:none!important;color:#6B7280!important;width:30px!important;height:30px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
+
 

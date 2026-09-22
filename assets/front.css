@@ -820,40 +820,41 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .dhr-wall__in{margin:.6rem 0 0;text-align:center;font-size:13px;color:#4E565F}
 .dhr .dhr-wall__in a{color:#1565C0;font-weight:700}
 
-/* ── 안내 띠 (.dhn) — 헤더 바로 아래, 모든 화면 (2026-09-21, 두 번째 판) ───────────────
-   처음 판은 옅은 주황 띠에 제목 세 줄을 접어 둔 아코디언이었다 — 「너무 별로」(사장님).
-   이제 **카드 세 장**: 누르지 않아도 핵심이 다 읽힌다 (문의를 줄이는 것이 목적이라 접어 두면 안 된다).
-   카드 = 주황 원 안의 아이콘 · 작은 이름표(고객센터 · 배송 · 노보 액상) · 굵은 한 줄 · 회색 한 줄 · 이어지는 곳.
-   폰은 옆으로 넘기는 카드 줄(snap, 다음 카드가 살짝 보인다), 880px 부터 한 줄에 셋. 전부 불투명. */
-.dhr .dhn{background:#F4F6F7;border-bottom:1px solid #E8EAED;color:#111}
+/* ── 안내 띠 (.dhn) — 헤더 바로 아래, 모든 화면 (2026-09-22, 세 번째 판) ───────────────
+   첫 판(주황 띠 아코디언) · 둘째 판(아이콘 카드 세 장) 다 「톤이 안 어울린다」(사장님).
+   그래서 사이트에 이미 있는 안내 줄 .dhr-gate 와 같은 옷 — 흰 상자 · 왼쪽 주황 선 · 글자만.
+   줄 하나 = 이름표(굵게) · 핵심(굵게) · 나머지(회색) · 이어지는 곳(주황). 아이콘 · 색 원 없음.
+   폰트는 사이트 기본을 못 박는다 — 테마 화면에서 다른 글꼴이 섞이지 않게. 전부 불투명. */
+.dhr .dhn{background:var(--dh-ground,#F4F6F7);color:#111;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
 .dhr .dhn[hidden]{display:none}
-.dhr .dhn-in{position:relative;padding-top:.7rem;padding-bottom:.7rem}
-.dhr .dhn__list{list-style:none;margin:0;padding:0 0 .1rem;display:flex;gap:.6rem;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.dhr .dhn__list::-webkit-scrollbar{display:none}
-.dhr .dhn__list>li{flex:0 0 84%;max-width:340px;scroll-snap-align:start;min-width:0;display:flex}
-.dhr .dhn__card{display:flex;align-items:flex-start;gap:.7rem;width:100%;min-height:44px;padding:.75rem .85rem .75rem .8rem;background:#fff;border:1px solid #E2E4E8;border-radius:16px;color:#111;text-decoration:none;box-shadow:0 1px 0 #E2E4E8;transition:transform 160ms,box-shadow 160ms}
-.dhr a.dhn__card:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(17,17,17,.08),0 1px 0 #E2E4E8}
-.dhr .dhn__ic{flex:0 0 auto;width:36px;height:36px;border-radius:999px;background:#FFF0E6;color:#C2410C;display:flex;align-items:center;justify-content:center}
-.dhr .dhn__ic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.dhr .dhn__tx{flex:1 1 auto;min-width:0;display:grid;gap:.15rem;word-break:keep-all}
-.dhr .dhn__eb{font-size:13px;font-weight:800;color:#C2410C;line-height:1.3}
-.dhr .dhn__k{font-size:15px;font-weight:800;line-height:1.35;color:#111}
-.dhr .dhn__s{font-size:13.5px;line-height:1.45;color:#4E565F}
-.dhr .dhn__more{justify-self:start;margin-top:.2rem;display:inline-flex;align-items:center;gap:.05rem;font-size:13px;font-weight:800;color:#C2410C;white-space:nowrap}
+.dhr .dhn-in{position:relative;padding-top:.7rem;padding-bottom:.2rem}
+.dhr .dhn__list{list-style:none;margin:0;padding:.15rem 1rem .15rem .9rem;background:#fff;border:1px solid #E1E5E8;border-left:4px solid #C2410C;border-radius:14px}
+.dhr .dhn__list>li{border-top:1px solid #EEF0F2}
+.dhr .dhn__list>li:first-child{border-top:0}
+.dhr .dhn__row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;column-gap:.6rem;min-height:44px;padding:.55rem 0;color:#111;text-decoration:none;font-size:14px;line-height:1.5;word-break:keep-all}
+.dhr .dhn__eb{font-weight:800;color:#111;white-space:nowrap}
+.dhr .dhn__tx{min-width:0;color:#4E565F}
+.dhr .dhn__tx strong{color:#111;font-weight:700}
+.dhr .dhn__more{display:inline-flex;align-items:center;gap:.05rem;align-self:center;font-weight:800;color:#C2410C;white-space:nowrap}
 .dhr .dhn__more svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.dhr a.dhn__card:hover .dhn__more{text-decoration:underline;text-underline-offset:3px}
-.dhr .dhn__x{position:absolute;right:calc(var(--dh-gutter,16px) - 6px);top:-.15rem;width:32px;height:32px;margin:0;padding:0;border:0;border-radius:999px;background:#fff;box-shadow:0 1px 0 #E2E4E8;color:#6B7280;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1}
-.dhr .dhn__x svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.dhr .dhn__x:hover{color:#111;background:#F4F6F7}
+.dhr a.dhn__row:hover .dhn__more span{text-decoration:underline;text-underline-offset:3px}
+.dhr .dhn__x{position:absolute;right:calc(var(--dh-gutter,16px) + 6px);top:calc(.7rem + 6px);width:30px;height:30px;margin:0;padding:0;border:0;border-radius:999px;background:#F4F6F7;color:#6B7280;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1}
+.dhr .dhn__x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.dhr .dhn__x:hover{background:#E8EAED;color:#111}
 @media(max-width:879px){
-  .dhr .dhn-in{padding-top:.85rem}
-  .dhr .dhn__x{top:.2rem}
+  .dhr .dhn__row{grid-template-columns:minmax(0,1fr) auto;row-gap:.1rem}
+  .dhr .dhn__eb{grid-column:1;font-size:13px;color:#C2410C}
+  .dhr .dhn__tx{grid-column:1}
+  .dhr .dhn__more{grid-column:2;grid-row:1/span 2}
+  .dhr .dhn__more span{display:none}
+  .dhr .dhn__list{padding-right:.6rem}
+  .dhr .dhn__list>li:first-child .dhn__row{padding-right:2rem}
 }
 @media(min-width:880px){
-  .dhr .dhn-in{padding-top:.85rem;padding-bottom:.85rem;padding-right:calc(var(--dh-gutter,16px) + 40px)}
-  .dhr .dhn__list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;overflow:visible}
-  .dhr .dhn__list>li{flex:none;max-width:none}
-  .dhr .dhn__x{top:.6rem;right:var(--dh-gutter,16px)}
+  .dhr .dhn-in{padding-top:.85rem;padding-bottom:.3rem}
+  .dhr .dhn__list{padding:.2rem 3rem .2rem 1.1rem}
+  .dhr .dhn__eb{min-width:4.6em}
+  .dhr .dhn__row{font-size:14.5px}
 }
 /* ── 노보 분류 배너 — 재고 있음 + 가격 인상 (2026-09-21, 테마에 맞춰 다시 지음) ────────
    흰 카드 · 검정 · 번트 오렌지 — 상품 카드 · 안내 띠와 같은 옷. 감청 · 노랑(노보 브랜드 색)은

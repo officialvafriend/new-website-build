@@ -1307,7 +1307,7 @@ function notices(): array {
 		'icon' => 'clock',
 		'eb'   => '고객센터',
 		'k'    => '평일 ' . (string) hours()['open'] . '–' . (string) hours()['close'],
-		's'    => ( '' !== trim( (string) ( hours()['lunch'] ?? '' ) ) ? '점심 ' . trim( (string) hours()['lunch'] ) . ' · ' : '' ) . str_replace( '법정 ', '', $hl[1] ) . ' · 그 외 시간 문의는 다음 영업일에 답해 드립니다',
+		's'    => ( '' !== trim( (string) ( hours()['lunch'] ?? '' ) ) ? '· 점심 ' . trim( (string) hours()['lunch'] ) . ' ' : '' ) . '· ' . str_replace( '법정 ', '', $hl[1] ) . ' · 그 외 시간 문의는 다음 영업일에 답해 드립니다',
 		't'    => '고객센터 응대 시간이 ' . $hl[0] . ' 로 바뀌었습니다. ' . $hl[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
 		'url'  => inquiry_url(),
 		'more' => '1:1 문의',
@@ -1317,7 +1317,7 @@ function notices(): array {
 		'icon' => 'truck',
 		'eb'   => '배송',
 		'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금요일 16시 이후 · 주말 주문은 월요일 16시 출고' ) ),
-		's'    => '평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다',
+		's'    => '· 평일은 오후 4시 이전 입금 확인분 당일 출고',
 		't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
 		'url'  => home_url( '/shipping/' ),
 		'more' => '배송 안내',
@@ -1331,8 +1331,8 @@ function notices(): array {
 				'id'    => 'novo-price',
 				'icon'  => 'tag',
 				'eb'    => '노보 액상',
-				'k'     => '가격이 인상되었습니다',
-				's'     => '' !== $brief ? $brief : '현재 판매가는 상품 페이지에서 확인해 주세요',
+				'k'     => '가격 인상 안내',
+				's'     => '' !== $brief ? '· 지금 판매가 ' . $brief : '· 지금 판매가는 상품 페이지에서 확인해 주세요',
 				't'     => $txt,
 				'url'   => $novo && is_string( get_term_link( $novo ) ) ? (string) get_term_link( $novo ) : brand_url( '노보' ),
 				'more'  => '노보 보기',
@@ -1357,10 +1357,11 @@ function notices(): array {
 }
 
 /**
- * 안내 띠 — 헤더 바로 아래, 홈 · 테마 화면 전부. **카드 세 장, 접지 않는다** (2026-09-21 두 번째 판 —
- * 첫 판의 아코디언은 「너무 별로」였고, 문의를 줄이려면 누르지 않아도 읽혀야 한다).
- * 카드 하나 = 아이콘 · 이름표(`eb`) · 굵은 한 줄(`k`) · 회색 한 줄(`s`) · 이어지는 곳(`url` · `more`).
- * 폰은 옆으로 넘기는 카드 줄, 데스크톱은 한 줄에 셋. × 는 그날 하루만 닫는다 (front.js, `localStorage['dhr-nb']`).
+ * 안내 띠 — 헤더 바로 아래, 홈 · 테마 화면 전부. **흰 상자 한 장에 세 줄** (2026-09-22 세 번째 판).
+ * 첫 판(주황 띠 아코디언)은 「너무 별로」, 둘째 판(아이콘 카드 세 장)은 「폰트도 어색하고 톤이 안 어울린다」.
+ * 그래서 사이트에 이미 있는 안내 줄(`.dhr-gate` — 흰 상자 · 왼쪽 주황 선 · 글자만)과 똑같은 옷을 입힌다.
+ * 아이콘 · 색 원 없이, 줄 하나 = 이름표(굵게) · 핵심(굵게) · 나머지(회색) · 이어지는 곳(주황).
+ * 줄 전체가 링크. × 는 그날 하루만 닫는다 (front.js, `localStorage['dhr-nb']`).
  * 글이 바뀌면 `data-dhn`(내용의 해시)이 달라져 닫아 둔 사람에게도 다시 보인다.
  *
  * @return string
@@ -1375,14 +1376,13 @@ function notice_bar_html(): string {
 	foreach ( $items as $it ) {
 		$url  = trim( (string) ( $it['url'] ?? '' ) );
 		$tag  = '' !== $url ? 'a' : 'div';
-		$h   .= '<li><' . $tag . ' class="dhn__card"' . ( '' !== $url ? ' href="' . esc_url( $url ) . '"' : '' ) . '>'
-			. '<span class="dhn__ic" aria-hidden="true">' . icon( (string) ( $it['icon'] ?? 'tag' ) ) . '</span>'
-			. '<span class="dhn__tx">'
-			. ( '' !== trim( (string) ( $it['eb'] ?? '' ) ) ? '<span class="dhn__eb">' . esc_html( (string) $it['eb'] ) . '</span>' : '' )
-			. '<b class="dhn__k">' . esc_html( (string) $it['k'] ) . '</b>'
-			. ( '' !== trim( (string) ( $it['s'] ?? '' ) ) ? '<span class="dhn__s">' . esc_html( (string) $it['s'] ) . '</span>' : '' )
-			. ( '' !== $url ? '<span class="dhn__more">' . esc_html( (string) ( $it['more'] ?? '자세히' ) ) . icon( 'chev' ) . '</span>' : '' )
-			. '</span></' . $tag . '></li>';
+		$h   .= '<li><' . $tag . ' class="dhn__row"' . ( '' !== $url ? ' href="' . esc_url( $url ) . '"' : '' ) . '>'
+			. ( '' !== trim( (string) ( $it['eb'] ?? '' ) ) ? '<b class="dhn__eb">' . esc_html( (string) $it['eb'] ) . '</b>' : '' )
+			. '<span class="dhn__tx"><strong>' . esc_html( (string) $it['k'] ) . '</strong>'
+			. ( '' !== trim( (string) ( $it['s'] ?? '' ) ) ? ' <span class="dhn__s">' . esc_html( (string) $it['s'] ) . '</span>' : '' )
+			. '</span>'
+			. ( '' !== $url ? '<span class="dhn__more"><span>' . esc_html( (string) ( $it['more'] ?? '자세히' ) ) . '</span>' . icon( 'chev' ) . '</span>' : '' )
+			. '</' . $tag . '></li>';
 	}
 	$h .= '</ul><button type="button" class="dhn__x" aria-label="안내 닫기 (오늘 하루)" data-dhn-close>' . icon( 'close' ) . '</button></div></section>';
 	return $h;
