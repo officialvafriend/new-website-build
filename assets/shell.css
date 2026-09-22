@@ -511,7 +511,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__bg{
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__in{ display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__txt{ flex: 1 1 240px; min-width: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__eb{
-  margin: 0 0 .35rem; font-size: 13.5px; font-weight: 600; letter-spacing: .02em; color: #A9D9F5;
+  margin: 0 0 .35rem; font-size: 13.5px; font-weight: 600; letter-spacing: .02em !important; color: #A9D9F5;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t{
   margin: 0; padding: 0; border: 0; font-size: clamp(26px,22px + 1.6vw,34px); font-weight: 800;
@@ -1704,7 +1704,7 @@ html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
   display: flex !important; flex-direction: column !important; align-items: flex-start !important;
   box-shadow: 0 0 0 1px rgba(17,17,17,.03), 0 6px 16px -12px rgba(17,17,17,.3) !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice b{ font-size: 13px !important; font-weight: 700 !important; color: var(--dh-accent-warm, #C2410C) !important; letter-spacing: .01em; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice b{ font-size: 13px !important; font-weight: 700 !important; color: var(--dh-accent-warm, #C2410C) !important; letter-spacing: .01em !important; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice .n{ font-size: 15px !important; font-weight: 600 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice *{ color: var(--dh-ink, #111) !important; font-size: 14.5px !important; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice strong{ font-weight: 700 !important; color: var(--dh-accent-warm, #C2410C) !important; }

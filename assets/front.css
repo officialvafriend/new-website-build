@@ -1,4 +1,9 @@
 /* 홈 — 데모(design/demo-src/site.css)의 홈 구성을 실제 사이트로 옮긴 것. body.dhr 아래에서만 적용된다. */
+/* 자간 0 · 글자 다듬기 끄기 (2026-09-22, 사장님 「전체 폰트가 PDF 파일 보는 느낌」). 글꼴은 Pretendard 가 잘 실리고 있었다 —
+   조판이 문제였다. 사장님 Customizer 「추가 CSS」(DB · wp-custom-css) 가 body · 버튼 · 입력칸에 -0.01em, 제목 전부에 -0.025em,
+   antialiased 를 !important 로 깔고, 우리 CSS 도 -0.01~-0.045em 을 여기저기 썼다. 그 추가 CSS 는 wp_head 끝에 나와
+   우리보다 뒤이므로 특이도로 이긴다 — (0,2,1) !important. 양수 자간(눈썹 글자)은 파일 끝에서 같은 힘으로 되살린다. */
+html body.dhr,html body.dhr *{letter-spacing:0 !important;-webkit-font-smoothing:auto !important;-moz-osx-font-smoothing:auto !important}
 body.dhr{margin:0;background:var(--dh-ground,#F5F5F7);color:#111;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
  font-size:16px;line-height:1.6;word-break:keep-all;padding-bottom:calc(62px + env(safe-area-inset-bottom))}
 @media(min-width:880px){body.dhr{padding-bottom:0}}
@@ -888,3 +893,8 @@ body.dhr .dh-leave__box h3{ font-weight: 800 !important; }
   .dhr .nvs__grid>div{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:.5rem .75rem}
   .dhr .nvs__grid dd{margin:0;white-space:nowrap;font-size:17px}
 }
+
+/* 양수 자간 되살리기 — 위 전역 자간 0 규칙과 같은 특이도(0,2,1) · 뒤에 있어 이긴다. 대문자 눈썹 글자 · 계좌 번호만 */
+html body.dhr .eb2,html body.dhr .fbank__t b{letter-spacing:.01em !important}
+html body.dhr .sh-eb,html body.dhr .nvs__eb{letter-spacing:.02em !important}
+html body.dhr .fbank .n{letter-spacing:.03em !important}
