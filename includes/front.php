@@ -1307,7 +1307,7 @@ function notices(): array {
 		'icon' => 'clock',
 		'eb'   => '고객센터',
 		'k'    => '평일 ' . (string) hours()['open'] . '–' . (string) hours()['close'],
-		's'    => ( '' !== trim( (string) ( hours()['lunch'] ?? '' ) ) ? '· 점심 ' . trim( (string) hours()['lunch'] ) . ' ' : '' ) . '· ' . str_replace( '법정 ', '', $hl[1] ) . ' · 그 외 시간 문의는 다음 영업일에 답해 드립니다',
+		's'    => ( '' !== trim( (string) ( hours()['lunch'] ?? '' ) ) ? '· 점심 ' . trim( (string) hours()['lunch'] ) . ' ' : '' ) . '· ' . str_replace( '법정 ', '', $hl[1] ) . ' · 그 외 시간 문의는 다음 영업일에 답합니다',
 		't'    => '고객센터 응대 시간이 ' . $hl[0] . ' 로 바뀌었습니다. ' . $hl[1] . '. 그 밖의 시간에 남기신 문의는 다음 영업일에 순서대로 답해 드립니다.',
 		'url'  => inquiry_url(),
 		'more' => '1:1 문의',
@@ -1376,7 +1376,8 @@ function notice_bar_html(): string {
 	foreach ( $items as $it ) {
 		$url  = trim( (string) ( $it['url'] ?? '' ) );
 		$tag  = '' !== $url ? 'a' : 'div';
-		$h   .= '<li><' . $tag . ' class="dhn__row"' . ( '' !== $url ? ' href="' . esc_url( $url ) . '"' : '' ) . '>'
+		$cls  = 'dhn__row dhn__row--' . sanitize_html_class( (string) ( $it['id'] ?? 'x' ) );
+		$h   .= '<li><' . $tag . ' class="' . esc_attr( $cls ) . '"' . ( '' !== $url ? ' href="' . esc_url( $url ) . '"' : '' ) . '>'
 			. ( '' !== trim( (string) ( $it['eb'] ?? '' ) ) ? '<b class="dhn__eb">' . esc_html( (string) $it['eb'] ) . '</b>' : '' )
 			. '<span class="dhn__tx"><strong>' . esc_html( (string) $it['k'] ) . '</strong>'
 			. ( '' !== trim( (string) ( $it['s'] ?? '' ) ) ? ' <span class="dhn__s">' . esc_html( (string) $it['s'] ) . '</span>' : '' )

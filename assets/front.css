@@ -842,13 +842,13 @@ body.dhr .dh-leave__box h3{ font-weight: 900 !important; }
 .dhr .dhn__x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .dhr .dhn__x:hover{background:#E8EAED;color:#111}
 @media(max-width:879px){
-  .dhr .dhn__row{grid-template-columns:minmax(0,1fr) auto;row-gap:.1rem}
-  .dhr .dhn__eb{grid-column:1;font-size:13px;color:#C2410C}
-  .dhr .dhn__tx{grid-column:1}
-  .dhr .dhn__more{grid-column:2;grid-row:1/span 2}
+  /* 폰: 이름표 · 핵심 · 꺾쇠만. 회색 덧글은 고객센터 · 배송에만 짧게, 노보 값은 상세 · 분류 배너에 있으니 뺀다 */
+  .dhr .dhn__row{column-gap:.5rem;font-size:14px}
+  .dhr .dhn__s{font-size:13px}
+  .dhr .dhn__row--novo-price .dhn__s{display:none}
   .dhr .dhn__more span{display:none}
-  .dhr .dhn__list{padding-right:.6rem}
-  .dhr .dhn__list>li:first-child .dhn__row{padding-right:2rem}
+  .dhr .dhn__list{padding-right:.5rem}
+  .dhr .dhn__list>li:first-child .dhn__row{padding-right:2.1rem}
 }
 @media(min-width:880px){
   .dhr .dhn-in{padding-top:.85rem;padding-bottom:.3rem}
