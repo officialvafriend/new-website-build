@@ -1291,6 +1291,94 @@ function hours_short(): string {
 }
 
 /**
+ * 연휴 — 택배 출고가 없는 기간 (사장님 2026-09-22, 추석).
+ *
+ * - `ship_only` 출고는 되지만 배송이 안 되는 날 (택배사가 쉰다)
+ * - `from`~`to` 출고 자체가 없는 기간
+ * - `backlog` 연휴 뒤 밀린 물량으로 출고가 늦어질 수 있는 날 — 그날까지 안내가 남는다
+ * - `show_from` 언제부터 보일지. 지나면 `holiday_notice()` 가 null 을 돌려줘 저절로 빠진다
+ *
+ * 다음 연휴는 필터 `duckhoo_holiday` 한 줄로 날짜만 바꾼다. 글은 날짜에서 엮는다.
+ *
+ * @return array<string,string>
+ */
+function holiday(): array {
+	return (array) apply_filters( 'duckhoo_holiday', array(
+		'name'      => '추석 연휴',
+		'show_from' => '2026-09-22',
+		'ship_only' => '2026-09-23',
+		'from'      => '2026-09-24',
+		'to'        => '2026-09-27',
+		'backlog'   => '2026-09-28',
+	) );
+}
+
+/**
+ * `9월 24일(목)` 꼴. `$month` 가 false 면 `24일(목)`.
+ */
+function kday( string $ymd, bool $month = true ): string {
+	$t = strtotime( $ymd . ' 12:00:00' );
+	if ( false === $t ) {
+		return $ymd;
+	}
+	$w = array( '일', '월', '화', '수', '목', '금', '토' )[ (int) gmdate( 'w', $t ) ];
+	return ( $month ? (int) gmdate( 'n', $t ) . '월 ' : '' ) . (int) gmdate( 'j', $t ) . '일(' . $w . ')';
+}
+
+/**
+ * 연휴 안내 줄 — 안내 띠의 맨 앞 · 홈 검은 띠. 기간이 지나면 null.
+ *
+ * 연휴 전 · 중: 「9월 24일(목)–27일(일) 택배 출고가 없습니다 · 23일(수) 출고분은 연휴 뒤 도착 · 28일(월)은
+ * 밀린 물량으로 출고가 늦어질 수 있습니다」. 연휴 뒤 `backlog` 당일: 「연휴 동안 밀린 물량으로 …」.
+ *
+ * @return array<string,string>|null
+ */
+function holiday_notice(): ?array {
+	$h     = holiday();
+	$from  = trim( (string) ( $h['from'] ?? '' ) );
+	$to    = trim( (string) ( $h['to'] ?? '' ) );
+	if ( '' === $from || '' === $to ) {
+		return null;
+	}
+	$today = (string) current_time( 'Y-m-d' );
+	$show  = trim( (string) ( $h['show_from'] ?? '' ) );
+	$back  = trim( (string) ( $h['backlog'] ?? '' ) );
+	$only  = trim( (string) ( $h['ship_only'] ?? '' ) );
+	$name  = trim( (string) ( $h['name'] ?? '연휴' ) );
+	$last  = '' !== $back ? $back : $to;
+	if ( ( '' !== $show && $today < $show ) || $today > $last ) {
+		return null;
+	}
+	$same = substr( $from, 0, 7 ) === substr( $to, 0, 7 );
+	if ( $today <= $to ) {
+		$k = kday( $from ) . '–' . kday( $to, ! $same ) . ' 택배 출고가 없습니다';
+		$s = array();
+		if ( '' !== $only && $today <= $only ) {
+			$s[] = kday( $only, false ) . ' 출고분은 연휴 뒤에 도착합니다';
+		}
+		if ( '' !== $back ) {
+			$s[] = kday( $back, false ) . '은 밀린 물량으로 출고가 늦어질 수 있습니다';
+		}
+		$short = $name . ' ' . kday( $from ) . '–' . kday( $to, ! $same ) . ' 택배 출고 없음';
+	} else {
+		$k     = '연휴 동안 밀린 물량으로 출고가 늦어질 수 있습니다';
+		$s     = array( '입금 확인 순서대로 보내 드립니다' );
+		$short = '연휴 뒤 밀린 물량으로 출고가 늦어질 수 있습니다';
+	}
+	return array(
+		'id'    => 'holiday',
+		'icon'  => 'truck',
+		'eb'    => $name,
+		'k'     => $k,
+		's'     => $s ? '· ' . implode( ' · ', $s ) : '',
+		't'     => $k . ( $s ? '. ' . implode( '. ', $s ) . '.' : '' ),
+		'url'   => home_url( '/shipping/' ),
+		'more'  => '배송 안내',
+		'short' => $short,
+	);
+}
+
+/**
  * 모든 화면 헤더 아래 안내 띠에 실을 것. 항목: `id` · `k`(한 줄 제목) · `t`(펼치면 나오는 글) ·
  * `url`(선택) · `until`(선택, Y-m-d — 지나면 저절로 빠진다. 끝난 안내가 첫 화면에 남는 것이
  * 이 가게에서 이미 두 번 문제였다).
@@ -1302,6 +1390,10 @@ function hours_short(): string {
 function notices(): array {
 	$hl    = hours_lines();
 	$items = array();
+	$hol   = holiday_notice();
+	if ( $hol ) {
+		$items[] = $hol; // 연휴는 맨 앞 — 지금 볼 것
+	}
 	$items[] = array(
 		'id'   => 'hours',
 		'icon' => 'clock',
@@ -1312,16 +1404,18 @@ function notices(): array {
 		'url'  => inquiry_url(),
 		'more' => '1:1 문의',
 	);
-	$items[] = array(
-		'id'   => 'ship',
-		'icon' => 'truck',
-		'eb'   => '배송',
-		'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금요일 16시 이후 · 주말 주문은 월요일 16시 출고' ) ),
-		's'    => '· 평일은 오후 4시 이전 입금 확인분 당일 출고',
-		't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
-		'url'  => home_url( '/shipping/' ),
-		'more' => '배송 안내',
-	);
+	if ( ! $hol ) { // 연휴 중에는 평소 출고 규칙을 뺀다 — 「금요일 16시 이후 · 주말은 월요일 16시」가 그 주에는 틀린 말이다
+		$items[] = array(
+			'id'   => 'ship',
+			'icon' => 'truck',
+			'eb'   => '배송',
+			'k'    => trim( (string) apply_filters( 'duckhoo_ship_rule_chip', '금요일 16시 이후 · 주말 주문은 월요일 16시 출고' ) ),
+			's'    => '· 평일은 오후 4시 이전 입금 확인분 당일 출고',
+			't'    => ship_rule() . ' 평일은 오후 4시 이전 입금 확인분을 당일 우체국택배로 보냅니다.',
+			'url'  => home_url( '/shipping/' ),
+			'more' => '배송 안내',
+		);
+	}
 	if ( function_exists( '\\Duckhoo\\Redesign\\Novo\\price_notice_text' ) ) {
 		$txt = \Duckhoo\Redesign\Novo\price_notice_text();
 		if ( '' !== $txt ) {
@@ -1417,8 +1511,11 @@ function notice_bar_html(): string {
  * @return string
  */
 function announce(): string {
+	$hol = holiday_notice();
 	return trim( (string) apply_filters(
 		'duckhoo_announce',
+		// 2026-09-22 — 연휴(추석) 동안은 출고 안내가 먼저. 지나면 아래 노보 문구로 돌아간다.
+		$hol ? (string) $hol['short'] :
 		// 2026-09-21 — 다른 사이트에서 노보 품절. 노보를 찾아 온 사람에게 첫 줄에서 말한다.
 		// (9월 9일자 「자동 할인 조기 종료」 공지는 12일 지나 내렸다.)
 		'노보 액상 전 라인 재고 있음 · 낱병 13종 · 10+1 묶음'

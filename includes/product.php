@@ -125,6 +125,10 @@ function gate( string $back = '' ): string {
 function benefits(): void {
 	global $product;
 	$rows = array( '30,000원 이상 무료배송 · 우체국택배', '평일 16시 이전 입금 확인 시 당일 출고', \Duckhoo\Redesign\Front\ship_rule_short(), '미개봉 7일 이내 교환 · 환불' );
+	$hol  = \Duckhoo\Redesign\Front\holiday_notice(); // 연휴 중에는 사는 자리에서도 출고 없는 날짜를 본다 (2026-09-22)
+	if ( $hol ) {
+		array_splice( $rows, 1, 2, array( (string) $hol['eb'] . ' ' . (string) $hol['k'] ) );
+	}
 	if ( ! is_user_logged_in() ) {
 		array_unshift( $rows, '첫 가입 시 ' . number_format_i18n( \Duckhoo\Redesign\Front\signup_points() ) . '원 적립 · 본인확인 1분' );
 	}

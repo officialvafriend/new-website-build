@@ -44,7 +44,7 @@ html body.dhr.dhr-wrap.dhr-wrap #content,
 html body.dhr.dhr-wrap.dhr-wrap #content.dh-content{ padding: 1rem clamp(1.1rem,.6rem + 2vw,2.5rem) 2.5rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-breadcrumb{ font-size: 13px; color: var(--dh-ink-3); margin-bottom: .8rem; }
 html body.dhr.dhr-wrap.dhr-wrap h1.page-title, html body.dhr.dhr-wrap.dhr-wrap h1.woocommerce-products-header__title{
-  font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 900; letter-spacing: -.04em; margin: .4rem 0 1rem;
+  font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 800; letter-spacing: 0; margin: .4rem 0 1rem;
 }
 
 /* 목록: 우리 카드 4열 */
@@ -54,12 +54,12 @@ html body.dhr.dhr-wrap.dhr-wrap ul.products{ display: grid !important; gap: .85r
 html body.dhr.dhr-wrap.dhr-wrap ul.products li.product{ width: auto !important; margin: 0 !important; float: none !important; padding: 0 !important; background: none !important; border-radius: 0 !important; box-shadow: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap ul.products li.product:hover{ transform: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-result-count{ font-size: 14px; color: var(--dh-ink-3); font-weight: 500; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-ordering select{ min-height: 44px; border-radius: 999px; border: 1.5px solid var(--dh-line-2); padding: 0 2.2rem 0 1rem; font-size: 14px; font-weight: 700; background: var(--dh-surface); }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-ordering select{ min-height: 44px; border-radius: 999px; border: 1.5px solid var(--dh-line-2); padding: 0 2.2rem 0 1rem; font-size: 14px; font-weight: 600; background: var(--dh-surface); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ display: flex; gap: .35rem; justify-content: center; list-style: none; padding: 0; margin: 1.5rem 0; border: 0 !important; flex-wrap: wrap; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li{ border: 0 !important; }
 /* `ul.page-numbers` 자신도 클래스가 page-numbers 다. 아래 규칙을 목록에까지 주면
    페이지 번호 뒤로 흰 알약이 화면 폭만큼 길게 깔린다. 칸(li 안의 링크)에만 준다. */
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line, #E1E5E8); font-weight: 700; padding: 0 .6rem; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line, #E1E5E8); font-weight: 600; padding: 0 .6rem; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers.current{ background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ background: none !important; border-radius: 0 !important; min-width: 0 !important; height: auto !important; padding: 0 !important; }
 
@@ -71,20 +71,20 @@ html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .woocommerce-product
 html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .summary{ grid-column: 1; width: 100% !important; float: none !important; margin: 0 !important; }
 @media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .single-product div.product .summary{ grid-column: 2; grid-row: 1 / span 2; } }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-product-gallery__image img{ border-radius: 22px; background: var(--dh-surface); }
-html body.dhr.dhr-wrap.dhr-wrap .single-product .product_title{ font-size: clamp(1.4rem,1.1rem + 1.2vw,1.9rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.2; }
-html body.dhr.dhr-wrap.dhr-wrap .single-product .summary p.price{ font-size: 24px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .single-product .product_title{ font-size: clamp(1.4rem,1.1rem + 1.2vw,1.9rem); font-weight: 700; letter-spacing: 0; line-height: 1.2; }
+html body.dhr.dhr-wrap.dhr-wrap .single-product .summary p.price{ font-size: 24px; font-weight: 800; letter-spacing: 0; color: var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .single-product .summary p.price del{ font-size: 15px; color: var(--dh-ink-3); font-weight: 500; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs{ display: flex; gap: .3rem; border-bottom: 1px solid var(--dh-line); padding: 0 !important; margin: 1.6rem 0 1.2rem !important; overflow-x: auto; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs::before, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li::before, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li::after{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li{ background: none !important; border: 0 !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li a{ display: flex; align-items: center; min-height: 48px; padding: 0 .9rem !important; font-size: 15px; font-weight: 700; color: var(--dh-ink-3); border-bottom: 2.5px solid transparent; margin-bottom: -1px; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li a{ display: flex; align-items: center; min-height: 48px; padding: 0 .9rem !important; font-size: 15px; font-weight: 600; color: var(--dh-ink-3); border-bottom: 2.5px solid transparent; margin-bottom: -1px; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs ul.tabs li.active a{ color: var(--dh-ink); border-bottom-color: var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-tabs .panel{ font-size: 16px; line-height: 1.75; color: var(--dh-ink-2); }
-html body.dhr.dhr-wrap.dhr-wrap .related.products > h2, html body.dhr.dhr-wrap.dhr-wrap .upsells.products > h2{ font-size: 22px; font-weight: 800; letter-spacing: -.035em; margin: 2rem 0 .9rem; }
+html body.dhr.dhr-wrap.dhr-wrap .related.products > h2, html body.dhr.dhr-wrap.dhr-wrap .upsells.products > h2{ font-size: 22px; font-weight: 700; letter-spacing: 0; margin: 2rem 0 .9rem; }
 
 /* 장바구니 · 결제 · 계정 컨테이너 */
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-cart .woocommerce, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout .woocommerce, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account .woocommerce{ max-width: 1000px; margin: 0 auto; }
-html body.dhr.dhr-wrap.dhr-wrap .entry-title, html body.dhr.dhr-wrap.dhr-wrap .page-title{ font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 900; letter-spacing: -.04em; }
+html body.dhr.dhr-wrap.dhr-wrap .entry-title, html body.dhr.dhr-wrap.dhr-wrap .page-title{ font-size: clamp(1.7rem,1.3rem + 1.6vw,2.3rem); font-weight: 800; letter-spacing: 0; }
 
 /* 아래 탭바가 본문을 가리지 않게 */
 @media (max-width:879px){ html body.dhr.dhr-wrap.dhr-wrap{ padding-bottom: calc(62px + env(safe-area-inset-bottom)) !important; } }
@@ -103,7 +103,7 @@ html body.dhr.dhr-wrap.dhr-wrap nav.tabs{ background: #fff !important; }
 /* 목록 제목·검색 결과 제목은 보인다 (테마가 숨겨 둔다) */
 /* 테마는 목록 h1 을 1px 로 숨기고 .woocommerce-products-header 를 아예 안 찍는다 — 제목은 shell.php archive_title 이 루프 앞에 그린다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch{ display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .3rem 0 1rem; }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1.4vw,2.1rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.2; margin: 0; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__t{ font-size: clamp(1.5rem,1.2rem + 1.4vw,2.1rem); font-weight: 800; letter-spacing: 0; line-height: 1.2; margin: 0; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d{ flex-basis: 100%; font-size: 15px; line-height: 1.55; color: var(--dh-ink-2, #3F464D); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-arch__d p{ margin: 0; }
@@ -241,7 +241,7 @@ html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions{
 }
 html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button{
   flex: 1 1 0 !important; height: 52px !important; min-height: 52px !important; max-width: none !important;
-  border-radius: 999px !important; font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  border-radius: 999px !important; font-size: 16px !important; font-weight: 700 !important; letter-spacing: 0 !important;
 }
 /* 담기 — 흰 바탕에 검정 테두리 */
 html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button.single_add_to_cart_button{
@@ -284,9 +284,9 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .product_title{ color: var(--dh-i
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price bdi,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price .amount{ color: var(--dh-ink, #111) !important; text-decoration: none !important; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins{ text-decoration: none !important; font-weight: 900 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins{ text-decoration: none !important; font-weight: 800 !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins .amount,
-html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins bdi{ font-size: 26px !important; font-weight: 900 !important; letter-spacing: -.03em !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price ins bdi{ font-size: 26px !important; font-weight: 800 !important; letter-spacing: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del .amount,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary p.price del bdi{ color: var(--dh-ink-3, #616870) !important; font-size: 15px !important; font-weight: 500 !important; }
@@ -305,13 +305,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-gauge__n{ font-size: 13px !important; 
    총액과 나란히 읽히는 크기로 올린다 (총액 26px, 병당 20px). */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary .dh-unit{
   background: var(--dh-accent-soft, #E8F5FE) !important; color: var(--dh-ink, #111) !important;
-  font-size: 20px !important; font-weight: 900 !important; letter-spacing: -.03em !important;
+  font-size: 20px !important; font-weight: 800 !important; letter-spacing: 0 !important;
   border-radius: 999px !important; padding: .3rem .8rem !important; display: inline-flex !important;
   align-items: baseline !important; gap: .35rem !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .summary .dh-unit i{
   color: var(--dh-accent-deep, #1565C0) !important; font-style: normal !important;
-  font-size: 14px !important; font-weight: 700 !important;
+  font-size: 14px !important; font-weight: 600 !important;
 }
 
 /* 남은 12–12.5px 캡션을 13px 바닥으로 */
@@ -338,17 +338,17 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order__btn{
   background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
   border: 0 !important; border-radius: 999px !important;
   min-height: 52px !important; width: 100% !important; max-width: 420px !important;
-  font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important; cursor: pointer;
+  font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order__continue{
   display: inline-flex !important; align-items: center !important; justify-content: center !important;
   min-height: 44px !important; padding: 0 1.1rem !important; border-radius: 999px !important;
   border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; color: var(--dh-ink-2, #4E565F) !important;
-  font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
+  font-size: 15px !important; font-weight: 600 !important; text-decoration: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__btn,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-bulk__btn{
-  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 700 !important;
+  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 600 !important;
   border: 1.5px solid var(--dh-line, #E1E5E8) !important; border-radius: 999px !important;
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
 }
@@ -364,7 +364,7 @@ html body.dhr.dhr-wrap.dhr-wrap #place_order,
 html body.dhr.dhr-wrap.dhr-wrap #place_order.button.alt{
   background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
   border: 0 !important; border-radius: 999px !important; min-height: 56px !important;
-  font-size: 19px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  font-size: 19px !important; font-weight: 700 !important; letter-spacing: 0 !important;
 }
 /* 쿠폰·적립금 적용 버튼 — 회색 위 회색 글자(3.9:1)를 걷는다 */
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout button.button,
@@ -372,7 +372,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout #wc_gc_cart_redeem_send,
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-checkout .wd-point-dummy-btn{
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
   border: 1.5px solid var(--dh-primary, #111) !important; border-radius: 999px !important;
-  min-height: 44px !important; font-size: 15px !important; font-weight: 700 !important;
+  min-height: 44px !important; font-size: 15px !important; font-weight: 600 !important;
 }
 
 /* 주문서에 테마가 페이지 슬러그("checkout")를 h1 으로 한 번 더 찍는다.
@@ -389,7 +389,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice{
   border-radius: 12px !important; padding: .9rem 1rem !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p{ color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; line-height: 1.6 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p:first-child{ color: var(--dh-status-check, #B42318) !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p:first-child{ color: var(--dh-status-check, #B42318) !important; font-weight: 700 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-guide-box{
   background: var(--dh-surface-2, #EDF0F2) !important; border: 1px solid var(--dh-line, #E1E5E8) !important;
   border-radius: 12px !important;
@@ -407,7 +407,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-orderer-edit-btn{
   background: transparent !important; border: 0 !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-subtotal__btn{
-  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 700 !important;
+  min-height: 44px !important; padding: 0 .9rem !important; font-size: 13px !important; font-weight: 600 !important;
   border: 1.5px solid var(--dh-line, #E1E5E8) !important; border-radius: 999px !important;
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
 }
@@ -419,7 +419,7 @@ html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
   border: 1px solid #BFE4FA !important; border-radius: 14px !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div{ font-size: 13px !important; color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; font-weight: 700 !important; }
 
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__sub,
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist__more{ font-size: 13px !important; }
@@ -435,15 +435,15 @@ html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account):not(.woocommerce-
 }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content > *{ max-width: 68ch; }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content h2{
-  margin: 2.2rem 0 .7rem; font-size: 20px; font-weight: 800; letter-spacing: -.03em;
+  margin: 2.2rem 0 .7rem; font-size: 20px; font-weight: 700; letter-spacing: 0;
   color: var(--dh-ink, #111); line-height: 1.35; word-break: keep-all;
 }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content h2:first-child{ margin-top: 0; }
-html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content h3{ margin: 1.5rem 0 .5rem; font-size: 17px; font-weight: 800; color: var(--dh-ink, #111); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content h3{ margin: 1.5rem 0 .5rem; font-size: 17px; font-weight: 700; color: var(--dh-ink, #111); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content p{ margin: 0 0 1rem; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content ul{ margin: 0 0 1.2rem; padding-left: 1.15rem; }
 html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content li{ margin-bottom: .45rem; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content strong{ color: var(--dh-ink, #111); font-weight: 700; }
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .entry-content strong{ color: var(--dh-ink, #111); font-weight: 600; }
 
 /* 껍데기를 쓰는 화면에서도 같다 — 관리 바 아래로 헤더가 끼어 들어가지 않게. */
 @media (min-width:601px){ html body.dhr.dhr-wrap.dhr-wrap.admin-bar header.gnb{ top: 46px !important; } }
@@ -461,12 +461,12 @@ html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-ResetPassword{
   border-radius: 16px !important; padding: clamp(1.2rem,.9rem + 1.2vw,1.8rem) !important; margin: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-account h2{
-  font-size: 22px; font-weight: 900; letter-spacing: -.035em; margin: 0 0 1rem;
+  font-size: 22px; font-weight: 800; letter-spacing: 0; margin: 0 0 1rem;
   text-decoration: none !important; border: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login label,
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register label{
-  display: block; font-size: 14px; font-weight: 700; color: var(--dh-ink-2, #4E565F); margin-bottom: .35rem;
+  display: block; font-size: 14px; font-weight: 600; color: var(--dh-ink-2, #4E565F); margin-bottom: .35rem;
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input.input-text,
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-register input.input-text,
@@ -481,7 +481,7 @@ html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-ResetPassword button.button{
   width: 100% !important; min-height: 48px !important; margin: .2rem 0 0 !important;
   background: var(--dh-primary, #111) !important; color: var(--dh-primary-ink, #fff) !important;
   border: 0 !important; border-radius: 999px !important;
-  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important; float: none !important;
+  font-size: 16px !important; font-weight: 700 !important; letter-spacing: 0 !important; float: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-login__rememberme{ display: flex; align-items: center; gap: .45rem; margin: .9rem 0 0; font-size: 15px; }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password{ margin: .9rem 0 0; font-size: 15px; }
@@ -511,11 +511,11 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__bg{
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__in{ display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__txt{ flex: 1 1 240px; min-width: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__eb{
-  margin: 0 0 .35rem; font-size: 13.5px; font-weight: 700; letter-spacing: .02em; color: #A9D9F5;
+  margin: 0 0 .35rem; font-size: 13.5px; font-weight: 600; letter-spacing: .02em; color: #A9D9F5;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t{
-  margin: 0; padding: 0; border: 0; font-size: clamp(26px,22px + 1.6vw,34px); font-weight: 900;
-  line-height: 1.15; letter-spacing: -.03em; color: #fff; word-break: keep-all;
+  margin: 0; padding: 0; border: 0; font-size: clamp(26px,22px + 1.6vw,34px); font-weight: 800;
+  line-height: 1.15; letter-spacing: 0; color: #fff; word-break: keep-all;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t::before,
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__t::after{ display: none !important; }
@@ -530,11 +530,11 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__chips li{
   display: inline-flex; align-items: center; min-height: 34px; padding: 0 .8rem; border-radius: 999px;
   background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.26);
   -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
-  font-size: 13.5px; font-weight: 700; color: #fff; white-space: nowrap;
+  font-size: 13.5px; font-weight: 600; color: #fff; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__av{
   flex: 0 0 54px; width: 54px; height: 54px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 900; color: #111;
+  display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 800; color: #111;
   background: #fff; box-shadow: 0 6px 18px -8px rgba(0,0,0,.7);
 }
 /* 단계 — 몇 장 중 몇 번째인지 보이지 않으면 가입이 끝나는지 알 수 없다 */
@@ -546,7 +546,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li{
   display: inline-flex; align-items: center; gap: .45rem; min-height: 36px; padding: 0 .85rem 0 .5rem;
   border-radius: 999px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.18);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  font-size: 13.5px; font-weight: 700; color: #C4CCD4; white-space: nowrap;
+  font-size: 13.5px; font-weight: 600; color: #C4CCD4; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-done{ color: #A9D9F5; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-now{
@@ -555,7 +555,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-now{
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__no{
   flex: 0 0 22px; width: 22px; height: 22px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.18); font-size: 12.5px; font-weight: 800; color: #fff;
+  background: rgba(255,255,255,.18); font-size: 12.5px; font-weight: 700; color: #fff;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-now .dhr-ah__no{ background: #111; color: #fff; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__steps li.is-done .dhr-ah__no{ background: rgba(169,217,245,.24); color: #A9D9F5; }
@@ -587,7 +587,7 @@ html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login{
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .form-row{ margin: 0 0 .9rem !important; padding: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login label{
-  display: block; margin-bottom: .35rem; font-size: 14px; font-weight: 700; color: var(--dh-ink, #111);
+  display: block; margin-bottom: .35rem; font-size: 14px; font-weight: 600; color: var(--dh-ink, #111);
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input.input-text,
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login input[type="password"]{
@@ -602,7 +602,7 @@ html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .woocommerce-form-lo
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login button[type="submit"]{
   width: 100% !important; min-height: 52px !important; border: 0 !important; border-radius: 999px !important;
   background: var(--dh-primary, #111) !important; color: #fff !important;
-  font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  font-size: 16px !important; font-weight: 700 !important; letter-spacing: 0 !important;
   text-decoration: none !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap form.woocommerce-form-login .lost_password{ margin: .9rem 0 0 !important; text-align: center; }
@@ -614,13 +614,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-join{
   background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8);
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt{ flex: 1 1 220px; min-width: 0; }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt b{ display: block; font-size: 16px; font-weight: 800; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt b{ display: block; font-size: 16px; font-weight: 700; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-join__txt span{ display: block; margin-top: .25rem; font-size: 14px; line-height: 1.6; color: var(--dh-ink-3, #616870); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go{
   flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
   min-height: 48px; padding: 0 1.3rem; border-radius: 999px;
   border: 1.5px solid var(--dh-primary, #111); background: var(--dh-surface, #fff);
-  color: var(--dh-ink, #111) !important; font-size: 15px; font-weight: 800; text-decoration: none !important;
+  color: var(--dh-ink, #111) !important; font-size: 15px; font-weight: 700; text-decoration: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go:hover{ background: var(--dh-primary, #111); color: #fff !important; }
 @media (max-width: 559px){ html body.dhr.dhr-wrap.dhr-wrap .dhr-join__go{ flex: 1 1 100%; } }
@@ -678,7 +678,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-register-actions{
 html body.dhr.dhr-wrap.dhr-wrap a.wd-register-btn{
   position: relative; display: flex !important; align-items: center !important; justify-content: center !important;
   min-height: 60px !important; padding: 0 3.4rem !important; border-radius: 999px !important;
-  text-decoration: none !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important;
+  text-decoration: none !important; font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important;
   background: var(--dh-primary, #111) !important; color: #fff !important; border: 0 !important; margin: 0 !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 1px 2px rgba(16,24,32,.18), 0 14px 30px -18px rgba(16,24,32,.65);
   transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s cubic-bezier(.16,1,.3,1);
@@ -711,7 +711,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-agree-age{
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-check-row{
   margin: 0 0 1rem !important; padding: 0 0 1rem !important;
-  border-bottom: 1px solid var(--dh-line, #E1E5E8); font-weight: 800 !important;
+  border-bottom: 1px solid var(--dh-line, #E1E5E8); font-weight: 700 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-shell input[type="checkbox"]{
   width: 22px !important; height: 22px !important; flex: 0 0 22px !important; margin: 0 !important;
@@ -719,7 +719,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-agree-shell input[type="checkbox"]{
 }
 /* 필수 표시가 형광 분홍(#ff5c73)이었다 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-required{
-  color: var(--dh-accent-deep, #1565C0) !important; font-size: 13.5px !important; font-weight: 700 !important;
+  color: var(--dh-accent-deep, #1565C0) !important; font-size: 13.5px !important; font-weight: 600 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-box-item{ margin-bottom: 1.4rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-scrollbox,
@@ -729,7 +729,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-agree-marketing-box{
   font-size: 14px !important; line-height: 1.75 !important; color: var(--dh-ink-2, #4E565F) !important;
   height: 168px !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap .wd-agree-marketing-title{ font-size: 15.5px !important; color: var(--dh-ink, #111) !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-agree-marketing-title{ font-size: 15.5px !important; color: var(--dh-ink, #111) !important; font-weight: 600 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-agree-actions{
   display: flex !important; gap: .6rem !important; margin-top: 1.4rem !important; justify-content: stretch !important;
 }
@@ -737,13 +737,13 @@ html body.dhr.dhr-wrap.dhr-wrap button.wd-agree-submit{
   flex: 1 1 auto !important; order: 2; min-height: 52px !important; height: auto !important; padding: 0 1.2rem !important;
   border: 0 !important; border-radius: 999px !important;
   background: var(--dh-primary, #111) !important; color: #fff !important;
-  font-size: 16px !important; font-weight: 800 !important; cursor: pointer;
+  font-size: 16px !important; font-weight: 700 !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap a.wd-agree-cancel{
   order: 1; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
   min-height: 52px; padding: 0 1.2rem; border-radius: 999px;
   border: 1.5px solid var(--dh-line-2, #CBD2D8) !important; background: var(--dh-surface, #fff) !important;
-  color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
+  color: var(--dh-ink-2, #4E565F) !important; font-size: 15px !important; font-weight: 600 !important; text-decoration: none !important;
 }
 
 /* 정보 입력 */
@@ -751,7 +751,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-join-field{ margin: 0 0 1.4rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-field:last-of-type{ margin-bottom: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-label{
   display: block !important; margin: 0 0 .45rem !important;
-  font-size: 14px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important;
+  font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-required{ color: var(--dh-accent-deep, #1565C0) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-stack{ display: grid !important; gap: .5rem !important; }
@@ -782,7 +782,7 @@ html body.dhr.dhr-wrap.dhr-wrap label.wd-join-radio{
   flex: 1 1 0; display: flex !important; align-items: center; justify-content: flex-start; gap: .6rem;
   min-height: 52px; padding: 0 .8rem; border-radius: 12px;
   border: 1px solid var(--dh-line-2, #CBD2D8); background: #fff;
-  font-size: 15.5px !important; font-weight: 700; color: var(--dh-ink, #111) !important; cursor: pointer;
+  font-size: 15.5px !important; font-weight: 600; color: var(--dh-ink, #111) !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap label.wd-join-radio input[type="radio"]{
   width: 20px !important; height: 20px !important; accent-color: var(--dh-primary, #111);
@@ -791,7 +791,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-join-address-top{ grid-template-columns: min
 html body.dhr.dhr-wrap.dhr-wrap button.wd-join-address-btn{
   height: 52px !important; padding: 0 1.1rem !important; border-radius: 12px !important;
   border: 1.5px solid var(--dh-primary, #111) !important; background: var(--dh-surface, #fff) !important;
-  color: var(--dh-ink, #111) !important; font-size: 15px !important; font-weight: 800 !important; cursor: pointer;
+  color: var(--dh-ink, #111) !important; font-size: 15px !important; font-weight: 700 !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-birthday{ grid-template-columns: 1.2fr .9fr .9fr !important; gap: .5rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap select.wd-join-select{
@@ -813,11 +813,11 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-join-form button.dsma-auth-button{
   display: inline-flex !important; align-items: center; gap: .5rem;
   min-height: 48px !important; padding: 0 1.2rem !important; border-radius: 999px !important;
   border: 0 !important; background: var(--dh-primary, #111) !important; color: #fff !important;
-  font-size: 15.5px !important; font-weight: 800 !important; cursor: pointer;
+  font-size: 15.5px !important; font-weight: 700 !important; cursor: pointer;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-verify-status{
   display: block !important; font-size: 13.5px !important; line-height: 1.55 !important;
-  font-weight: 700 !important; word-break: keep-all;
+  font-weight: 600 !important; word-break: keep-all;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-verify-status--pending{ color: var(--dh-st-check, #B42318) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-join-submit-wrap{ margin-top: 1.6rem !important; }
@@ -825,7 +825,7 @@ html body.dhr.dhr-wrap.dhr-wrap button.wd-join-submit{
   width: 100% !important; min-height: 54px !important; height: auto !important;
   border: 0 !important; border-radius: 999px !important;
   background: var(--dh-primary, #111) !important; color: #fff !important;
-  font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.02em !important; cursor: pointer;
+  font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; cursor: pointer;
   box-shadow: 0 1px 2px rgba(16,24,32,.16), 0 12px 26px -16px rgba(16,24,32,.5);
 }
 html body.dhr.dhr-wrap.dhr-wrap button.wd-join-submit:hover,
@@ -860,7 +860,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-back{
   margin: 1rem 0 0; text-align: center; font-size: 14.5px; color: var(--dh-ink-3, #616870);
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-back a{
-  color: var(--dh-ink, #111); font-weight: 800; text-decoration: underline; text-underline-offset: 3px;
+  color: var(--dh-ink, #111); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
 }
 
 /* 내 계정 — 인사말과 내용에 숨 쉴 자리 */
@@ -896,7 +896,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li{ margin: 0 
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{
   display: flex; align-items: center; min-height: 44px; padding: 0 1rem;
   border-radius: 999px; border: 1.5px solid var(--dh-line, #E1E5E8); background: var(--dh-surface, #fff);
-  color: var(--dh-ink-2, #4E565F); font-size: 15px; font-weight: 700; text-decoration: none;
+  color: var(--dh-ink-2, #4E565F); font-size: 15px; font-weight: 600; text-decoration: none;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a{
   background: var(--dh-primary, #111); border-color: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff);
@@ -914,9 +914,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__hi{
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__av{
   flex: 0 0 48px; width: 48px; height: 48px; border-radius: 999px;
   background: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff);
-  display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700;
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__hi b{ display: block; font-size: 19px; font-weight: 800; letter-spacing: -.03em; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__hi b{ display: block; font-size: 19px; font-weight: 700; letter-spacing: 0; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__hi span:not(.dhr-acc__av){ display: block; font-size: 14px; color: var(--dh-ink-3, #616870); margin-top: .15rem; word-break: keep-all; }
 
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__grid{ display: grid; grid-template-columns: 1fr; gap: .6rem; }
@@ -929,17 +929,17 @@ html body.dhr.dhr-wrap.dhr-wrap a.dhr-acc__tile{
 html body.dhr.dhr-wrap.dhr-wrap a.dhr-acc__tile:hover{ border-color: var(--dh-line-strong, #C9CFD4); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__ic{ color: var(--dh-ink, #111); display: flex; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__ic svg{ width: 22px; height: 22px; }
-html body.dhr.dhr-wrap.dhr-wrap a.dhr-acc__tile b{ font-size: 16px; font-weight: 800; letter-spacing: -.02em; margin-top: .2rem; }
+html body.dhr.dhr-wrap.dhr-wrap a.dhr-acc__tile b{ font-size: 16px; font-weight: 700; letter-spacing: 0; margin-top: .2rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__sub{ font-size: 13px; color: var(--dh-ink-3, #616870); line-height: 1.45; word-break: keep-all; }
 
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__more{ display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__more a{
   display: flex; align-items: center; min-height: 44px; padding: 0 .95rem; border-radius: 999px;
   border: 1.5px solid var(--dh-line, #E1E5E8); background: var(--dh-surface, #fff);
-  color: var(--dh-ink-2, #4E565F); font-size: 14px; font-weight: 700; text-decoration: none;
+  color: var(--dh-ink-2, #4E565F); font-size: 14px; font-weight: 600; text-decoration: none;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__foot{ display: flex; gap: 1rem; margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--dh-line, #E1E5E8); }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__foot a{ min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__foot a{ min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600; text-decoration: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__out{ color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-acc__leave{ color: var(--dh-ink-3, #616870); margin-left: auto; }
 
@@ -953,8 +953,8 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product div.product > .upsells.products{
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations h2,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .related.products > h2,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .upsells.products > h2{
-  font-size: clamp(1.15rem,1rem + .6vw,1.4rem) !important; font-weight: 800 !important;
-  letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important; margin: 0 0 .9rem !important;
+  font-size: clamp(1.15rem,1rem + .6vw,1.4rem) !important; font-weight: 700 !important;
+  letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; margin: 0 0 .9rem !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wc-prl-recommendations ul.products{
   display: grid !important; grid-template-columns: repeat(2,1fr) !important; gap: .85rem !important;
@@ -989,9 +989,9 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .summary{
   display: flex !important; flex-direction: column !important; gap: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-eb{ display: flex; align-items: center; gap: .45rem; margin-bottom: .5rem; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-brand{ font-size: 13px; font-weight: 700; color: var(--dh-ink-3, #616870); letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-brand{ font-size: 13px; font-weight: 600; color: var(--dh-ink-3, #616870); letter-spacing: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-badge{
-  font-size: 13px; font-weight: 800; letter-spacing: -.01em; padding: .16rem .5rem; border-radius: 6px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0; padding: .16rem .5rem; border-radius: 6px;
   background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-2, #4E565F);
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--sale{ background: #FDEBD8; color: #8A4B0C; }
@@ -1000,22 +1000,22 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--best{ background: #FBE4EA; color: #9
 html body.dhr.dhr-wrap.dhr-wrap .dhp-badge--out{ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-3, #616870); }
 
 html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title{
-  font-size: clamp(1.35rem,1.15rem + .9vw,1.7rem) !important; font-weight: 800 !important;
-  letter-spacing: -.04em !important; line-height: 1.28 !important; color: var(--dh-ink, #111) !important;
+  font-size: clamp(1.35rem,1.15rem + .9vw,1.7rem) !important; font-weight: 700 !important;
+  letter-spacing: 0 !important; line-height: 1.28 !important; color: var(--dh-ink, #111) !important;
   margin: 0 0 .9rem !important; word-break: keep-all;
 }
 
 html body.dhr.dhr-wrap.dhr-wrap .dhp-price{ display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-off{ font-size: 20px; font-weight: 900; letter-spacing: -.03em; color: #B42318; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-off{ font-size: 20px; font-weight: 800; letter-spacing: 0; color: #B42318; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-was{ font-size: 15px; font-weight: 500; color: var(--dh-ink-3, #616870); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-now{ font-size: clamp(1.9rem,1.5rem + 1.6vw,2.15rem); font-weight: 900; letter-spacing: -.04em; color: var(--dh-ink, #111); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-now span{ font-size: .5em; font-weight: 800; margin-left: .12em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-now{ font-size: clamp(1.9rem,1.5rem + 1.6vw,2.15rem); font-weight: 800; letter-spacing: 0; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-now span{ font-size: .5em; font-weight: 700; margin-left: .12em; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-unit{
   display: inline-flex; align-items: baseline; gap: .4rem; margin-top: .55rem;
   padding: .3rem .7rem; border-radius: 999px; background: var(--dh-accent-soft, #E8F5FE);
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-unit b{ font-size: 17px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-unit span{ font-size: 13px; font-weight: 700; color: var(--dh-accent-deep, #1565C0); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-unit b{ font-size: 17px; font-weight: 800; letter-spacing: 0; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-unit span{ font-size: 13px; font-weight: 600; color: var(--dh-accent-deep, #1565C0); }
 
 /* 키플 위젯(조회수 · 오늘출발 · 무료배송)은 정보다. 다만 상자를 겹치지 않는다. */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-viewer-count{ order: -1; align-self: flex-start; margin: 0 0 .7rem !important; padding: .3rem .6rem !important; }
@@ -1033,11 +1033,11 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-trust li{ margin: 0 !important; padding: 0 
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__ic{ flex: 0 0 18px; color: var(--dh-ink-3, #616870); display: flex; padding-top: .12rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__ic svg{ width: 18px; height: 18px; stroke-width: 1.9; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust__tx{ min-width: 0; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-trust b{ display: block; font-size: 15px; font-weight: 800; letter-spacing: -.025em; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-trust b{ display: block; font-size: 15px; font-weight: 700; letter-spacing: 0; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span{ display: block; font-size: 13px; line-height: 1.5; color: var(--dh-ink-3, #616870); margin-top: .12rem; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-trust span b{ display: inline; font-size: 13px; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-links{ display: flex; gap: 1rem; margin: 1rem 0 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-links a{ font-size: 14px; font-weight: 700; color: var(--dh-accent-deep, #1565C0); text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-links a{ font-size: 14px; font-weight: 600; color: var(--dh-accent-deep, #1565C0); text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 
 /* 사진은 잘라내지 않는다 — 병 전체가 보여야 한다 */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .woocommerce-product-gallery__image img{ object-fit: contain !important; background: #fff !important; }
@@ -1076,7 +1076,7 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item{
   border-radius: 14px !important; padding: .85rem .95rem !important; margin: 0 !important;
   display: flex !important; flex-direction: column !important; gap: .6rem !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__title{ font-size: 15px !important; font-weight: 700 !important; letter-spacing: -.02em !important; color: var(--dh-ink, #111) !important; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__title{ font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__bottom{ display: flex !important; align-items: center !important; justify-content: space-between !important; gap: .6rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty{
   display: inline-flex !important; align-items: center !important; overflow: hidden !important;
@@ -1085,25 +1085,25 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty{
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty button{
   width: 44px !important; height: 44px !important; min-width: 44px !important; min-height: 44px !important;
   border: 0 !important; background: none !important; color: var(--dh-ink, #111) !important;
-  font-size: 18px !important; font-weight: 700 !important; line-height: 1 !important; cursor: pointer;
+  font-size: 18px !important; font-weight: 600 !important; line-height: 1 !important; cursor: pointer;
   display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty button:hover{ background: var(--dh-surface-2, #EDF0F2) !important; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty > span{ min-width: 2.2rem; text-align: center; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111); }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-price{ font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty > span{ min-width: 2.2rem; text-align: center; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-price{ font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
 
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-summary{ background: none !important; border: 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important; margin: 1.1rem 0 0 !important; padding: 1rem 0 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-summary__row{ display: flex !important; align-items: baseline !important; justify-content: space-between !important; gap: .6rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-summary__row > span{ font-size: 15px !important; font-weight: 600 !important; color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-total{ font-size: 22px !important; font-weight: 900 !important; letter-spacing: -.035em !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-error{ font-size: 14px !important; color: var(--dh-status-check, #B42318) !important; font-weight: 700 !important; margin: .6rem 0 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-total{ font-size: 22px !important; font-weight: 800 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-error{ font-size: 14px !important; color: var(--dh-status-check, #B42318) !important; font-weight: 600 !important; margin: .6rem 0 0 !important; }
 
 /* PPOM 옵션 라벨 */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .ppom-wrapper{ margin-top: 1.1rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .ppom-wrapper label,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .ppom-wrapper .ppom-field-label{
-  display: block !important; font-size: 15px !important; font-weight: 700 !important;
-  color: var(--dh-ink, #111) !important; margin: 0 0 .4rem !important; letter-spacing: -.02em !important;
+  display: block !important; font-size: 15px !important; font-weight: 600 !important;
+  color: var(--dh-ink, #111) !important; margin: 0 0 .4rem !important; letter-spacing: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .ppom-wrapper .form-group,
 html body.dhr.dhr-wrap.dhr-wrap.single-product .ppom-wrapper .form-row{ margin: 0 0 .9rem !important; }
@@ -1118,7 +1118,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-main{ padding: 0 0 3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb{ display: flex; gap: .35rem; align-items: center; padding: 1rem 0 .8rem; font-size: 13px; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a{ color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a + a::before{ content: "›"; margin-right: .35rem; color: var(--dh-line-strong, #C9CFD4); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a:last-child{ color: var(--dh-ink, #111); font-weight: 700; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-crumb a:last-child{ color: var(--dh-ink, #111); font-weight: 600; }
 
 html body.dhr.dhr-wrap.dhr-wrap .dhp-top{ display: grid; grid-template-columns: minmax(0,1fr); gap: 1rem; align-items: start; }
 @media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .dhp-top{ grid-template-columns: minmax(0,1.02fr) minmax(0,.98fr); gap: 2rem; } }
@@ -1147,16 +1147,16 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-gate{
   padding: .95rem 1rem 1rem; display: grid; gap: .35rem; text-align: left; word-break: keep-all;
   box-shadow: 0 12px 28px -18px rgba(17,17,17,.35);
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__t{ margin: 0; font-size: 16px; font-weight: 800; line-height: 1.35; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__t{ margin: 0; font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__p{ margin: 0 0 .35rem; font-size: 13.5px; line-height: 1.55; color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__btn{
   display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 1.1rem;
-  background: var(--dh-ink, #111); color: #fff !important; font-size: 15px; font-weight: 800; border-radius: 999px; text-decoration: none !important;
+  background: var(--dh-ink, #111); color: #fff !important; font-size: 15px; font-weight: 700; border-radius: 999px; text-decoration: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__btn:hover{ background: var(--dh-accent-warm, #C2410C); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gate__login{
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px; margin: -.15rem 0 -.5rem;
-  font-size: 14px; font-weight: 700; color: var(--dh-ink-2, #4E565F) !important; text-decoration: underline; text-underline-offset: .18em;
+  font-size: 14px; font-weight: 600; color: var(--dh-ink-2, #4E565F) !important; text-decoration: underline; text-underline-offset: .18em;
 }
 @media (max-width: 420px){ html body.dhr.dhr-wrap.dhr-wrap .dhp-gate{ left: .5rem; right: .5rem; bottom: .5rem; padding: .8rem .85rem .9rem; } }
 
@@ -1168,7 +1168,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-short p{ margin: 0; }
 
 /* 아래 섹션 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-sec{ margin-top: clamp(2rem,1.4rem + 2vw,3rem); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-sec > h2, html body.dhr.dhr-wrap.dhr-wrap .dhp-sec .sec-h h2{ font-size: clamp(1.15rem,1rem + .7vw,1.45rem); font-weight: 800; letter-spacing: -.035em; margin: 0 0 .9rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-sec > h2, html body.dhr.dhr-wrap.dhr-wrap .dhp-sec .sec-h h2{ font-size: clamp(1.15rem,1rem + .7vw,1.45rem); font-weight: 700; letter-spacing: 0; margin: 0 0 .9rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-desc__body{
   background: var(--dh-surface, #fff); border: 1px solid var(--dh-line, #E1E5E8); border-radius: 18px;
   padding: clamp(1rem,.7rem + 1vw,1.6rem); font-size: 16px; line-height: 1.75; color: var(--dh-ink-2, #4E565F);
@@ -1180,7 +1180,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-faq details{ border-top: 1px solid var(--dh
 html body.dhr.dhr-wrap.dhr-wrap .dhp-faq details:first-child{ border-top: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-faq summary{
   list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: .8rem;
-  min-height: 56px; font-size: 16px; font-weight: 700; color: var(--dh-ink, #111); letter-spacing: -.02em;
+  min-height: 56px; font-size: 16px; font-weight: 600; color: var(--dh-ink, #111); letter-spacing: 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-faq summary::-webkit-details-marker{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-faq summary svg{ width: 20px; height: 20px; flex: 0 0 20px; transform: rotate(90deg); transition: transform .2s; color: var(--dh-ink-3, #616870); }
@@ -1192,28 +1192,28 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-faq a{ color: var(--dh-accent-deep, #1565C0
 html body.dhr.dhr-wrap.dhr-wrap .dha-main{ padding: 0 0 3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-head{ padding: 1.4rem 0 .6rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-head__t{ display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
-html body.dhr.dhr-wrap.dhr-wrap .dha-head h1{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem); font-weight: 900; letter-spacing: -.045em; line-height: 1.15; margin: 0; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap .dha-n{ font-size: 15px; font-weight: 700; color: var(--dh-ink-3, #616870); }
+html body.dhr.dhr-wrap.dhr-wrap .dha-head h1{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem); font-weight: 800; letter-spacing: 0; line-height: 1.15; margin: 0; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-n{ font-size: 15px; font-weight: 600; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dha-desc{ margin: .5rem 0 0; font-size: 15px; color: var(--dh-ink-2, #4E565F); max-width: 60ch; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-chips{ display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding: .4rem 0 .9rem; margin: 0 -1px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-chips::-webkit-scrollbar{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-chips a{
   flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 .95rem; border-radius: 999px;
   border: 1.5px solid var(--dh-line, #E1E5E8); background: var(--dh-surface, #fff); color: var(--dh-ink-2, #4E565F);
-  font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+  font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dha-chips a.on{ background: var(--dh-primary, #111); border-color: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff); }
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar{ display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin: 0 0 .9rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar__n{ font-size: 14px; font-weight: 600; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dha-bar form.woocommerce-ordering{ margin: 0; }
-html body.dhr.dhr-wrap.dhr-wrap .dha-bar form.woocommerce-ordering select{ width: auto; min-height: 40px; padding: 0 2.2rem 0 .9rem; font-size: 14px; font-weight: 700; border-radius: 999px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-bar form.woocommerce-ordering select{ width: auto; min-height: 40px; padding: 0 2.2rem 0 .9rem; font-size: 14px; font-weight: 600; border-radius: 999px; }
 /* 정렬 — 분류 칩과 같은 알약이되 한 단 작게. 폰에서는 옆으로 밀린다 (줄바꿈하면 카드가 밀린다). */
 html body.dhr.dhr-wrap.dhr-wrap .dha-sort{ display: flex; gap: .35rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-sort::-webkit-scrollbar{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-sort a{
   flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 .85rem; border-radius: 999px;
   border: 1.5px solid var(--dh-line, #E1E5E8); background: var(--dh-surface, #fff); color: var(--dh-ink-2, #4E565F);
-  font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+  font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dha-sort a:hover{ border-color: var(--dh-ink-3, #616870); color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dha-sort a.on{ background: var(--dh-primary, #111); border-color: var(--dh-primary, #111); color: var(--dh-primary-ink, #fff); }
@@ -1230,7 +1230,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dha-empty p b{ color: var(--dh-ink, #111); font
 
 /* ══ 장바구니 — 키플 표를 카드로 ════════════════════════════════════════════
    마크업은 그대로(체크박스 · 수량 · 삭제가 이름으로 걸려 있다). 표를 풀어 상품마다 카드 한 장. */
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg__title{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem) !important; font-weight: 900 !important; letter-spacing: -.045em !important; margin: 1.2rem 0 1rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg__title{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem) !important; font-weight: 800 !important; letter-spacing: 0 !important; margin: 1.2rem 0 1rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table, html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tbody, html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tr, html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td{ display: block !important; width: 100% !important; border: 0 !important; padding: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table thead, html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table colgroup{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table tbody{ display: grid !important; gap: .7rem !important; }
@@ -1258,7 +1258,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__check input{ width: 20px; height: 
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb{ flex: 0 0 72px; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; background: var(--dh-surface-2, #EDF0F2); display: block; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; display: block; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__body{ min-width: 0; flex: 1 1 auto; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__head{ font-size: 15px !important; font-weight: 800 !important; letter-spacing: -.02em !important; color: var(--dh-ink, #111) !important; line-height: 1.4; word-break: keep-all; display: flex; justify-content: space-between; gap: .5rem; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__head{ font-size: 15px !important; font-weight: 700 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; line-height: 1.4; word-break: keep-all; display: flex; justify-content: space-between; gap: .5rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ margin-top: .45rem !important; display: grid; gap: .3rem; padding: 0 !important; }
 /* 옵션 줄 — 라벨이 길어 한 줄에 라벨 · × · 수량 · 가격이 다 못 들어간다. 두 줄로 접는다:
    1줄 라벨(+×), 2줄 수량 | 가격. 옆 칸으로 흘러넘치던 원인이 min-width:auto 였다. */
@@ -1278,45 +1278,45 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__text{ display: inline !important
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__remove{ grid-area: remove; justify-self: end; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty{ grid-area: qty; display: inline-flex !important; align-items: center !important; overflow: hidden !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; border-radius: 999px !important; background: var(--dh-surface, #fff) !important; width: max-content !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button{ width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; border: 0 !important; background: none !important; color: var(--dh-ink, #111) !important; font-size: 17px !important; font-weight: 700 !important; padding: 0 !important; cursor: pointer; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty span{ min-width: 2rem; text-align: center; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111); }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__price{ grid-area: price; justify-self: end; font-size: 15px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty button{ width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; border: 0 !important; background: none !important; color: var(--dh-ink, #111) !important; font-size: 17px !important; font-weight: 600 !important; padding: 0 !important; cursor: pointer; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__qty span{ min-width: 2rem; text-align: center; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111); }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__price{ grid-area: price; justify-self: end; font-size: 15px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap table.wd-cpg-table td.wd-cpg-col-info{ min-width: 0 !important; overflow: hidden !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-info__body, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option-list{ min-width: 0 !important; max-width: 100% !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__label,
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ font-size: 12px !important; font-weight: 800 !important; padding: .1rem .4rem !important; border-radius: 5px !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__num{ font-size: 17px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ font-size: 12px !important; font-weight: 700 !important; padding: .1rem .4rem !important; border-radius: 5px !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__num{ font-size: 17px !important; font-weight: 700 !important; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-qty__num::before{ content: "수량 "; font-size: 13px; font-weight: 600; color: var(--dh-ink-3, #616870); }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-subtotal__amt{ font-size: 19px !important; font-weight: 900 !important; letter-spacing: -.03em !important; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__main{ font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink-2, #4E565F) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-subtotal__amt{ font-size: 19px !important; font-weight: 800 !important; letter-spacing: 0 !important; font-variant-numeric: tabular-nums; color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__main{ font-size: 14px !important; font-weight: 600 !important; color: var(--dh-ink-2, #4E565F) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-shipping__main::before{ content: "배송비 "; font-weight: 600; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-bulk{ display: flex !important; gap: .4rem !important; margin: .8rem 0 0 !important; }
 /* 추천 줄 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom{ margin: 2.2rem 0 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__title{ font-size: 18px !important; font-weight: 800 !important; letter-spacing: -.03em !important; margin: 0 0 .8rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__title{ font-size: 18px !important; font-weight: 700 !important; letter-spacing: 0 !important; margin: 0 0 .8rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__list{ display: grid !important; grid-template-columns: repeat(2,1fr) !important; gap: .7rem !important; }
 @media (min-width:640px){ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__list{ grid-template-columns: repeat(3,1fr) !important; } }
 @media (min-width:980px){ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__list{ grid-template-columns: repeat(5,1fr) !important; } }
 html body.dhr.dhr-wrap.dhr-wrap a.wd-cpg-recom__item{ display: block !important; background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important; border-radius: 14px !important; padding: .7rem !important; text-decoration: none !important; color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb{ aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; background: var(--dh-surface-2, #EDF0F2); margin-bottom: .55rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__name{ font-size: 14px !important; font-weight: 700 !important; line-height: 1.4 !important; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__price{ margin-top: .35rem; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__name{ font-size: 14px !important; font-weight: 600 !important; line-height: 1.4 !important; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__price{ margin-top: .35rem; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__price del{ font-size: 13px; font-weight: 500; color: var(--dh-ink-3, #616870); margin-right: .3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__price ins{ text-decoration: none; }
 /* 합계 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary{ margin: 1.6rem 0 0 !important; background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important; border-radius: 16px !important; padding: 1.1rem 1.2rem !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__head{ font-size: 15px !important; font-weight: 700 !important; color: var(--dh-ink-2, #4E565F) !important; margin: 0 0 .8rem !important; padding: 0 0 .8rem !important; border-bottom: 1px solid var(--dh-line, #E1E5E8) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__head{ font-size: 15px !important; font-weight: 600 !important; color: var(--dh-ink-2, #4E565F) !important; margin: 0 0 .8rem !important; padding: 0 0 .8rem !important; border-bottom: 1px solid var(--dh-line, #E1E5E8) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__calc{ display: grid !important; gap: .55rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__sym{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item{ display: flex !important; flex-direction: row-reverse !important; justify-content: space-between !important; align-items: baseline !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item span{ font-size: 15px !important; color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item strong{ font-size: 16px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item strong{ font-size: 16px !important; font-weight: 600 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--discount strong{ color: var(--dh-status-check, #B42318) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--discount strong::before{ content: "− "; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total{ margin-top: .4rem !important; padding-top: .8rem !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total span{ font-weight: 800 !important; color: var(--dh-ink, #111) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total strong{ font-size: 24px !important; font-weight: 900 !important; letter-spacing: -.035em !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total span{ font-weight: 700 !important; color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-summary__item--total strong{ font-size: 24px !important; font-weight: 800 !important; letter-spacing: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order{ display: flex !important; flex-direction: column !important; align-items: center !important; gap: .6rem !important; margin: 1rem 0 0 !important; }
 @media (min-width:900px){
   /* 두 칸은 **폼 안에서** 나눈다. `.wd-cpg` 를 격자로 만들고 폼을 display:contents 로
@@ -1335,7 +1335,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-order{ display: flex !important; flex-di
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cartside{ display: grid; gap: .8rem; }
 
 /* ══ 주문서 — 두 칸 ═════════════════════════════════════════════════════════ */
-html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-title{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem) !important; font-weight: 900 !important; letter-spacing: -.045em !important; margin: 1.2rem 0 1rem !important; text-align: left !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-title{ font-size: clamp(1.6rem,1.2rem + 1.8vw,2.4rem) !important; font-weight: 800 !important; letter-spacing: 0 !important; margin: 1.2rem 0 1rem !important; text-align: left !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-grid{ display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 1rem !important; align-items: start !important; }
 @media (min-width:1024px){
   html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-grid{ grid-template-columns: minmax(0,1fr) 380px !important; gap: 1.5rem !important; }
@@ -1343,45 +1343,45 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-grid{ display: grid !important; gri
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-left, html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-right{ display: grid !important; gap: 1rem !important; width: auto !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-card{ background: var(--dh-surface, #fff) !important; border: 1px solid var(--dh-line, #E1E5E8) !important; border-radius: 16px !important; padding: 1.2rem !important; margin: 0 !important; box-shadow: none !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-card-title{ font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; margin: 0 0 .9rem !important; padding: 0 !important; border: 0 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-field-box label{ display: block !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink-2, #4E565F) !important; margin: 0 0 .35rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-card-title{ font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; margin: 0 0 .9rem !important; padding: 0 !important; border: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-field-box label{ display: block !important; font-size: 14px !important; font-weight: 600 !important; color: var(--dh-ink-2, #4E565F) !important; margin: 0 0 .35rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-field-box p.form-row{ margin: 0 !important; padding: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-field-grid{ display: grid !important; gap: .8rem !important; margin: 0 0 .8rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-field-grid--2{ grid-template-columns: 1fr !important; }
 @media (min-width:640px){ html body.dhr.dhr-wrap.dhr-wrap .wd-field-grid--2{ grid-template-columns: 1fr 1fr !important; } }
 html body.dhr.dhr-wrap.dhr-wrap .wd-postcode-row{ display: grid !important; grid-template-columns: minmax(0,1fr) auto !important; gap: .6rem !important; align-items: end !important; margin: 0 0 .8rem !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-address-search-btn{ min-height: 48px !important; padding: 0 1rem !important; border-radius: 12px !important; border: 1.5px solid var(--dh-primary, #111) !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important; font-size: 15px !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-address-search-btn{ min-height: 48px !important; padding: 0 1rem !important; border-radius: 12px !important; border: 1.5px solid var(--dh-primary, #111) !important; background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important; font-size: 15px !important; font-weight: 600 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-item{ display: flex !important; gap: .8rem !important; align-items: flex-start !important; padding: .7rem 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-item:first-child{ border-top: 0 !important; padding-top: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-thumb{ flex: 0 0 64px; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: var(--dh-surface-2, #EDF0F2); }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-name{ font-size: 15px !important; font-weight: 700 !important; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-price{ font-size: 15px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums; margin-top: .3rem; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-name{ font-size: 15px !important; font-weight: 600 !important; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-product-price{ font-size: 15px !important; font-weight: 700 !important; font-variant-numeric: tabular-nums; margin-top: .3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row{ display: flex !important; justify-content: space-between !important; align-items: baseline !important; padding: .35rem 0 !important; font-size: 15px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row span{ color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row strong{ font-weight: 700 !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row strong{ font-weight: 600 !important; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-summary-total{ display: flex !important; justify-content: space-between !important; align-items: baseline !important; margin-top: .6rem !important; padding-top: .9rem !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-summary-total span{ font-size: 15px !important; font-weight: 800 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-summary-total strong{ font-size: 24px !important; font-weight: 900 !important; letter-spacing: -.035em !important; font-variant-numeric: tabular-nums; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-summary-point-info{ font-size: 13px !important; color: var(--dh-accent-deep, #1565C0) !important; font-weight: 700 !important; margin-top: .4rem !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-total span{ font-size: 15px !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-total strong{ font-size: 24px !important; font-weight: 800 !important; letter-spacing: 0 !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-summary-point-info{ font-size: 13px !important; color: var(--dh-accent-deep, #1565C0) !important; font-weight: 600 !important; margin-top: .4rem !important; }
 /* 위 요약이 이미 합계를 보여 준다 — 워드커머스 표는 숨긴다. 결제 수단과 버튼은 그 아래 그대로. */
 html body.dhr.dhr-wrap.dhr-wrap #order_review table.shop_table{ display: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap #payment{ background: transparent !important; margin-top: .8rem !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wc_payment_method label{ font-size: 16px !important; font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wc_payment_method label{ font-size: 16px !important; font-weight: 700 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .place-order{ padding: 0 !important; margin-top: .8rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-terms-custom{ font-size: 14px !important; color: var(--dh-ink-2, #4E565F) !important; line-height: 1.6 !important; margin: .8rem 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap #place_order{ width: 100% !important; }
 
 /* ══ 상품 상세 — 사는 쪽으로 미는 것들 ═══════════════════════════════════════ */
 /* 사진 위 — 할인율 알약, 몇 장째 */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__pill{ position: absolute; z-index: 2; top: .8rem; left: .8rem; background: #111; color: #fff; font-size: 13px; font-weight: 800; padding: .35rem .7rem; border-radius: 999px; letter-spacing: -.01em; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__n{ position: absolute; z-index: 2; right: .8rem; bottom: .8rem; background: #fff; border: 1px solid var(--dh-line, #E1E5E8); color: var(--dh-ink-2, #4E565F); font-size: 13px; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__pill{ position: absolute; z-index: 2; top: .8rem; left: .8rem; background: #111; color: #fff; font-size: 13px; font-weight: 700; padding: .35rem .7rem; border-radius: 999px; letter-spacing: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__n{ position: absolute; z-index: 2; right: .8rem; bottom: .8rem; background: #fff; border: 1px solid var(--dh-line, #E1E5E8); color: var(--dh-ink-2, #4E565F); font-size: 13px; font-weight: 600; padding: .25rem .6rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-gal__n b{ color: var(--dh-ink, #111); }
 /* 가격 아래 — 살까 말까를 정하는 사실 세 줄 */
 html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben{ list-style: none; margin: .9rem 0 0 !important; padding: .8rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .35rem; }
 html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li{ margin: 0 !important; padding: 0 0 0 1.1rem !important; position: relative; font-size: 14px; line-height: 1.5; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li::before{ content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 999px; background: var(--dh-accent, #38BDF8); }
-html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li:first-child{ color: var(--dh-ink, #111); font-weight: 700; }
+html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li:first-child{ color: var(--dh-ink, #111); font-weight: 600; }
 /* 아래 고정 구매 줄 — 모바일. 폼의 버튼이 보이는 동안은 내려가 있다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 36; display: block;
@@ -1404,13 +1404,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open:hover{ background: #EDF0F2; border-color: var(--dh-line-2, #CBD2D8); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__lbl{ flex: 0 0 auto; font-size: 13px; font-weight: 600; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__open .n{
-  flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 900; letter-spacing: -.03em;
+  flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 800; letter-spacing: 0;
   color: var(--dh-ink, #111); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__more{
   flex: 0 0 auto; display: inline-flex; align-items: center; gap: .1rem;
-  font-size: 13.5px; font-weight: 800; color: var(--dh-accent-deep, #1565C0); white-space: nowrap;
+  font-size: 13.5px; font-weight: 700; color: var(--dh-accent-deep, #1565C0); white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__more svg{ width: 16px; height: 16px; transform: rotate(-90deg); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__row{ display: flex; align-items: center; gap: .5rem; }
@@ -1418,13 +1418,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart{ flex: 0 0 50px; width: 50px; hei
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart[hidden]{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__cart svg{ width: 22px; height: 22px; }
 /* 결제하기가 남은 자리를 다 쓴다. content 폭으로 두면 오른쪽이 비어 두 버튼이 왼쪽으로 몰린다 */
-html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ flex: 1 1 auto; min-width: 0; height: 50px; padding: 0 1.3rem; border-radius: 14px; background: var(--dh-primary, #111); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -.01em; border: 0; cursor: pointer; white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ flex: 1 1 auto; min-width: 0; height: 50px; padding: 0 1.3rem; border-radius: 14px; background: var(--dh-primary, #111); color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 0; border: 0; cursor: pointer; white-space: nowrap; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-off .dhp-bar__buy{ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink-2, #4E565F); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-off .dhp-bar__cart{ border-color: var(--dh-line-strong, #C9CFD4); color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.nudge .dhp-bar__buy{ animation: dhp-nudge .5s; }
 @keyframes dhp-nudge{ 20%{ transform: translateX(-4px); } 60%{ transform: translateX(4px); } }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip{
-  position: absolute; right: 1rem; bottom: calc(100% + .45rem); background: #111; color: #fff; font-size: 13px; font-weight: 700; padding: .4rem .7rem; border-radius: 999px; text-decoration: none; white-space: nowrap;
+  position: absolute; right: 1rem; bottom: calc(100% + .45rem); background: #111; color: #fff; font-size: 13px; font-weight: 600; padding: .4rem .7rem; border-radius: 999px; text-decoration: none; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip::after{ content: ""; position: absolute; right: 1.4rem; top: 100%; border: 5px solid transparent; border-top-color: #111; }
 /* 구매 줄이 탭바 자리를 쓴다 */
@@ -1432,7 +1432,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__tip::after{ content: ""; position: abs
 /* 담긴 뒤의 워드커머스 알림 — 서랍이 대신 말하니 짧게 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message{ background: var(--dh-accent-soft, #E8F5FE) !important; border: 0 !important; border-radius: 12px !important; color: var(--dh-ink, #111) !important; padding: .8rem 1rem !important; margin: 1rem 0 0 !important; font-size: 14px !important; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message::before{ display: none !important; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message a.button{ order: 2; margin-left: auto; min-height: 40px; padding: 0 1rem !important; border-radius: 999px !important; background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important; display: inline-flex; align-items: center; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-main .woocommerce-message a.button{ order: 2; margin-left: auto; min-height: 40px; padding: 0 1rem !important; border-radius: 999px !important; background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 600 !important; display: inline-flex; align-items: center; }
 /* 가입 말풍선은 구매 줄이 올라와 있을 때만 — 줄이 내려가 있으면 말풍선만 떠 있게 된다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar:not(.is-away) .dhp-bar__tip{ display: none; }
 /* 맛 칩 — 글자를 15px 로 키우고 나니 한 줄 고정(nowrap)이 칸을 넘어 왼쪽이 잘렸다. 줄바꿈을 허용한다. */
@@ -1497,8 +1497,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhp-dock__head{
   border-bottom: 1px solid var(--dh-line, #E1E5E8); border-radius: 20px 20px 0 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx{ min-width: 0; flex: 1 1 auto; display: grid; gap: .1rem; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx b{ font-size: 14px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n{ font-size: 15px; font-weight: 800; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx b{ font-size: 14px; font-weight: 700; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n{ font-size: 15px; font-weight: 700; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n del{ font-size: 12.5px; font-weight: 500; color: var(--dh-ink-3, #616870); margin-right: .3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx .n ins{ text-decoration: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__x{
@@ -1509,7 +1509,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__x:hover{ background: var(--dh-surface
 /* 닫으면 알약 하나만 남는다 — 다시 누르면 서랍이 돌아온다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__open{
   position: fixed; right: 24px; bottom: 24px; z-index: 45; min-height: 52px; padding: 0 1.4rem; border: 0; border-radius: 999px;
-  background: var(--dh-primary, #111); color: #fff !important; font-size: 16px; font-weight: 800; cursor: pointer;
+  background: var(--dh-primary, #111); color: #fff !important; font-size: 16px; font-weight: 700; cursor: pointer;
   display: inline-flex; align-items: center; gap: .35rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 10px 28px -10px rgba(17,17,17,.7);
 }
@@ -1553,13 +1553,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsel__btn{
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__btn:hover{ border-color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel.is-open .dhsel__btn{ border-color: var(--dh-ink, #111); box-shadow: 0 0 0 3px rgba(17,17,17,.08); }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__btn:focus-visible{ outline: 2px solid var(--dh-accent-deep, #1565C0); outline-offset: 2px; }
-html body.dhr.dhr-wrap.dhr-wrap .dhsel.is-set .dhsel__btn{ color: var(--dh-ink, #111); font-weight: 700; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsel.is-set .dhsel__btn{ color: var(--dh-ink, #111); font-weight: 600; }
 /* 고른 값은 텍스트 노드가 아니라 CSS content 로 그린다 — 폼 안의 글자가 늘어나면
    사장님 스니펫이 그 칸을 다른 칸으로 잘못 읽는다 (front.js 의 설명 참고).
    화면낭독기에는 트리거의 aria-label 이 같은 말을 전한다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__val{ flex: 1 1 auto; min-width: 0; line-height: 1.35; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__val::after{ content: attr(data-l); }
-html body.dhr.dhr-wrap.dhr-wrap .dhsel__cost{ flex: 0 0 auto; font-weight: 800; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsel__cost{ flex: 0 0 auto; font-weight: 700; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__cost::after{ content: attr(data-l); }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__chev{ flex: 0 0 20px; width: 20px; height: 20px; color: var(--dh-ink-3, #616870); transition: transform .3s cubic-bezier(.16,1,.3,1); }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel.is-open .dhsel__chev{ transform: rotate(180deg); }
@@ -1594,10 +1594,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt{
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt + .dhsel__opt{ margin-top: 1px; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt:hover:not([disabled]){ background: var(--dh-surface-2, #EDF0F2); color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt:focus-visible{ outline: 2px solid var(--dh-accent-deep, #1565C0); outline-offset: -2px; }
-html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.on{ background: var(--dh-accent-soft, #E8F5FE); color: var(--dh-ink, #111); font-weight: 800; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.on{ background: var(--dh-accent-soft, #E8F5FE); color: var(--dh-ink, #111); font-weight: 700; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.is-off{ opacity: .45; cursor: default; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__nm{ flex: 1 1 auto; min-width: 0; line-height: 1.4; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap .dhsel__pr{ flex: 0 0 auto; font-weight: 800; color: var(--dh-accent-warm, #C2410C); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsel__pr{ flex: 0 0 auto; font-weight: 700; color: var(--dh-accent-warm, #C2410C); font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__tick{ flex: 0 0 18px; width: 18px; height: 18px; color: var(--dh-ink, #111); opacity: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.on .dhsel__tick{ opacity: 1; }
 /* 첫 줄은 "고르지 않음" 자리다 — 값이 아니라 안내다 */
@@ -1636,7 +1636,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation ul{ list-style
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li{ margin: 0 !important; border: 0 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a{
   display: flex; align-items: center; min-height: 48px; padding: 0 .95rem !important; border-radius: 12px;
-  font-size: 15px; font-weight: 700; color: var(--dh-ink-2, #4E565F) !important; text-decoration: none; background: none !important;
+  font-size: 15px; font-weight: 600; color: var(--dh-ink-2, #4E565F) !important; text-decoration: none; background: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li a:hover{ background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-primary, #111) !important; color: #fff !important; }
@@ -1661,12 +1661,12 @@ html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table tr.woocommerce-or
 html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table td{ display: block !important; border: 0 !important; padding: 0 !important; text-align: left !important; }
 html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table td::before,
 html body.dhr.dhr-wrap.dhr-wrap table.woocommerce-orders-table th::before{ display: none !important; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number{ grid-area: num; display: block !important; border: 0 !important; padding: 0 !important; font-weight: 800 !important; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number a{ font-size: 16px; font-weight: 800; color: var(--dh-ink, #111) !important; text-decoration: none; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number{ grid-area: num; display: block !important; border: 0 !important; padding: 0 !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-number a{ font-size: 16px; font-weight: 700; color: var(--dh-ink, #111) !important; text-decoration: none; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-date{ grid-area: date; font-size: 13.5px !important; color: var(--dh-ink-3, #616870) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-status{ grid-area: status; justify-self: end; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-status{
-  font-size: 13px !important; font-weight: 800 !important; padding: .3rem .7rem !important; border-radius: 999px !important;
+  font-size: 13px !important; font-weight: 700 !important; padding: .3rem .7rem !important; border-radius: 999px !important;
   background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important; white-space: nowrap;
 }
 /* 상태별 색 — 입금 확인 중은 손님이 할 일이 남은 상태다 */
@@ -1676,11 +1676,11 @@ html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-ready-t
 html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-delivered .woocommerce-orders-table__cell-order-status,
 html body.dhr.dhr-wrap.dhr-wrap tr.woocommerce-orders-table__row--status-completed .woocommerce-orders-table__cell-order-status{ background: #E7F3EA !important; color: #1B5E2A !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-total{ grid-area: total; font-size: 15px !important; color: var(--dh-ink-2, #4E565F) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-total strong{ font-size: 17px; font-weight: 900; letter-spacing: -.03em; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-total strong{ font-size: 17px; font-weight: 800; letter-spacing: 0; color: var(--dh-ink, #111); font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions{ grid-area: act; display: flex !important; gap: .45rem !important; flex-wrap: wrap; }
 @media (min-width: 720px){ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions{ justify-content: flex-end; } }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .button{
-  min-height: 44px !important; padding: 0 1.1rem !important; border-radius: 999px !important; font-size: 14px !important; font-weight: 700 !important;
+  min-height: 44px !important; padding: 0 1.1rem !important; border-radius: 999px !important; font-size: 14px !important; font-weight: 600 !important;
   display: inline-flex !important; align-items: center; background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important;
   border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; box-shadow: none !important; text-decoration: none !important;
 }
@@ -1691,7 +1691,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-orders-table__cell-order-actions .b
 /* ══ 장바구니 — 남은 손질 ═══════════════════════════════════════════════════ */
 /* 제목 옆 개수 — 형광 분홍이었다 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg__count{
-  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 15px !important; font-weight: 800 !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 15px !important; font-weight: 700 !important;
   min-width: 30px; height: 30px; padding: 0 .5rem !important; border-radius: 999px !important; display: inline-flex !important;
   align-items: center; justify-content: center; vertical-align: 4px; margin-left: .4rem !important; font-variant-numeric: tabular-nums;
 }
@@ -1704,10 +1704,10 @@ html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
   display: flex !important; flex-direction: column !important; align-items: flex-start !important;
   box-shadow: 0 0 0 1px rgba(17,17,17,.03), 0 6px 16px -12px rgba(17,17,17,.3) !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice b{ font-size: 13px !important; font-weight: 800 !important; color: var(--dh-accent-warm, #C2410C) !important; letter-spacing: .01em; }
-html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice .n{ font-size: 15px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice b{ font-size: 13px !important; font-weight: 700 !important; color: var(--dh-accent-warm, #C2410C) !important; letter-spacing: .01em; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice .n{ font-size: 15px !important; font-weight: 600 !important; color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice *{ color: var(--dh-ink, #111) !important; font-size: 14.5px !important; }
-html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice strong{ font-weight: 800 !important; color: var(--dh-accent-warm, #C2410C) !important; }
+html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice strong{ font-weight: 700 !important; color: var(--dh-accent-warm, #C2410C) !important; }
 /* 함께 구매하면 좋은 상품 — 썸네일이 상자를 꽉 채운다 (테마가 6px 안쪽 여백을 준다) */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb{ padding: 0 !important; background: var(--dh-surface-2, #EDF0F2) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb img{ width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; padding: 0 !important; margin: 0 !important; border-radius: 0 !important; }
@@ -1715,10 +1715,10 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-recom__thumb img{ width: 100% !important
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-wishlist.is-empty{ display: none !important; }
 /* 옵션 줄의 필수 · 선택 배지 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option__badge{ background: var(--dh-ink, #111) !important; color: #fff !important; }
-html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option:has(.wd-cpg-option__badge) .wd-cpg-option__badge{ letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-option:has(.wd-cpg-option__badge) .wd-cpg-option__badge{ letter-spacing: 0; }
 /* 바로구매 · 옵션 변경 — 회색 위 회색이던 것을 또렷하게 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-edit{
-  min-height: 40px !important; padding: 0 .9rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 700 !important;
+  min-height: 40px !important; padding: 0 .9rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 600 !important;
   background: var(--dh-surface, #fff) !important; color: var(--dh-ink, #111) !important; border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-direct:hover, html body.dhr.dhr-wrap.dhr-wrap .wd-cpg-row .wd-cpg-edit:hover{ border-color: var(--dh-ink, #111) !important; }
@@ -1752,7 +1752,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-mess
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-info .button,
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-message .button{
   margin-left: auto; min-height: 44px; padding: 0 1.2rem !important; border-radius: 999px !important;
-  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 14px !important; font-weight: 600 !important;
   display: inline-flex !important; align-items: center; box-shadow: none !important;
 }
 /* 대시보드 카드 */
@@ -1769,7 +1769,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form fieldset{
   border: 0 !important; margin: 1.6rem 0 0 !important; padding: 1.4rem 0 0 !important; border-top: 1px solid var(--dh-line, #E1E5E8) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form legend{
-  padding: 0 !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important;
+  padding: 0 !important; font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-form-row,
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content p.form-row{ margin: 0 0 1rem !important; padding: 0 !important; float: none !important; width: auto !important; }
@@ -1782,14 +1782,14 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .form-row-last{ w
   html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content form > .form-row-last{ grid-column: 2; }
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content label{
-  display: block !important; margin: 0 0 .4rem !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink-2, #4E565F) !important;
+  display: block !important; margin: 0 0 .4rem !important; font-size: 14px !important; font-weight: 600 !important; color: var(--dh-ink-2, #4E565F) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content span.required{ color: var(--dh-status-check, #B42318); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content em{ display: block; margin-top: .35rem; font-size: 13px; font-style: normal; color: var(--dh-ink-3, #616870); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content button[type="submit"],
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-MyAccount-content .woocommerce-Button{
   min-height: 52px !important; padding: 0 1.6rem !important; border-radius: 999px !important; border: 0 !important;
-  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 16px !important; font-weight: 800 !important;
+  background: var(--dh-primary, #111) !important; color: #fff !important; font-size: 16px !important; font-weight: 700 !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 8px 20px -8px rgba(17,17,17,.55) !important;
 }
 /* 주소 — 두 칸 카드 */
@@ -1802,9 +1802,9 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address{
 }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title{ display: flex !important; align-items: center; justify-content: space-between; gap: .8rem; margin: 0 0 .8rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h2,
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h3{ margin: 0 !important; font-size: 17px !important; font-weight: 800 !important; letter-spacing: -.03em !important; color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title h3{ margin: 0 !important; font-size: 17px !important; font-weight: 700 !important; letter-spacing: 0 !important; color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-Address-title .edit{
-  min-height: 40px; padding: 0 .95rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 700 !important;
+  min-height: 40px; padding: 0 .95rem !important; border-radius: 999px !important; font-size: 13.5px !important; font-weight: 600 !important;
   border: 1.5px solid var(--dh-line-strong, #C9CFD4) !important; color: var(--dh-ink, #111) !important; text-decoration: none !important;
   display: inline-flex !important; align-items: center; white-space: nowrap;
 }
@@ -1862,15 +1862,15 @@ html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-btn{
   display: inline-flex !important; align-items: center !important; gap: .4rem !important;
   min-height: 48px !important; height: auto !important; width: auto !important; padding: 0 1rem !important;
   border: 0 !important; border-radius: 0 !important; background: none !important; cursor: pointer;
-  font-family: inherit !important; font-size: 15.5px !important; font-weight: 700 !important;
+  font-family: inherit !important; font-size: 15.5px !important; font-weight: 600 !important;
   color: var(--dh-ink-3, #616870) !important; border-bottom: 2.5px solid transparent !important; margin-bottom: -1px !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-btn:hover{ color: var(--dh-ink, #111) !important; }
-html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-btn.is-active{ color: var(--dh-ink, #111) !important; font-weight: 800 !important; border-bottom-color: var(--dh-ink, #111) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-btn.is-active{ color: var(--dh-ink, #111) !important; font-weight: 700 !important; border-bottom-color: var(--dh-ink, #111) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-count{
   min-width: 22px; height: 22px; padding: 0 .45rem !important; border-radius: 999px !important;
   background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important;
-  font-size: 13px !important; font-weight: 800 !important; display: inline-flex !important; align-items: center; justify-content: center;
+  font-size: 13px !important; font-weight: 700 !important; display: inline-flex !important; align-items: center; justify-content: center;
   font-variant-numeric: tabular-nums;
 }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-tab-btn.is-active .keyple-tab-count{ background: var(--dh-primary, #111) !important; color: #fff !important; }
@@ -1885,17 +1885,17 @@ html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon{
 }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-left{ min-width: 0; display: grid; gap: .25rem; }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-benefit{
-  font-size: clamp(1.25rem,1.1rem + .6vw,1.6rem) !important; font-weight: 900 !important; letter-spacing: -.04em !important;
+  font-size: clamp(1.25rem,1.1rem + .6vw,1.6rem) !important; font-weight: 800 !important; letter-spacing: 0 !important;
   color: var(--dh-ink, #111) !important; font-variant-numeric: tabular-nums; line-height: 1.2 !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-name{ font-size: 15px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-name{ font-size: 15px !important; font-weight: 600 !important; color: var(--dh-ink, #111) !important; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-condition{ font-size: 13.5px !important; color: var(--dh-ink-3, #616870) !important; line-height: 1.5 !important; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-right{
   text-align: right; display: grid; gap: .2rem; justify-items: end; padding-left: 1.4rem;
   border-left: 1.5px dashed var(--dh-line-strong, #C9CFD4) !important; align-self: stretch; align-content: center;
 }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-code{
-  font-size: 15px !important; font-weight: 800 !important; letter-spacing: .04em !important; color: var(--dh-ink, #111) !important;
+  font-size: 15px !important; font-weight: 700 !important; letter-spacing: .04em !important; color: var(--dh-ink, #111) !important;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon-right > *:first-child{ font-size: 13px !important; color: var(--dh-ink-3, #616870) !important; font-weight: 600 !important; }
@@ -2074,7 +2074,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsearch__cats a{ color: var(--dh-ink, #111) !i
    `노보 블랙 데저트` 가 화면에서 둘 다 그냥 `데저트` 로 보였다. 제목 안에 두되
    본 이름보다는 한 단계 약하게 — 읽는 순서는 브랜드 → 이름이다. */
 html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title .dhp-title__b{
-  color: var(--dh-ink-2, #4E565F); font-weight: 700; white-space: nowrap;
+  color: var(--dh-ink-2, #4E565F); font-weight: 600; white-space: nowrap;
 }
 
 /* ══ 노보 물량 이벤트 — 하루 한도 · 남은 수량 ══════════════════════════════
@@ -2084,13 +2084,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-novo{
   margin: .9rem 0 0; padding: .8rem .9rem .75rem 1rem; background: var(--dh-ground, #F4F6F7);
   border-radius: 12px; border-left: 4px solid var(--dh-accent-warm, #C2410C);
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t{ display: block; font-size: 15px; font-weight: 800; color: var(--dh-ink, #111); letter-spacing: -.01em; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t{ display: block; font-size: 15px; font-weight: 700; color: var(--dh-ink, #111); letter-spacing: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t span{ color: var(--dh-accent-warm, #C2410C); font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__p{ margin: .25rem 0 0 !important; font-size: 13.5px; line-height: 1.55; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__rows{ margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--dh-line, #E1E5E8); display: grid; gap: .3rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row{ display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; font-size: 14px; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row span{ color: var(--dh-ink-2, #4E565F); }
-html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink, #111); font-weight: 800; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink, #111); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* ── 담기가 거절됐을 때 ────────────────────────────────────────────────────
    테마는 워드커머스 안내를 자기 토스트(#wd-coupon-toast)로 옮기고 원본에 인라인
@@ -2161,10 +2161,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-text p.meta{
   margin: 0 0 6px; font-size: 13px; color: var(--dh-ink-3, #616870);
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__author{
-  color: var(--dh-ink, #111); font-weight: 700; font-size: 15px;
+  color: var(--dh-ink, #111); font-weight: 600; font-size: 15px;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__verified{
-  color: var(--dh-accent-warm, #C2410C); font-weight: 700;
+  color: var(--dh-accent-warm, #C2410C); font-weight: 600;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .description{ color: var(--dh-ink, #111); font-size: 15px; line-height: 1.65; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .description p{ margin: 0 0 .5em; }
@@ -2178,7 +2178,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev #review_form_wrapper{
   background: #fff; border: 1px solid var(--dh-line, #E1E5E8); border-radius: 16px; padding: 18px;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-reply-title{
-  display: block; font-size: 17px; font-weight: 800; color: var(--dh-ink, #111); margin: 0 0 4px;
+  display: block; font-size: 17px; font-weight: 700; color: var(--dh-ink, #111); margin: 0 0 4px;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-notes,
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-verification-required{
@@ -2187,7 +2187,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-verification-required{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-form{ display: grid; gap: 12px; margin: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-form p{ margin: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-form label{
-  display: block; font-size: 14px; font-weight: 700; color: var(--dh-ink-2, #4E565F); margin: 0 0 6px;
+  display: block; font-size: 14px; font-weight: 600; color: var(--dh-ink-2, #4E565F); margin: 0 0 6px;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-form input[type="text"],
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-form input[type="email"],
@@ -2210,7 +2210,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev p.stars a{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .form-submit{ margin: 4px 0 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .form-submit input[type="submit"]{
   width: 100%; min-height: 52px; background: var(--dh-ink, #111) !important; color: #fff !important;
-  border: 0 !important; border-radius: 999px !important; font-size: 16px; font-weight: 800;
+  border: 0 !important; border-radius: 999px !important; font-size: 16px; font-weight: 700;
   cursor: pointer; padding: 0 20px; box-shadow: none !important; text-shadow: none !important;
 }
 @media (min-width: 720px){
@@ -2247,7 +2247,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn{
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__l{
   display: block !important; margin: 0 0 8px !important;
-  font-size: 14px !important; font-weight: 800 !important; color: var(--dh-ink, #111) !important;
+  font-size: 14px !important; font-weight: 700 !important; color: var(--dh-ink, #111) !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__row{ display: flex !important; gap: 8px !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__i{
@@ -2260,14 +2260,14 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-bad .dhr-cpn__i{ border-color: var(-
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__b{
   flex: 0 0 auto !important; height: 46px !important; padding: 0 18px !important;
   border: 0 !important; border-radius: 10px !important; background: #111 !important;
-  color: #fff !important; font-size: 15px !important; font-weight: 800 !important; cursor: pointer !important;
+  color: #fff !important; font-size: 15px !important; font-weight: 700 !important; cursor: pointer !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-busy .dhr-cpn__b{ opacity: .6 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__msg{
   margin: 8px 0 0 !important; font-size: 13px !important; line-height: 1.5 !important;
   color: var(--dh-ink-2, #4E565F) !important; word-break: keep-all;
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-bad .dhr-cpn__msg{ color: var(--dh-accent-warm, #C2410C) !important; font-weight: 700 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn.is-bad .dhr-cpn__msg{ color: var(--dh-accent-warm, #C2410C) !important; font-weight: 600 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__on{ margin: 10px 0 0 !important; padding: 0 !important; list-style: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cpn__on li{
   display: flex !important; align-items: center !important; gap: 8px !important;
@@ -2291,7 +2291,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn{
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn.is-bad{
   color: var(--dh-accent-warm, #C2410C) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-hide-note{ display: none !important; }
 
@@ -2305,13 +2305,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li{
   background: var(--dh-surface-2, #F4F6F7) !important; border-radius: 10px !important;
   font-size: 13px !important; line-height: 1.4 !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li b{ font-weight: 800 !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li b{ font-weight: 700 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-on li span{ color: var(--dh-ink-2, #44525C) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-cocpn-x{
   margin-left: auto !important; min-height: 32px !important; padding: 0 12px !important;
   border: 1px solid var(--dh-line, #D8DEE3) !important; border-radius: 999px !important;
   background: #fff !important; color: var(--dh-ink-2, #44525C) !important;
-  font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important;
+  font-size: 12px !important; font-weight: 600 !important; cursor: pointer !important;
 }
 
 /* ══ 주문서 마무리 — 다른 화면과 같은 얼굴로 (2026-09-15) ══════════════════════
@@ -2362,7 +2362,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-summary-row span{ color: var(--dh-ink-2, #4E
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-option-badge{
   color: var(--dh-ink-2, #4E565F) !important;
   border: 1px solid var(--dh-line-strong, #C9CFD4) !important;
-  border-radius: 999px !important; font-size: 13px !important; font-weight: 700 !important;
+  border-radius: 999px !important; font-size: 13px !important; font-weight: 600 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-placeholder-note{
   background: var(--dh-surface-2, #EDF0F2) !important; color: var(--dh-ink-2, #4E565F) !important;
@@ -2374,7 +2374,7 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-placeholder-note{
 html body.dhr.dhr-wrap.dhr-wrap .wd-point-dummy-input,
 html body.dhr.dhr-wrap.dhr-wrap #wd_point_discount{
   border: 1px solid var(--dh-line-strong, #C9CFD4) !important;
-  border-radius: 10px !important; font-weight: 700 !important;
+  border-radius: 10px !important; font-weight: 600 !important;
 }
 /* 주소찾기만 라운드 12 였다 — 나머지 보조 버튼과 같은 알약으로 */
 html body.dhr.dhr-wrap.dhr-wrap .wd-address-search-btn{ border-radius: 999px !important; }
@@ -2420,7 +2420,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-track{
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__co{
   display: flex !important; align-items: center !important; gap: .4rem !important;
-  font-size: 13.5px !important; font-weight: 700 !important; color: #C9CFD4 !important;
+  font-size: 13.5px !important; font-weight: 600 !important; color: #C9CFD4 !important;
   letter-spacing: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__ic svg{ width: 18px !important; height: 18px !important; display: block !important; }
@@ -2429,14 +2429,14 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-track__row{
   flex-wrap: wrap !important; margin-top: .35rem !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__no{
-  font-size: 22px !important; font-weight: 800 !important; color: #FFFFFF !important;
+  font-size: 22px !important; font-weight: 700 !important; color: #FFFFFF !important;
   font-variant-numeric: tabular-nums !important; letter-spacing: 0 !important; min-width: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__copy{
   flex: 0 0 auto !important; min-height: 36px !important; padding: 0 .85rem !important;
   border-radius: 999px !important; border: 1px solid #4E565F !important;
   background: transparent !important; color: #FFFFFF !important;
-  font-size: 13.5px !important; font-weight: 700 !important; cursor: pointer !important;
+  font-size: 13.5px !important; font-weight: 600 !important; cursor: pointer !important;
   white-space: nowrap !important; box-shadow: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__copy.is-done{ background: #FFFFFF !important; color: #111111 !important; border-color: #FFFFFF !important; }
@@ -2444,7 +2444,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-track__go{
   display: inline-flex !important; align-items: center !important; gap: .35rem !important;
   min-height: 48px !important; margin-top: .85rem !important; padding: 0 1.15rem !important;
   border-radius: 999px !important; background: #FFFFFF !important; color: #111111 !important;
-  font-size: 15px !important; font-weight: 800 !important; text-decoration: none !important;
+  font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
   max-width: 100% !important; box-sizing: border-box !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-track__hint{
@@ -2459,7 +2459,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__go{
   display: flex !important; align-items: center !important; justify-content: center !important;
   min-height: 48px !important; border-radius: 999px !important;
   background: #111111 !important; color: #FFFFFF !important;
-  font-size: 15px !important; font-weight: 800 !important; text-decoration: none !important;
+  font-size: 15px !important; font-weight: 700 !important; text-decoration: none !important;
   box-shadow: none !important; border: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-wall__in a{ color: #1565C0 !important; }
@@ -2476,7 +2476,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ask{
   margin: 1.25rem 0 !important; box-sizing: border-box !important; max-width: 100% !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__t{
-  margin: 0 !important; font-size: 17px !important; font-weight: 800 !important;
+  margin: 0 !important; font-size: 17px !important; font-weight: 700 !important;
   color: #111111 !important; word-break: keep-all !important; letter-spacing: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__d{
@@ -2497,12 +2497,12 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__go{
   flex: 0 0 auto !important; display: inline-flex !important; align-items: center !important;
   justify-content: center !important; min-height: 44px !important; padding: 0 1.05rem !important;
   border-radius: 999px !important; background: #111111 !important; color: #FFFFFF !important;
-  font-size: 14px !important; font-weight: 800 !important; text-decoration: none !important;
+  font-size: 14px !important; font-weight: 700 !important; text-decoration: none !important;
   white-space: nowrap !important; border: 0 !important; box-shadow: none !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__go--wide{ width: 100% !important; min-height: 48px !important; margin-top: .85rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ask__done{
-  flex: 0 0 auto !important; font-size: 13.5px !important; font-weight: 700 !important; color: #616870 !important;
+  flex: 0 0 auto !important; font-size: 13.5px !important; font-weight: 600 !important; color: #616870 !important;
 }
 
 /* ===========================================================================
@@ -2557,10 +2557,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .comment-text p.meta{
   gap: 6px !important; margin: 0 0 8px !important; font-size: 13px !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__author{
-  color: var(--dh-ink, #111) !important; font-weight: 800 !important; font-size: 15px !important;
+  color: var(--dh-ink, #111) !important; font-weight: 700 !important; font-size: 15px !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .woocommerce-review__verified{
-  font-style: normal !important; font-size: 12px !important; font-weight: 700 !important;
+  font-style: normal !important; font-size: 12px !important; font-weight: 600 !important;
   color: var(--dh-accent-warm, #C2410C) !important; background: #FDF0E8 !important;
   border-radius: 999px !important; padding: 2px 8px !important; line-height: 1.5 !important;
 }
@@ -2607,3 +2607,22 @@ html body.dhr.dhr-wrap.dhr-wrap .dhn__tx strong{color:#111!important}
 html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:#F4F6F7!important;border:0!important;box-shadow:none!important;color:#6B7280!important;width:30px!important;height:30px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
 
 
+
+/* ── 글자 — 자간 0 · 무게 한 단계 아래 (2026-09-22, 사장님 「전체적인 웹사이트 폰트가 PDF 파일 보는 느낌」) ──
+   원인은 글꼴이 아니라 **조판**이었다: Pretendard 는 잘 실리는데 본문까지 음수 자간(−0.01~−0.045em)에
+   800·900 굵기가 깔려 인쇄물처럼 빽빽했다. 우리 CSS 의 음수 자간은 전부 0 으로, 굵기는 900→800 · 800→700 ·
+   700→600 으로 내렸다. 테마 custom-css 가 `.woocommerce` · 제목 · 버튼에 음수 자간을 `!important` 로
+   박아 두므로 여기서 도로 편다 (특이도 (0,4,2)+ · !important). 홈은 테마 CSS 를 안 실어 이 규칙이 필요 없다. */
+html body.dhr.dhr-wrap.dhr-wrap,
+html body.dhr.dhr-wrap.dhr-wrap.woocommerce, html body.dhr.dhr-wrap.dhr-wrap.woocommerce-page,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-page,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce h1, html body.dhr.dhr-wrap.dhr-wrap .woocommerce h2, html body.dhr.dhr-wrap.dhr-wrap .woocommerce h3,
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce a.button,
+html body.dhr.dhr-wrap.dhr-wrap .entry-summary .product_title, html body.dhr.dhr-wrap.dhr-wrap .single_add_to_cart_button,
+html body.dhr.dhr-wrap.dhr-wrap #reviews #reply-title, html body.dhr.dhr-wrap.dhr-wrap .wd-section-title h2,
+html body.dhr.dhr-wrap.dhr-wrap .wd-product-title, html body.dhr.dhr-wrap.dhr-wrap .woocommerce-loop-product__title,
+html body.dhr.dhr-wrap.dhr-wrap .wd-search__title, html body.dhr.dhr-wrap.dhr-wrap #vf-trigger-mobile-drawer{ letter-spacing: 0 !important; }
+html body.dhr.dhr-wrap.dhr-wrap{ line-height: 1.6 !important; -webkit-font-smoothing: auto !important; }
+
+/* 연휴 안내 줄 — 이름표만 주황. 다른 줄과 같은 옷에 색 하나로 「지금 볼 것」을 가른다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhn__row--holiday .dhn__eb{ color: #C2410C !important; }

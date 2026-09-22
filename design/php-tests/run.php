@@ -1792,6 +1792,33 @@ $GLOBALS['__filters']['duckhoo_notices'] = [fn($v) => []];
 $ok(($F.'notice_bar_html')() === '', '필터로 다 빼면 띠 자체가 없다');
 $GLOBALS['__filters']['duckhoo_notices'] = [];
 foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($h, $bad), "띠에 「{$bad}」 없음"); }
+// 연휴(추석) — 2026-09-22 사장님: 24(목)~27(일) 출고 없음 · 23(수)은 출고되지만 배송 안 됨 · 28(월)은 밀린 물량으로 지연 가능
+$GLOBALS['__now'] = strtotime('2026-09-21 12:00:00');
+$ok(($F.'holiday_notice')() === null, '보이기 시작하는 날 전에는 연휴 안내가 없다');
+$GLOBALS['__now'] = strtotime('2026-09-22 12:00:00');
+$hn = ($F.'holiday_notice')();
+$ok(is_array($hn) && $hn['id'] === 'holiday' && $hn['eb'] === '추석 연휴' && $hn['k'] === '9월 24일(목)–27일(일) 택배 출고가 없습니다', '연휴 줄: 이름표 · 출고 없는 날짜를 요일과 함께');
+$ok(str_contains($hn['s'], '23일(수) 출고분은 연휴 뒤에 도착합니다') && str_contains($hn['s'], '28일(월)은 밀린 물량으로 출고가 늦어질 수 있습니다'), '회색 줄: 23일 출고분은 연휴 뒤 도착 · 28일 지연 가능');
+$ns = ($F.'notices')();
+$ok(count($ns) === 3 && $ns[0]['id'] === 'holiday' && $ns[1]['id'] === 'hours' && $ns[2]['id'] === 'novo-price', '연휴 중에는 연휴 줄이 맨 앞, 평소 출고 규칙 줄은 뺀다');
+$h2 = ($F.'notice_bar_html')();
+$ok(str_contains($h2, 'dhn__row--holiday') && !str_contains($h2, 'dhn__row--ship') && $h2 !== $h, '띠에 연휴 줄이 그려지고 해시가 바뀐다 (닫아 둔 사람에게도 다시 보인다)');
+$ok(($F.'announce')() === '추석 연휴 9월 24일(목)–27일(일) 택배 출고 없음' && mb_strlen(($F.'announce')()) <= 40, '홈 검은 띠도 연휴 동안은 출고 안내 — 40자 안');
+$GLOBALS['__now'] = strtotime('2026-09-25 12:00:00');
+$hn = ($F.'holiday_notice')();
+$ok(str_starts_with($hn['k'], '9월 24일(목)') && !str_contains($hn['s'], '23일') && str_contains($hn['s'], '28일(월)'), '23일이 지나면 그 줄은 빠지고 28일 지연 안내는 남는다');
+$GLOBALS['__now'] = strtotime('2026-09-28 12:00:00');
+$hn = ($F.'holiday_notice')();
+$ok($hn['k'] === '연휴 동안 밀린 물량으로 출고가 늦어질 수 있습니다' && str_contains($hn['s'], '순서대로') && str_contains(($F.'announce')(), '밀린 물량'), '연휴 뒤 월요일에는 지연 안내만');
+$GLOBALS['__now'] = strtotime('2026-09-29 12:00:00');
+$ns = ($F.'notices')();
+$ok(($F.'holiday_notice')() === null && count($ns) === 3 && $ns[1]['id'] === 'ship' && str_contains(($F.'announce')(), '노보'), '지나면 저절로 빠지고 평소 출고 규칙 · 노보 문구로 돌아간다');
+$GLOBALS['__now'] = strtotime('2026-09-25 12:00:00');
+$GLOBALS['__filters']['duckhoo_holiday'] = [fn($v) => ['from' => '', 'to' => '']];
+$ok(($F.'holiday_notice')() === null, '필터로 날짜를 비우면 연휴 안내가 없다');
+$GLOBALS['__filters']['duckhoo_holiday'] = [];
+$ok(($F.'kday')('2026-10-03') === '10월 3일(토)' && ($F.'kday')('2026-10-03', false) === '3일(토)', '날짜는 「10월 3일(토)」 꼴');
+$GLOBALS['__now'] = strtotime('2026-09-21 12:00:00');
 $GLOBALS['__products'] = $keepP2; $GLOBALS['__transients'] = [];
 // 안내 페이지 — 우리가 넣은 뒤 손대지 않은 것만 새 글로
 if (!function_exists('get_page_by_path')) { function get_page_by_path($slug, $o = null, $t = 'page'){ return $GLOBALS['__pages'][$slug] ?? null; } }

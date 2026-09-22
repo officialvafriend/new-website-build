@@ -104,8 +104,8 @@ body{
   border-radius: 999px !important;
   min-height: var(--dh-tap-cta);
   padding: 0 1.4rem !important;
-  font-weight: 800 !important;
-  letter-spacing: -.01em;
+  font-weight: 700 !important;
+  letter-spacing: 0;
   transition: filter 160ms var(--dh-ez), transform 160ms var(--dh-ez);
 }
 .woocommerce a.button.alt:hover,
@@ -123,7 +123,7 @@ body{
 .woocommerce input.button{
   border-radius: 999px !important;
   min-height: var(--dh-tap);
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 /* --- 폼 ------------------------------------------------------------------
@@ -176,7 +176,7 @@ body{
 /* 이미지는 카드 안에서 한 번 더 둥글게 — 데모의 카드 구조 */
 .woocommerce ul.products li.product img{ border-radius: var(--dh-r); }
 .woocommerce ul.products li.product .woocommerce-loop-product__title{
-  font-size: 15.5px; font-weight: 700; letter-spacing: -.02em; line-height: 1.35; padding: .5rem .35rem 0;
+  font-size: 15.5px; font-weight: 600; letter-spacing: 0; line-height: 1.35; padding: .5rem .35rem 0;
 }
 /* 별점 색 — 데모와 같은 앰버 */
 .woocommerce .star-rating span::before, .woocommerce .star-rating::before{ color: #F59E0B; }
@@ -184,8 +184,8 @@ body{
 /* 병당 가격이 고객의 비교 지표다. 총액보다 크게 쓴다. */
 .woocommerce ul.products li.product .price{
   color: var(--dh-ink) !important;
-  font-weight: 900;
-  letter-spacing: -.02em;
+  font-weight: 800;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 .woocommerce ul.products li.product .price del{
@@ -197,7 +197,7 @@ body{
   background: var(--dh-accent) !important;
   color: var(--dh-accent-ink) !important;
   border-radius: 999px !important;
-  font-weight: 800;
+  font-weight: 700;
   min-height: 0;
   line-height: 1.6;
   padding: .2rem .6rem;
@@ -227,7 +227,7 @@ body{
 .order-status, .woocommerce-orders-table__cell-order-status mark{
   border-radius: 999px;
   padding: .22rem .6rem;
-  font-weight: 700;
+  font-weight: 600;
   font-size: .86em;
   background: transparent;
 }
@@ -269,7 +269,7 @@ body{
 .woocommerce-MyAccount-navigation a{
   display: inline-flex; align-items: center; min-height: var(--dh-tap);
   padding: 0 1rem; border-radius: 999px; background: var(--dh-surface);
-  font-weight: 700; font-size: 15px; color: var(--dh-ink); text-decoration: none;
+  font-weight: 600; font-size: 15px; color: var(--dh-ink); text-decoration: none;
   border: 1.5px solid transparent;
 }
 .woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-ink); color: #fff; }
@@ -288,15 +288,15 @@ body{
   content: attr(data-title); display: inline-block; min-width: 3.2em; margin-right: .5rem;
   color: var(--dh-ink-3); font-size: 13.5px; font-weight: 600;
 }
-.woocommerce-orders-table__cell-order-number{ grid-column: 1; font-weight: 800; }
+.woocommerce-orders-table__cell-order-number{ grid-column: 1; font-weight: 700; }
 .woocommerce-orders-table__cell-order-number::before{ display: none !important; }
-.woocommerce-orders-table__cell-order-status{ grid-column: 2; grid-row: 1; justify-self: end; font-weight: 800; font-size: 13.5px !important; }
+.woocommerce-orders-table__cell-order-status{ grid-column: 2; grid-row: 1; justify-self: end; font-weight: 700; font-size: 13.5px !important; }
 .woocommerce-orders-table__cell-order-status::before{ display: none !important; }
-.woocommerce-orders-table__cell-order-total{ font-weight: 800; }
+.woocommerce-orders-table__cell-order-total{ font-weight: 700; }
 .woocommerce-orders-table__cell-order-actions{ grid-column: 1 / -1; display: flex !important; gap: .5rem; padding-top: .6rem !important; }
 .woocommerce-orders-table__cell-order-actions::before{ display: none !important; }
 .woocommerce-orders-table__cell-order-actions .button{
-  min-height: 42px; padding: 0 1rem !important; border-radius: 999px !important; font-weight: 700 !important;
+  min-height: 42px; padding: 0 1rem !important; border-radius: 999px !important; font-weight: 600 !important;
   background: var(--dh-surface) !important; color: var(--dh-ink) !important; border: 1.5px solid var(--dh-line-2) !important;
 }
 /* 취소 버튼은 빨간 테두리 — 되돌릴 수 없는 동작이라 다른 버튼과 달라 보여야 한다 */
