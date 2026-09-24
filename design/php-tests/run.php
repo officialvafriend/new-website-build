@@ -1844,6 +1844,7 @@ echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모
 exit($fail?1:0);
 
 /* ── 성인인증 점검 (includes/verify-admin.php) — 읽기 전용 화면의 갈래짓기 · 요약 ───────────── */
+require_once dirname(__DIR__, 2).'/includes/verify-gate.php';
 require_once dirname(__DIR__, 2).'/includes/verify-admin.php';
 $V = 'Duckhoo\\Redesign\\Verify\\Admin\\';
 $ok(($V.'two_char')('길동') && ($V.'two_char')('길 동') && !($V.'two_char')('홍길동') && !($V.'two_char')('Kim') && !($V.'two_char')('') && !($V.'two_char')('김a'), '두 글자 이름: 한글 두 글자뿐일 때만 (빈칸은 뗀다 · 영문 · 빈 이름 아님)');
@@ -1872,3 +1873,25 @@ $cx = ($V.'cross')([
   ['id'=>4,'verified'=>false,'phone'=>'01000000001','email'=>'no@z.com'],
 ], $ro);
 $ok(count($cx) === 3 && $cx[0]['hit'] === 'phone' && $cx[1]['hit'] === 'email' && $cx[2]['hit'] === '', '대조: 인증 있는 회원은 빼고 · 번호 먼저 · 번호 없으면 이메일(대소문자 무시) · 둘 다 없으면 빈 값');
+/* ── 옛 회원 재인증 문 (includes/verify-gate.php) ───────────────────────────────────────── */
+$G = 'Duckhoo\\Redesign\\Verify\\';
+$GLOBALS['__usermeta'][10] = ['wd_phone_verified' => '1'];
+$GLOBALS['__usermeta'][11] = [];
+$GLOBALS['__usermeta'][12] = [];
+$ok(!($G.'needs_reverify')(10) && ($G.'needs_reverify')(11) && !($G.'needs_reverify')(0), '인증 기록 있으면 안 묻고, 둘 다 없으면 묻는다 · 비로그인(0)은 아님');
+$ok(($G.'mark_legacy')(11, 'imweb') === true && !($G.'needs_reverify')(11) && ($G.'mark_legacy')(11) === false && $GLOBALS['__usermeta'][11]['_dhr_legacy_verified'] === 'imweb' && !empty($GLOBALS['__usermeta'][11]['_dhr_legacy_verified_at']), '옛 사이트 확인 표시를 남기면 안 묻는다 · 두 번 안 적는다 · 출처와 날짜');
+$GLOBALS['__filters']['duckhoo_reverify_gate'] = [fn() => false];
+$ok(!($G.'needs_reverify')(12), '필터로 문을 끄면 아무도 안 묻는다');
+$GLOBALS['__filters']['duckhoo_reverify_gate'] = [];
+$redir = function (int $uid, bool $checkout): string {
+  $GLOBALS['__logged_in'] = $uid; $GLOBALS['__is_checkout'] = $checkout; $GLOBALS['__redirect'] = '';
+  try { ('Duckhoo\\Redesign\\Verify\\gate')(); } catch (\RuntimeException $e) {}
+  return (string) $GLOBALS['__redirect'];
+};
+$ok(str_contains($redir(12, true), '/profile-edit/') && str_contains($redir(12, true), 'dhr_reverify=1'), '재인증 대상이 결제 화면에 오면 테마 재인증 화면으로 보낸다');
+$ok($redir(10, true) === '' && $redir(11, true) === '' && $redir(12, false) === '' && $redir(0, true) === '', '인증 있음 · 옛 사이트 확인 · 결제 화면 아님 · 비로그인은 그대로');
+$GLOBALS['__logged_in'] = 0; $GLOBALS['__is_checkout'] = false;
+$sm2 = ($V.'summary')([
+  ['verified'=>false,'legacy'=>true,'orders'=>0], ['verified'=>false,'legacy'=>false,'orders'=>1], ['verified'=>true,'orders'=>0],
+]);
+$ok($sm2['unverified'] === 2 && $sm2['legacy'] === 1 && $sm2['gate'] === 1, '요약: 인증 없음 2 = 옛 사이트 확인 1 + 재인증 대상 1');

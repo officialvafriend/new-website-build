@@ -2426,3 +2426,22 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
 `duckhoo_verify_dead_statuses` · `duckhoo_verify_list_max`(400).
 테마는 로그인 직후 「cutoff 이전 가입 + 미인증」에게 안내 팝업만 띄운다 (10266행 주석) — 결제까지 막는지는 `wd_phone_verified` 검색으로 본다.
 검증: `php design/php-tests/run.php` (성인인증 점검 6개).
+
+### 옛 회원은 72명 → 6명 — 아임웹 명단 대조 · 재인증 문 (2026-09-24)
+
+사장님: 인증 기록 없는 72명은 **사이트 이전 때 만들어진 계정**(아임웹 → 워드프레스). 「이메일은 달라도 전화번호는
+같으니 대조해서 다른 사람만 재인증」. 성인인증 점검 화면에 **아임웹 명단 대조** 칸을 붙였다 — 엑셀 전체 복사 → 붙여
+넣기 → 줄마다 휴대폰(하이픈 · `+82` 정규화) · 이메일만 뽑아 인증 없는 회원과 견준다 (`parse_roster()` · `cross()`,
+**번호 먼저 · 없으면 이메일**). 붙여 넣은 글은 저장하지 않는다. 결과: 4,010명 명단 · **66명 걸림 · 6명 남음**
+(전부 5월 11~14일 이전 기간 가입 · 지금 사는 사람 없음).
+
+- **「대조하고 표시 남기기」** — 걸린 회원에게 `_dhr_legacy_verified = imweb` · `_at` 을 적는다 (`Verify\mark_legacy()`,
+  두 번 안 적음). 회원 정보에 쓰는 유일한 자리 — 사장님 「딱 저 6명만 인증하면 될듯」으로 허락
+- **재인증 문** `includes/verify-gate.php` — `wd_phone_verified` 도 `_dhr_legacy_verified` 도 없는 회원만
+  결제 화면(`is_checkout()`, order-received · order-pay 제외)에서 테마의 재인증 화면 `/profile-edit/?dhr_reverify=1` 로
+  보낸다 (`template_redirect` 5). 그 화면 위에 왜 왔는지 · 끝나면 결제로 돌아가는 링크(`.dhr-gate`, `wp_body_open` 7).
+  재인증이 끝나면 테마가 `wd_phone_verified` 를 적으므로 다음부터 안 묻고, 미성년자면 테마가 그 자리에서 탈퇴시킨다.
+  **다른 3,355명에게는 아무 일도 없다.** 끄기: `duckhoo_reverify_gate` → false · 주소: `duckhoo_reverify_url`
+- 점검 화면 카드에 「결제 전 재인증 대상」(둘 다 없는 수)을 더했다. 목록의 옛 사이트 확인 회원은 초록 표시
+
+검증: `php design/php-tests/run.php` (명단 읽기 · 대조 · 표시 · 문 여닫기 9개).

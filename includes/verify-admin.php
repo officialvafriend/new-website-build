@@ -56,7 +56,7 @@ add_action( 'admin_menu', __NAMESPACE__ . '\\menu' );
  * @return string
  */
 function meta_key(): string {
-	return (string) apply_filters( 'duckhoo_verified_meta_key', 'wd_phone_verified' );
+	return \Duckhoo\Redesign\Verify\meta_key();
 }
 
 /**
@@ -106,13 +106,18 @@ function classify( array $u, int $now, int $recent_d = 90 ): array {
  * @return array<string,int>
  */
 function summary( array $rows ): array {
-	$s = array( 'all' => 0, 'verified' => 0, 'unverified' => 0, 'unv_orders' => 0, 'unv_recent' => 0, 'two_char' => 0, 'two_char_unv' => 0, 'differs' => 0 );
+	$s = array( 'all' => 0, 'verified' => 0, 'unverified' => 0, 'unv_orders' => 0, 'unv_recent' => 0, 'two_char' => 0, 'two_char_unv' => 0, 'differs' => 0, 'legacy' => 0, 'gate' => 0 );
 	foreach ( $rows as $r ) {
 		++$s['all'];
 		if ( ! empty( $r['verified'] ) ) {
 			++$s['verified'];
 		} else {
 			++$s['unverified'];
+			if ( ! empty( $r['legacy'] ) ) {
+				++$s['legacy'];
+			} else {
+				++$s['gate'];
+			}
 			if ( (int) $r['orders'] > 0 ) {
 				++$s['unv_orders'];
 			}
@@ -189,17 +194,18 @@ function members(): array {
 	}
 	$key = meta_key();
 	$sql = 'SELECT u.ID, u.user_email, u.display_name, u.user_registered,
-			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps, n.meta_value AS vname, p.meta_value AS ph1, q.meta_value AS ph2
+			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps, n.meta_value AS vname, p.meta_value AS ph1, q.meta_value AS ph2, g.meta_value AS legacy
 		FROM ' . $wpdb->users . ' u
 		LEFT JOIN ' . $wpdb->usermeta . ' v ON v.user_id = u.ID AND v.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' n ON n.user_id = u.ID AND n.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' p ON p.user_id = u.ID AND p.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' q ON q.user_id = u.ID AND q.meta_key = %s
+		LEFT JOIN ' . $wpdb->usermeta . ' g ON g.user_id = u.ID AND g.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' f ON f.user_id = u.ID AND f.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' l ON l.user_id = u.ID AND l.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' c ON c.user_id = u.ID AND c.meta_key = %s
 		ORDER BY u.ID ASC';
-	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'wd_verified_name', 'wd_phone', 'billing_phone', 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
+	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'wd_verified_name', 'wd_phone', 'billing_phone', \Duckhoo\Redesign\Verify\META_LEGACY, 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	$staff = staff_roles();
 	$out   = array();
 	foreach ( $rows as $r ) {
@@ -216,6 +222,7 @@ function members(): array {
 			'verified'   => '1' === (string) $r['verified'] || 'yes' === (string) $r['verified'],
 			'vname'      => trim( (string) $r['vname'] ),
 			'phone'      => norm_phone( (string) $r['ph1'] ) ?: norm_phone( (string) $r['ph2'] ),
+			'legacy'     => '' !== trim( (string) $r['legacy'] ),
 		);
 	}
 	return $out;
@@ -308,6 +315,27 @@ function screen(): void {
 	}
 	$t0     = microtime( true );
 	$now    = (int) current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
+	$said   = '';
+	$roster_txt = '';
+	if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) && isset( $_POST['dhr_roster'] ) && check_admin_referer( 'dhr_verify_roster' ) ) {
+		$roster_txt = (string) wp_unslash( $_POST['dhr_roster'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- 숫자 · 이메일만 뽑아 쓴다
+		if ( ! empty( $_POST['dhr_mark'] ) && '' !== trim( $roster_txt ) ) {
+			// 명단에 걸린 회원에게 「옛 사이트에서 확인」 표시를 남긴다 — 사장님 2026-09-24 「딱 저 6명만 인증하면 될듯」
+			$ro = parse_roster( $roster_txt );
+			$n  = 0;
+			$orders0 = order_map();
+			foreach ( members() as $m ) {
+				$m['orders'] = ( $orders0[ $m['id'] ] ?? array( 'n' => 0 ) )['n'];
+				$m['last']   = '';
+				foreach ( cross( array( classify( $m, $now ) ), $ro ) as $c ) {
+					if ( '' !== $c['hit'] && \Duckhoo\Redesign\Verify\mark_legacy( (int) $c['id'], 'imweb' ) ) {
+						++$n;
+					}
+				}
+			}
+			$said = '명단에 걸린 회원 ' . number_format_i18n( $n ) . '명에게 「옛 사이트(아임웹)에서 확인」 표시를 남겼습니다. 이 회원들은 결제 전 재인증을 묻지 않습니다.';
+		}
+	}
 	$orders = order_map();
 	$rows   = array();
 	foreach ( members() as $m ) {
@@ -322,6 +350,9 @@ function screen(): void {
 	echo '<p style="max-width:56em;line-height:1.7">가입할 때 PASS 본인확인 뒤 <b>만 19세 판정</b>을 거친 회원에게는 테마가 <code>' . esc_html( meta_key() ) . '</code> 표시를 남깁니다. '
 		. '이 표시가 <b>없는</b> 회원은 그 판정이 걸리기 전에 가입했거나 옛 사이트에서 넘어온 사람이라, 인증 없이 로그인 · 주문이 됩니다. 이 화면은 <b>읽기만</b> 합니다 — 회원 · 주문에 아무것도 쓰지 않습니다.</p>';
 
+	if ( '' !== $said ) {
+		echo '<div class="notice notice-success"><p>' . esc_html( $said ) . '</p></div>';
+	}
 	$card = function ( string $label, int $n, string $sub = '', bool $warn = false ): void {
 		echo '<div style="flex:1 1 160px;min-width:160px;background:#fff;border:1px solid #dcdcde;border-left:4px solid ' . ( $warn ? '#C2410C' : '#2271b1' ) . ';border-radius:8px;padding:12px 14px">'
 			. '<div style="font-size:12px;color:#646970">' . esc_html( $label ) . '</div>'
@@ -332,7 +363,8 @@ function screen(): void {
 	echo '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px">';
 	$card( '회원 전체 (직원 제외)', $s['all'] );
 	$card( '인증 기록 있음', $s['verified'], $s['all'] > 0 ? round( $s['verified'] * 100 / $s['all'] ) . '%' : '' );
-	$card( '인증 기록 없음', $s['unverified'], '', $s['unverified'] > 0 );
+	$card( '인증 기록 없음', $s['unverified'], '옛 사이트 확인 ' . number_format_i18n( $s['legacy'] ) . '명 포함', $s['gate'] > 0 );
+	$card( '결제 전 재인증 대상', $s['gate'], '인증 기록도 옛 사이트 확인도 없음', $s['gate'] > 0 );
 	$card( '없음 · 주문 이력 있음', $s['unv_orders'], '취소 · 환불 · 실패 제외', $s['unv_orders'] > 0 );
 	$card( '없음 · 최근 90일 주문', $s['unv_recent'], '지금도 사는 사람', $s['unv_recent'] > 0 );
 	$card( '이름 두 글자 (성 없음?)', $s['two_char'], '인증 없는 쪽 ' . number_format_i18n( $s['two_char_unv'] ) . '명 · 입금자명 불일치의 한 원인' );
@@ -359,6 +391,9 @@ function screen(): void {
 			if ( $r['two_char'] ) {
 				$flags[] = '<span style="color:#646970">두 글자</span>';
 			}
+			if ( ! empty( $r['legacy'] ) ) {
+				$flags[] = '<span style="color:#1d7a3a">옛 사이트 확인</span>';
+			}
 			echo '<tr><td><a href="' . esc_url( get_edit_user_link( (int) $r['id'] ) ) . '">#' . (int) $r['id'] . '</a></td>'
 				. '<td>' . esc_html( (string) $r['name'] ) . '</td>'
 				. '<td>' . esc_html( (string) $r['email'] ) . '</td>'
@@ -371,16 +406,13 @@ function screen(): void {
 	}
 
 	// 옛 사이트(아임웹) 명단 대조 — 붙여 넣은 글은 이 요청 안에서만 쓰고 저장하지 않는다.
-	$roster_txt = '';
-	if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) && isset( $_POST['dhr_roster'] ) && check_admin_referer( 'dhr_verify_roster' ) ) {
-		$roster_txt = (string) wp_unslash( $_POST['dhr_roster'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- 숫자 · 이메일만 뽑아 쓴다
-	}
 	echo '<h2 style="margin-top:26px">옛 사이트(아임웹) 명단과 대조</h2>';
 	echo '<p style="max-width:56em;line-height:1.7;color:#646970;font-size:13px">아임웹 회원 내보내기(CSV · 엑셀)를 열어 <b>전체를 복사해 아래에 붙여 넣고</b> 대조를 누르세요. 줄마다 휴대폰 번호와 이메일만 뽑아 인증 기록 없는 회원과 견줍니다 — <b>전화번호가 같으면 같은 사람</b>으로, 없으면 이메일로 봅니다. 붙여 넣은 글은 저장하지 않습니다.</p>';
 	echo '<form method="post" style="max-width:56em">';
 	wp_nonce_field( 'dhr_verify_roster' );
 	echo '<textarea name="dhr_roster" rows="6" style="width:100%;font-family:monospace;font-size:12px" placeholder="이름,이메일,휴대폰,가입일 … (열 순서는 상관없습니다)">' . esc_textarea( $roster_txt ) . '</textarea>';
-	echo '<p><button type="submit" class="button button-primary">대조</button></p></form>';
+	echo '<p><button type="submit" class="button button-primary">대조</button> '
+		. '<button type="submit" name="dhr_mark" value="1" class="button" onclick="return confirm(\'명단에 걸린 회원에게 「옛 사이트에서 확인」 표시를 남깁니다. 표시가 있는 회원은 결제 전 재인증을 묻지 않습니다. 진행할까요?\')">대조하고 표시 남기기</button></p></form>';
 	if ( '' !== trim( $roster_txt ) ) {
 		$ro   = parse_roster( $roster_txt );
 		$cx   = cross( $rows, $ro );
@@ -432,5 +464,6 @@ function screen(): void {
 	echo '<p style="max-width:56em;line-height:1.7;color:#646970;font-size:13px;margin-top:16px">'
 		. '읽는 데 ' . esc_html( number_format( microtime( true ) - $t0, 1 ) ) . '초. 「인증 기록」은 <code>' . esc_html( meta_key() ) . '</code> 가 1 인 회원입니다 (필터 <code>duckhoo_verified_meta_key</code>). '
 		. '테마는 로그인 직후 「cutoff 이전 가입 + 미인증」 회원에게 안내 팝업을 띄웁니다 (<code>functions.php</code> 10266행 근처) — 결제까지 막는지는 <b>도구 → 코드 찾기</b>에서 <code>wd_phone_verified</code> 를 찾아 보면 나옵니다. '
-		. '「이름 두 글자」는 한글 두 글자뿐인 이름 — 새 가입은 인증기관이 준 이름이 그대로 들어가므로 옛 회원에게만 있습니다.</p></div>';
+		. '「이름 두 글자」는 한글 두 글자뿐인 이름 — 새 가입은 인증기관이 준 이름이 그대로 들어가므로 옛 회원에게만 있습니다. '
+		. '<b>결제 전 재인증 대상</b>(인증 기록도 옛 사이트 확인도 없는 회원)은 결제 화면에 오면 테마의 재인증 화면으로 보내고, 끝나면 다음부터 묻지 않습니다 (끄기: 필터 <code>duckhoo_reverify_gate</code>).</p></div>';
 }

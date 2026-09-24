@@ -81,6 +81,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
 
 // 담아 둔 뒤 값이 바뀌면 옛 금액으로 주문된다 — 결제에서 막는다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
+// 옛 회원 재인증 문 — 인증 기록도 옛 사이트 확인 표시도 없는 회원만 결제 전에 테마 재인증 화면으로 (2026-09-24)
+require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
