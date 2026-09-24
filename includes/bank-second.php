@@ -149,6 +149,30 @@ function pick( string $depositor, array $cands ): array {
 }
 
 /**
+ * 키플 파서가 금액을 못 읽은 원문에서 금액으로 보이는 숫자를 느슨하게 찾는다 — **표시용 추정**.
+ *
+ * 키플 `extract_amount()` 는 「입금 N」 · 「N원」 두 꼴만 본다. 그 밖의 꼴(「금액:78900」 · 「78,900 입금」 등)은
+ * 0 으로 떨어진다. 여기서는 1,000 이상인 숫자를 전부 모아 보여 주고 판정은 사람이 한다.
+ *
+ * @param string $raw 원문.
+ * @return int[] 큰 순서.
+ */
+function guess_amounts( string $raw ): array {
+	$out = array();
+	if ( preg_match_all( '/(?<![\d\-\*])(\d{1,3}(?:,\d{3})+|\d{4,9})(?![\d\-\*])/u', $raw, $m ) ) {
+		foreach ( $m[1] as $n ) {
+			$v = (int) str_replace( ',', '', $n );
+			if ( $v >= 1000 && $v < 100000000 && ! preg_match( '/^(19|20)\d{2}$/', $n ) ) {
+				$out[ $v ] = true;
+			}
+		}
+	}
+	$out = array_keys( $out );
+	rsort( $out );
+	return $out;
+}
+
+/**
  * 키플 문자 표 이름.
  *
  * @return string
@@ -366,7 +390,9 @@ function screen(): void {
 			}
 			$cell = $j['cands'] > 0 ? '같은 금액 주문 ' . (int) $j['cands'] . '건은 있는데 이름이 안 맞음: ' . implode( ' · ', $names ) : '같은 금액의 입금전 주문 없음';
 		} elseif ( 'parse' === $j['verdict'] ) {
-			$cell = '' !== $j['raw'] ? '원문: <code style="white-space:pre-wrap">' . esc_html( mb_substr( $j['raw'], 0, 160 ) ) . '</code>' : '원문 칸을 못 찾음';
+			$g    = '' !== $j['raw'] ? guess_amounts( $j['raw'] ) : array();
+			$cell = ( $g ? '원문에 보이는 금액 후보: <b>' . esc_html( implode( ' · ', array_map( fn( $v ) => number_format_i18n( $v ) . '원', $g ) ) ) . '</b><br>' : '' )
+				. ( '' !== $j['raw'] ? '원문: <code style="white-space:pre-wrap">' . esc_html( mb_substr( $j['raw'], 0, 200 ) ) . '</code>' : '원문 칸을 못 찾음 (표 칸 이름을 각주에서 확인)' );
 		}
 		echo '<tr><td>#' . (int) $j['sms_id'] . '</td><td>' . esc_html( substr( (string) $j['at'], 0, 16 ) ) . '</td><td><b>' . esc_html( (string) $j['depositor'] ) . '</b></td>'
 			. '<td style="text-align:right">' . esc_html( number_format_i18n( (int) $j['amount'] ) ) . '</td><td style="font-size:12px;color:#646970">' . esc_html( (string) $j['reason'] ) . '</td>'

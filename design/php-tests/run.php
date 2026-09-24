@@ -1913,3 +1913,4 @@ $nm = ($B.'names_of')($fo);
 $ok(in_array('길동', $nm, true) && in_array('홍길동', $nm, true) && count($nm) === 2, '주문 쪽 이름: 청구 · 배송 · 예금주 메타를 모아 중복 없이');
 $j = ($B.'judge')(['id' => 7, 'depositor_name' => '농협이상섭', 'amount' => 0, 'match_reason' => '확인필요: SMS 파싱 실패']);
 $ok($j['verdict'] === 'parse' && ($B.'judge')(['id' => 8, 'depositor_name' => '홍길동', 'amount' => 1000, 'match_reason' => '확인필요: 과입금'])['verdict'] === 'skip', '금액 0 은 「해석 실패」 · 입금자명 사유가 아니면 건너뜀');
+$ok(($B.'guess_amounts')("[Web발신]\n농협 09/24 13:05\n금액:78,900\n이상섭\n잔액 1,234,567") === [1234567, 78900] && ($B.'guess_amounts')('2026/09/24 12:00 500원') === [], '해석 실패 원문의 금액 후보: 1,000 이상 숫자만 · 연도 · 날짜 · 계좌 조각 제외');
