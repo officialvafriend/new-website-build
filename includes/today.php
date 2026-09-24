@@ -10,7 +10,7 @@
  * 규칙: 급한 돈(입금) → 오늘 나갈 것(출고) → 손님(문의 · 후기) → 가게(품절 · 쿠폰) → 어제 숫자.
  * 숫자가 0 이면 「없음」으로 접어 둔다 — 할 일이 없는 날은 짧게 끝나야 한다.
  *
- * 매일 아침 9시(사이트 시간)에 같은 목록을 관리자 메일로도 보낸다 (열린 항목이 하나라도 있을 때만).
+ * 매일 10시 30분(사이트 시간 · 사장님 11시 출근)에 같은 목록을 관리자 메일로도 보낸다 (열린 항목이 하나라도 있을 때만).
  * 끄기: 이 화면의 체크박스, 또는 `add_filter( 'duckhoo_today_mail', '__return_false' )`.
  *
  * @package Duckhoo\Redesign
@@ -27,6 +27,7 @@ const OPT_DONE  = 'duckhoo_today_done';
 const OPT_MAIL  = 'duckhoo_today_mail';
 const CRON      = 'duckhoo_today_mail';
 const CACHE     = 'dhr_today_v1';
+const MAIL_AT   = '10:30'; // 사이트 시간 — 사장님 11시 출근, 열어 보면 와 있게
 
 /**
  * 볼 수 있는가.
@@ -682,7 +683,7 @@ function screen(): void {
 
 	$mail_on = mail_on();
 	echo '<form method="post" class="dhr-td__mail"><input type="hidden" name="dhr_today_nonce" value="' . esc_attr( wp_create_nonce( 'dhr_today' ) ) . '"><input type="hidden" name="dhr_mail_set" value="1">';
-	echo '<label><input type="checkbox" name="dhr_mail" value="1"' . ( $mail_on ? ' checked' : '' ) . ' onchange="this.form.submit()"> 매일 아침 9시에 이 목록을 <b>' . esc_html( mail_to() ) . '</b> 로 보낸다 (할 일이 하나라도 있을 때만)</label> ';
+	echo '<label><input type="checkbox" name="dhr_mail" value="1"' . ( $mail_on ? ' checked' : '' ) . ' onchange="this.form.submit()"> 매일 10시 30분에 이 목록을 <b>' . esc_html( mail_to() ) . '</b> 로 보낸다 (할 일이 하나라도 있을 때만)</label> ';
 	echo '<button class="button" name="dhr_mail_now" value="1">지금 보내 보기</button>';
 	echo '</form>';
 
@@ -848,24 +849,28 @@ function send_mail( bool $force = false ): bool {
 }
 
 /**
- * 크론 — 매일 사이트 시간 09:00.
+ * 크론 — 매일 사이트 시간 MAIL_AT. 시각을 바꾸면 이미 잡힌 것을 풀고 다시 잡는다.
  */
 function schedule(): void {
 	if ( ! function_exists( 'wp_next_scheduled' ) ) {
 		return;
 	}
+	$tz = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'Asia/Seoul' );
+	$ts = wp_next_scheduled( CRON );
 	if ( ! mail_on() ) {
-		$ts = wp_next_scheduled( CRON );
 		if ( $ts ) {
 			wp_unschedule_event( $ts, CRON );
 		}
 		return;
 	}
-	if ( wp_next_scheduled( CRON ) ) {
-		return;
+	if ( $ts ) {
+		$at = ( new \DateTime( '@' . (int) $ts ) )->setTimezone( $tz )->format( 'H:i' );
+		if ( $at === MAIL_AT ) {
+			return;
+		}
+		wp_unschedule_event( $ts, CRON ); // 시각이 달라졌다 — 다시 잡는다
 	}
-	$tz    = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'Asia/Seoul' );
-	$first = new \DateTime( 'today 09:00', $tz );
+	$first = new \DateTime( 'today ' . MAIL_AT, $tz );
 	if ( $first->getTimestamp() <= time() ) {
 		$first->modify( '+1 day' );
 	}
