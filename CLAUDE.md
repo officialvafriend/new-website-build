@@ -2546,3 +2546,17 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
 - 루틴 프롬프트: 브리핑을 쓴 뒤 그 전문을 POST 한다. `ok:false` 면 마지막 메시지에 한 줄 적는다 (푸시 · 메일은 그대로 나간다)
 
 검증: `php design/php-tests/run.php` (디스코드 6개 — 주소 꼴 · 조각 나누기 · 웹훅 없으면 0) · `scratchpad/today-render.php`.
+
+### 브리핑 세션은 저장소를 못 쓴다 — 기억도 사이트가 준다 (2026-09-24, 첫 시험 발송 결과)
+
+첫 시험 발송(`cse_01PYkyJ8TcGBZ6Nn9TY3Powv`)은 5분 만에 「성공」으로 끝났지만 `design/briefs/` 에 아무것도 push 되지 않았다.
+루틴이 여는 세션은 **소스(저장소)가 비어 있고** push 자격도 없다 (`session_request.config.sources: []`). 저장소는 공개라
+읽기는 되지만 브리핑 기록을 git 에 남기는 설계는 틀렸다.
+
+- **GET 이 `rules`(가게의 기억 — `Brief\rules()`, 필터 `duckhoo_brief_rules`) 와 `recent`(최근 브리핑 5개) · `dow` 를 같이 준다.**
+  rules 는 CLAUDE.md 의 결정 중 브리핑이 알아야 할 것만 추린 8줄 — 「안 한다」 목록 · 지금 돌고 있는 것 · 아직 안 한 후보 ·
+  숫자 읽는 법. **새 결정이 생기면 CLAUDE.md 와 함께 여기에도 한 줄 적는다** (루틴은 이것만 본다)
+- **POST 가 글을 저장한다** (옵션 `duckhoo_briefs`, 날짜 => 글, 14일치) → 다음 날 세션이 `recent` 로 지난 추천을 본다.
+  오늘 할 일 화면 맨 아래 「지난 브리핑」에 접혀 있다 — 디스코드를 놓쳤을 때 읽는 자리
+- 루틴 프롬프트에서 git 읽기 · push 를 뺐다. 저장소가 있으면 CLAUDE.md 마지막 300줄을 더 읽어도 되지만 clone 은 하지 않는다
+- 루틴 알림 메일은 이 Gmail 에 오지 않았다 (클로드 계정 메일이 다른 듯) — 채널은 디스코드 하나로 본다
