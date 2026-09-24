@@ -22,7 +22,9 @@ namespace Duckhoo\Redesign\Brief;
 
 defined( 'ABSPATH' ) || exit;
 
-const OPT_KEY = 'duckhoo_brief_key';
+const OPT_KEY  = 'duckhoo_brief_key';
+const OPT_LOG  = 'duckhoo_briefs';   // 최근 브리핑 글 (날짜 => 글), 14일치
+const KEEP     = 14;
 
 /**
  * 키. 없으면 ''.
@@ -130,6 +132,48 @@ function period( string $from, string $to ): array {
 }
 
 /**
+ * 브리핑 세션에 주는 **가게의 기억** — 저장소를 못 읽는 세션도 이것만으로 판단할 수 있게.
+ *
+ * CLAUDE.md 의 결정 가운데 브리핑이 알아야 하는 것만 추린다. 새 결정이 생기면 여기에도 한 줄.
+ * 필터 `duckhoo_brief_rules`.
+ *
+ * @return string[]
+ */
+function rules(): array {
+	return (array) apply_filters( 'duckhoo_brief_rules', array(
+		'가게: 전자담배 액상 전문몰 액상덕후(duck-hoo.com). 결제는 무통장입금뿐 — 입금자명이 주문자명과 같아야 자동 입금확인. 19세 미만 판매 금지, 비로그인은 상품 사진이 「19」로 가려지고 결제 화면에 못 들어간다(가입 벽).',
+		'주문 흐름: 입금전(on-hold) → 입금확인 → 배송준비중 → 배송완료. 평일 오후 4시 전 입금 확인분 당일 출고, 금요일 16시 뒤 · 주말 주문은 월요일 16시 출고. 고객센터 평일 11:00–18:00.',
+		'사장님이 이미 「안 한다」고 정한 것 — 다시 제안하지 말 것: 노보 하루 구매 한도(1인 1세트 · 3세트 모두), 입금자명 불일치 자동 입금확인(수동 처리로 확정), 회원 이름을 인증기관 이름으로 동기화, 카드결제(PG) 도입, 「공식」이라는 낱말, 「다른 곳에서 품절」 같은 경쟁사 얘기.',
+		'지금 돌고 있는 것: 노보 전 라인 재고 있음 홍보(홈 띠 · 분류 배너 · 브랜드 페이지), 노보 가격 인상 안내(끝날 때까지 유지), 사진 후기 1,000원 적립(승인 뒤 자동 지급), 쿠폰 한 번에 만들기(마케팅 메뉴), 깔때기 집계(9/10 부터), 네이버 서치어드바이저 수집 요청(9/24 노보 15종).',
+		'후기는 배송완료 주문의 구매자만 쓸 수 있고 전 상품 후기가 거의 0 이다. 후기 쓰기 버튼은 주문내역에 이미 있다 — 부족한 것은 손님을 부르는 문자.',
+		'아직 안 한 후보(사장님이 고르면 클로드가 만든다): ①마지막 주문 30일 넘은 회원 목록 + 쿠폰 문자(재구매) ②배송완료 문자에 「사진 후기 1,000원」 한 줄 ③배송준비중에 오래 머문 주문을 배송완료로 한 번에 넘기는 버튼(자동은 안 함) ④주문내역 「같은 구성 다시 담기」 ⑤젤로 크리스탈 팟을 색상별 상품 둘로 나누기(사장님 관리자 작업) ⑥얼려먹구싶오 단품 13종에 입호흡 분류 넣기.',
+		'말: 건강 · 금연 · 순하다 · 해롭지 않다 를 쓰지 않는다(담배사업법). 사장님께는 짧고 평이하게, 추천은 하나로 못 박는다.',
+		'숫자 읽는 법: 확정 매출 = 입금확인 이후 주문의 실제 입금액(적립금 · 쿠폰 · 할인 이미 뺀 값). 입금전은 아직 안 들어온 돈. 깔때기는 비회원 길(첫 화면→상세→담기→가입)과 회원 길(상세→담기→결제→주문)을 따로 본다 — 앞 단계 대비 %는 사람이 적을 때 100%를 넘을 수 있으니 두 수를 같이 적는다.',
+	) );
+}
+
+/**
+ * 저장된 최근 브리핑 (날짜 => 글), 최신이 앞.
+ *
+ * @return array<string,string>
+ */
+function recent( int $n = 5 ): array {
+	$all = (array) get_option( OPT_LOG, array() );
+	krsort( $all );
+	return array_slice( array_map( 'strval', $all ), 0, max( 1, $n ), true );
+}
+
+/**
+ * 오늘 브리핑을 저장한다 (같은 날은 덮어쓴다). 14일치만 남긴다.
+ */
+function save( string $text ): void {
+	$all = (array) get_option( OPT_LOG, array() );
+	$all[ (string) current_time( 'Y-m-d' ) ] = $text;
+	krsort( $all );
+	update_option( OPT_LOG, array_slice( $all, 0, KEEP, true ), false );
+}
+
+/**
  * 브리핑에 실을 것 전부. 10분 캐시.
  *
  * @return array<string,mixed>
@@ -190,6 +234,9 @@ function payload(): array {
 		'funnel'    => $funnel,
 		'catalog'   => $catalog,
 		'site'      => $site,
+		'rules'     => rules(),
+		'recent'    => recent( 5 ),
+		'dow'       => array( '일', '월', '화', '수', '목', '금', '토' )[ (int) current_time( 'w' ) ],
 	);
 	set_transient( $key, $out, 10 * MINUTE_IN_SECONDS );
 	return $out;
@@ -213,6 +260,7 @@ function routes(): void {
 			if ( mb_strlen( $text ) > 12000 ) {
 				$text = mb_substr( $text, 0, 12000 );
 			}
+			save( $text );
 			$n = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_send' ) ? \Duckhoo\Redesign\Today\discord_send( $text ) : 0;
 			$configured = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_url' ) && '' !== \Duckhoo\Redesign\Today\discord_url();
 			return rest_ensure_response( array( 'ok' => $n > 0, 'chunks' => $n, 'discord' => $configured ) );
@@ -253,4 +301,12 @@ function key_box(): void {
 	echo '<button class="button" name="dhr_brief_new" value="1" onclick="return confirm(\'새 키를 만들면 지금 키는 바로 닫힙니다. 환경 변수도 다시 넣어야 합니다.\')">새 키 만들기</button>';
 	echo '<div style="color:#6b7280;margin-top:4px">주소: <code>' . esc_html( rest_url( 'duckhoo/v1/brief' ) ) . '</code> · 헤더 <code>X-DHR-Key</code>. 집계 숫자만 나가고 이름 · 연락처 · 주문 번호는 없습니다.</div>';
 	echo '</form>';
+	$rc = recent( 7 );
+	if ( $rc ) {
+		echo '<div class="dhr-td__mail" style="margin-top:12px"><b>지난 브리핑</b> — 디스코드를 놓쳤을 때 여기서 봅니다.';
+		foreach ( $rc as $day => $txt ) {
+			echo '<details style="margin-top:6px"><summary style="cursor:pointer">' . esc_html( (string) $day ) . '</summary><pre style="white-space:pre-wrap;font-family:inherit;line-height:1.6;margin:6px 0 0;padding:10px;background:#f6f7f7;border-radius:8px">' . esc_html( (string) $txt ) . '</pre></details>';
+		}
+		echo '</div>';
+	}
 }

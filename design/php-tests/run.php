@@ -1981,5 +1981,19 @@ $ok(count(($T.'discord_chunks')(str_repeat('가', 120), 50)) === 3, '한 줄이 
 $GLOBALS['__options']['duckhoo_discord_webhook'] = '';
 $ok(($T.'discord_send')('x') === 0, '웹훅이 없으면 안 보내고 0');
 
+/* ── 브리핑 저장 · 규칙 ─────────────────────────────────────────────────────────── */
+$GLOBALS['__options']['duckhoo_briefs'] = [];
+$GLOBALS['__now'] = mktime(11, 0, 0, 9, 24, 2026);
+($Bf.'save')('첫 글'); ($Bf.'save')('둘째 글(덮어씀)');
+$GLOBALS['__now'] = mktime(11, 0, 0, 9, 25, 2026);
+($Bf.'save')('25일 글');
+$rc = ($Bf.'recent')(5);
+$ok(array_keys($rc) === ['2026-09-25','2026-09-24'] && $rc['2026-09-24'] === '둘째 글(덮어씀)', '브리핑 저장: 날짜별 · 같은 날은 덮어쓰고 · 최신이 앞');
+for ($d = 1; $d <= 20; $d++) { $GLOBALS['__now'] = mktime(11, 0, 0, 10, $d, 2026); ($Bf.'save')('10/'.$d); }
+$ok(count((array)$GLOBALS['__options']['duckhoo_briefs']) === 14 && !isset($GLOBALS['__options']['duckhoo_briefs']['2026-09-24']), '14일치만 남긴다');
+$GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
+$rules = implode("\n", array_filter(($Bf.'rules')(), fn($r) => !str_starts_with($r, '말:')));
+$ok(str_contains($rules, '안 한다') && str_contains($rules, '하루 구매 한도') && str_contains($rules, '무통장입금') && !preg_match('/건강|금연|순하|해롭/', $rules), '규칙: 「안 한다」 목록 · 무통장 · 금지어는 금지 규칙 줄에만');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
