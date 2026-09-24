@@ -1995,5 +1995,15 @@ $GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
 $rules = implode("\n", array_filter(($Bf.'rules')(), fn($r) => !str_starts_with($r, '말:')));
 $ok(str_contains($rules, '안 한다') && str_contains($rules, '하루 구매 한도') && str_contains($rules, '무통장입금') && !preg_match('/건강|금연|순하|해롭/', $rules), '규칙: 「안 한다」 목록 · 무통장 · 금지어는 금지 규칙 줄에만');
 
+/* ── 오늘 할 일 크론 문 — 창 밖 · 이미 보낸 날은 send_mail 까지 못 간다 ─────────────────── */
+if(!function_exists('wp_mail')) { function wp_mail($to,$s,$b){ $GLOBALS['__mail_sent'][] = $s; return true; } }
+$GLOBALS['__mail_sent'] = []; $GLOBALS['__options']['duckhoo_today_sent_day'] = '';
+$GLOBALS['__now'] = mktime(15, 45, 0, 9, 24, 2026); ($T.'cron_send')();
+$ok($GLOBALS['__mail_sent'] === [] && ($GLOBALS['__options']['duckhoo_today_sent_day'] ?? '') === '', '15:45 에 불리면 창 밖 — 안 보내고 표시도 안 남긴다');
+$GLOBALS['__options']['duckhoo_today_sent_day'] = '2026-09-24';
+$GLOBALS['__now'] = mktime(10, 35, 0, 9, 24, 2026); ($T.'cron_send')();
+$ok($GLOBALS['__mail_sent'] === [], '오늘 이미 보냈으면 창 안이라도 안 보낸다');
+$GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

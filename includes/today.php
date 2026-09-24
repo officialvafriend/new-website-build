@@ -984,16 +984,25 @@ function schedule(): void {
 	$ts = wp_next_scheduled( CRON );
 	if ( ! mail_on() ) {
 		if ( $ts ) {
-			wp_unschedule_event( $ts, CRON );
+			if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+				wp_clear_scheduled_hook( CRON );
+			} else {
+				wp_unschedule_event( $ts, CRON );
+			}
 		}
 		return;
 	}
 	if ( $ts ) {
 		$at = ( new \DateTime( '@' . (int) $ts ) )->setTimezone( $tz )->format( 'H:i' );
-		if ( $at === MAIL_AT ) {
+		if ( $at === MAIL_AT && $ts > time() ) {
 			return;
 		}
-		wp_unschedule_event( $ts, CRON ); // 시각이 달라졌다 — 다시 잡는다
+		// 시각이 다르거나 지난 예약이 남아 있다 — 이 훅의 예약을 전부 지우고 하나만 다시 잡는다
+		if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+			wp_clear_scheduled_hook( CRON );
+		} else {
+			wp_unschedule_event( $ts, CRON );
+		}
 	}
 	$first = new \DateTime( 'today ' . MAIL_AT, $tz );
 	if ( $first->getTimestamp() <= time() ) {
@@ -1002,4 +1011,26 @@ function schedule(): void {
 	wp_schedule_event( $first->getTimestamp(), 'daily', CRON );
 }
 add_action( 'admin_init', __NAMESPACE__ . '\\schedule' );
-add_action( CRON, __NAMESPACE__ . '\\send_mail' );
+
+/**
+ * 크론이 부르는 자리 — **하루 한 번 · MAIL_AT 앞뒤 창 안에서만.**
+ *
+ * 2026-09-24 예약이 2분마다 돌아 디스코드에 같은 목록이 계속 나갔다 (원인은 호스트 크론 쪽으로 보이나
+ * 확정 못 함). 그래서 「언제 불리든」 여기서 거른다: 오늘 이미 보냈으면 안 보내고, 시각이 창 밖이면
+ * 안 보낸다. 버튼(`send_mail(true)`)은 이 문을 안 거친다.
+ */
+function cron_send(): void {
+	$today = (string) current_time( 'Y-m-d' );
+	if ( (string) get_option( 'duckhoo_today_sent_day', '' ) === $today ) {
+		return;
+	}
+	$now = (int) current_time( 'H' ) * 60 + (int) current_time( 'i' );
+	list( $h, $m ) = array_map( 'intval', explode( ':', MAIL_AT ) );
+	$at  = $h * 60 + $m;
+	if ( $now < $at - 10 || $now > $at + 60 ) {
+		return; // 창 밖 — 잘못 불린 것
+	}
+	update_option( 'duckhoo_today_sent_day', $today, false ); // 보내기 **전에** 적는다 — 겹쳐 불려도 한 통
+	send_mail();
+}
+add_action( CRON, __NAMESPACE__ . '\\cron_send' );
