@@ -2005,5 +2005,46 @@ $GLOBALS['__now'] = mktime(10, 35, 0, 9, 24, 2026); ($T.'cron_send')();
 $ok($GLOBALS['__mail_sent'] === [], '오늘 이미 보냈으면 창 안이라도 안 보낸다');
 $GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
 
+/* ── 주문 해부 (includes/anatomy.php) — 순수 계산 ───────────────────────────────────── */
+if(!function_exists('add_submenu_page')) { function add_submenu_page(...$a){ return ''; } }
+require_once dirname(__DIR__, 2).'/includes/anatomy.php';
+$An = 'Duckhoo\\Redesign\\Anatomy\\';
+$ok(($An.'brand')('[노보 블랙] 타박멘솔') === '노보' && ($An.'brand')('[펠릭스] 더블라임 (9.8mg / 30ml)') === '펠릭스' && ($An.'brand')('10병 묶음') === '기타' && ($An.'brand')('[9월 특가] 세트') === '기타', '브랜드: 대괄호 · 별칭 · 행사 접두는 기타');
+$ok(($An.'short')('[펠릭스] 더블라임 (9.8mg / 30ml)') === '더블라임' && ($An.'short')('[노보 리퀴드] 10+1') === '10+1', '짧은 이름: 브랜드 · 용량 꼬리 뗌');
+$ok(($An.'median')([3,1,2]) === 2.0 && ($An.'median')([1,2,3,4]) === 2.5 && ($An.'median')([]) === 0.0, '중앙값');
+$D = 86400; $base = mktime(12,0,0,6,1,2026);
+$mk = fn(int $id, int $day, string $s, float $t, int $u, string $st='대구') => ['id'=>$id,'ts'=>$base+$day*$D,'s'=>$s,'t'=>$t,'u'=>$u,'city'=>'','state'=>$st];
+$orders = [
+  $mk(1, 0,  'delivered', 30000, 1),          // 손님1 첫 주문 노보
+  $mk(2, 20, 'delivered', 45000, 1),          // 손님1 둘째 (20일 뒤) 펠릭스
+  $mk(3, 50, 'delivered', 30000, 1),          // 손님1 셋째 (30일 뒤) 노보
+  $mk(4, 5,  'delivered', 60000, 2, '서울'),   // 손님2 한 번
+  $mk(5, 10, 'on-hold',   20000, 3),          // 입금 안 함
+  $mk(6, 11, 'cancelled', 20000, 4),
+  $mk(7, 40, 'delivered', 120000, 5),         // 손님5 한 번 (노보 10+1)
+  $mk(8, 2,  'delivered', 15000, 0),          // 비회원
+];
+$items = [
+  1=>[['pid'=>11,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>2,'total'=>26000]],
+  2=>[['pid'=>12,'name'=>'[펠릭스] 더블라임 (9.8mg / 30ml)','qty'=>2,'total'=>40000]],
+  3=>[['pid'=>11,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>2,'total'=>26000]],
+  4=>[['pid'=>13,'name'=>'[화이트아웃] 체리','qty'=>4,'total'=>56000]],
+  7=>[['pid'=>14,'name'=>'[노보 리퀴드] 10+1','qty'=>1,'total'=>120000]],
+  8=>[['pid'=>11,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>1,'total'=>13000]],
+];
+$a = ($An.'analyze')($orders, $items, $base + 100*$D);
+$ok($a['orders_all']===8 && $a['orders_paid']===6 && $a['customers']===3 && $a['repeaters']===1 && $a['repeat_rate']==='33%', '주문 8 · 돈 들어온 6 · 회원 3 · 재구매 1명(33%) — 비회원 · 미입금 · 취소는 빠진다');
+$ok($a['gap_first_median']==20.0 && $a['gap_median']==25.0, '첫→둘째 20일 · 전체 간격 중앙값 25일');
+$ok($a['first_brand']['노보']['n']===2 && $a['first_brand']['노보']['rep']===1 && $a['first_brand']['화이트아웃']['rep']===0, '첫 브랜드별 재구매: 노보 2명 중 1 · 화이트아웃 0');
+$ok(($a['brand_flow']['노보']['펠릭스'] ?? 0)===1 && ($a['brand_flow']['노보']['노보'] ?? 0)===1, '브랜드 이동: 노보 → 펠릭스 1 · 노보 1');
+$ok(isset($a['one_first']['체리']) && isset($a['rep_first']['타박멘솔']), '한 번 사고 만 첫 상품 · 재구매 손님 첫 상품');
+$ok($a['cohort']['2026-06']['n']===2 && $a['cohort']['2026-06']['r30']===1 && $a['cohort']['2026-07']['n']===1, '첫 주문 달별: 6월 2명(30일 안 1) · 7월 1명');
+$ok($a['aov']==50000 && $a['buckets']['~2만']===1 && $a['buckets']['2~4만']===2 && $a['buckets']['10~15만']===1, '객단가 평균 50,000 · 분포');
+$ok($a['region']['대구']===5 && $a['region']['서울']===1 && $a['brands']['노보']==185000.0, '지역 · 브랜드 매출');
+$ok($a['leak']['2026-06']['paid']===4 && $a['leak']['2026-06']['unpaid']===1 && $a['leak']['2026-06']['cancel']===1, '달별 입금 이탈: 6월 돈 4 · 미입금 1 · 취소 1');
+$ok($a['products']['10+1']['sales']==120000.0 && array_key_first($a['products'])==='10+1', '상품 매출 상위 1위는 10+1');
+$rep = ($An.'report')($a, '2026-09-24');
+$ok(str_contains($rep,'두 번 이상 산 회원 1명 (33%)') && str_contains($rep,'[달별 입금 이탈]') && str_contains($rep,'노보 → ') && !preg_match('/건강|금연|순하|해롭/', $rep), '붙여 넣기용 글: 핵심 숫자 · 절 제목 · 금지어 없음');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
