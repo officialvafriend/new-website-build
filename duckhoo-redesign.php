@@ -105,6 +105,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/review-doctor.php';
 	// 도구 → 금액 점검 — 옛 기준가로 결제된 주문을 찾는다 (읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/price-check-admin.php';
+	// 도구 → 성인인증 점검 — 인증 판정이 걸리기 전에 가입한 회원을 센다 (읽기 전용)
+	require_once plugin_dir_path( __FILE__ ) . 'includes/verify-admin.php';
 }
 
 

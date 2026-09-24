@@ -2415,3 +2415,14 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
   입금확인 + 주문 메모. 표시만 하는 모드로 먼저. 만들려면 `apply_filters` · `candidates` · `update_sms` 검색 결과가 필요하다
 - 결제 화면 `form-checkout.php:267` 에도 「회원님의 성함과 입금자명이 동일해야 합니다」가 있다 — 안내는 이미 열 곳이 넘는다.
   **안내를 더 붙이는 것은 답이 아니다**
+
+### 도구 → 성인인증 점검 (2026-09-24, `includes/verify-admin.php`)
+
+테마가 가입 때 판정을 마친 회원에게 **`wd_phone_verified = 1`** 을 적는다 (`functions.php:10252` 「게이트 판정 기준」,
+함께 `wd_verified_name/phone/birth/ci/di`). 그 표시가 **없는 회원** = 판정이 걸리기 전 가입 · 옛 사이트에서 넘어온 사람.
+**읽기 전용** — 회원 전체(직원 역할 제외) · 인증 있음/없음 · 없음 중 주문 이력 · 없음 중 최근 90일 주문 ·
+이름 두 글자(성 없음) 수를 카드로, 없는 회원 목록을 주문 많은 순으로. 회원 한 번 · 주문 한 번, 질의 두 개
+(HPOS 면 `wc_orders`, 아니면 posts + `_customer_user`). 필터 `duckhoo_verified_meta_key` · `duckhoo_verify_staff_roles` ·
+`duckhoo_verify_dead_statuses` · `duckhoo_verify_list_max`(400).
+테마는 로그인 직후 「cutoff 이전 가입 + 미인증」에게 안내 팝업만 띄운다 (10266행 주석) — 결제까지 막는지는 `wd_phone_verified` 검색으로 본다.
+검증: `php design/php-tests/run.php` (성인인증 점검 6개).

@@ -1842,3 +1842,18 @@ $GLOBALS['__pages'] = [];
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
+
+/* ── 성인인증 점검 (includes/verify-admin.php) — 읽기 전용 화면의 갈래짓기 · 요약 ───────────── */
+require_once dirname(__DIR__, 2).'/includes/verify-admin.php';
+$V = 'Duckhoo\\Redesign\\Verify\\Admin\\';
+$ok(($V.'two_char')('길동') && ($V.'two_char')('길 동') && !($V.'two_char')('홍길동') && !($V.'two_char')('Kim') && !($V.'two_char')('') && !($V.'two_char')('김a'), '두 글자 이름: 한글 두 글자뿐일 때만 (빈칸은 뗀다 · 영문 · 빈 이름 아님)');
+$now = strtotime('2026-09-24 12:00:00 UTC');
+$c = ($V.'classify')(['id'=>1,'name'=>'길동','verified'=>false,'orders'=>2,'last'=>'2026-09-01 10:00:00'], $now);
+$ok($c['two_char'] && $c['recent'] && $c['orders'] === 2 && $c['verified'] === false, '갈래짓기: 두 글자 · 최근 90일 주문 · 주문 수');
+$c2 = ($V.'classify')(['id'=>2,'name'=>'홍길동','verified'=>true,'orders'=>0,'last'=>''], $now);
+$ok(!$c2['two_char'] && !$c2['recent'] && $c2['verified'], '갈래짓기: 주문 없으면 최근 아님 · 인증 있음');
+$c3 = ($V.'classify')(['id'=>3,'name'=>'홍길동','verified'=>false,'orders'=>1,'last'=>'2026-05-01 10:00:00'], $now);
+$ok(!$c3['recent'], '90일 넘은 주문은 최근이 아니다');
+$sm = ($V.'summary')([$c, $c2, $c3]);
+$ok($sm['all'] === 3 && $sm['verified'] === 1 && $sm['unverified'] === 2 && $sm['unv_orders'] === 2 && $sm['unv_recent'] === 1 && $sm['two_char'] === 1 && $sm['two_char_unv'] === 1, '요약: 전체 3 · 인증 1 · 없음 2 · 없음+주문 2 · 없음+최근 1 · 두 글자 1');
+$ok(($V.'meta_key')() === 'wd_phone_verified' && in_array('administrator', ($V.'staff_roles')(), true) && in_array('wc-cancelled', ($V.'dead_statuses')(), true), '기본값: 테마의 wd_phone_verified · 직원 역할 제외 · 취소 주문 안 셈');
