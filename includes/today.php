@@ -312,7 +312,8 @@ function facts( bool $fresh = false ): array {
 		$f['check']['ids'][] = $r['id'];
 	}
 	if ( function_exists( '\\Duckhoo\\Redesign\\Bank2\\rows' ) ) {
-		$f['sms'] = count( \Duckhoo\Redesign\Bank2\rows( 14, 200 ) );
+		// 14일치를 세면 이미 손으로 처리한 옛 문자(연결 표시가 안 남는다)까지 매일 같은 숫자로 뜬다 → 오늘 · 어제만
+		$f['sms'] = count( \Duckhoo\Redesign\Bank2\rows( (int) apply_filters( 'duckhoo_today_sms_days', 2 ), 200 ) );
 	}
 	foreach ( orders( array( 'payment-confirmed' ) ) as $r ) {
 		++$f['to_ship']['n'];
@@ -394,7 +395,7 @@ function build( array $f, array $ctx = array() ): array {
 	$items[] = array(
 		'id'    => 'sms',
 		'group' => '입금',
-		'title' => '주문에 못 붙인 입금 문자 (최근 14일)',
+		'title' => '주문에 못 붙인 입금 문자 (오늘 · 어제)',
 		'n'     => (int) ( $f['sms'] ?? 0 ),
 		'note'  => '「금고홍길동」처럼 은행 이름이 붙었거나 두 글자 이름일 수 있습니다. 키플 문자 목록에서 주문에 연결합니다.',
 		'url'   => (string) ( $u['sms'] ?? '' ),

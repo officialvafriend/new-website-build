@@ -79,7 +79,7 @@ function strip_facts( array $f ): array {
 		'onhold'         => $n( $f['onhold'] ?? 0 ),
 		'onhold_stale'   => (int) ( $f['onhold']['stale'] ?? 0 ),
 		'need_check'     => $n( $f['check'] ?? 0 ),
-		'sms_unmatched'  => (int) ( $f['sms'] ?? 0 ),
+		'sms_unmatched'  => (int) ( $f['sms'] ?? 0 ), // 오늘 · 어제 문자만
 		'to_ship'        => $n( $f['to_ship'] ?? 0 ),
 		'no_tracking'    => $n( $f['no_track'] ?? 0 ),
 		'stuck_ready'    => $n( $f['stuck'] ?? 0 ),
