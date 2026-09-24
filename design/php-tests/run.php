@@ -1857,3 +1857,8 @@ $ok(!$c3['recent'], '90일 넘은 주문은 최근이 아니다');
 $sm = ($V.'summary')([$c, $c2, $c3]);
 $ok($sm['all'] === 3 && $sm['verified'] === 1 && $sm['unverified'] === 2 && $sm['unv_orders'] === 2 && $sm['unv_recent'] === 1 && $sm['two_char'] === 1 && $sm['two_char_unv'] === 1, '요약: 전체 3 · 인증 1 · 없음 2 · 없음+주문 2 · 없음+최근 1 · 두 글자 1');
 $ok(($V.'meta_key')() === 'wd_phone_verified' && in_array('administrator', ($V.'staff_roles')(), true) && in_array('wc-cancelled', ($V.'dead_statuses')(), true), '기본값: 테마의 wd_phone_verified · 직원 역할 제외 · 취소 주문 안 셈');
+$c4 = ($V.'classify')(['id'=>4,'name'=>'길동','vname'=>'홍길동','verified'=>true,'orders'=>3,'last'=>''], $now);
+$c5 = ($V.'classify')(['id'=>5,'name'=>'홍 길동','vname'=>'홍길동','verified'=>true,'orders'=>0,'last'=>''], $now);
+$c6 = ($V.'classify')(['id'=>6,'name'=>'길동','vname'=>'','verified'=>false,'orders'=>0,'last'=>''], $now);
+$ok($c4['differs'] && !$c5['differs'] && !$c6['differs'], '회원 이름 ≠ 인증 이름: 두 글자 vs 세 글자는 다름 · 빈칸 차이는 같음 · 인증 이름 없으면 셈 안 함');
+$ok(($V.'summary')([$c4,$c5,$c6])['differs'] === 1, '요약에 「이름 다름」 수');

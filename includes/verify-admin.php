@@ -90,6 +90,9 @@ function two_char( string $name ): bool {
 function classify( array $u, int $now, int $recent_d = 90 ): array {
 	$last          = trim( (string) ( $u['last'] ?? '' ) );
 	$u['two_char'] = two_char( (string) ( $u['name'] ?? '' ) );
+	$vn            = preg_replace( '/\s+/u', '', (string) ( $u['vname'] ?? '' ) );
+	$nm            = preg_replace( '/\s+/u', '', (string) ( $u['name'] ?? '' ) );
+	$u['differs']  = '' !== $vn && $vn !== $nm; // 회원 이름 ≠ 인증기관이 준 이름 (주문자명은 회원 이름을 쓴다)
 	$u['recent']   = '' !== $last && ( $now - (int) strtotime( $last . ' UTC' ) ) <= $recent_d * DAY_IN_SECONDS;
 	$u['orders']   = (int) ( $u['orders'] ?? 0 );
 	$u['verified'] = (bool) ( $u['verified'] ?? false );
@@ -103,7 +106,7 @@ function classify( array $u, int $now, int $recent_d = 90 ): array {
  * @return array<string,int>
  */
 function summary( array $rows ): array {
-	$s = array( 'all' => 0, 'verified' => 0, 'unverified' => 0, 'unv_orders' => 0, 'unv_recent' => 0, 'two_char' => 0, 'two_char_unv' => 0 );
+	$s = array( 'all' => 0, 'verified' => 0, 'unverified' => 0, 'unv_orders' => 0, 'unv_recent' => 0, 'two_char' => 0, 'two_char_unv' => 0, 'differs' => 0 );
 	foreach ( $rows as $r ) {
 		++$s['all'];
 		if ( ! empty( $r['verified'] ) ) {
@@ -122,6 +125,9 @@ function summary( array $rows ): array {
 		}
 		if ( ! empty( $r['two_char'] ) ) {
 			++$s['two_char'];
+		}
+		if ( ! empty( $r['differs'] ) ) {
+			++$s['differs'];
 		}
 	}
 	return $s;
@@ -183,14 +189,15 @@ function members(): array {
 	}
 	$key = meta_key();
 	$sql = 'SELECT u.ID, u.user_email, u.display_name, u.user_registered,
-			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps
+			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps, n.meta_value AS vname
 		FROM ' . $wpdb->users . ' u
 		LEFT JOIN ' . $wpdb->usermeta . ' v ON v.user_id = u.ID AND v.meta_key = %s
+		LEFT JOIN ' . $wpdb->usermeta . ' n ON n.user_id = u.ID AND n.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' f ON f.user_id = u.ID AND f.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' l ON l.user_id = u.ID AND l.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' c ON c.user_id = u.ID AND c.meta_key = %s
 		ORDER BY u.ID ASC';
-	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
+	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'wd_verified_name', 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	$staff = staff_roles();
 	$out   = array();
 	foreach ( $rows as $r ) {
@@ -205,6 +212,7 @@ function members(): array {
 			'email'      => (string) $r['user_email'],
 			'registered' => (string) $r['user_registered'],
 			'verified'   => '1' === (string) $r['verified'] || 'yes' === (string) $r['verified'],
+			'vname'      => trim( (string) $r['vname'] ),
 		);
 	}
 	return $out;
@@ -249,6 +257,7 @@ function screen(): void {
 	$card( '없음 · 주문 이력 있음', $s['unv_orders'], '취소 · 환불 · 실패 제외', $s['unv_orders'] > 0 );
 	$card( '없음 · 최근 90일 주문', $s['unv_recent'], '지금도 사는 사람', $s['unv_recent'] > 0 );
 	$card( '이름 두 글자 (성 없음?)', $s['two_char'], '인증 없는 쪽 ' . number_format_i18n( $s['two_char_unv'] ) . '명 · 입금자명 불일치의 한 원인' );
+	$card( '회원 이름 ≠ 인증기관 이름', $s['differs'], '주문자명은 회원 이름을 쓴다 — 입금자명 불일치의 뿌리', $s['differs'] > 0 );
 	echo '</div>';
 
 	$unv = array_values( array_filter( $rows, fn( $r ) => ! $r['verified'] ) );
@@ -278,6 +287,23 @@ function screen(): void {
 				. '<td style="text-align:right">' . (int) $r['orders'] . '</td>'
 				. '<td>' . esc_html( '' !== (string) $r['last'] ? substr( (string) $r['last'], 0, 10 ) : '—' ) . '</td>'
 				. '<td>' . implode( ' · ', $flags ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+	}
+
+	$dif = array_values( array_filter( $rows, fn( $r ) => ! empty( $r['differs'] ) ) );
+	if ( $dif ) {
+		usort( $dif, fn( $a, $b ) => ( $b['orders'] <=> $a['orders'] ) ?: ( $a['id'] <=> $b['id'] ) );
+		echo '<h2 style="margin-top:22px">회원 이름이 인증기관 이름과 다른 회원 <span style="font-weight:400;color:#646970">— ' . esc_html( number_format_i18n( min( $max, count( $dif ) ) ) ) . ' / ' . esc_html( number_format_i18n( count( $dif ) ) ) . '명 · 주문 많은 순</span></h2>';
+		echo '<p style="max-width:56em;line-height:1.7;color:#646970;font-size:13px">인증기관이 준 이름(<code>wd_verified_name</code>)은 세 글자인데 회원 이름은 옛날에 손으로 적은 것이 남아 있는 경우입니다. 주문자명 · 입금 자동확인은 <b>회원 이름</b>을 쓰므로 은행에서 온 세 글자 이름과 어긋납니다. 이 화면은 고치지 않습니다 — 인증 이름으로 맞출지는 사장님이 정합니다.</p>';
+		echo '<table class="widefat striped"><thead><tr><th style="width:5rem">회원</th><th>회원 이름 (주문자명)</th><th>인증기관 이름</th><th>이메일</th><th style="width:5rem;text-align:right">주문</th><th style="width:9rem">마지막 주문</th></tr></thead><tbody>';
+		foreach ( array_slice( $dif, 0, $max ) as $r ) {
+			echo '<tr><td><a href="' . esc_url( get_edit_user_link( (int) $r['id'] ) ) . '">#' . (int) $r['id'] . '</a></td>'
+				. '<td><b>' . esc_html( (string) $r['name'] ) . '</b></td>'
+				. '<td>' . esc_html( (string) $r['vname'] ) . '</td>'
+				. '<td>' . esc_html( (string) $r['email'] ) . '</td>'
+				. '<td style="text-align:right">' . (int) $r['orders'] . '</td>'
+				. '<td>' . esc_html( '' !== (string) $r['last'] ? substr( (string) $r['last'], 0, 10 ) : '—' ) . '</td></tr>';
 		}
 		echo '</tbody></table>';
 	}
