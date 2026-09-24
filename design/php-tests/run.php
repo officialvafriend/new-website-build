@@ -1954,5 +1954,22 @@ $ok(($T.'done')() === [], '다음 날이면 「했음」이 비어 있다');
 $GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
 $ok(str_contains(($T.'orders_url')('on-hold'), 'wc-on-hold') && str_contains(($T.'orders_url')(['payment-confirmed','x']), 'wc-payment-confirmed'), '주문 목록 주소에 상태가 붙는다 (배열이면 첫 것)');
 
+/* ── 클로드 아침 브리핑 (includes/brief.php) — 키 검사 · 숫자만 남기기 ─────────────────── */
+if(!function_exists('register_rest_route')) { function register_rest_route(...$a){} }
+if(!function_exists('rest_url')) { function rest_url($p=''){ return 'https://duck-hoo.com/wp-json/'.$p; } }
+if(!function_exists('rest_ensure_response')) { function rest_ensure_response($r){ return $r; } }
+require_once dirname(__DIR__, 2).'/includes/brief.php';
+$Bf = 'Duckhoo\\Redesign\\Brief\\';
+$req = fn(array $h) => new class($h) { function __construct(public array $h){} function get_header($k){ return $this->h[$k] ?? ''; } };
+$ok(($Bf.'authorized')($req(['x_dhr_key'=>'abc123']), 'abc123') && ($Bf.'authorized')($req(['authorization'=>'Bearer abc123']), 'abc123'), '키: X-DHR-Key 또는 Bearer');
+$ok(!($Bf.'authorized')($req(['x_dhr_key'=>'abc124']), 'abc123') && !($Bf.'authorized')($req([]), 'abc123') && !($Bf.'authorized')($req(['x_dhr_key'=>'']), ''), '틀린 키 · 빈 키 · 키가 아예 없으면(옵션 비어 있음) 닫힘');
+$GLOBALS['__options']['duckhoo_brief_key'] = '';
+$ok(!($Bf.'authorized')($req(['x_dhr_key'=>''])), '옵션에 키가 없으면 빈 헤더로도 못 들어온다');
+$nk = ($Bf.'new_key')();
+$ok(strlen($nk) >= 24 && preg_match('/^[a-z0-9]+$/', $nk) && ($Bf.'key')() === $nk, '새 키: 24자 이상 영숫자 · 옵션에 저장');
+$st = ($Bf.'strip_facts')(['onhold'=>['n'=>7,'stale'=>2,'stale_ids'=>[101,102]],'check'=>['n'=>1,'ids'=>[5]],'sms'=>3,'to_ship'=>['n'=>4,'ids'=>[1,2,3,4]],'no_track'=>['n'=>0],'stuck'=>['n'=>0],'inq'=>['n'=>-1],'reviews'=>1,'stock'=>['out'=>3,'low'=>[11=>'노보 데저트 2개']],'coupons'=>0,'holiday'=>['eb'=>'추석 연휴','k'=>'택배 출고가 없습니다']]);
+$ok($st['onhold']===7 && $st['onhold_stale']===2 && $st['to_ship']===4 && $st['low_stock']===['노보 데저트 2개'] && $st['holiday']==='추석 연휴 — 택배 출고가 없습니다', '숫자만 남긴다');
+$ok(!isset($st['stale_ids']) && !str_contains(json_encode($st), '101') && $st['inquiries_open'] === -1, '주문 번호 목록은 빠지고, 못 센 문의는 -1 그대로');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

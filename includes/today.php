@@ -686,6 +686,10 @@ function screen(): void {
 	echo '<button class="button" name="dhr_mail_now" value="1">지금 보내 보기</button>';
 	echo '</form>';
 
+	if ( function_exists( '\\Duckhoo\\Redesign\\Brief\\key_box' ) ) {
+		\Duckhoo\Redesign\Brief\key_box();
+	}
+
 	echo '<p class="dhr-td__foot">숫자는 5분마다 새로 셉니다 · <a href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&dhr_fresh=1' ), 'dhr-today-fresh' ) ) . '">지금 다시 세기</a>';
 	echo ' · 이 화면은 읽기만 합니다. 주문 · 회원에 아무것도 쓰지 않고, 「했음」 체크만 오늘 하루 기억합니다.</p>';
 	echo '</div>';
