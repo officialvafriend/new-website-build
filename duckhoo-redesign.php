@@ -83,6 +83,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
 // 옛 회원 재인증 문 — 인증 기록도 옛 사이트 확인 표시도 없는 회원만 결제 전에 테마 재인증 화면으로 (2026-09-24)
 require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/today.php';       // 오늘 할 일 — 화면 · 대시보드 위젯 · 아침 메일(크론이라 admin 밖)
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.

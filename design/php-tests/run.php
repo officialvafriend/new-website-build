@@ -1840,8 +1840,6 @@ $GLOBALS['__options']['duckhoo_pages_version'] = 2; $GLOBALS['__updated'] = [];
 $ok(!$GLOBALS['__updated'], '버전이 같으면 아무것도 안 한다');
 $GLOBALS['__pages'] = [];
 
-echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
-exit($fail?1:0);
 
 /* ── 성인인증 점검 (includes/verify-admin.php) — 읽기 전용 화면의 갈래짓기 · 요약 ───────────── */
 require_once dirname(__DIR__, 2).'/includes/verify-gate.php';
@@ -1914,3 +1912,47 @@ $ok(in_array('길동', $nm, true) && in_array('홍길동', $nm, true) && count($
 $j = ($B.'judge')(['id' => 7, 'depositor_name' => '농협이상섭', 'amount' => 0, 'match_reason' => '확인필요: SMS 파싱 실패']);
 $ok($j['verdict'] === 'parse' && ($B.'judge')(['id' => 8, 'depositor_name' => '홍길동', 'amount' => 1000, 'match_reason' => '확인필요: 과입금'])['verdict'] === 'skip', '금액 0 은 「해석 실패」 · 입금자명 사유가 아니면 건너뜀');
 $ok(($B.'guess_amounts')("[Web발신]\n농협 09/24 13:05\n금액:78,900\n이상섭\n잔액 1,234,567") === [1234567, 78900] && ($B.'guess_amounts')('2026/09/24 12:00 500원') === [], '해석 실패 원문의 금액 후보: 1,000 이상 숫자만 · 연도 · 날짜 · 계좌 조각 제외');
+
+/* ── 오늘 할 일 (includes/today.php) — 사실 → 목록 순수 함수 ─────────────────────────── */
+if(!function_exists('wp_add_dashboard_widget')) { function wp_add_dashboard_widget(...$a){} }
+if(!function_exists('wp_next_scheduled')) { function wp_next_scheduled($h){ return false; } }
+if(!function_exists('wp_schedule_event')) { function wp_schedule_event(...$a){ $GLOBALS['__cron'][] = $a; return true; } }
+if(!function_exists('wp_unschedule_event')) { function wp_unschedule_event(...$a){ return true; } }
+require_once dirname(__DIR__, 2).'/includes/today.php';
+$T = 'Duckhoo\\Redesign\\Today\\';
+$facts0 = ['onhold'=>['n'=>0,'stale'=>0],'check'=>['n'=>0],'sms'=>0,'to_ship'=>['n'=>0],'no_track'=>['n'=>0],'stuck'=>['n'=>0],'inq'=>['n'=>-1],'reviews'=>0,'stock'=>['out'=>0,'low'=>[]],'coupons'=>0,'yday'=>['orders'=>0,'sales'=>0,'signups'=>0],'holiday'=>[]];
+$ctx0 = ['today'=>'2026-09-24','dow'=>4,'hour'=>9,'stale_days'=>5,'urls'=>['onhold'=>'U1','to_ship'=>'U2']];
+$it = ($T.'build')($facts0, $ctx0);
+$ids = array_column($it, 'id');
+$ok(array_search('stale',$ids,true) < array_search('ship',$ids,true) && array_search('ship',$ids,true) < array_search('reviews',$ids,true) && array_search('reviews',$ids,true) < array_search('out',$ids,true), '순서: 입금 → 출고 → 손님 → 가게');
+$ok(!in_array('inq',$ids,true), 'kboard 표 구조를 모르면(-1) 문의 항목을 아예 안 그린다 — 틀린 숫자보다 없는 숫자');
+$ok(!in_array('weekly',$ids,true), '목요일에는 주간 점검 항목이 없다');
+$ok(count(array_filter($it, fn($i)=>empty($i['info']) && (int)$i['n']>0)) === 0, '아무것도 없는 날은 열린 항목 0');
+$it2 = ($T.'build')(['onhold'=>['n'=>7,'stale'=>2],'check'=>['n'=>1],'sms'=>3,'to_ship'=>['n'=>4],'no_track'=>['n'=>0],'stuck'=>['n'=>0],'inq'=>['n'=>2,'url'=>'/inquiries/'],'reviews'=>1,'stock'=>['out'=>3,'low'=>[11=>'노보 데저트 2개']],'coupons'=>0,'yday'=>[],'holiday'=>[]] , ['dow'=>1,'hour'=>17,'stale_days'=>5,'urls'=>[]]);
+$by = array_column($it2, null, 'id');
+$ok($by['stale']['n']===2 && str_contains($by['stale']['title'],'5일') && $by['stale']['tone']==='hot', '입금전 5일 넘은 주문 2건 · 급함 표시');
+$ok($by['onhold']['n']===7 && !empty($by['onhold']['info']), '입금 기다리는 주문 7건은 숫자만(할 일 아님)');
+$ok($by['inq']['n']===2 && $by['inq']['url']==='/inquiries/', '답 없는 문의 2건은 게시판으로');
+$ok(str_contains($by['ship']['note'],'오후 4시가 지나'), '17시에는 「내일 출고분」이라고 말한다');
+$ok(str_contains($by['low']['note'],'노보 데저트 2개') && $by['low']['n']===1, '재고 5개 이하는 상품 이름 · 수량을 그대로 적는다');
+$ok(isset($by['weekly']) && $by['weekly']['n']===1, '월요일에는 지난주 매출 · 깔때기 보기가 붙는다');
+$it3 = ($T.'build')($facts0 + [], ['dow'=>6,'hour'=>10,'urls'=>[]]);
+$ok(str_contains(array_column($it3,null,'id')['ship']['note'],'주말 주문은 월요일'), '토요일에는 월요일 출고 안내');
+$it4 = ($T.'build')(array_merge($facts0, ['holiday'=>['eb'=>'추석 연휴','k'=>'9월 24일(목)–27일(일) 택배 출고가 없습니다']]), ['dow'=>4,'hour'=>10,'urls'=>[]]);
+$ok(str_contains(array_column($it4,null,'id')['ship']['note'],'추석 연휴 — 9월 24일(목)'), '연휴 중에는 출고 줄에 연휴 안내를 쓴다');
+$open = array_filter($it2, fn($i)=>empty($i['info']) && (int)$i['n']>0);
+$ok(count($open) === 9, '열린 항목만 센다 (입금전 숫자 · 0건은 빠진다)');
+$txt = ($T.'mail_text')($it2, ['orders'=>12,'sales'=>345000,'signups'=>3], 'https://duck-hoo.com/wp-admin/admin.php?page=duckhoo-today');
+$ok(str_starts_with($txt,'오늘 할 일 9개') && str_contains($txt,'[입금]') && str_contains($txt,'· 확인필요 주문 처리 — 1건') && !str_contains($txt,'입금 기다리는 주문'), '메일: 열린 항목만 · 묶음 제목 · 숫자만 줄은 뺀다');
+$ok(str_contains($txt,'어제: 주문 12건 · 확정 매출 345,000원 · 새 회원 3명') && str_contains($txt,'page=duckhoo-today'), '메일 끝에 어제 숫자와 화면 주소');
+$ok(str_starts_with(($T.'mail_text')($it, [], 'x'),'오늘은 처리할 것이 없습니다'), '할 일 없는 날의 메일 첫 줄');
+$GLOBALS['__now'] = mktime(9, 0, 0, 9, 24, 2026);
+($T.'save_done')(['stale','check']);
+$ok(($T.'done')() === ['stale','check'], '「했음」은 오늘 날짜 아래 저장');
+$GLOBALS['__now'] = mktime(9, 0, 0, 9, 25, 2026);
+$ok(($T.'done')() === [], '다음 날이면 「했음」이 비어 있다');
+$GLOBALS['__now'] = mktime(9, 30, 0, 9, 2, 2026);
+$ok(str_contains(($T.'orders_url')('on-hold'), 'wc-on-hold') && str_contains(($T.'orders_url')(['payment-confirmed','x']), 'wc-payment-confirmed'), '주문 목록 주소에 상태가 붙는다 (배열이면 첫 것)');
+
+echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
+exit($fail?1:0);
