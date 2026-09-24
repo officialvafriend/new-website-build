@@ -594,7 +594,20 @@ function screen(): void {
 	if ( ! may() ) {
 		wp_die( '권한이 없습니다.' );
 	}
+	// 알림 — 리다이렉트 뒤에 한 번만 보여 준다
+	$flash = get_transient( 'dhr_today_flash_' . get_current_user_id() );
+	if ( is_array( $flash ) ) {
+		delete_transient( 'dhr_today_flash_' . get_current_user_id() );
+		add_action( 'admin_notices', function () use ( $flash ) {
+			echo '<div class="notice notice-' . esc_attr( (string) $flash[0] ) . '"><p>' . wp_kses_post( (string) $flash[1] ) . '</p></div>';
+		} );
+	}
+	$say = function ( string $tone, string $msg ): void {
+		set_transient( 'dhr_today_flash_' . get_current_user_id(), array( $tone, $msg ), 60 );
+	};
 	if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) && isset( $_POST['dhr_today_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['dhr_today_nonce'] ) ), 'dhr_today' ) ) {
+		// 처리한 뒤 **반드시 GET 으로 돌려보낸다** (PRG). 안 그러면 새로고침마다 같은 전송이 또 나간다 —
+		// 「지금 보내 보기」 뒤 새로고침할 때마다 디스코드에 한 통씩 갔다 (2026-09-24)
 		if ( isset( $_POST['dhr_mail_set'] ) ) {
 			update_option( OPT_MAIL, empty( $_POST['dhr_mail'] ) ? '0' : '1', false );
 		}
@@ -603,26 +616,22 @@ function screen(): void {
 			if ( '' === $u || discord_ok( $u ) ) {
 				update_option( OPT_DISC, $u, false );
 			} else {
-				add_action( 'admin_notices', function () {
-					echo '<div class="notice notice-error"><p>디스코드 웹훅 주소가 아닙니다. <code>https://discord.com/api/webhooks/…</code> 꼴이어야 합니다.</p></div>';
-				} );
+				$say( 'error', '디스코드 웹훅 주소가 아닙니다. <code>https://discord.com/api/webhooks/…</code> 꼴이어야 합니다.' );
 			}
 		}
 		if ( isset( $_POST['dhr_disc_test'] ) ) {
 			$ok = discord_send( '액상덕후 사이트에서 보내는 시험 메시지입니다. 이 방으로 아침 브리핑과 오늘 할 일이 옵니다.' ) > 0;
-			add_action( 'admin_notices', function () use ( $ok ) {
-				echo '<div class="notice notice-' . ( $ok ? 'success' : 'error' ) . '"><p>' . ( $ok ? '디스코드로 보냈습니다. 방을 확인해 보세요.' : '디스코드로 못 보냈습니다. 웹훅 주소를 다시 확인해 주세요.' ) . '</p></div>';
-			} );
+			$say( $ok ? 'success' : 'error', $ok ? '디스코드로 보냈습니다. 방을 확인해 보세요.' : '디스코드로 못 보냈습니다. 웹훅 주소를 다시 확인해 주세요.' );
 		}
 		if ( isset( $_POST['dhr_mail_now'] ) ) {
 			$sent = send_mail( true );
-			add_action( 'admin_notices', function () use ( $sent ) {
-				echo '<div class="notice notice-' . ( $sent ? 'success' : 'warning' ) . '"><p>' . ( $sent ? '메일을 보냈습니다.' : '메일을 못 보냈습니다 (보낼 것이 없거나 발송 실패).' ) . '</p></div>';
-			} );
+			$say( $sent ? 'success' : 'warning', $sent ? '보냈습니다 (메일' . ( '' !== discord_url() ? ' · 디스코드' : '' ) . ').' : '못 보냈습니다 — 1분 안에 이미 보냈거나 발송에 실패했습니다.' );
 		}
 		if ( isset( $_POST['dhr_done_set'] ) ) {
 			save_done( array_map( 'sanitize_key', (array) ( $_POST['dhr_done'] ?? array() ) ) );
 		}
+		wp_safe_redirect( admin_url( 'admin.php?page=' . SLUG ) );
+		exit;
 	}
 	$fresh = isset( $_GET['dhr_fresh'] ) && check_admin_referer( 'dhr-today-fresh' ); // phpcs:ignore WordPress.Security.NonceVerification
 	try {
@@ -942,6 +951,11 @@ function send_mail( bool $force = false ): bool {
 	if ( '' === $to || ! function_exists( 'wp_mail' ) ) {
 		return false;
 	}
+	// 같은 목록이 1분 안에 두 번 나가지 않게 — 버튼 두 번 · 크론 겹침 · 재전송 모두 여기서 막힌다
+	if ( get_transient( 'dhr_today_sent' ) ) {
+		return false;
+	}
+	set_transient( 'dhr_today_sent', 1, MINUTE_IN_SECONDS );
 	$f     = facts( true );
 	$c     = ctx();
 	$items = build( $f, $c );
