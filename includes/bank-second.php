@@ -279,6 +279,37 @@ function candidates( int $amount ): array {
 }
 
 /**
+ * 이미 처리된 주문까지 넓혀서 — 사장님이 손으로 입금확인한 뒤라 입금전 후보가 없을 때,
+ * 같은 금액 · 같은 기간의 **모든** 주문(취소 · 환불 · 실패 제외)에서 끝 일치를 찾는다.
+ * 지난 문자로 판정 규칙이 맞는지 보는 용도 — 이 결과로는 아무것도 안 한다.
+ *
+ * @param int $amount 금액.
+ * @return array<int,object> id ⇒ 주문.
+ */
+function candidates_any( int $amount ): array {
+	if ( $amount <= 0 || ! function_exists( 'wc_get_orders' ) ) {
+		return array();
+	}
+	$st = function_exists( 'wc_get_order_statuses' ) ? array_keys( (array) wc_get_order_statuses() ) : array( 'any' );
+	$st = array_values( array_diff( $st, array( 'wc-cancelled', 'wc-refunded', 'wc-failed', 'wc-checkout-draft' ) ) );
+	$days = (int) get_option( 'keyple_bank_match_window', 14 );
+	$args = array( 'limit' => 80, 'status' => $st, 'orderby' => 'date', 'order' => 'DESC' );
+	if ( $days > 0 ) {
+		$args['date_created'] = '>' . ( time() - DAY_IN_SECONDS * ( $days + 7 ) );
+	}
+	$out = array();
+	foreach ( (array) wc_get_orders( $args ) as $o ) {
+		if ( ! is_object( $o ) && function_exists( 'wc_get_order' ) ) {
+			$o = wc_get_order( $o );
+		}
+		if ( is_object( $o ) && method_exists( $o, 'get_total' ) && (int) round( (float) $o->get_total() ) === $amount ) {
+			$out[ (int) $o->get_id() ] = $o;
+		}
+	}
+	return $out;
+}
+
+/**
  * 문자 한 건 판정.
  *
  * @param array<string,mixed> $sms 문자 줄.
@@ -301,7 +332,21 @@ function judge( array $sms ): array {
 	}
 	$base['cands']      = count( $map );
 	$base['cand_names'] = $map;
-	return $base + pick( $dep, $map );
+	$r = pick( $dep, $map );
+	if ( 'none' === $r['verdict'] ) {
+		// 입금전 후보가 없으면 이미 처리된 주문까지 넓혀 본다 — 규칙 검증용.
+		$any = array();
+		$sts = array();
+		foreach ( candidates_any( $amount ) as $oid => $o ) {
+			$any[ $oid ] = names_of( $o );
+			$sts[ $oid ] = method_exists( $o, 'get_status' ) ? (string) $o->get_status() : '';
+		}
+		$r2 = pick( $dep, $any );
+		if ( 'match' === $r2['verdict'] ) {
+			$r = array( 'verdict' => 'done', 'order_id' => $r2['order_id'], 'name' => $r2['name'], 'matched' => $r2['matched'], 'status' => (string) ( $sts[ $r2['order_id'] ] ?? '' ) );
+		}
+	}
+	return $base + $r;
 }
 
 /**
@@ -345,7 +390,7 @@ function screen(): void {
 		$j['at']  = '' !== $c['time'] ? (string) ( $r[ $c['time'] ] ?? '' ) : '';
 		$list[]   = $j;
 	}
-	$n = array( 'match' => 0, 'none' => 0, 'multi' => 0, 'parse' => 0, 'skip' => 0 );
+	$n = array( 'match' => 0, 'done' => 0, 'none' => 0, 'multi' => 0, 'parse' => 0, 'skip' => 0 );
 	foreach ( $list as $j ) {
 		++$n[ $j['verdict'] ];
 	}
@@ -366,6 +411,7 @@ function screen(): void {
 	echo '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px">';
 	$card( '최근 14일 · 주문 못 붙인 문자', count( $list ) );
 	$card( '이 주문이 맞아 보임', $n['match'], '주문 하나에만 끝이 맞음', $n['match'] > 0 );
+	$card( '이미 처리된 주문과 맞음', $n['done'], '손으로 입금확인한 뒤 — 규칙이 맞았을 자리' );
 	$card( '후보가 여럿', $n['multi'], '같은 금액 · 끝이 맞는 주문 2건 이상' );
 	$card( '못 찾음', $n['none'], '금액 같은 주문이 없거나 이름이 안 맞음' );
 	$card( '문자 해석 실패', $n['parse'], '이름 또는 금액을 못 읽음 — 원문을 봐야 함' );
@@ -375,12 +421,14 @@ function screen(): void {
 		echo '<p><b>최근 14일에 주문을 못 붙인 확인필요 문자가 없습니다.</b></p></div>';
 		return;
 	}
-	$label = array( 'match' => '<b style="color:#1d7a3a">이 주문</b>', 'multi' => '<span style="color:#C2410C">후보 여럿</span>', 'none' => '못 찾음', 'parse' => '<span style="color:#C2410C">해석 실패</span>', 'skip' => '다른 사유' );
+	$label = array( 'match' => '<b style="color:#1d7a3a">이 주문</b>', 'done' => '<span style="color:#1d7a3a">이미 처리됨</span>', 'multi' => '<span style="color:#C2410C">후보 여럿</span>', 'none' => '못 찾음', 'parse' => '<span style="color:#C2410C">해석 실패</span>', 'skip' => '다른 사유' );
 	echo '<table class="widefat striped"><thead><tr><th style="width:5rem">문자</th><th style="width:9rem">받은 시각</th><th>입금자명</th><th style="width:7rem;text-align:right">금액</th><th>키플 판정</th><th style="width:7rem">우리 판정</th><th>주문 (주문자명)</th></tr></thead><tbody>';
 	foreach ( $list as $j ) {
 		$cell = '';
 		if ( 'match' === $j['verdict'] ) {
 			$cell = '<a href="' . esc_url( admin_url( 'post.php?post=' . (int) $j['order_id'] . '&action=edit' ) ) . '">#' . (int) $j['order_id'] . '</a> — 주문자 「' . esc_html( (string) $j['name'] ) . '」 · 금액 일치 · 후보 ' . (int) $j['cands'] . '건 중 이것뿐';
+		} elseif ( 'done' === $j['verdict'] ) {
+			$cell = '<a href="' . esc_url( admin_url( 'post.php?post=' . (int) $j['order_id'] . '&action=edit' ) ) . '">#' . (int) $j['order_id'] . '</a> — 주문자 「' . esc_html( (string) $j['name'] ) . '」 · 금액 일치 · 지금 상태 ' . esc_html( (string) ( $j['status'] ?? '' ) ) . ' (이미 손으로 처리하신 주문으로 보입니다 — 규칙대로면 자동으로 잡혔을 건)';
 		} elseif ( 'multi' === $j['verdict'] ) {
 			$cell = '끝이 맞는 주문 ' . count( (array) $j['matched'] ) . '건: ' . implode( ', ', array_map( fn( $id ) => '#' . (int) $id, (array) $j['matched'] ) );
 		} elseif ( 'none' === $j['verdict'] ) {
