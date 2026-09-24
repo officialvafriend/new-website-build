@@ -189,15 +189,17 @@ function members(): array {
 	}
 	$key = meta_key();
 	$sql = 'SELECT u.ID, u.user_email, u.display_name, u.user_registered,
-			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps, n.meta_value AS vname
+			v.meta_value AS verified, f.meta_value AS fn, l.meta_value AS ln, c.meta_value AS caps, n.meta_value AS vname, p.meta_value AS ph1, q.meta_value AS ph2
 		FROM ' . $wpdb->users . ' u
 		LEFT JOIN ' . $wpdb->usermeta . ' v ON v.user_id = u.ID AND v.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' n ON n.user_id = u.ID AND n.meta_key = %s
+		LEFT JOIN ' . $wpdb->usermeta . ' p ON p.user_id = u.ID AND p.meta_key = %s
+		LEFT JOIN ' . $wpdb->usermeta . ' q ON q.user_id = u.ID AND q.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' f ON f.user_id = u.ID AND f.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' l ON l.user_id = u.ID AND l.meta_key = %s
 		LEFT JOIN ' . $wpdb->usermeta . ' c ON c.user_id = u.ID AND c.meta_key = %s
 		ORDER BY u.ID ASC';
-	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'wd_verified_name', 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
+	$rows  = (array) $wpdb->get_results( $wpdb->prepare( $sql, $key, 'wd_verified_name', 'wd_phone', 'billing_phone', 'first_name', 'last_name', $wpdb->prefix . 'capabilities' ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	$staff = staff_roles();
 	$out   = array();
 	foreach ( $rows as $r ) {
@@ -213,7 +215,84 @@ function members(): array {
 			'registered' => (string) $r['user_registered'],
 			'verified'   => '1' === (string) $r['verified'] || 'yes' === (string) $r['verified'],
 			'vname'      => trim( (string) $r['vname'] ),
+			'phone'      => norm_phone( (string) $r['ph1'] ) ?: norm_phone( (string) $r['ph2'] ),
 		);
+	}
+	return $out;
+}
+
+/**
+ * 전화번호를 숫자만으로 — `010-1234-5678` · `+82 10 1234 5678` · `01012345678` 이 같은 값이 된다.
+ *
+ * @param string $v 원문.
+ * @return string 11자리 휴대폰이면 그것, 아니면 ''.
+ */
+function norm_phone( string $v ): string {
+	$d = preg_replace( '/\D+/', '', $v );
+	if ( null === $d ) {
+		return '';
+	}
+	if ( str_starts_with( $d, '82' ) && strlen( $d ) >= 11 ) {
+		$d = '0' . substr( $d, 2 );
+	}
+	return preg_match( '/^01[016789]\d{7,8}$/', $d ) ? $d : '';
+}
+
+/**
+ * 붙여 넣은 명단(아임웹 내보내기 · CSV · 엑셀 복사)에서 휴대폰 · 이메일을 뽑는다. 저장하지 않는다.
+ *
+ * @param string $text 원문.
+ * @return array{phones:array<string,true>,emails:array<string,true>,lines:int}
+ */
+function parse_roster( string $text ): array {
+	$phones = array();
+	$emails = array();
+	$lines  = 0;
+	foreach ( preg_split( '/\r\n|\r|\n/', $text ) as $line ) {
+		if ( '' === trim( $line ) ) {
+			continue;
+		}
+		++$lines;
+		if ( preg_match_all( '/(?:\+?82[\s-]?|0)1[016789][\s-]?\d{3,4}[\s-]?\d{4}\b/u', $line, $m ) ) {
+			foreach ( $m[0] as $raw ) {
+				$p = norm_phone( $raw );
+				if ( '' !== $p ) {
+					$phones[ $p ] = true;
+				}
+			}
+		}
+		if ( preg_match_all( '/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $line, $m ) ) {
+			foreach ( $m[0] as $e ) {
+				$emails[ strtolower( $e ) ] = true;
+			}
+		}
+	}
+	return array( 'phones' => $phones, 'emails' => $emails, 'lines' => $lines );
+}
+
+/**
+ * 인증 기록 없는 회원을 명단과 대조한다 — 전화번호가 먼저, 없으면 이메일.
+ *
+ * @param array<int,array<string,mixed>> $rows   classify() 를 거친 줄들.
+ * @param array{phones:array<string,true>,emails:array<string,true>} $roster parse_roster().
+ * @return array<int,array<string,mixed>> 인증 없는 줄에 `hit`('phone'|'email'|'') 을 붙여 돌려준다.
+ */
+function cross( array $rows, array $roster ): array {
+	$out = array();
+	foreach ( $rows as $r ) {
+		if ( ! empty( $r['verified'] ) ) {
+			continue;
+		}
+		$hit = '';
+		$ph  = (string) ( $r['phone'] ?? '' );
+		$em  = strtolower( trim( (string) ( $r['email'] ?? '' ) ) );
+		if ( '' !== $ph && isset( $roster['phones'][ $ph ] ) ) {
+			$hit = 'phone';
+		} elseif ( '' !== $em && isset( $roster['emails'][ $em ] ) ) {
+			$hit = 'email';
+		}
+		$r['hit'] = $hit;
+		$out[]    = $r;
 	}
 	return $out;
 }
@@ -289,6 +368,48 @@ function screen(): void {
 				. '<td>' . implode( ' · ', $flags ) . '</td></tr>';
 		}
 		echo '</tbody></table>';
+	}
+
+	// 옛 사이트(아임웹) 명단 대조 — 붙여 넣은 글은 이 요청 안에서만 쓰고 저장하지 않는다.
+	$roster_txt = '';
+	if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) && isset( $_POST['dhr_roster'] ) && check_admin_referer( 'dhr_verify_roster' ) ) {
+		$roster_txt = (string) wp_unslash( $_POST['dhr_roster'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- 숫자 · 이메일만 뽑아 쓴다
+	}
+	echo '<h2 style="margin-top:26px">옛 사이트(아임웹) 명단과 대조</h2>';
+	echo '<p style="max-width:56em;line-height:1.7;color:#646970;font-size:13px">아임웹 회원 내보내기(CSV · 엑셀)를 열어 <b>전체를 복사해 아래에 붙여 넣고</b> 대조를 누르세요. 줄마다 휴대폰 번호와 이메일만 뽑아 인증 기록 없는 회원과 견줍니다 — <b>전화번호가 같으면 같은 사람</b>으로, 없으면 이메일로 봅니다. 붙여 넣은 글은 저장하지 않습니다.</p>';
+	echo '<form method="post" style="max-width:56em">';
+	wp_nonce_field( 'dhr_verify_roster' );
+	echo '<textarea name="dhr_roster" rows="6" style="width:100%;font-family:monospace;font-size:12px" placeholder="이름,이메일,휴대폰,가입일 … (열 순서는 상관없습니다)">' . esc_textarea( $roster_txt ) . '</textarea>';
+	echo '<p><button type="submit" class="button button-primary">대조</button></p></form>';
+	if ( '' !== trim( $roster_txt ) ) {
+		$ro   = parse_roster( $roster_txt );
+		$cx   = cross( $rows, $ro );
+		$hitN = count( array_filter( $cx, fn( $r ) => '' !== $r['hit'] ) );
+		$miss = array_values( array_filter( $cx, fn( $r ) => '' === $r['hit'] ) );
+		usort( $miss, fn( $a, $b ) => ( $b['orders'] <=> $a['orders'] ) ?: ( $a['id'] <=> $b['id'] ) );
+		echo '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 14px">';
+		$card( '명단에서 읽은 번호', count( $ro['phones'] ), number_format_i18n( $ro['lines'] ) . '줄 · 이메일 ' . number_format_i18n( count( $ro['emails'] ) ) . '개' );
+		$card( '인증 없음 · 명단에 있음', $hitN, '옛 사이트 회원 — 재인증 대상에서 뺄 후보' );
+		$card( '인증 없음 · 명단에 없음', count( $miss ), '재인증이 필요한 사람', count( $miss ) > 0 );
+		echo '</div>';
+		if ( $miss ) {
+			echo '<table class="widefat striped"><thead><tr><th style="width:5rem">회원</th><th>이름</th><th>이메일</th><th style="width:9rem">휴대폰</th><th style="width:8rem">가입일</th><th style="width:5rem;text-align:right">주문</th><th style="width:9rem">마지막 주문</th></tr></thead><tbody>';
+			foreach ( $miss as $r ) {
+				echo '<tr><td><a href="' . esc_url( get_edit_user_link( (int) $r['id'] ) ) . '">#' . (int) $r['id'] . '</a></td>'
+					. '<td>' . esc_html( (string) $r['name'] ) . '</td><td>' . esc_html( (string) $r['email'] ) . '</td>'
+					. '<td>' . esc_html( '' !== (string) $r['phone'] ? (string) $r['phone'] : '—' ) . '</td>'
+					. '<td>' . esc_html( substr( (string) $r['registered'], 0, 10 ) ) . '</td>'
+					. '<td style="text-align:right">' . (int) $r['orders'] . '</td>'
+					. '<td>' . esc_html( '' !== (string) $r['last'] ? substr( (string) $r['last'], 0, 10 ) : '—' ) . '</td></tr>';
+			}
+			echo '</tbody></table>';
+		} else {
+			echo '<p><b>인증 기록 없는 회원이 전부 명단에 있습니다.</b></p>';
+		}
+		$noPhone = count( array_filter( $cx, fn( $r ) => '' === (string) $r['phone'] ) );
+		if ( $noPhone > 0 ) {
+			echo '<p style="color:#646970;font-size:13px">휴대폰 번호가 비어 있어 이메일로만 견준 회원 ' . esc_html( number_format_i18n( $noPhone ) ) . '명.</p>';
+		}
 	}
 
 	$dif = array_values( array_filter( $rows, fn( $r ) => ! empty( $r['differs'] ) ) );

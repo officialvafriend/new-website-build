@@ -1862,3 +1862,13 @@ $c5 = ($V.'classify')(['id'=>5,'name'=>'홍 길동','vname'=>'홍길동','verifi
 $c6 = ($V.'classify')(['id'=>6,'name'=>'길동','vname'=>'','verified'=>false,'orders'=>0,'last'=>''], $now);
 $ok($c4['differs'] && !$c5['differs'] && !$c6['differs'], '회원 이름 ≠ 인증 이름: 두 글자 vs 세 글자는 다름 · 빈칸 차이는 같음 · 인증 이름 없으면 셈 안 함');
 $ok(($V.'summary')([$c4,$c5,$c6])['differs'] === 1, '요약에 「이름 다름」 수');
+$ok(($V.'norm_phone')('010-1234-5678') === '01012345678' && ($V.'norm_phone')('+82 10 1234 5678') === '01012345678' && ($V.'norm_phone')('02-123-4567') === '' && ($V.'norm_phone')('') === '', '전화번호 정규화: 하이픈 · +82 · 유선번호는 제외');
+$ro = ($V.'parse_roster')("이름,이메일,휴대폰\n홍길동,hong@x.com,010-1234-5678\n김철수,kim@y.com,+82 10-9999-0000\n\n박영희,,010 5555 1234");
+$ok($ro['lines'] === 4 && count($ro['phones']) === 3 && isset($ro['phones']['01012345678']) && isset($ro['phones']['01099990000']) && isset($ro['phones']['01055551234']) && count($ro['emails']) === 2 && isset($ro['emails']['hong@x.com']), '명단 읽기: 줄 · 번호 세 꼴 · 이메일');
+$cx = ($V.'cross')([
+  ['id'=>1,'verified'=>true,'phone'=>'01012345678','email'=>'hong@x.com'],
+  ['id'=>2,'verified'=>false,'phone'=>'01012345678','email'=>'other@z.com'],
+  ['id'=>3,'verified'=>false,'phone'=>'','email'=>'KIM@y.com'],
+  ['id'=>4,'verified'=>false,'phone'=>'01000000001','email'=>'no@z.com'],
+], $ro);
+$ok(count($cx) === 3 && $cx[0]['hit'] === 'phone' && $cx[1]['hit'] === 'email' && $cx[2]['hit'] === '', '대조: 인증 있는 회원은 빼고 · 번호 먼저 · 번호 없으면 이메일(대소문자 무시) · 둘 다 없으면 빈 값');
