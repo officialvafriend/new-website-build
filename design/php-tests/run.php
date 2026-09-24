@@ -2046,5 +2046,72 @@ $ok($a['products']['10+1']['sales']==120000.0 && array_key_first($a['products'])
 $rep = ($An.'report')($a, '2026-09-24');
 $ok(str_contains($rep,'두 번 이상 산 회원 1명 (33%)') && str_contains($rep,'[달별 입금 이탈]') && str_contains($rep,'노보 → ') && !preg_match('/건강|금연|순하|해롭/', $rep), '붙여 넣기용 글: 핵심 숫자 · 절 제목 · 금지어 없음');
 
+
+// ───────────────────────────────────────────────── 시장가 대조 (2026-09-24)
+// 사장님: 「니코틴 액상을 빨리 처분」 · 「업자한테 팔 생각은 절대 없음」. 이 화면은 읽기 전용 —
+// 경쟁 가게 값을 우리 상품 옆에 놓고 제안 값을 적기만 한다. 값을 바꾸는 코드는 없다.
+require_once dirname(__DIR__, 2).'/includes/market.php';
+$M = 'Duckhoo\\Redesign\\Market\\';
+$vmHtml = '<div class="item-list-wrap"><div class="item-list"><a href="https://www.vmonster.co.kr/shop/1"></a><div class="reviewCount">REVIEW <em>511</em></div>'
+  . '<h5 class="product-name"><a href="https://www.vmonster.co.kr/shop/1"> 노보 타박멘솔 30ml </a></h5><div class="product-price"><span class="title-price">11,500원</span></div></div>'
+  . '<div class="item-list-wrap"><div class="item-list"><div class="reviewCount">REVIEW <em>10</em></div><h5 class="product-name"><a href="#"> 노보 블랙리퀴드 타박멘솔 30ml </a></h5><span class="title-price">12,000원</span></div>'
+  . '<div class="item-list-wrap"><div class="item-list"><span class="soldout">품절</span><h5 class="product-name"><a href="#"> 노보 세븐펀치 30ml </a></h5><span class="title-price">11,500원</span></div>'
+  . '<div class="item-list-wrap"><div class="item-list"><h5 class="product-name"><a href="#"> 얼려먹구싶오 소다 30ml </a></h5><span class="title-price">9,900원</span><div class="reviewCount">REVIEW <em>393</em></div></div>'
+  . '<div class="item-list-wrap"><div class="item-list"><h5 class="product-name"><a href="#"> 무니코틴 얼려먹구싶오 소다 30ml </a></h5><span class="title-price">8,500원</span></div>';
+$vm = ($M.'parse_vm')($vmHtml);
+$ok(count($vm) === 5, '브이몬스터 쪽에서 상품 5개를 읽는다');
+$ok($vm[0]['name'] === '노보 타박멘솔 30ml' && $vm[0]['price'] === 11500 && $vm[0]['reviews'] === 511, '이름 · 값 · 후기 수를 읽는다');
+$ok($vm[2]['out'] === true && $vm[0]['out'] === false, '품절 표시를 가른다');
+$w24 = ($M.'parse_w24')([
+  ['name' => '노보 고농도(0.98%) 입호흡 액상 30ml', 'prices' => ['price' => '9000'], 'is_in_stock' => true],
+  ['name' => '★대량구매★ 노보 고농도 입호흡 액상 30ml', 'prices' => ['price' => '8000'], 'is_in_stock' => true],
+  ['name' => '[10개 세트] 노보 블랙리퀴드 입호흡 액상 30ml', 'prices' => ['price' => '85000'], 'is_in_stock' => true],
+  ['name' => '★대량구매★ 노보 블랙리퀴드 입호흡 액상 30ml', 'prices' => ['price' => '8000'], 'is_in_stock' => true],
+  ['name' => '▶유통기한 이슈 상품◀ 노보 옐로우펀치 30ml', 'prices' => ['price' => '7900'], 'is_in_stock' => false],
+  ['name' => '[무니코틴] 얼려먹구싶오 입호흡 액상 30ml', 'prices' => ['price' => '9500'], 'is_in_stock' => true],
+]);
+$ok(count($w24) === 5, '겨울마을 「유통기한 이슈」 칸은 뺀다');
+$ok($w24[1]['bulk'] === true && $w24[0]['bulk'] === false, '★대량구매★ 는 업자 단으로 표시한다');
+$ok($w24[2]['set'] === 10 && $w24[2]['price'] === 85000, '[10개 세트] 는 병 수 10 으로 읽는다');
+
+$ok(($M.'brand_of')('[노보 블랙 리퀴드] 10+1 | 금액 130,000원') === '노보 블랙', '「노보 블랙 리퀴드」 묶음의 브랜드는 노보 블랙');
+$ok(($M.'bottles')('[노보 리퀴드] 10+1 | 금액 120,000원') === 11 && ($M.'bottles')('[빌런] ★ 맛돌이 액상 ★ 빌런 5병 EVENT') === 5 && ($M.'bottles')('[노보] 타박멘솔 (9.8mg / 30ml)') === 1, '병 수: 10+1 → 11 · 5병 → 5 · 낱병 → 1');
+$ok(($M.'flavor_of')('[맥스쿨] 맥스쿨 소다 무니코틴 액상') === '소다', '브랜드가 두 번 붙은 이름에서 맛만 남긴다');
+
+$data = ['vm' => $vm, 'w24' => $w24];
+$f = ($M.'find_row')('[노보] 타박멘솔 (9.8mg / 30ml)', $vm);
+$ok($f['single']['name'] === '노보 타박멘솔 30ml', '「노보 타박멘솔」은 블랙이 아닌 쪽과 맞춘다');
+$f = ($M.'find_row')('[노보 블랙] 타박멘솔 (9.8mg / 30ml)', $vm);
+$ok($f['single']['name'] === '노보 블랙리퀴드 타박멘솔 30ml', '「노보 블랙 타박멘솔」은 블랙리퀴드와 맞춘다');
+$f = ($M.'find_row')('[얼려먹구싶오] 얼려먹구싶오 소다 무니코틴 액상', $vm);
+$ok($f['single']['price'] === 8500, '무니코틴은 무니코틴판(8,500)과 맞추지 니코틴판(9,900)과 맞추지 않는다');
+$f = ($M.'find_row')('[노보 리퀴드] 10+1 | 금액 120,000원', $vm);
+$ok($f['single']['name'] === '노보 타박멘솔 30ml', '묶음은 그 브랜드의 재고 있는 가장 싼 낱병과 견준다 (품절 세븐펀치는 뺀다)');
+$f = ($M.'find_row')('[노보] 타박멘솔 (9.8mg / 30ml)', $w24);
+$ok($f['single']['price'] === 9000 && $f['bulk']['price'] === 8000, '겨울마을처럼 맛이 옵션인 가게는 브랜드만 같은 낱병(9,000)으로 떨어진다');
+$f = ($M.'find_row')('[노보 블랙 리퀴드] 10+1 | 금액 130,000원', $w24);
+$ok($f['set']['set'] === 10 && $f['bulk']['price'] === 8000, '겨울마을에서 세트와 대량 단을 따로 찾는다');
+$f = ($M.'find_row')('[빌런] 아이스빌런청사과 (9.8mg / 30ml)', $vm);
+$ok($f['single'] === null, '없는 브랜드는 못 맞춘 것으로 둔다');
+$f = ($M.'find_row')('[노보] 데저트 (9.8mg / 30ml)', $vm, '노보 세븐펀치 30ml');
+$ok($f['single']['name'] === '노보 세븐펀치 30ml', '못 박은 이름이 있으면 그것을 쓴다');
+
+$ours = [
+  ['id' => 242, 'name' => '[노보] 타박멘솔 (9.8mg / 30ml)', 'price' => 13000, 'bottles' => 1],
+  ['id' => 146, 'name' => '[노보 블랙 리퀴드] 10+1 | 금액 130,000원', 'price' => 130000, 'bottles' => 11],
+  ['id' => 226, 'name' => '[빌런] 아이스빌런레즈애플 (9.8mg / 30ml)', 'price' => 10900, 'bottles' => 1],
+];
+$rows = ($M.'compare')($ours, $data);
+$ok($rows[0]['min'] === 9000 && $rows[0]['gap'] === 44, '노보 타박멘솔: 시장 최저(낱병) 9,000 · 우리가 44% 비싸다');
+$ok($rows[0]['comp']['w24']['bulk'] === 8000 && $rows[0]['min'] !== 8000, '50병 대량 단(8,000)은 적기만 하고 시장가로 세지 않는다 — 업자 절대 없음');
+$ok($rows[1]['per'] === 11818 && $rows[1]['comp']['w24']['set'] === 8500, '블랙 10+1 은 병당 11,818 · 겨울마을 블랙 10개 세트 병당 8,500');
+$ok($rows[2]['gap'] === null && $rows[2]['min'] === 0, '못 맞춘 상품은 차이가 없다');
+$ok(($M.'suggest')($rows[0], 'vm') === 11500 && ($M.'suggest')($rows[0], 'w24') === 9000 && ($M.'suggest')($rows[0], 'min') === 9000, '제안 값: 브이몬스터 11,500 · 겨울마을 9,000 · 둘 중 싼 것 9,000');
+$ok(($M.'suggest')($rows[1], 'w24') === 93500 && ($M.'suggest')($rows[1], 'vm') === 132000, '묶음 제안은 병당 × 11, 100원 단위로 내린다 (세트 8,500 × 11 = 93,500 · 브이몬스터 블랙 낱병 12,000 × 11)');
+$ok(($M.'suggest')($rows[2], 'min') === 0, '기준이 없으면 제안하지 않는다');
+$ok(!function_exists($M.'apply') && !function_exists($M.'revert'), '값을 바꾸는 함수가 없다 — 읽기 전용');
+$rows = ($M.'compare')($ours, $data, [242 => 'vm:노보 세븐펀치 30ml']);
+$ok($rows[0]['comp']['vm']['name'] === '노보 세븐펀치 30ml' && $rows[0]['comp']['w24']['single'] === 9000, '「vm:이름」은 그 가게에서만 못 박고 다른 가게는 이름으로 맞춘다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

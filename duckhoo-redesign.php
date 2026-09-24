@@ -85,6 +85,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/today.php';       // 오늘 할 일 — 화면 · 대시보드 위젯 · 아침 메일(크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/brief.php';       // 클로드 아침 브리핑 — 집계 숫자를 키로 닫힌 REST 주소로 (REST 라 admin 밖)
+require_once plugin_dir_path( __FILE__ ) . 'includes/market.php';      // 도구 → 시장가 대조 (읽기 전용) — 경쟁 값을 크론이 받는다 (크론이라 admin 밖)
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
