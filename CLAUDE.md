@@ -2529,3 +2529,20 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
   새로 못 박힌 결정이 생기면 **CLAUDE.md 에 적는 것으로 충분하다** — 루틴이 마지막 500줄을 읽는다
 
 검증: `php design/php-tests/run.php` (브리핑 6개) · 프로덕션 `curl -I …/wp-json/duckhoo/v1/brief` 가 키 없이 401/403.
+
+### 브리핑은 디스코드로 (2026-09-24, 사장님 「폰 알림은 작업자 폰으로 안 온다」)
+
+루틴의 푸시 · 메일은 클로드 계정 주인에게만 간다. 사장님이 고른 것은 **디스코드** (카카오는 비즈니스 채널 · 대행사가
+필요해 뺐고, 텔레그램은 새 앱이라 뺐다).
+
+- **웹훅 주소는 사이트가 쥔다** — 오늘 할 일 화면 「디스코드로 받기」 상자(옵션 `duckhoo_discord_webhook`, 필터
+  `duckhoo_discord_webhook`). `discord_ok()` 가 `https://discord(app).com/api/webhooks/…` 꼴만 받는다 — 글이 다른 곳으로
+  새지 않게. 「시험 메시지 보내기」 버튼
+- **브리핑 세션은 웹훅을 모른다.** 다 쓴 글을 `POST /wp-json/duckhoo/v1/brief` (같은 키, `text`)로 보내면 사이트가
+  `Today\discord_send()` 로 옮긴다. 받는 곳을 나중에 바꿔도 루틴 프롬프트는 그대로다. 응답 `{ok, chunks, discord}` —
+  `discord:false` 면 웹훅이 아직 없는 것
+- 10시 30분 오늘 할 일도 같은 웹훅으로 간다 (`send_mail()` 이 메일과 디스코드 둘 다). 디스코드 한 메시지 2,000자 제한 →
+  `discord_chunks()` 가 줄 단위로 1,900자씩 나눈다. `allowed_mentions` 를 비워 @everyone 이 안 울리게
+- 루틴 프롬프트: 브리핑을 쓴 뒤 그 전문을 POST 한다. `ok:false` 면 마지막 메시지에 한 줄 적는다 (푸시 · 메일은 그대로 나간다)
+
+검증: `php design/php-tests/run.php` (디스코드 6개 — 주소 꼴 · 조각 나누기 · 웹훅 없으면 0) · `scratchpad/today-render.php`.

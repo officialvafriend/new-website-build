@@ -199,6 +199,25 @@ function payload(): array {
  * REST.
  */
 function routes(): void {
+	// 브리핑 세션이 다 쓴 글을 여기로 보내면 사이트가 디스코드(오늘 할 일 화면의 웹훅)로 옮긴다.
+	// 세션은 웹훅 주소를 몰라도 되고, 받는 곳을 바꿔도 루틴은 그대로다.
+	register_rest_route( 'duckhoo/v1', '/brief', array(
+		'methods'             => 'POST',
+		'permission_callback' => fn( $req ) => authorized( $req ),
+		'callback'            => function ( $req ) {
+			$text = is_object( $req ) && method_exists( $req, 'get_param' ) ? (string) $req->get_param( 'text' ) : '';
+			$text = trim( wp_strip_all_tags( $text ) );
+			if ( '' === $text ) {
+				return new \WP_Error( 'dhr_brief_empty', 'text 가 비어 있습니다', array( 'status' => 400 ) );
+			}
+			if ( mb_strlen( $text ) > 12000 ) {
+				$text = mb_substr( $text, 0, 12000 );
+			}
+			$n = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_send' ) ? \Duckhoo\Redesign\Today\discord_send( $text ) : 0;
+			$configured = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_url' ) && '' !== \Duckhoo\Redesign\Today\discord_url();
+			return rest_ensure_response( array( 'ok' => $n > 0, 'chunks' => $n, 'discord' => $configured ) );
+		},
+	) );
 	register_rest_route( 'duckhoo/v1', '/brief', array(
 		'methods'             => 'GET',
 		'permission_callback' => fn( $req ) => authorized( $req ),

@@ -25,6 +25,7 @@ defined( 'ABSPATH' ) || exit;
 const SLUG      = 'duckhoo-today';
 const OPT_DONE  = 'duckhoo_today_done';
 const OPT_MAIL  = 'duckhoo_today_mail';
+const OPT_DISC  = 'duckhoo_discord_webhook';
 const CRON      = 'duckhoo_today_mail';
 const CACHE     = 'dhr_today_v1';
 const MAIL_AT   = '10:30'; // 사이트 시간 — 사장님 11시 출근, 열어 보면 와 있게
@@ -596,6 +597,22 @@ function screen(): void {
 		if ( isset( $_POST['dhr_mail_set'] ) ) {
 			update_option( OPT_MAIL, empty( $_POST['dhr_mail'] ) ? '0' : '1', false );
 		}
+		if ( isset( $_POST['dhr_disc_set'] ) ) {
+			$u = esc_url_raw( trim( (string) wp_unslash( $_POST['dhr_disc'] ?? '' ) ) );
+			if ( '' === $u || discord_ok( $u ) ) {
+				update_option( OPT_DISC, $u, false );
+			} else {
+				add_action( 'admin_notices', function () {
+					echo '<div class="notice notice-error"><p>디스코드 웹훅 주소가 아닙니다. <code>https://discord.com/api/webhooks/…</code> 꼴이어야 합니다.</p></div>';
+				} );
+			}
+		}
+		if ( isset( $_POST['dhr_disc_test'] ) ) {
+			$ok = discord_send( '액상덕후 사이트에서 보내는 시험 메시지입니다. 이 방으로 아침 브리핑과 오늘 할 일이 옵니다.' ) > 0;
+			add_action( 'admin_notices', function () use ( $ok ) {
+				echo '<div class="notice notice-' . ( $ok ? 'success' : 'error' ) . '"><p>' . ( $ok ? '디스코드로 보냈습니다. 방을 확인해 보세요.' : '디스코드로 못 보냈습니다. 웹훅 주소를 다시 확인해 주세요.' ) . '</p></div>';
+			} );
+		}
 		if ( isset( $_POST['dhr_mail_now'] ) ) {
 			$sent = send_mail( true );
 			add_action( 'admin_notices', function () use ( $sent ) {
@@ -687,6 +704,15 @@ function screen(): void {
 	echo '<button class="button" name="dhr_mail_now" value="1">지금 보내 보기</button>';
 	echo '</form>';
 
+	$disc = discord_url();
+	echo '<form method="post" class="dhr-td__mail" style="margin-top:12px"><input type="hidden" name="dhr_today_nonce" value="' . esc_attr( wp_create_nonce( 'dhr_today' ) ) . '"><input type="hidden" name="dhr_disc_set" value="1">';
+	echo '<b>디스코드로 받기</b> — 디스코드 방의 <b>웹훅 주소</b>를 넣으면 아침 브리핑(11시)과 오늘 할 일(10시 30분)이 그 방으로 옵니다. ';
+	echo '만드는 법: 디스코드 방 → 채널 옆 톱니바퀴(채널 편집) → 연동 → 웹훅 → 새 웹훅 → 「웹훅 URL 복사」.<br>';
+	echo '<input type="url" name="dhr_disc" value="' . esc_attr( $disc ) . '" placeholder="https://discord.com/api/webhooks/…" style="width:100%;max-width:560px;margin:6px 0"> ';
+	echo '<button class="button button-primary">저장</button> ';
+	echo '<button class="button" name="dhr_disc_test" value="1"' . ( '' === $disc ? ' disabled' : '' ) . '>시험 메시지 보내기</button>';
+	echo '</form>';
+
 	if ( function_exists( '\\Duckhoo\\Redesign\\Brief\\key_box' ) ) {
 		\Duckhoo\Redesign\Brief\key_box();
 	}
@@ -774,6 +800,86 @@ function widget_html(): void {
 	echo '<p style="margin:10px 0 0"><a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG ) ) . '">전체 보기</a></p>';
 }
 
+/* ── 디스코드 ────────────────────────────────────────────────────────── */
+
+/**
+ * 디스코드 웹훅 주소. 비어 있으면 안 보낸다.
+ */
+function discord_url(): string {
+	return (string) apply_filters( 'duckhoo_discord_webhook', trim( (string) get_option( OPT_DISC, '' ) ) );
+}
+
+/**
+ * 웹훅 주소가 디스코드 것인가 (다른 곳으로 글이 새지 않게).
+ */
+function discord_ok( string $url ): bool {
+	return (bool) preg_match( '#^https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/\d+/[A-Za-z0-9_\-]+$#', $url );
+}
+
+/**
+ * 디스코드 한 메시지는 2,000자까지 — 줄 단위로 나눈다. 순수 함수.
+ *
+ * @param string $text 글.
+ * @param int    $max  한 조각 최대 글자 수.
+ * @return string[]
+ */
+function discord_chunks( string $text, int $max = 1900 ): array {
+	$text = trim( str_replace( "\r\n", "\n", $text ) );
+	if ( '' === $text ) {
+		return array();
+	}
+	$out = array();
+	$cur = '';
+	foreach ( explode( "\n", $text ) as $line ) {
+		while ( mb_strlen( $line ) > $max ) {
+			if ( '' !== $cur ) {
+				$out[] = $cur;
+				$cur   = '';
+			}
+			$out[] = mb_substr( $line, 0, $max );
+			$line  = mb_substr( $line, $max );
+		}
+		$try = '' === $cur ? $line : $cur . "\n" . $line;
+		if ( mb_strlen( $try ) > $max ) {
+			$out[] = $cur;
+			$cur   = $line;
+		} else {
+			$cur = $try;
+		}
+	}
+	if ( '' !== $cur ) {
+		$out[] = $cur;
+	}
+	return $out;
+}
+
+/**
+ * 디스코드로 보낸다. 성공한 조각 수를 돌려준다 (0 = 안 보냄 · 실패).
+ */
+function discord_send( string $text ): int {
+	$url = discord_url();
+	if ( '' === $url || ! discord_ok( $url ) || ! function_exists( 'wp_remote_post' ) ) {
+		return 0;
+	}
+	$n = 0;
+	foreach ( discord_chunks( $text ) as $chunk ) {
+		$r = wp_remote_post( $url, array(
+			'timeout' => 15,
+			'headers' => array( 'Content-Type' => 'application/json' ),
+			'body'    => wp_json_encode( array( 'content' => $chunk, 'allowed_mentions' => array( 'parse' => array() ) ) ),
+		) );
+		if ( is_wp_error( $r ) ) {
+			break;
+		}
+		$code = (int) wp_remote_retrieve_response_code( $r );
+		if ( $code < 200 || $code >= 300 ) {
+			break;
+		}
+		++$n;
+	}
+	return $n;
+}
+
 /* ── 아침 메일 ───────────────────────────────────────────────────────── */
 
 /**
@@ -845,7 +951,11 @@ function send_mail( bool $force = false ): bool {
 	$w    = array( '일', '월', '화', '수', '목', '금', '토' )[ $c['dow'] ];
 	$subj = '[액상덕후] 오늘 할 일 ' . count( $open ) . '개 — ' . gmdate( 'n월 j일', strtotime( $c['today'] ) ) . '(' . $w . ')';
 	$body = mail_text( $items, (array) ( $f['yday'] ?? array() ), admin_url( 'admin.php?page=' . SLUG ) );
-	return (bool) wp_mail( $to, $subj, $body );
+	$sent = (bool) wp_mail( $to, $subj, $body );
+	if ( '' !== discord_url() ) {
+		$sent = discord_send( "**" . $subj . "**\n" . $body ) > 0 || $sent;
+	}
+	return $sent;
 }
 
 /**

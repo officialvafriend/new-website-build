@@ -1971,5 +1971,15 @@ $st = ($Bf.'strip_facts')(['onhold'=>['n'=>7,'stale'=>2,'stale_ids'=>[101,102]],
 $ok($st['onhold']===7 && $st['onhold_stale']===2 && $st['to_ship']===4 && $st['low_stock']===['노보 데저트 2개'] && $st['holiday']==='추석 연휴 — 택배 출고가 없습니다', '숫자만 남긴다');
 $ok(!isset($st['stale_ids']) && !str_contains(json_encode($st), '101') && $st['inquiries_open'] === -1, '주문 번호 목록은 빠지고, 못 센 문의는 -1 그대로');
 
+/* ── 디스코드 (includes/today.php) — 조각 나누기 · 주소 검사 ─────────────────────────── */
+$ok(($T.'discord_ok')('https://discord.com/api/webhooks/123456/abc_DEF-ghi') && ($T.'discord_ok')('https://discordapp.com/api/webhooks/1/x'), '디스코드 웹훅 주소 꼴을 받는다');
+$ok(!($T.'discord_ok')('https://example.com/api/webhooks/1/x') && !($T.'discord_ok')('http://discord.com/api/webhooks/1/x') && !($T.'discord_ok')(''), '다른 주소 · http · 빈 값은 거절 — 글이 밖으로 새지 않게');
+$ok(($T.'discord_chunks')("한 줄\n두 줄") === ["한 줄\n두 줄"] && ($T.'discord_chunks')("  \n") === [], '짧은 글은 한 조각 · 빈 글은 없음');
+$ch = ($T.'discord_chunks')(str_repeat("가나다라마바사아자차\n", 30), 50);
+$ok(count($ch) === 8 && max(array_map('mb_strlen', $ch)) <= 50 && !str_contains(implode('', $ch), "\n\n"), '긴 글은 줄 단위로 50자 안에서 나눈다');
+$ok(count(($T.'discord_chunks')(str_repeat('가', 120), 50)) === 3, '한 줄이 너무 길면 그 줄 안에서도 자른다');
+$GLOBALS['__options']['duckhoo_discord_webhook'] = '';
+$ok(($T.'discord_send')('x') === 0, '웹훅이 없으면 안 보내고 0');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
