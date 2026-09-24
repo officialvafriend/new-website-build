@@ -127,7 +127,7 @@ function notice(): void {
 		return;
 	}
 	echo '<div class="wrap"><div class="dhr-gate" role="status" style="margin-top:1rem"><span>'
-		. '<b>주문 전에 본인확인을 한 번만 해 주세요.</b> 옛 사이트에서 옮겨 온 계정이라 이 사이트의 인증 기록이 없습니다. '
+		. '<b>주문 전에 본인확인을 한 번만 해 주세요.</b> '
 		. '아래 <b>재인증</b> 버튼으로 PASS 본인확인을 마치면 다음부터는 묻지 않습니다.</span> '
 		. '<a href="' . esc_url( function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' ) ) . '">인증을 마쳤으면 결제로 돌아가기</a>'
 		. '</div></div>';

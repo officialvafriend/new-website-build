@@ -2439,7 +2439,7 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
   두 번 안 적음). 회원 정보에 쓰는 유일한 자리 — 사장님 「딱 저 6명만 인증하면 될듯」으로 허락
 - **재인증 문** `includes/verify-gate.php` — `wd_phone_verified` 도 `_dhr_legacy_verified` 도 없는 회원만
   결제 화면(`is_checkout()`, order-received · order-pay 제외)에서 테마의 재인증 화면 `/profile-edit/?dhr_reverify=1` 로
-  보낸다 (`template_redirect` 5). 그 화면 위에 왜 왔는지 · 끝나면 결제로 돌아가는 링크(`.dhr-gate`, `wp_body_open` 7).
+  보낸다 (`template_redirect` 5). 그 화면 위에 「주문 전에 본인확인을 한 번만」 안내 · 끝나면 결제로 돌아가는 링크 (「옛 사이트」라는 말은 손님에게 안 보이게 뺌 — 사장님 2026-09-24)(`.dhr-gate`, `wp_body_open` 7).
   재인증이 끝나면 테마가 `wd_phone_verified` 를 적으므로 다음부터 안 묻고, 미성년자면 테마가 그 자리에서 탈퇴시킨다.
   **다른 3,355명에게는 아무 일도 없다.** 끄기: `duckhoo_reverify_gate` → false · 주소: `duckhoo_reverify_url`
 - 점검 화면 카드에 「결제 전 재인증 대상」(둘 다 없는 수)을 더했다. 목록의 옛 사이트 확인 회원은 초록 표시
