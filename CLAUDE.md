@@ -2445,3 +2445,25 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
 - 점검 화면 카드에 「결제 전 재인증 대상」(둘 다 없는 수)을 더했다. 목록의 옛 사이트 확인 회원은 초록 표시
 
 검증: `php design/php-tests/run.php` (명단 읽기 · 대조 · 표시 · 문 여닫기 9개).
+
+### 도구 → 입금 2차 판정 (2026-09-24, `includes/bank-second.php`, 읽기 전용)
+
+사장님이 `class-order-matcher.php` 전체를 보내 줬다 (코드 찾기 「파일 통째로 보기」로 — 낱말 넷을 따로 찾게 하는
+대신 붙인 칸). 확정된 것: 필터는 `keyple_bank_awaiting_statuses` 하나뿐, 이름 비교에 끼어들 자리 없음 ·
+주문 쪽 이름 후보는 청구/배송 성+이름 · 이름+성 · formatted · `_deposit_payer_name` 메타 · 후보 주문은 금액 완전
+일치 + 입금전/확인필요/on-hold/pending + `keyple_bank_match_window`(14일) · `update_sms()` 는 protected,
+**`manual_link( $sms_id, $order_id, 'confirm' )` 이 public** (관리자 수동 입금확인과 같은 길) · 문자 표는
+`Keyple_Bank_Installer::table( TABLE_SMS )`, 칸 `depositor_name · amount · match_status · match_reason · order_id`.
+헬퍼 앱 화면의 「자동매칭 성공 · 이름+금액 일치」 「확인필요: 입금자명 불일치」가 이 플러그인 문구라 도는 쪽도 확정.
+
+- **판정 규칙은 끝 일치** — 주문자명(정규화)이 입금자명(정규화 · 접두어 뗀 것)의 **끝**에 붙어야 한다.
+  「금고홍길동」 ← 「홍길동」 · 「길동」 둘 다 잡고, 「농협이상섭」 ← 「이상」은 안 잡는다 (들어 있는가가 아니라 끝인가).
+  금액 같은 후보 중 **딱 하나**일 때만 「이 주문」, 둘 이상이면 「후보 여럿」. 접두어는 키플 목록 + 금고 · 저축 · 축협 · 씨티 …
+  (`duckhoo_bank_prefixes`). 문자 표의 시각 · 원문 칸 이름은 몰라서 `SHOW COLUMNS` 로 있는 것을 고른다 (1시간 캐시)
+- **자동으로 입금확인까지 하는 판은 이 세션 권한에서 막혔다** (돈이 걸린 주문 상태를 자동으로 바꾸는 코드 — 「Modify
+  Shared Resources」). 그래서 **읽기 전용**: 최근 14일 「주문 못 붙인 확인필요 문자」를 카드(이 주문 · 후보 여럿 · 못 찾음 ·
+  해석 실패)와 표로 보여 주고, 맞다고 보이면 사장님이 키플 문자 목록에서 연결 · 입금확인을 누른다. 자동화하려면
+  `manual_link(…,'confirm')` 을 부르는 5분 크론 한 겹이면 되지만 **사장님 결정 + 권한**이 필요하다
+- 「해석 실패」(금액 0)는 이름 비교가 아니라 `class-sms-parser.php` 문제 — 원문 칸을 표에 같이 찍는다
+
+검증: `php design/php-tests/run.php` (2차 판정 9개 — 접두어 · 끝 일치 · 후보 하나/여럿/없음 · 이름 후보 · 해석 실패).

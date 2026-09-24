@@ -109,6 +109,8 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/price-check-admin.php';
 	// 도구 → 성인인증 점검 — 인증 판정이 걸리기 전에 가입한 회원을 센다 (읽기 전용)
 	require_once plugin_dir_path( __FILE__ ) . 'includes/verify-admin.php';
+	// 도구 → 입금 2차 판정 — 키플이 「입금자명 불일치」로 둔 문자를 끝 일치로 다시 판정해 보여 준다 (읽기 전용)
+	require_once plugin_dir_path( __FILE__ ) . 'includes/bank-second.php';
 }
 
 

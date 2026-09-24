@@ -1895,3 +1895,21 @@ $sm2 = ($V.'summary')([
   ['verified'=>false,'legacy'=>true,'orders'=>0], ['verified'=>false,'legacy'=>false,'orders'=>1], ['verified'=>true,'orders'=>0],
 ]);
 $ok($sm2['unverified'] === 2 && $sm2['legacy'] === 1 && $sm2['gate'] === 1, '요약: 인증 없음 2 = 옛 사이트 확인 1 + 재인증 대상 1');
+
+/* ── 입금 2차 판정 (includes/bank-second.php) — 읽기 전용 판정 규칙 ────────────────────── */
+require_once dirname(__DIR__, 2).'/includes/bank-second.php';
+$B = 'Duckhoo\\Redesign\\Bank2\\';
+$ok(($B.'norm')(' 홍 길동 (a)') === '홍길동a' && ($B.'norm')('') === '', '정규화: 공백 · 괄호 제거 · 소문자 (키플과 같게)');
+$v = ($B.'variants')('금고홍길동');
+$ok(in_array('금고홍길동', $v, true) && in_array('홍길동', $v, true), '「금고홍길동」 → 원문 + 「홍길동」 (키플에 없던 「금고」 접두어)');
+$ok(in_array('최훈영', ($B.'variants')('토스최훈영'), true) && ($B.'variants')('') === [], '「토스최훈영」 → 「최훈영」 · 빈 이름은 없음');
+$ok(($B.'tail_match')('금고홍길동', ['홍길동']) === '홍길동' && ($B.'tail_match')('금고홍길동', ['길동']) === '길동' && ($B.'tail_match')('홍길동', ['길동']) === '길동', '끝 일치: 세 글자 · 두 글자(옛 회원) 둘 다 잡는다');
+$ok(($B.'tail_match')('농협이상섭', ['이상']) === '' && ($B.'tail_match')('농협이상섭', ['상섭']) === '상섭' && ($B.'tail_match')('김민수', ['박민수']) === '', '들어 있기만 하면 안 되고 끝이라야 한다 · 다른 성은 안 맞는다');
+$p = ($B.'pick')('금고홍길동', [101 => ['홍길동'], 102 => ['김철수']]);
+$ok($p['verdict'] === 'match' && $p['order_id'] === 101 && $p['name'] === '홍길동', '후보 둘 중 하나만 맞으면 「이 주문」');
+$ok(($B.'pick')('금고홍길동', [101 => ['홍길동'], 103 => ['길동']])['verdict'] === 'multi' && ($B.'pick')('금고홍길동', [102 => ['김철수']])['verdict'] === 'none' && ($B.'pick')('금고홍길동', [])['verdict'] === 'none', '둘 이상 맞으면 「후보 여럿」 · 없으면 「못 찾음」 — 어느 쪽도 주문을 고르지 않는다');
+$fo = new class { public function get_billing_last_name(){ return ''; } public function get_billing_first_name(){ return '길동'; } public function get_shipping_first_name(){ return '홍길동'; } public function get_shipping_last_name(){ return ''; } public function get_formatted_billing_full_name(){ return '길동'; } public function get_formatted_shipping_full_name(){ return '홍길동'; } public function get_meta($k){ return $k === '_deposit_payer_name' ? '홍 길동' : ''; } };
+$nm = ($B.'names_of')($fo);
+$ok(in_array('길동', $nm, true) && in_array('홍길동', $nm, true) && count($nm) === 2, '주문 쪽 이름: 청구 · 배송 · 예금주 메타를 모아 중복 없이');
+$j = ($B.'judge')(['id' => 7, 'depositor_name' => '농협이상섭', 'amount' => 0, 'match_reason' => '확인필요: SMS 파싱 실패']);
+$ok($j['verdict'] === 'parse' && ($B.'judge')(['id' => 8, 'depositor_name' => '홍길동', 'amount' => 1000, 'match_reason' => '확인필요: 과입금'])['verdict'] === 'skip', '금액 0 은 「해석 실패」 · 입금자명 사유가 아니면 건너뜀');
