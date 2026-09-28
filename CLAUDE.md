@@ -2725,3 +2725,20 @@ alt 채우기(없음 · 빈 것 · 홑따옴표) · 첨부 alt) · 프로덕션 
 **모르는 플러그인의 키 · 필터는 소스에서 확인하고 쓴다.**
 
 검증: `php design/php-tests/run.php` (13개) · `scratchpad/live/joba-test.mjs`(안 고르기 · 고르기 · 담기 · 뒤처리) · `joba-dump.mjs`(select · 게이트 상태) · curl Store API.
+
+## 주문내역이 안 보이는 손님 — 도구 → 주문내역 진단 (2026-09-28)
+
+사장님: 「주문내역 안 보임. 직원들 개인 계정으로 테스트해 본 결과 직원들은 나옴. 종종 다른 고객들은 안 보임」 (#202609280005056 의
+고객 #279209536 · 배송준비중 · 회원 할인 −46,000). **우리 쪽에는 줄을 숨기는 것이 없다** — shell.css 는 표를 카드로 펼 뿐이고
+(`display:none` 은 thead 뿐), 우리 훅 셋(`points` 취소 문의 · `tracking` 배송조회 · `review-ask`)은 버튼만 더한다.
+손님 계정이 없어 화면을 못 보므로 `includes/orders-doctor.php`(**읽기 전용**)가 워드커머스가 주문 목록을 만드는 길을 그 회원
+번호로 그대로 밟는다: ①회원 · **같은 전화 · 이름의 다른 계정** ②표에서 직접 센 주문(HPOS `customer_id` / `_customer_user`, 상태별)
+③마이페이지 질의(`wc_get_orders` + `woocommerce_my_account_my_orders_query` 필터, 등록된 상태 전부) ④그 자리의 콜백 이름
+⑤`myaccount/orders.php` 가 테마 override 인지 ⑥`wp_set_current_user` 로 잠깐 바꿔 `woocommerce_account_orders_endpoint` 를 그려
+줄 수 · 예외. `verdict( raw, listed, drawn, twins )` 가 어디가 문제인지 한 줄로 — 0건이면 **다른 계정으로 로그인**을 먼저 의심하고,
+표 > 질의면 필터 · 상태 등록, 그리다 죽으면 템플릿. **사장님이 돌려 결과를 붙여 주면 다음 손을 정한다.**
+
+가설 순서: (가) 손님이 다른 계정(옛 아임웹 계정 · 이메일 둘)으로 로그인 (나) 테마 · 키플 필터가 커스텀 상태(배송준비중 · 배송완료)를
+걸러 직원의 입금전 시험 주문만 보임 (다) 회원 할인 줄이 있는 주문에서 템플릿이 죽음.
+
+검증: `php design/php-tests/run.php` (판정 5개).

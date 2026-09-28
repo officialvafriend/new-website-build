@@ -2245,5 +2245,14 @@ $caught = ''; try { ($MP.'store_add')(new WC_Product(146, '노보 10병', 130000
 $ok($caught === '', '다른 상품은 Store API 그대로');
 unset($GLOBALS['__postmeta'][3435]);
 
+// ───────────────────────────────────────────────── 주문내역 진단 (2026-09-28)
+require_once dirname(__DIR__, 2).'/includes/orders-doctor.php';
+$OD = 'Duckhoo\\Redesign\\OrdersDoctor\\';
+$ok(($OD.'verdict')(0, 0, 0, false)['level'] === 'warn' && str_contains(($OD.'verdict')(0, 0, 0, true)['text'], '다른 계정'), '주문이 0건이면 계정 문제를 의심 (다른 계정이 있으면 그것부터)');
+$ok(($OD.'verdict')(5, 2, 2, false)['level'] === 'bad' && str_contains(($OD.'verdict')(5, 2, 2, false)['text'], 'my_orders_query'), '표 5건 · 질의 2건이면 필터 · 상태 등록이 범인');
+$ok(($OD.'verdict')(5, 5, -1, false)['level'] === 'bad' && str_contains(($OD.'verdict')(5, 5, -1, false)['text'], '죽는다'), '그리다 죽으면 템플릿 예외');
+$ok(($OD.'verdict')(5, 5, 3, false)['level'] === 'bad', '질의 5 · 그린 줄 3 이면 템플릿이 건너뛴다');
+$ok(($OD.'verdict')(5, 5, 5, false)['level'] === 'ok' && str_contains(($OD.'verdict')(5, 5, 5, true)['text'], '다른 계정'), '다 맞으면 서버는 정상 — 다른 계정이 있으면 그쪽을 짚는다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
