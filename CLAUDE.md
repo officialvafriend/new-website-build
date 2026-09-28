@@ -2646,9 +2646,13 @@ SEO 63(메타 설명 누락 5 · H1 2개 이상 1 · Alt 누락 57). **사이트
 - 테마 · AIOSEO · kboard · 키플 파일은 안 건드렸다. 재크롤(242개): 첫 응답 non-200 = kboard 글 2개의 301 뿐, 설명 없음 = kboard 글 2 + `/category/uncategorized/`,
   alt 없음 0, 빈 alt 10(kboard 글 · contact-us · 테마 데모 글)
 
-**남은 것은 사장님 몫이다.**
-- 테마 데모 글 `Behind the product: Fedora hat`(`/2026/04/09/behind-the-product-fedora-hat/`)과 `/category/uncategorized/` 가 사이트맵에 있다 — **글을 지우면** 둘 다 사라진다
-- `/본인인증테스트/` 페이지 — noindex 는 했지만 지워도 된다
+**아무것도 지우지 않는다** (사장님 2026-09-28 「섣불리 못 지우겠다, 괜히 불안해서」). 테마 데모 글
+`Behind the product: Fedora hat` · `/category/uncategorized/` · `/본인인증테스트/` 는 그대로 두고 `private_slugs()` 에
+넣어 noindex + 사이트맵(글 · 분류 · 페이지)에서만 뺀다. 글 · 분류 주소는 `2026/04/09/<slug>` · `category/<slug>` 라
+**마지막 조각**으로 견준다 — 통째로 견줘 테스트 하나가 떨어진 채 커밋이 나갔다 (`php … | tail` 은 tail 의 종료 코드다.
+**테스트 결과로 커밋을 걸 때는 파이프를 빼고 `$?` 를 본다**). 되돌리기: `duckhoo_noindex_slugs` 필터에서 슬러그를 뺀다.
+
+**남은 것.**
 - H1 2개(kboard 글 화면 — 테마 `wd-page__title` + kboard 글 제목)는 그대로. 팁 · 이벤트 글 2개뿐이고 테마 · 플러그인 마크업이다
 - `/login/` 은 키플 페이지라 h1 이 없고 제목이 영문 `Login`(h2) — 필요하면 가입 3장처럼 머리판을 붙일 수 있다
 - kboard 게시판 설정에서 1:1 문의의 「검색엔진 노출」을 끄면 플러그인이 뺄 일도 없어진다 (지금은 플러그인이 걸러 내고 있다)
