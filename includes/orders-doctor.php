@@ -421,6 +421,45 @@ function screen(): void {
 			<tr><th>같은 사람으로 보이는 다른 계정</th><td><?php echo $tw ? wp_kses_post( implode( '<br>', array_map( fn( $t ) => sprintf( '#%d · %s · %s (%s) · 가입 %s · 주문 <b>%d건</b> · 본인확인 %s', $t['id'], esc_html( $t['login'] ), esc_html( $t['email'] ), esc_html( $t['why'] ), esc_html( (string) ( get_userdata( $t['id'] )->user_registered ?? '' ) ), order_count( $t['id'] ), esc_html( (string) get_user_meta( $t['id'], 'wd_phone_verified', true ) ) ), $tw ) ) ) : '없음'; ?></td></tr>
 			<tr><th>이 아이디 · 이메일로 로그인하면</th><td>아이디로 → <b>#<?php echo (int) $lr['by_login']; ?></b> · 이메일로 → <b>#<?php echo (int) $lr['by_email']; ?></b> <?php echo ( $lr['by_login'] && $lr['by_login'] !== $uid ) || ( $lr['by_email'] && $lr['by_email'] !== $uid ) ? '<b style="color:#B42318">← 이 계정(#' . (int) $uid . ')이 아니다</b>' : '(이 계정)'; ?></td></tr>
 		</tbody></table>
+		<?php
+		$same = function_exists( '\\Duckhoo\\Redesign\\TwinLogin\\by_name' ) ? array_values( array_unique( array_merge( \Duckhoo\Redesign\TwinLogin\by_name( (string) $u->user_login ), \Duckhoo\Redesign\TwinLogin\by_name( (string) $u->user_email ) ) ) ) : array();
+		if ( count( $same ) > 1 ) :
+			?>
+			<h2>1-b. 같은 아이디 · 이메일의 계정 나란히 (로그인 · 비밀번호가 어디에 닿는지)</h2>
+			<p>비밀번호 찾기 · 정보 수정은 <b>한 계정에만</b> 닿는다. 「재설정 링크 요청」 시각이 한쪽에만 있으면 그 계정의 비밀번호만 바뀐 것이다.
+			플러그인은 손님이 친 비밀번호를 두 계정 해시로 다 확인해 맞는 쪽으로 넣어 준다 — 어느 쪽에도 안 맞으면 정말 틀린 비밀번호다.</p>
+			<table class="widefat striped" style="max-width:1100px"><thead><tr><th>번호</th><th>가입</th><th>역할</th><th>본인확인</th><th>주문</th><th>적립금</th><th>비밀번호 해시</th><th>재설정 링크 요청</th><th>키플 · 테마 메타</th></tr></thead><tbody>
+			<?php foreach ( $same as $sid ) : $su = get_userdata( (int) $sid ); if ( ! $su ) { continue; } ?>
+				<?php
+				$hash  = (string) $su->user_pass;
+				$htype = str_starts_with( $hash, '$wp' ) ? 'bcrypt(wp)' : ( str_starts_with( $hash, '$P$' ) ? 'phpass(옛)' : ( str_starts_with( $hash, '$2' ) ? 'bcrypt' : ( strlen( $hash ) <= 32 ? 'md5(옛)' : '기타' ) ) );
+				$akey  = (string) $su->user_activation_key;
+				$when  = '';
+				if ( '' !== $akey && false !== strpos( $akey, ':' ) ) {
+					$when = wp_date( 'Y-m-d H:i', (int) explode( ':', $akey, 2 )[0] );
+				}
+				$metas = array();
+				foreach ( (array) get_user_meta( (int) $sid ) as $mk => $mv ) {
+					if ( preg_match( '/^(wd_|keyple|_keyple|_wd_|_dhr_|dhr_)/', (string) $mk ) && ! preg_match( '/(ci|di|pass|token|key|secret)$/i', (string) $mk ) ) {
+						$val     = is_array( $mv ) ? (string) reset( $mv ) : (string) $mv;
+						$metas[] = esc_html( $mk ) . '=' . esc_html( mb_strimwidth( $val, 0, 24, '…' ) );
+					}
+				}
+				?>
+				<tr<?php echo (int) $sid === (int) $uid ? ' style="background:#FFF7ED"' : ''; ?>>
+					<td><b>#<?php echo (int) $sid; ?></b><?php echo (int) $sid === (int) $uid ? ' (이 계정)' : ''; ?></td>
+					<td><?php echo esc_html( (string) $su->user_registered ); ?></td>
+					<td><?php echo esc_html( implode( ', ', (array) $su->roles ) ); ?></td>
+					<td><?php echo '' !== trim( (string) get_user_meta( (int) $sid, 'wd_phone_verified', true ) ) ? '있음' : ( '' !== trim( (string) get_user_meta( (int) $sid, '_dhr_legacy_verified', true ) ) ? '옛 사이트' : '<b style="color:#B42318">없음</b>' ); ?></td>
+					<td><?php echo (int) order_count( (int) $sid ); ?>건</td>
+					<td><?php echo esc_html( number_format_i18n( (float) get_user_meta( (int) $sid, '_keyple_points', true ) ) ); ?></td>
+					<td><?php echo esc_html( $htype ); ?></td>
+					<td><?php echo '' !== $when ? '<b>' . esc_html( $when ) . '</b>' : ( '' !== $akey ? '있음' : '—' ); ?></td>
+					<td style="font-size:12px;max-width:380px"><?php echo $metas ? wp_kses_post( implode( '<br>', array_slice( $metas, 0, 14 ) ) ) : '—'; ?></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody></table>
+		<?php endif; ?>
 		<h2>2. 표에서 직접 센 주문 (<?php echo hpos() ? 'HPOS wc_orders.customer_id' : 'posts + _customer_user'; ?>)</h2>
 		<p><b><?php echo (int) $rawn; ?>건</b>
 		<?php foreach ( $raw as $st => $n ) : ?> · <?php echo esc_html( ( $names[ $st ] ?? $names[ 'wc-' . $st ] ?? $st ) . ' ' . $n ); ?><?php endforeach; ?></p>

@@ -2265,9 +2265,13 @@ $ok(($TL.'best')([['id'=>535,'ok'=>true,'verified'=>false,'orders'=>0], ['id'=>5
 $ok(($TL.'best')([['id'=>905,'ok'=>true,'verified'=>true,'orders'=>4], ['id'=>906,'ok'=>true,'verified'=>true,'orders'=>0]]) === 905, '본인확인이 둘 다면 주문 있는 쪽 (lymuzik86 처럼 먼저 계정)');
 $ok(($TL.'best')([['id'=>100,'ok'=>true,'verified'=>false,'orders'=>0], ['id'=>101,'ok'=>true,'verified'=>false,'orders'=>0]]) === 101, '아무것도 없으면 나중에 만들어진 쪽');
 $ok(($TL.'best')([['id'=>1,'ok'=>false], ['id'=>2,'ok'=>false]]) === 0 && ($TL.'best')([]) === 0, '맞는 것이 없으면 0');
-if (!class_exists('WP_Error')) { class WP_Error { public function __construct(public string $c = '', public string $m = '') {} } }
+if (!class_exists('WP_Error')) { class WP_Error { public function __construct(public string $c = '', public string $m = '') {} public function get_error_code() { return $this->c; } } }
 $err = new \WP_Error('x','y');
-$ok(($TL.'pick')($err, 'a', 'b') === $err && ($TL.'pick')(null, 'a', '') === null, '이미 실패한 로그인 · 비밀번호 없는 호출은 그대로');
+$ok(($TL.'pick')($err, 'a', 'b') === $err && ($TL.'pick')(null, 'a', '') === null, '다른 이유로 실패한 로그인 · 비밀번호 없는 호출은 그대로');
+$bad = new \WP_Error('incorrect_password','틀림');
+$ok(($TL.'rescuable')($bad) && !($TL.'rescuable')(new \WP_Error('invalid_username','')) && !($TL.'rescuable')(null) && !($TL.'rescuable')($err), '「틀린 비밀번호」일 때만 쌍둥이 해시를 다시 본다 — 없는 아이디 · 빈 값은 아니다');
+$ok(($TL.'pick')($bad, 'kisa8020@naver.com', 'pw') === $bad, '쌍둥이를 못 찾으면(DB 없음) 틀린 비밀번호 그대로 — 열어 주지 않는다');
+$ok(($TL.'by_name')('  ') === [], '빈 아이디는 후보 없음');
 
 // ───────────────────────────────────────────────── 가입 두 번 제출 잠금 (2026-09-28)
 $SG = 'Duckhoo\\Redesign\\Signup\\';
