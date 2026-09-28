@@ -2624,3 +2624,35 @@ ship_only · from · to · backlog) 의 **날짜에서 글을 엮는다** (`kday
 Store API 로 보면 노보 옵션 전부 `재고 있음` 이지만 **수량을 세지 않는다** (`low_stock_remaining` 없음 — 재고 관리를 안 켠
 기본 깃발). 시장가 대조의 기본 기준을 **브이몬스터**로 바꿨다 (`?mode=vm`). 겨울마을 값은 표에 남되 참고로만.
 노보 55병 · 110병 세트는 사장님 값 **병당 9,900 · 9,100**(545,000 · 1,000,000 권함)으로 가고, 2주 안 나가면 9,000 · 8,182 로 내린다.
+
+## 네이버 서치어드바이저 진단 — 사이트맵의 절반이 쓰레기였다 (2026-09-28)
+
+사장님이 붙인 진단(2026-09-26): 색인 ≈180 · 수집제한 4(리다이렉션 1 · 접근 불가 3) · 색인제외 30(meta robots) ·
+SEO 63(메타 설명 누락 5 · H1 2개 이상 1 · Alt 누락 57). **사이트맵 462개 주소를 전부 받아 세어** 원인을 찾았다
+(`scratchpad/seo/crawl.sh` — 주소마다 상태 · 첫 응답 · 메타 설명 · h1 수 · alt 없는/빈 img · robots 를 표로).
+
+| 원인 | 실측 | 고친 것 (`includes/seo-pages.php`) |
+|---|---|---|
+| kboard 사이트맵 212개 중 **210개가 1:1 문의** — 회원만 읽는 글이라 크롤러에겐 「로그인 하셔야」 안내뿐 | 212 → **2** | `aioseo_sitemap_posts( $entries, 'kboard' )` 에서 비공개 게시판 글을 뺀다. 게시판 번호는 `/inquiries/` 본문의 `[kboard id=N]`, 글 번호(uid)는 `kboard_board_content` 표 (`SHOW COLUMNS` 로 확인 · 10분 캐시 · 못 읽으면 안 뺀다) |
+| 결제 · 마이페이지 · 정보수정처럼 비로그인엔 302 인 페이지가 사이트맵에 | 페이지 24 → **14** | 같은 필터(`'page'`)에서 `private_slugs()` 를 뺀다 + `aioseo_robots_meta` · `wp_robots` 로 `noindex`. 목록: checkout · cart · mypage · my-account · profile-edit · membership-cancel · point · coupon · join-form · agree · inquiries · 본인인증테스트 (필터 `duckhoo_noindex_slugs`). **`/register/` 는 남긴다.** 날짜 보관함(`/2026/`)도 noindex |
+| `/shop/` 제목이 「상점 - 액상덕후」, 설명 없음 | | 상품 수를 읽어 `전자담배 액상 전체 상품 184종 \| 액상덕후` + 브랜드(`featured_brands`) · 혜택 · 19세 설명 |
+| 로그인 · 가입 · 공지 · 팁 · 뉴스 · 이벤트 · 후기 페이지 설명 없음 (18장) | 18 → **0** | `aioseo_description` 25 — **비어 있을 때만** 슬러그 글(`page_texts()`, 필터 `duckhoo_page_desc_map`), 없으면 제목으로 엮는다 |
+| 상품 설명 이미지 alt 없음 — 아임웹에서 옮겨 온 에디터 이미지(`fr-dib`) 219개 + 워드프레스 이미지 블록 `alt=""` | 219+100 → **0** | 템플릿에서 `img_alt( the_content, 상품명 )` → 「상품명 상세 이미지 N」(빈 alt 도 채운다 — 사장님 상품 사진이라 장식용이 아니다). 첨부 이미지의 빈 alt 는 `wp_get_attachment_image_attributes` 로 상품 이름 |
+
+- **`aioseo_sitemap_exclude_posts` 라는 필터는 없다.** 그 이름으로 걸고 배포했더니 사이트맵이 새로 생성됐는데(주석의 시각으로 안다)
+  그대로였다. AIOSEO 공개 소스(`plugins.svn.wordpress.org/all-in-one-seo-pack/trunk/app/Common/Sitemap/Content.php`)로 확인 —
+  **모르는 플러그인 필터는 소스에서 이름을 확인하고 건다.** kboard 는 글마다 숨은 글이 하나씩 있는 글 타입 `kboard`
+  (주소 `?kboard_content_redirect=<uid>`, 301 → 게시판 글)이라 AIOSEO 가 페이지처럼 사이트맵에 싣는다
+- 테마 · AIOSEO · kboard · 키플 파일은 안 건드렸다. 재크롤(242개): 첫 응답 non-200 = kboard 글 2개의 301 뿐, 설명 없음 = kboard 글 2 + `/category/uncategorized/`,
+  alt 없음 0, 빈 alt 10(kboard 글 · contact-us · 테마 데모 글)
+
+**남은 것은 사장님 몫이다.**
+- 테마 데모 글 `Behind the product: Fedora hat`(`/2026/04/09/behind-the-product-fedora-hat/`)과 `/category/uncategorized/` 가 사이트맵에 있다 — **글을 지우면** 둘 다 사라진다
+- `/본인인증테스트/` 페이지 — noindex 는 했지만 지워도 된다
+- H1 2개(kboard 글 화면 — 테마 `wd-page__title` + kboard 글 제목)는 그대로. 팁 · 이벤트 글 2개뿐이고 테마 · 플러그인 마크업이다
+- `/login/` 은 키플 페이지라 h1 이 없고 제목이 영문 `Login`(h2) — 필요하면 가입 3장처럼 머리판을 붙일 수 있다
+- kboard 게시판 설정에서 1:1 문의의 「검색엔진 노출」을 끄면 플러그인이 뺄 일도 없어진다 (지금은 플러그인이 걸러 내고 있다)
+- 네이버가 다시 수집한 뒤(며칠) 진단 숫자가 내려간다 — 서치어드바이저에서 사이트맵 **다시 제출** 하면 빨라진다
+
+검증: `php design/php-tests/run.php` (진단 항목 45개 — 슬러그 · 사이트맵 걸러 내기(페이지 · kboard · loc/url) · 제목 · 설명 160자 · 금지 낱말 ·
+alt 채우기(없음 · 빈 것 · 홑따옴표) · 첨부 alt) · 프로덕션 curl — `/shop/` 제목 · 설명, 12 페이지 robots, page/kboard 사이트맵 수, 상품 2개 alt 0.
