@@ -116,6 +116,28 @@ function find_user( string $q ) {
 }
 
 /**
+ * 정확히 못 찾았을 때 — 아이디 · 이메일 · 이름에 그 글자가 든 회원들 (이 가게는 아이디가 이메일이라
+ * 「kisa8020」 만 치면 정확 일치가 없다). 읽기 전용.
+ *
+ * @param string $q 입력.
+ * @return array<int,array{id:int,login:string,email:string,name:string,registered:string}>
+ */
+function find_like( string $q ): array {
+	global $wpdb;
+	$q = trim( $q );
+	if ( mb_strlen( $q ) < 2 || ! isset( $wpdb ) ) {
+		return array();
+	}
+	$like = '%' . $wpdb->esc_like( $q ) . '%';
+	$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT ID, user_login, user_email, display_name, user_registered FROM {$wpdb->users} WHERE user_login LIKE %s OR user_email LIKE %s OR display_name LIKE %s ORDER BY ID ASC LIMIT 20", $like, $like, $like ) ); // phpcs:ignore
+	$out  = array();
+	foreach ( $rows as $r ) {
+		$out[] = array( 'id' => (int) $r->ID, 'login' => (string) $r->user_login, 'email' => (string) $r->user_email, 'name' => (string) $r->display_name, 'registered' => (string) $r->user_registered );
+	}
+	return $out;
+}
+
+/**
  * 같은 사람으로 보이는 다른 계정 — 전화 · 이름이 같은 회원.
  *
  * @param \WP_User $u 회원.
@@ -390,7 +412,21 @@ function screen(): void {
 			<input type="text" name="who" value="<?php echo esc_attr( $q ); ?>" class="regular-text" placeholder="279209536 또는 이메일"> <button class="button button-primary">진단</button></form>
 		<?php
 		if ( '' !== $q && ! $u ) {
-			echo '<div class="notice notice-error"><p>그 회원을 찾지 못했습니다.</p></div></div>';
+			$like = find_like( $q );
+			if ( 1 === count( $like ) || ( $like && 1 === count( array_unique( array_column( $like, 'login' ) ) ) ) ) {
+				$u = get_user_by( 'id', $like[0]['id'] );   // 한 사람(쌍둥이 포함)만 걸리면 바로 그 사람
+			}
+		}
+		if ( '' !== $q && ! $u ) {
+			echo '<div class="notice notice-error"><p>「' . esc_html( $q ) . '」 와 정확히 같은 번호 · 이메일 · 아이디가 없습니다. 이 가게는 아이디가 이메일입니다 — <code>kisa8020@naver.com</code> 처럼 전체를 넣어 주세요.</p></div>';
+			if ( ! empty( $like ) ) {
+				echo '<h2>비슷한 회원</h2><table class="widefat striped" style="max-width:900px"><thead><tr><th>번호</th><th>아이디</th><th>이메일</th><th>이름</th><th>가입</th></tr></thead><tbody>';
+				foreach ( $like as $r ) {
+					echo '<tr><td><a href="' . esc_url( add_query_arg( array( 'page' => SLUG, 'who' => $r['id'] ), admin_url( 'tools.php' ) ) ) . '"><b>#' . (int) $r['id'] . '</b></a></td><td>' . esc_html( $r['login'] ) . '</td><td>' . esc_html( $r['email'] ) . '</td><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( $r['registered'] ) . '</td></tr>';
+				}
+				echo '</tbody></table>';
+			}
+			echo '</div>';
 			return;
 		}
 		if ( ! $u ) {
