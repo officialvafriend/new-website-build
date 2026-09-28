@@ -127,29 +127,52 @@ function robots_wp( $r ) {
 add_filter( 'wp_robots', __NAMESPACE__ . '\\robots_wp', 20 );
 
 /**
- * AIOSEO 페이지 사이트맵에서 그 페이지들을 뺀다. 필터는 `( $excluded_ids, $post_type )` 을 준다.
+ * 사이트맵 항목의 주소에서 경로(앞뒤 슬래시 뗀 것)를 읽는다. `https://duck-hoo.com/checkout/` → `checkout`.
  *
- * @param mixed  $ids  지금 제외 목록.
- * @param string $type 사이트맵의 글 타입.
+ * @param mixed $entry 항목 (배열 `loc`/`url` 또는 문자열).
+ * @return string
+ */
+function entry_path( $entry ): string {
+	$loc  = is_array( $entry ) ? (string) ( $entry['loc'] ?? $entry['url'] ?? '' ) : (string) $entry;
+	$path = (string) ( function_exists( 'wp_parse_url' ) ? wp_parse_url( $loc, PHP_URL_PATH ) : parse_url( $loc, PHP_URL_PATH ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
+	return rawurldecode( trim( $path, '/' ) );
+}
+
+/**
+ * 페이지 사이트맵 항목에서 색인 제외 페이지를 뺀다 — 순수 함수.
+ *
+ * @param array $entries 항목들.
  * @return array
  */
-function sitemap_exclude( $ids, $type = '' ) {
-	$ids = array_map( 'intval', is_array( $ids ) ? $ids : array() );
-	if ( '' !== (string) $type && 'page' !== (string) $type ) {
-		return $ids;
-	}
-	if ( ! function_exists( 'get_page_by_path' ) ) {
-		return $ids;
-	}
-	foreach ( private_slugs() as $slug ) {
-		$p = get_page_by_path( $slug );
-		if ( is_object( $p ) && ! empty( $p->ID ) ) {
-			$ids[] = (int) $p->ID;
-		}
-	}
-	return array_values( array_unique( $ids ) );
+function drop_private_pages( array $entries ): array {
+	return array_values( array_filter( $entries, fn( $e ) => ! is_private_slug( entry_path( $e ) ) ) );
 }
-add_filter( 'aioseo_sitemap_exclude_posts', __NAMESPACE__ . '\\sitemap_exclude', 20, 2 );
+
+/**
+ * AIOSEO 가 글 타입 하나의 사이트맵을 다 만든 뒤 묻는 자리 (`aioseo_sitemap_posts`, `( $entries, $post_type )`).
+ * 페이지는 색인 제외 슬러그를, kboard(글마다 숨은 글이 하나씩 있는 타입 — 주소가
+ * `?kboard_content_redirect=<uid>`)는 비공개 게시판 글을 뺀다. 나머지 타입은 그대로.
+ *
+ * `aioseo_sitemap_exclude_posts` 라는 필터는 **없다** — 처음 그 이름으로 걸어 한 번 헛돌았다.
+ * AIOSEO 공개 소스(`app/Common/Sitemap/Content.php`)에서 확인한 이름만 쓴다.
+ *
+ * @param mixed  $entries 항목들.
+ * @param string $type    글 타입.
+ * @return mixed
+ */
+function sitemap_posts( $entries, $type = '' ) {
+	if ( ! is_array( $entries ) ) {
+		return $entries;
+	}
+	if ( 'page' === (string) $type ) {
+		return drop_private_pages( $entries );
+	}
+	if ( 'kboard' === (string) $type ) {
+		return drop_private( $entries, private_uids() );
+	}
+	return $entries;
+}
+add_filter( 'aioseo_sitemap_posts', __NAMESPACE__ . '\\sitemap_posts', 20, 2 );
 
 /* ───────────────────────────── kboard 사이트맵 ───────────────────────────── */
 
@@ -230,19 +253,6 @@ function drop_private( array $entries, array $uids ): array {
 	);
 }
 
-/**
- * kboard 가 AIOSEO 에 건네는 사이트맵 항목 (`aioseo_sitemap_kboard`). 우리는 그 뒤(99)에서 걸러 낸다.
- *
- * @param mixed $entries 항목들.
- * @return mixed
- */
-function kboard_sitemap( $entries ) {
-	if ( ! is_array( $entries ) ) {
-		return $entries;
-	}
-	return drop_private( $entries, private_uids() );
-}
-add_filter( 'aioseo_sitemap_kboard', __NAMESPACE__ . '\\kboard_sitemap', 99 );
 
 /* ───────────────────────────── 제목 · 설명 ───────────────────────────── */
 
@@ -411,8 +421,9 @@ add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 25 );
 /* ───────────────────────────── 이미지 alt ───────────────────────────── */
 
 /**
- * `<img>` 에 alt 가 없으면 「이름 상세 이미지 N」을 붙인다 — 순수 함수. `alt=""` 는 그대로 둔다
- * (장식용이라고 적어 둔 것). 상품 설명은 아임웹에서 옮겨 온 에디터 이미지라 alt 가 하나도 없었다.
+ * `<img>` 에 alt 가 없거나 비어 있으면 「이름 상세 이미지 N」을 붙인다 — 순수 함수. 상품 설명은
+ * 아임웹에서 옮겨 온 에디터 이미지(alt 없음)와 워드프레스 이미지 블록(`alt=""`)이 섞여 있는데
+ * 둘 다 사장님이 올린 상품 사진이라 장식용이 아니다 — 빈 것도 채운다. 글자가 있는 alt 는 그대로.
  *
  * @param string $html 설명 HTML.
  * @param string $name 상품 이름.
@@ -427,11 +438,15 @@ function img_alt( string $html, string $name ): string {
 	return (string) preg_replace_callback(
 		'/<img\b([^>]*?)(\s*\/?)>/i',
 		function ( $m ) use ( $name, &$i ) {
-			if ( preg_match( '/\salt\s*=/i', $m[1] ) ) {
-				return $m[0];
+			$attrs = $m[1];
+			if ( preg_match( '/\salt\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', $attrs, $a ) ) {
+				if ( '' !== trim( $a[1], '"\'' ) ) {
+					return $m[0];   // 글자가 있는 alt 는 그대로
+				}
+				$attrs = preg_replace( '/\salt\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $attrs, 1 );   // 빈 alt 는 떼고 다시 붙인다
 			}
 			++$i;
-			return '<img' . rtrim( $m[1] ) . ' alt="' . esc_attr( $name . ' 상세 이미지 ' . $i ) . '"' . $m[2] . '>';
+			return '<img' . rtrim( (string) $attrs ) . ' alt="' . esc_attr( $name . ' 상세 이미지 ' . $i ) . '"' . $m[2] . '>';
 		},
 		$html
 	);

@@ -2123,13 +2123,14 @@ $ok(($SP.'is_private_slug')('event'), '필터로 슬러그를 더할 수 있다'
 unset($GLOBALS['__filters']['duckhoo_noindex_slugs']);
 $r = ($SP.'robots_aioseo')(['index' => 'index', 'max-image-preview' => 'max-image-preview:large']);
 $ok(($r['index'] ?? '') === 'index' && !isset($r['noindex']), '페이지가 아니면 robots 를 건드리지 않는다');
-$ex = ($SP.'sitemap_exclude')([5], 'product');
-$ok($ex === [5], '상품 사이트맵은 건드리지 않는다');
-$GLOBALS['__pages']['checkout'] = (object)['ID' => 777, 'post_content' => ''];
-$GLOBALS['__pages']['mypage'] = (object)['ID' => 778, 'post_content' => ''];
-$ex = ($SP.'sitemap_exclude')([5, 777], 'page');
-$ok(in_array(777, $ex, true) && in_array(778, $ex, true) && count(array_keys($ex, 777, true)) === 1 && in_array(5, $ex, true), '페이지 사이트맵에서 결제 · 마이페이지를 뺀다 (있던 것은 두고, 두 번 넣지 않는다)');
-unset($GLOBALS['__pages']['checkout'], $GLOBALS['__pages']['mypage']);
+$pages = [
+  ['loc' => 'https://duck-hoo.com/checkout/'], ['loc' => 'https://duck-hoo.com/shop/'], ['loc' => 'https://duck-hoo.com/mypage/'],
+  ['loc' => 'https://duck-hoo.com/%EB%B3%B8%EC%9D%B8%EC%9D%B8%EC%A6%9D%ED%85%8C%EC%8A%A4%ED%8A%B8/'], ['loc' => 'https://duck-hoo.com/register/'], ['loc' => 'https://duck-hoo.com/'],
+];
+$kept = ($SP.'sitemap_posts')($pages, 'page');
+$ok(array_column($kept, 'loc') === ['https://duck-hoo.com/shop/', 'https://duck-hoo.com/register/', 'https://duck-hoo.com/'], '페이지 사이트맵에서 결제 · 마이페이지 · 시험 페이지(인코딩된 주소)를 빼고 전체 상품 · 가입 · 홈은 남긴다');
+$ok(($SP.'sitemap_posts')($pages, 'product') === $pages && ($SP.'sitemap_posts')('x', 'page') === 'x', '상품 사이트맵은 건드리지 않는다 · 배열이 아니면 그대로');
+$ok(($SP.'entry_path')(['loc' => 'https://duck-hoo.com/checkout/']) === 'checkout' && ($SP.'entry_path')('https://duck-hoo.com/') === '', '항목 주소 → 경로 (홈은 빈 문자열)');
 // kboard
 $GLOBALS['__pages']['inquiries'] = (object)['ID' => 30, 'post_content' => '<p>[kboard id="4"]</p>'];
 $ok(($SP.'private_boards')() === [4], '1:1 문의 게시판 번호는 페이지 본문의 [kboard id=N] 에서 읽는다');
@@ -2142,8 +2143,8 @@ $entries = [
 $kept = ($SP.'drop_private')($entries, [99, 100]);
 $ok(count($kept) === 2 && ($SP.'entry_uid')($kept[0]) === 33 && ($kept[1]['loc'] ?? '') === 'https://duck-hoo.com/tip/', '비공개 게시판 글(uid 99 · 100)만 빠지고 팁 글 · 번호 없는 주소는 남는다 (loc · url 둘 다 읽는다)');
 $ok(($SP.'drop_private')($entries, []) === $entries, '뺄 번호를 모르면 아무것도 빼지 않는다');
-$ok(($SP.'kboard_sitemap')('not-an-array') === 'not-an-array', '배열이 아니면 그대로 돌려준다');
 unset($GLOBALS['__pages']['inquiries']);
+$ok(($SP.'sitemap_posts')($entries, 'kboard') === $entries, 'kboard 표를 읽을 수 없으면(테스트) 아무것도 빼지 않는다 — 모를 때는 그대로');
 // 제목 · 설명
 $ok(($SP.'shop_title')(184) === '전자담배 액상 전체 상품 184종 | 액상덕후' && ($SP.'shop_title')(0) === '전자담배 액상 전체 상품 | 액상덕후', '전체 상품 제목 — 종수는 있을 때만');
 $d = ($SP.'shop_desc')(184, ['노보', '펠릭스']);
@@ -2161,8 +2162,10 @@ $ok(($SP.'title')('상점 - 액상덕후') === '상점 - 액상덕후' && ($SP.'
 // alt
 $html = '<p>x</p><img decoding="async" class="fr-dib" src="a.jpg" /><img src="b.jpg" alt=""><img src="c.jpg" alt="있음"><IMG src="d.jpg">';
 $out = ($SP.'img_alt')($html, '[노보] 타박멘솔 (9.8mg / 30ml)');
-$ok(str_contains($out, 'src="a.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 1" />') && str_contains($out, 'src="d.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 2">'), 'alt 없는 이미지에만 「상품명 상세 이미지 N」을 붙인다 (닫는 슬래시 유지)');
-$ok(str_contains($out, 'alt=""') && str_contains($out, 'alt="있음"') && substr_count($out, ' alt=') === 4, 'alt="" 와 있는 alt 는 그대로 — 총 4개');
+$ok(str_contains($out, 'src="a.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 1" />') && str_contains($out, 'src="d.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 3">'), 'alt 없는 이미지에 「상품명 상세 이미지 N」을 붙인다 (닫는 슬래시 유지 · 번호는 채운 순서)');
+$ok(str_contains($out, '<img src="b.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 2">') && !str_contains($out, 'alt=""'), '빈 alt="" 도 채운다 (워드프레스 이미지 블록) — 빈 것을 떼고 하나만 남긴다');
+$ok(str_contains($out, 'alt="있음"') && substr_count($out, ' alt=') === 4, '글자가 있는 alt 는 그대로 — 총 4개, 두 번 붙지 않는다');
+$ok(str_contains(($SP.'img_alt')("<img alt='' src=x.jpg><img alt=y src=z.jpg>", 'N'), "<img src=x.jpg alt=\"N 상세 이미지 1\">") && str_contains(($SP.'img_alt')("<img alt=y src=z.jpg>", 'N'), 'alt=y'), '홑따옴표 · 따옴표 없는 alt 도 읽는다');
 $ok(($SP.'img_alt')($html, '') === $html && ($SP.'img_alt')('', 'x') === '', '이름이나 HTML 이 비면 손대지 않는다');
 $GLOBALS['product'] = new WC_Product(1, '[펠릭스] 더블라임', 20000);
 $a = ($SP.'attachment_alt')(['alt' => '', 'src' => 'x.jpg']);
