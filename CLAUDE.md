@@ -2830,3 +2830,26 @@ UNIQUE 제약이 없고 `wp_insert_user` 의 `username_exists()` · `email_exist
 **교훈: 제출 버튼을 submit 핸들러 안에서 disabled 로 만들면 그 버튼의 name · value 가 전송에서 빠진다.**
 가입 · 주문처럼 서버가 버튼 이름으로 「눌렀는지」를 보는 폼에서는 `setTimeout(0)` 뒤에 잠그거나 `aria-disabled` 만 쓴다.
 그리고 **가입 · 결제 길에 무엇을 넣으면 그날 안에 진짜 가입 · 주문이 되는지를 본다** — 34쌍을 막으려다 하루 저녁 가입을 0 으로 만들었다.
+
+## 손님 길 점검 `design/smoke/smoke.mjs` — 배포 전후로 반드시 돈다 (2026-09-28)
+
+사장님: 「사이트 내에 자잘한 오류가 계속 나온다 … 기존 오류를 고치다가 네가 오류를 발생시킨 것」. 맞다 — 가입 · 로그인 ·
+결제 길을 고치고 프로덕션에 바로 올리면서 **손님이 그 길을 끝까지 지나가는지**는 안 봤다. 그래서 기존 버그든 우리 버그든
+길이 끊기면 배포 1~2분 안에 잡히는 그물을 하나로 묶었다. **push 전에 한 번(스테이징이나 현재 프로덕션), 배포 반영 뒤 한 번** 돌린다.
+
+```bash
+NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/smoke/smoke.mjs            # 프로덕션
+NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/smoke/smoke.mjs --site https://staging-fe60-tothemoone-huwyp.wpcomstaging.com
+```
+
+20개 항목, 전부 비로그인 · 서버에 아무것도 남기지 않는다: 화면 8장 200 + 치명 오류 없음 · 우리 자산 200 · 상품 상세의
+구매 폼 · 19 가림 · 비로그인 결제 302 · 브리핑 API 키 없이 401 · 로그인 틀린 비번 정상 거절 · **가입 POST 두 번 튕김 없음**(본인확인
+없이라 계정 안 생김) · Store API 담기 201 → 지우기 0줄 · **브라우저에서 「가입하기」를 누르면 전송에 `wd_join_form_submit=1` 이
+실리는지**(오늘 사고를 그대로 재현하는 항목 — 전송은 가로채 서버에 안 보낸다). 하나라도 실패하면 exit 1.
+
+- playwright 는 저장소에 없다 — `DHR_NODE_MODULES`(기본 scratchpad/live/node_modules)에서 `createRequire` 로 끌어온다.
+  브라우저 요청은 전부 Node fetch 로 대신 받아 준다 (크로미움 직접 접속은 이 환경에서 `ERR_CERT_AUTHORITY_INVALID`)
+- 로그인이 필요한 길(결제 화면 · 주문내역)은 여기 없다 — 스테이징 계정이 생기면 그때 붙인다
+- 사장님께 제안한 나머지 둘은 아직 결정 전: ①스테이징을 먼저 받는 브랜치로 나누기 ②관리자 「안전 스위치」 화면
+  (쌍둥이 로그인 · 가입 잠금 · 금액 점검 차단 · 재인증 문을 체크박스로 끄기)
+- **당분간 가입 · 로그인 · 결제는 사장님이 신고한 것만 고친다.** 오늘 가입 잠금은 시키지 않은 확장이었다
