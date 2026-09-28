@@ -248,7 +248,7 @@ function callbacks( string $hook ): array {
  */
 function render_as( int $uid ): array {
 	$me   = get_current_user_id();
-	$out  = array( 'rows' => -1, 'len' => 0, 'error' => '', 'empty_note' => false );
+	$out  = array( 'rows' => -1, 'len' => 0, 'error' => '', 'empty_note' => false, 'html' => '' );
 	$html = '';
 	try {
 		wp_set_current_user( $uid );
@@ -258,6 +258,7 @@ function render_as( int $uid ): array {
 		$out['rows']       = preg_match_all( '/<tr[^>]*woocommerce-orders-table__row/', $html );
 		$out['len']        = strlen( $html );
 		$out['empty_note'] = false !== strpos( $html, 'woocommerce-info' ) || false !== strpos( $html, '주문이 없' ) || false !== stripos( $html, 'No order' );
+		$out['html']       = $html;
 	} catch ( \Throwable $e ) {
 		if ( ob_get_level() ) {
 			ob_end_clean();
@@ -267,6 +268,54 @@ function render_as( int $uid ): array {
 		wp_set_current_user( $me );
 	}
 	return $out;
+}
+
+/**
+ * 그 주문들의 속살 — 템플릿이 무엇을 보고 건너뛰는지 알려면 필요하다.
+ *
+ * @param int[] $ids 주문 번호들.
+ * @return array<int,array<string,string>>
+ */
+function order_facts( array $ids ): array {
+	$out = array();
+	foreach ( array_slice( $ids, 0, 10 ) as $id ) {
+		$o = function_exists( 'wc_get_order' ) ? wc_get_order( (int) $id ) : null;
+		if ( ! $o ) {
+			$out[ (int) $id ] = array( 'wc_get_order' => '못 읽음 (null)' );
+			continue;
+		}
+		$f = array(
+			'class'          => get_class( $o ),
+			'status'         => (string) $o->get_status(),
+			'type'           => (string) $o->get_type(),
+			'parent_id'      => (string) $o->get_parent_id(),
+			'customer_id'    => (string) $o->get_customer_id(),
+			'created_via'    => (string) $o->get_created_via(),
+			'payment_method' => (string) $o->get_payment_method(),
+			'date_created'   => $o->get_date_created() ? $o->get_date_created()->date( 'Y-m-d H:i' ) : '',
+			'items'          => (string) count( $o->get_items() ),
+			'fees'           => implode( ' | ', array_map( fn( $x ) => $x->get_name() . '=' . $x->get_total(), (array) $o->get_items( 'fee' ) ) ),
+			'total'          => (string) $o->get_total(),
+			'billing_email'  => (string) $o->get_billing_email(),
+			'is_editable'    => $o->is_editable() ? 'yes' : 'no',
+			'meta_keys'      => implode( ', ', array_slice( array_map( fn( $m ) => (string) $m->key, (array) $o->get_meta_data() ), 0, 40 ) ),
+		);
+		$out[ (int) $id ] = $f;
+	}
+	return $out;
+}
+
+/**
+ * 테마가 덮어쓴 템플릿의 원문 (읽기만). 테마 폴더 안의 파일만 연다.
+ *
+ * @param string $path 절대 경로.
+ * @return string
+ */
+function theme_source( string $path ): string {
+	if ( '' === $path || false === strpos( $path, '/themes/' ) || ! is_readable( $path ) ) {
+		return '';
+	}
+	return (string) file_get_contents( $path ); // phpcs:ignore
 }
 
 /**
@@ -324,6 +373,11 @@ function screen(): void {
 		<p><b><?php echo (int) $aq['total']; ?>건</b> (첫 쪽 <?php echo count( $aq['ids'] ); ?>건: <?php echo esc_html( implode( ', ', array_slice( $aq['ids'], 0, 20 ) ) ); ?>)</p>
 		<details><summary>질의 인자 (필터를 거친 뒤)</summary><pre style="background:#fff;padding:8px;font-size:12px"><?php echo esc_html( (string) wp_json_encode( $aq['args'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ); ?></pre></details>
 		<p>등록된 주문 상태 <?php echo count( $names ); ?>개: <?php echo esc_html( implode( ' · ', array_keys( $names ) ) ); ?></p>
+		<details open><summary>그 주문들의 속살 (템플릿이 보는 값)</summary>
+		<?php foreach ( order_facts( $aq['ids'] ) as $oid => $f ) : ?>
+			<p><b>#<?php echo (int) $oid; ?></b> — <?php echo esc_html( implode( ' · ', array_map( fn( $k, $v ) => $k . '=' . $v, array_keys( $f ), $f ) ) ); ?></p>
+		<?php endforeach; ?>
+		</details>
 		<h2>4. 그 자리에 걸린 콜백</h2>
 		<?php foreach ( array( 'woocommerce_my_account_my_orders_query', 'woocommerce_account_orders_endpoint', 'woocommerce_before_account_orders', 'woocommerce_my_account_my_orders_actions', 'woocommerce_account_menu_items' ) as $h ) : $c = callbacks( $h ); ?>
 			<p><code><?php echo esc_html( $h ); ?></code> — <?php echo $c ? esc_html( implode( ' | ', $c ) ) : '없음'; ?></p>
@@ -336,6 +390,12 @@ function screen(): void {
 			<p style="color:#B42318"><b>그리다 죽음:</b> <?php echo esc_html( $dr['error'] ); ?></p>
 		<?php else : ?>
 			<p>줄 <b><?php echo (int) $dr['rows']; ?>개</b> · HTML <?php echo number_format( (int) $dr['len'] ); ?>자 · 「주문 없음」 안내 <?php echo $dr['empty_note'] ? '있음' : '없음'; ?></p>
+			<details><summary>실제로 그려진 HTML (앞 4,000자)</summary><pre style="background:#fff;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-all"><?php echo esc_html( mb_substr( $dr['html'], 0, 4000 ) ); ?></pre></details>
+		<?php endif; ?>
+		<?php $src = theme_source( $tpl ); if ( '' !== $src ) : ?>
+		<h2>7. 테마가 덮어쓴 <code>myaccount/orders.php</code> 원문 (읽기만)</h2>
+		<p class="description">이 안에서 <code>continue</code> · <code>if</code> 로 주문을 건너뛰는 줄이 원인이다. 통째로 복사해 클로드에게 붙여 주세요.</p>
+		<pre style="background:#fff;padding:8px;font-size:11px;max-height:600px;overflow:auto;white-space:pre-wrap;word-break:break-all"><?php echo esc_html( $src ); ?></pre>
 		<?php endif; ?>
 		<p class="description">이 화면 결과를 그대로 복사해 클로드에게 붙여 주시면 다음 손을 정합니다. 손님께는 「어느 계정(이메일)으로 로그인했는지」와 「마이페이지 → 주문내역 화면에 무엇이 보이는지(빈 목록인지 · 오류인지)」를 물어봐 주세요.</p>
 	</div>
