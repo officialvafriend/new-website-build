@@ -176,3 +176,102 @@ function notice(): void {
 		. '</p></div>';
 }
 add_action( 'wp_body_open', __NAMESPACE__ . '\\notice', 7 );
+
+/* ───────────────────────────── 가입 두 번 제출 (2026-09-28) ─────────────────────────────
+   같은 아이디 · 이메일 계정이 34쌍, 전부 번호가 붙어 있었다 (#…535 · #…536). 테마 `page-join-form.php:136` 은
+   `wp_insert_user` 라 같은 아이디를 거절하는데도 둘이 생긴 것은 **가입 요청이 동시에 두 번** 들어와 둘 다 「없음」 검사를
+   통과한 것 — 「가입하기」 두 번 누름. 사용자 표는 아이디에 고유 제약이 없다. 여기서는 같은 이메일의 가입 요청을
+   **원자적 잠금**(`wp_cache_add` — 있으면 실패)으로 한 번만 통과시킨다. 첫 요청이 계정을 못 만들고 끝나면(검증 실패)
+   잠금을 바로 푼다 — 손님이 고쳐서 다시 내는 것을 막으면 안 된다. */
+
+/**
+ * 잠금 열쇠 — 이메일로.
+ *
+ * @param string $email 이메일.
+ * @return string
+ */
+function lock_key( string $email ): string {
+	return 'dhr_join_' . md5( strtolower( trim( $email ) ) );
+}
+
+/**
+ * 잠금을 잡는다. 이미 있으면 false (= 두 번째 요청).
+ *
+ * @param string $key 열쇠.
+ * @param int    $ttl 초.
+ * @return bool
+ */
+function lock_take( string $key, int $ttl = 60 ): bool {
+	if ( function_exists( 'wp_cache_add' ) && function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+		return (bool) wp_cache_add( $key, 1, 'duckhoo', $ttl );   // 원자적 — 둘이 동시에 와도 하나만 true
+	}
+	if ( false !== get_transient( $key ) ) {
+		return false;
+	}
+	set_transient( $key, 1, $ttl );
+	return true;
+}
+
+/**
+ * 잠금을 푼다.
+ *
+ * @param string $key 열쇠.
+ * @return void
+ */
+function lock_drop( string $key ): void {
+	if ( function_exists( 'wp_cache_delete' ) ) {
+		wp_cache_delete( $key, 'duckhoo' );
+	}
+	delete_transient( $key );
+}
+
+/**
+ * 가입 제출이 같은 이메일로 몇 초 안에 또 왔으면 두 번째를 로그인 화면으로 돌린다.
+ *
+ * @return void
+ */
+function twice_guard(): void {
+	if ( ! blocking() || 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		return;
+	}
+	if ( empty( $_POST['wd_join_form_nonce'] ) || empty( $_POST['wd_join_email'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return;
+	}
+	$email = sanitize_email( wp_unslash( (string) $_POST['wd_join_email'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+	if ( '' === $email ) {
+		return;
+	}
+	$key = lock_key( $email );
+	if ( lock_take( $key ) ) {
+		// 첫 요청. 계정이 안 만들어진 채 끝나면(검증 실패 · 오류) 잠금을 풀어 다시 낼 수 있게 한다.
+		add_action(
+			'shutdown',
+			function () use ( $key ) {
+				if ( ! did_action( 'user_register' ) ) {
+					lock_drop( $key );
+				}
+			}
+		);
+		return;
+	}
+	$login = function_exists( 'wc_get_page_permalink' ) ? (string) wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
+	wp_safe_redirect( add_query_arg( 'dhr_twice', '1', $login ) );
+	exit;
+}
+add_action( 'init', __NAMESPACE__ . '\\twice_guard', 1 );
+
+/**
+ * 두 번째 요청이 떨어진 로그인 화면의 안내.
+ *
+ * @return void
+ */
+function twice_notice(): void {
+	if ( empty( $_GET['dhr_twice'] ) || is_admin() ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return;
+	}
+	echo '<div class="dhr-dup" role="alert">'
+		. '<b>가입 요청이 두 번 들어와 첫 번째로 처리했습니다.</b>'
+		. '<p>가입하신 이메일과 비밀번호로 로그인해 주세요. 로그인이 안 되면 잠시 뒤 다시 시도해 주세요.</p>'
+		. '</div>';
+}
+add_action( 'wp_body_open', __NAMESPACE__ . '\\twice_notice', 7 );

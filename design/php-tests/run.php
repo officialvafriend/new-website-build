@@ -2269,5 +2269,14 @@ if (!class_exists('WP_Error')) { class WP_Error { public function __construct(pu
 $err = new \WP_Error('x','y');
 $ok(($TL.'pick')($err, 'a', 'b') === $err && ($TL.'pick')(null, 'a', '') === null, '이미 실패한 로그인 · 비밀번호 없는 호출은 그대로');
 
+// ───────────────────────────────────────────────── 가입 두 번 제출 잠금 (2026-09-28)
+$SG = 'Duckhoo\\Redesign\\Signup\\';
+$ok(($SG.'lock_key')(' Kisa8020@Naver.com ') === ($SG.'lock_key')('kisa8020@naver.com'), '열쇠는 대소문자 · 빈칸을 무시한 이메일');
+$GLOBALS['__transients'] = [];
+$k = ($SG.'lock_key')('a@b.c');
+$ok(($SG.'lock_take')($k) === true && ($SG.'lock_take')($k) === false, '첫 요청은 잠금을 잡고 두 번째는 못 잡는다');
+($SG.'lock_drop')($k);
+$ok(($SG.'lock_take')($k) === true, '풀면 다시 잡힌다 (검증 실패 뒤 다시 내는 손님)');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

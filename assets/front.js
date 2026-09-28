@@ -1982,3 +1982,18 @@
     try { localStorage.setItem(KEY, JSON.stringify({ v: v, d: today })); } catch (e) {}
   });
 })();
+
+/* 가입 버튼 두 번 누름 막기 (2026-09-28) — 같은 아이디 계정이 둘 생기던 원인. 첫 제출 뒤 버튼을 잠그고
+   글자를 바꾼다. 테마 검증이 제출을 막은 경우(defaultPrevented)는 손대지 않는다. 20초 뒤엔 도로 푼다 (서버 오류 대비). */
+(function(){
+  var form = document.querySelector('form.wd-join-form');
+  if (!form) return;
+  form.addEventListener('submit', function(e){
+    if (e.defaultPrevented) return;
+    if (form.getAttribute('data-dhr-sent')) { e.preventDefault(); return; }
+    form.setAttribute('data-dhr-sent', '1');
+    var b = form.querySelector('.wd-join-submit');
+    if (b) { b.disabled = true; b.setAttribute('aria-disabled', 'true'); b.dataset.dhrTxt = b.textContent; b.textContent = '가입 처리 중…'; }
+    setTimeout(function(){ form.removeAttribute('data-dhr-sent'); if (b) { b.disabled = false; b.removeAttribute('aria-disabled'); if (b.dataset.dhrTxt) b.textContent = b.dataset.dhrTxt; } }, 20000);
+  });
+})();
