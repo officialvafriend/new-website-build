@@ -66,7 +66,10 @@ function hpos(): bool {
  * @param bool $twins   같은 사람으로 보이는 다른 계정이 있는가.
  * @return array{level:string,text:string}
  */
-function verdict( int $raw, int $listed, int $drawn, bool $twins ): array {
+function verdict( int $raw, int $listed, int $drawn, bool $twins, int $login_to = 0, int $self = 0 ): array {
+	if ( $login_to > 0 && $self > 0 && $login_to !== $self ) {
+		return array( 'level' => 'bad', 'text' => sprintf( '**같은 아이디 · 이메일의 계정이 둘이다.** 이 아이디로 로그인하면 워드프레스는 먼저 만들어진 #%d 로 들어가는데, 주문은 #%d 에 붙어 있다. 그래서 손님은 빈 주문내역을 본다. 고치는 길: 주문 화면의 「고객」 칸을 #%d 로 바꾸거나(주문을 손님이 실제로 들어가는 계정으로 옮김), 두 계정을 하나로 합친다.', $login_to, $self, $login_to ) );
+	}
 	if ( $raw <= 0 ) {
 		return array( 'level' => 'warn', 'text' => $twins
 			? '이 계정에는 주문이 없다. 같은 사람으로 보이는 다른 계정이 있다 — 손님이 주문은 그 계정으로 하고 로그인은 이 계정으로 한 것일 수 있다.'
@@ -75,11 +78,11 @@ function verdict( int $raw, int $listed, int $drawn, bool $twins ): array {
 	if ( $listed < $raw ) {
 		return array( 'level' => 'bad', 'text' => sprintf( '표에는 %d건인데 마이페이지 질의는 %d건만 돌려준다 — `woocommerce_my_account_my_orders_query` 필터나 상태 등록(테마 · 키플)이 걸러 내고 있다. 아래 콜백 목록과 상태별 수를 본다.', $raw, $listed ) );
 	}
-	if ( $drawn < 0 ) {
+	if ( -1 === $drawn ) {   // -2 = 관리자라 안 그림(모름) · -1 = 그리다 죽음
 		return array( 'level' => 'bad', 'text' => '질의는 맞는데 주문 목록 템플릿을 그리다 죽는다 — 아래 예외를 본다. 손님 화면이 비거나 잘린 이유다.' );
 	}
-	if ( $drawn < $listed ) {
-		return array( 'level' => 'bad', 'text' => sprintf( '질의는 %d건인데 그린 줄은 %d개 — 템플릿(테마 override)이 일부를 건너뛴다.', $listed, $drawn ) );
+	if ( $drawn >= 0 && $drawn < $listed ) {
+		return array( 'level' => 'bad', 'text' => sprintf( '질의는 %d건인데 그린 줄은 %d개 — 템플릿이 일부를 건너뛴다 (5번에서 테마 override 인지 본다).', $listed, $drawn ) );
 	}
 	return array( 'level' => 'ok', 'text' => $twins
 		? sprintf( '이 계정으로는 %d건이 정상으로 그려진다. 다만 같은 사람으로 보이는 다른 계정이 있다 — 손님이 **다른 계정**으로 로그인해 빈 목록을 본 것일 가능성이 크다.', $drawn )
@@ -248,8 +251,15 @@ function callbacks( string $hook ): array {
  */
 function render_as( int $uid ): array {
 	$me   = get_current_user_id();
-	$out  = array( 'rows' => -1, 'len' => 0, 'error' => '', 'empty_note' => false, 'html' => '' );
+	$out  = array( 'rows' => -1, 'len' => 0, 'error' => '', 'empty_note' => false, 'html' => '', 'skipped' => false );
 	$html = '';
+	if ( ! has_action( 'woocommerce_account_orders_endpoint' ) ) {
+		// 관리자 화면에는 워드커머스 템플릿 훅(wc-template-hooks.php)이 안 실린다 — 여기서 그리면 늘 빈 결과가 나온다.
+		// 처음엔 그 0 을 「템플릿이 건너뛴다」로 읽었다 (2026-09-28). 그리지 않고 그렇다고 적는다.
+		$out['skipped'] = true;
+		$out['rows']    = -2;
+		return $out;
+	}
 	try {
 		wp_set_current_user( $uid );
 		ob_start();
@@ -319,6 +329,49 @@ function theme_source( string $path ): string {
 }
 
 /**
+ * 이 아이디 · 이메일로 로그인하면 워드프레스가 어느 계정을 잡는가. (`wp_authenticate_username_password` 는 `get_user_by('login')`,
+ * 이메일 로그인은 `get_user_by('email')` — 둘 다 LIMIT 1 이라 같은 값이 둘이면 **먼저 만들어진 쪽**이다.)
+ *
+ * @param \WP_User $u 회원.
+ * @return array{by_login:int,by_email:int}
+ */
+function login_resolution( $u ): array {
+	$a = get_user_by( 'login', (string) $u->user_login );
+	$b = get_user_by( 'email', (string) $u->user_email );
+	return array( 'by_login' => $a ? (int) $a->ID : 0, 'by_email' => $b ? (int) $b->ID : 0 );
+}
+
+/**
+ * 가게 전체에서 아이디 · 이메일이 겹치는 계정 — 같은 일이 몇 명에게 있는지.
+ *
+ * @return array<int,array{val:string,n:int,ids:string,kind:string}>
+ */
+function duplicates(): array {
+	global $wpdb;
+	if ( ! isset( $wpdb ) ) {
+		return array();
+	}
+	$out = array();
+	foreach ( array( 'user_login' => '아이디', 'user_email' => '이메일' ) as $col => $kind ) {
+		$rows = (array) $wpdb->get_results( "SELECT {$col} val, COUNT(*) n, GROUP_CONCAT(ID ORDER BY ID) ids FROM {$wpdb->users} WHERE {$col} <> '' GROUP BY {$col} HAVING n > 1 ORDER BY n DESC LIMIT 100" ); // phpcs:ignore
+		foreach ( $rows as $r ) {
+			$out[] = array( 'val' => (string) $r->val, 'n' => (int) $r->n, 'ids' => (string) $r->ids, 'kind' => $kind );
+		}
+	}
+	return $out;
+}
+
+/**
+ * 어느 계정에 주문이 몇 건인지 (표 직접).
+ *
+ * @param int $uid 회원 번호.
+ * @return int
+ */
+function order_count( int $uid ): int {
+	return array_sum( raw_counts( $uid ) );
+}
+
+/**
  * 화면.
  *
  * @return void
@@ -350,7 +403,8 @@ function screen(): void {
 		$aq     = account_query( $uid );
 		$tw     = twins( $u );
 		$dr     = render_as( $uid );
-		$v      = verdict( $rawn, $aq['total'], '' !== $dr['error'] ? -1 : $dr['rows'], ! empty( $tw ) );
+		$lr     = login_resolution( $u );
+		$v      = verdict( $rawn, $aq['total'], '' !== $dr['error'] ? -1 : $dr['rows'], ! empty( $tw ), (int) ( $lr['by_login'] ?: $lr['by_email'] ), $uid );
 		$names  = wc_get_order_statuses();
 		$color  = array( 'ok' => '#1B5E2A', 'warn' => '#8A4B0C', 'bad' => '#B42318' )[ $v['level'] ];
 		$tpl    = function_exists( 'wc_locate_template' ) ? (string) wc_locate_template( 'myaccount/orders.php' ) : '';
@@ -364,7 +418,8 @@ function screen(): void {
 			<tr><th>이름 · 역할</th><td><?php echo esc_html( $u->display_name ); ?> · <?php echo esc_html( implode( ', ', (array) $u->roles ) ); ?></td></tr>
 			<tr><th>가입 · 본인확인</th><td><?php echo esc_html( (string) $u->user_registered ); ?> · wd_phone_verified=<code><?php echo esc_html( (string) get_user_meta( $uid, 'wd_phone_verified', true ) ); ?></code> · 옛 사이트 확인=<code><?php echo esc_html( (string) get_user_meta( $uid, '_dhr_legacy_verified', true ) ); ?></code></td></tr>
 			<tr><th>전화</th><td><?php echo esc_html( (string) get_user_meta( $uid, 'billing_phone', true ) ); ?> / 인증 <?php echo esc_html( (string) get_user_meta( $uid, 'wd_verified_phone', true ) ); ?></td></tr>
-			<tr><th>같은 사람으로 보이는 다른 계정</th><td><?php echo $tw ? wp_kses_post( implode( '<br>', array_map( fn( $t ) => sprintf( '#%d · %s · %s (%s)', $t['id'], esc_html( $t['login'] ), esc_html( $t['email'] ), esc_html( $t['why'] ) ), $tw ) ) ) : '없음'; ?></td></tr>
+			<tr><th>같은 사람으로 보이는 다른 계정</th><td><?php echo $tw ? wp_kses_post( implode( '<br>', array_map( fn( $t ) => sprintf( '#%d · %s · %s (%s) · 가입 %s · 주문 <b>%d건</b> · 본인확인 %s', $t['id'], esc_html( $t['login'] ), esc_html( $t['email'] ), esc_html( $t['why'] ), esc_html( (string) ( get_userdata( $t['id'] )->user_registered ?? '' ) ), order_count( $t['id'] ), esc_html( (string) get_user_meta( $t['id'], 'wd_phone_verified', true ) ) ), $tw ) ) ) : '없음'; ?></td></tr>
+			<tr><th>이 아이디 · 이메일로 로그인하면</th><td>아이디로 → <b>#<?php echo (int) $lr['by_login']; ?></b> · 이메일로 → <b>#<?php echo (int) $lr['by_email']; ?></b> <?php echo ( $lr['by_login'] && $lr['by_login'] !== $uid ) || ( $lr['by_email'] && $lr['by_email'] !== $uid ) ? '<b style="color:#B42318">← 이 계정(#' . (int) $uid . ')이 아니다</b>' : '(이 계정)'; ?></td></tr>
 		</tbody></table>
 		<h2>2. 표에서 직접 센 주문 (<?php echo hpos() ? 'HPOS wc_orders.customer_id' : 'posts + _customer_user'; ?>)</h2>
 		<p><b><?php echo (int) $rawn; ?>건</b>
@@ -386,7 +441,9 @@ function screen(): void {
 		<p><code>myaccount/orders.php</code> → <?php echo wp_kses_post( $in_theme( $tpl ) ); ?> <small><?php echo esc_html( str_replace( ABSPATH, '', $tpl ) ); ?></small><br>
 		<code>myaccount/my-account.php</code> → <?php echo wp_kses_post( $in_theme( $tpl2 ) ); ?> <small><?php echo esc_html( str_replace( ABSPATH, '', $tpl2 ) ); ?></small></p>
 		<h2>6. 그 회원으로 주문 목록을 그려 봄</h2>
-		<?php if ( '' !== $dr['error'] ) : ?>
+		<?php if ( ! empty( $dr['skipped'] ) ) : ?>
+			<p>관리자 화면에는 워드커머스 주문 목록 훅이 실리지 않아 여기서는 그릴 수 없습니다 (그려도 늘 0 이 나옵니다). 3번 질의 결과가 곧 손님 화면의 줄 수입니다.</p>
+		<?php elseif ( '' !== $dr['error'] ) : ?>
 			<p style="color:#B42318"><b>그리다 죽음:</b> <?php echo esc_html( $dr['error'] ); ?></p>
 		<?php else : ?>
 			<p>줄 <b><?php echo (int) $dr['rows']; ?>개</b> · HTML <?php echo number_format( (int) $dr['len'] ); ?>자 · 「주문 없음」 안내 <?php echo $dr['empty_note'] ? '있음' : '없음'; ?></p>
@@ -396,6 +453,16 @@ function screen(): void {
 		<h2>7. 테마가 덮어쓴 <code>myaccount/orders.php</code> 원문 (읽기만)</h2>
 		<p class="description">이 안에서 <code>continue</code> · <code>if</code> 로 주문을 건너뛰는 줄이 원인이다. 통째로 복사해 클로드에게 붙여 주세요.</p>
 		<pre style="background:#fff;padding:8px;font-size:11px;max-height:600px;overflow:auto;white-space:pre-wrap;word-break:break-all"><?php echo esc_html( $src ); ?></pre>
+		<?php endif; ?>
+		<h2>8. 가게 전체에서 아이디 · 이메일이 겹치는 계정</h2>
+		<?php $dups = duplicates(); ?>
+		<?php if ( ! $dups ) : ?><p>없음</p><?php else : ?>
+		<p>같은 아이디 · 이메일로 계정이 둘 이상인 경우 <b><?php echo count( $dups ); ?>쌍</b>. 이런 손님은 로그인할 때마다 먼저 만들어진 계정으로 들어가므로, 나중 계정에 붙은 주문은 안 보입니다.</p>
+		<table class="widefat striped" style="max-width:900px"><thead><tr><th>무엇</th><th>값</th><th>계정 번호(먼저 만든 순)</th><th>주문 수</th></tr></thead><tbody>
+		<?php foreach ( $dups as $d ) : ?>
+			<tr><td><?php echo esc_html( $d['kind'] ); ?></td><td><?php echo esc_html( $d['val'] ); ?></td><td><?php echo esc_html( $d['ids'] ); ?></td><td><?php echo esc_html( implode( ' / ', array_map( fn( $i ) => '#' . (int) $i . ' ' . order_count( (int) $i ) . '건', explode( ',', $d['ids'] ) ) ) ); ?></td></tr>
+		<?php endforeach; ?>
+		</tbody></table>
 		<?php endif; ?>
 		<p class="description">이 화면 결과를 그대로 복사해 클로드에게 붙여 주시면 다음 손을 정합니다. 손님께는 「어느 계정(이메일)으로 로그인했는지」와 「마이페이지 → 주문내역 화면에 무엇이 보이는지(빈 목록인지 · 오류인지)」를 물어봐 주세요.</p>
 	</div>

@@ -2253,6 +2253,9 @@ $ok(($OD.'verdict')(5, 2, 2, false)['level'] === 'bad' && str_contains(($OD.'ver
 $ok(($OD.'verdict')(5, 5, -1, false)['level'] === 'bad' && str_contains(($OD.'verdict')(5, 5, -1, false)['text'], '죽는다'), '그리다 죽으면 템플릿 예외');
 $ok(($OD.'verdict')(5, 5, 3, false)['level'] === 'bad', '질의 5 · 그린 줄 3 이면 템플릿이 건너뛴다');
 $ok(($OD.'verdict')(5, 5, 5, false)['level'] === 'ok' && str_contains(($OD.'verdict')(5, 5, 5, true)['text'], '다른 계정'), '다 맞으면 서버는 정상 — 다른 계정이 있으면 그쪽을 짚는다');
+$v = ($OD.'verdict')(1, 1, -2, true, 279209535, 279209536);
+$ok($v['level'] === 'bad' && str_contains($v['text'], '#279209535 로 들어가는데') && str_contains($v['text'], '#279209536 에 붙어'), '같은 아이디의 계정이 둘이면 로그인이 먼저 만든 계정으로 가는 것을 원인으로 짚는다');
+$ok(($OD.'verdict')(1, 1, -2, false, 279209536, 279209536)['level'] === 'ok', '로그인이 이 계정으로 오고 관리자라 못 그린 것(-2)은 정상으로 본다');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
