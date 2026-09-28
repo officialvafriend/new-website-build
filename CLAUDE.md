@@ -2713,4 +2713,15 @@ alt 채우기(없음 · 빈 것 · 홑따옴표) · 첨부 alt) · 프로덕션 
   줄. **칸 이름을 못 박지 않는다.** **`_product_ppom` 이 비어 있으면 아무것도 안 한다** — 그룹을 잇기 전에 판매가 서면 안 된다.
   잇는 메타 키가 다르면 빗장이 조용히 안 돈다(fail-open) → 이은 뒤 Store API add-item 이 400 인지로 확인하고, 아니면 `duckhoo_ppom_link_keys`
 
-검증: `php design/php-tests/run.php` (12개). 라이브는 사장님이 그룹을 이은 뒤 — 상품 화면의 select · 담기 차단 · 색 고른 뒤 줄 값 · Store API 400.
+**확인 완료 (2026-09-28, 프로덕션 · 그룹 #61 · 칸 이름 `zova_color`)**: ①select 가 `form.cart` 안에 있고 우리 `.dhsel` 이 위에 그려진다
+②안 고르면 구매 게이트가 담기 · 결제하기를 잠근다(「이벤트/기획/기기 옵션을 모두 선택해주세요」, 장바구니 0) ③블랙을 고르면 빌더가
+`required_main · 58,000원` 줄을 만들고 담기면 장바구니 줄 58,000 · 「조바 기기 색상 *: 블랙 - 1개」 ④Store API `add-item` → **400**
+「옵션(색상)을 선택해 주세요」. 시험 장바구니는 둘 다 비웠다.
+
+**빗장이 처음엔 안 돌았다 — 메타 키를 짐작했기 때문이다.** `_product_ppom` 이라고 걸었는데 PPOM 34 의 진짜 키는
+`_product_meta_id`(그룹 번호 **배열**, `PPOM_PRODUCT_META_KEY`) 라 fail-open 으로 201 이 났다. 공개 소스
+(`plugins.svn.wordpress.org/woocommerce-product-addon/trunk/woocommerce-product-addon.php`)로 확인해 고쳤고, 그보다 먼저
+**`PPOM_Meta( $pid )->is_exists`** 로 PPOM 자신에게 묻는다 — 분류 · 태그로 붙인 그룹까지 그쪽이 안다. AIOSEO 필터 때와 같은 교훈:
+**모르는 플러그인의 키 · 필터는 소스에서 확인하고 쓴다.**
+
+검증: `php design/php-tests/run.php` (13개) · `scratchpad/live/joba-test.mjs`(안 고르기 · 고르기 · 담기 · 뒤처리) · `joba-dump.mjs`(select · 게이트 상태) · curl Store API.
