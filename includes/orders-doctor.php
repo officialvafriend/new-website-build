@@ -404,9 +404,15 @@ function screen(): void {
 	}
 	$q = isset( $_GET['who'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['who'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	$u = '' !== $q ? find_user( $q ) : null;
+	$done = '';
+	if ( isset( $_POST['dhr_sync_from'] ) && check_admin_referer( 'dhr_sync_pw' ) && function_exists( '\\Duckhoo\\Redesign\\TwinLogin\\sync_hash' ) ) {
+		$n    = \Duckhoo\Redesign\TwinLogin\sync_hash( (int) $_POST['dhr_sync_from'] );
+		$done = sprintf( '#%d 의 비밀번호를 쌍둥이 계정 %d개에 적용했습니다. 손님은 지금 쓰는 비밀번호 그대로 다시 로그인하면 됩니다.', (int) $_POST['dhr_sync_from'], $n );
+	}
 	?>
 	<div class="wrap" style="max-width:1000px">
 		<h1>주문내역 진단</h1>
+		<?php if ( '' !== $done ) : ?><div class="notice notice-success"><p><?php echo esc_html( $done ); ?></p></div><?php endif; ?>
 		<p>손님이 「주문내역이 안 보인다」고 할 때, 그 손님 번호(주문 화면 고객 칸의 <code>#숫자</code>) · 이메일 · 아이디로 마이페이지 주문 목록을 서버에서 그대로 만들어 봅니다. <b>읽기만 합니다.</b></p>
 		<form method="get"><input type="hidden" name="page" value="<?php echo esc_attr( SLUG ); ?>">
 			<input type="text" name="who" value="<?php echo esc_attr( $q ); ?>" class="regular-text" placeholder="279209536 또는 이메일"> <button class="button button-primary">진단</button></form>
@@ -463,8 +469,10 @@ function screen(): void {
 			?>
 			<h2>1-b. 같은 아이디 · 이메일의 계정 나란히 (로그인 · 비밀번호가 어디에 닿는지)</h2>
 			<p>비밀번호 찾기 · 정보 수정은 <b>한 계정에만</b> 닿는다. 「재설정 링크 요청」 시각이 한쪽에만 있으면 그 계정의 비밀번호만 바뀐 것이다.
-			플러그인은 손님이 친 비밀번호를 두 계정 해시로 다 확인해 맞는 쪽으로 넣어 준다 — 어느 쪽에도 안 맞으면 정말 틀린 비밀번호다.</p>
-			<table class="widefat striped" style="max-width:1100px"><thead><tr><th>번호</th><th>가입</th><th>역할</th><th>본인확인</th><th>주문</th><th>적립금</th><th>비밀번호 해시</th><th>재설정 링크 요청</th><th>키플 · 테마 메타</th></tr></thead><tbody>
+			플러그인은 손님이 친 비밀번호를 두 계정 해시로 다 확인해 맞는 쪽으로 넣어 준다 — 어느 쪽에도 안 맞으면 정말 틀린 비밀번호다.
+			이제부터는 어느 계정의 비밀번호가 바뀌든 쌍둥이에 같은 해시가 복사된다. 이미 갈라진 쌍은 오른쪽 버튼으로 한 번 맞춘다 —
+			<b>손님이 지금 쓰는 비밀번호가 걸려 있는 계정</b>(보통 주문내역이 비어 보이는 그 계정)의 버튼을 누른다.</p>
+			<table class="widefat striped" style="max-width:1100px"><thead><tr><th>번호</th><th>가입</th><th>역할</th><th>본인확인</th><th>주문</th><th>적립금</th><th>비밀번호 해시</th><th>재설정 링크 요청</th><th>키플 · 테마 메타</th><th></th></tr></thead><tbody>
 			<?php foreach ( $same as $sid ) : $su = get_userdata( (int) $sid ); if ( ! $su ) { continue; } ?>
 				<?php
 				$hash  = (string) $su->user_pass;
@@ -492,6 +500,7 @@ function screen(): void {
 					<td><?php echo esc_html( $htype ); ?></td>
 					<td><?php echo '' !== $when ? '<b>' . esc_html( $when ) . '</b>' : ( '' !== $akey ? '있음' : '—' ); ?></td>
 					<td style="font-size:12px;max-width:380px"><?php echo $metas ? wp_kses_post( implode( '<br>', array_slice( $metas, 0, 14 ) ) ) : '—'; ?></td>
+					<td><form method="post" onsubmit="return confirm('#<?php echo (int) $sid; ?> 의 비밀번호를 같은 아이디의 다른 계정에도 그대로 적용합니다. 손님이 지금 쓰는 비밀번호가 이 계정 것일 때 누르세요.');"><?php wp_nonce_field( 'dhr_sync_pw' ); ?><input type="hidden" name="dhr_sync_from" value="<?php echo (int) $sid; ?>"><button class="button">이 계정 비밀번호를 쌍둥이에도</button></form></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody></table>

@@ -190,3 +190,64 @@ function pick( $user, $username = '', $password = '' ) {
 	return $user;
 }
 add_filter( 'authenticate', __NAMESPACE__ . '\\pick', 30, 3 );
+
+/**
+ * 비밀번호가 바뀌면 쌍둥이 계정에도 같은 해시를 적는다 (2026-09-28 저녁).
+ *
+ * 김성욱 손님이 휴대폰 비밀번호 찾기로 초기화했더니 #535 만 바뀌어, 새 비밀번호로는 주문 없는 #535 로만 들어갔다.
+ * 비밀번호 찾기 · 정보 수정 · 관리자 편집 어느 길로 바뀌든 **같은 아이디의 다른 계정에 같은 해시를 복사**해 두면
+ * 두 계정의 비밀번호가 갈라질 일이 없고, 로그인은 늘 `best()` 가 고른 쪽(본인확인 · 주문 있는 계정)으로 간다.
+ * 해시를 그대로 복사하므로 평문은 만지지 않는다 (워드프레스 bcrypt 해시는 계정에 묶여 있지 않다). 훅을 안 타는
+ * `$wpdb->update` 로 적어 되돌이가 없다. 쌍둥이 = 아이디(user_login)가 같은 계정만 — 이메일만 같은 것은 안 건드린다.
+ * 끄기: `duckhoo_twin_password_sync` → false.
+ *
+ * @param int $uid 비밀번호가 바뀐 계정.
+ * @return int 복사한 계정 수.
+ */
+function sync_hash( int $uid ): int {
+	global $wpdb;
+	if ( ! apply_filters( 'duckhoo_twin_password_sync', on() ) || ! isset( $wpdb ) || $uid <= 0 ) {
+		return 0;
+	}
+	$row = $wpdb->get_row( $wpdb->prepare( "SELECT user_login, user_pass FROM {$wpdb->users} WHERE ID = %d", $uid ) ); // phpcs:ignore
+	if ( ! $row || '' === (string) $row->user_pass || '' === (string) $row->user_login ) {
+		return 0;
+	}
+	$ids = (array) $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->users} WHERE ID <> %d AND user_login = %s AND user_pass <> %s LIMIT 10", $uid, (string) $row->user_login, (string) $row->user_pass ) ); // phpcs:ignore
+	$n   = 0;
+	foreach ( $ids as $tid ) {
+		$tid = (int) $tid;
+		if ( false !== $wpdb->update( $wpdb->users, array( 'user_pass' => (string) $row->user_pass ), array( 'ID' => $tid ) ) ) { // phpcs:ignore
+			clean_user_cache( $tid );
+			++$n;
+			error_log( sprintf( '[duckhoo twin-login] #%d 비밀번호가 바뀌어 쌍둥이 #%d 에 같은 해시를 적음', $uid, $tid ) ); // phpcs:ignore
+		}
+	}
+	return $n;
+}
+
+/**
+ * `wp_set_password` (비밀번호 재설정 · 찾기) 뒤.
+ *
+ * @param string $password 평문 (안 쓴다).
+ * @param int    $uid      계정.
+ */
+function on_set_password( $password, $uid ): void {
+	sync_hash( (int) $uid );
+}
+add_action( 'wp_set_password', __NAMESPACE__ . '\\on_set_password', 20, 2 );
+
+/**
+ * `profile_update` (정보 수정 · 관리자 편집 · `wp_update_user`) 뒤 — 해시가 실제로 바뀐 때만.
+ *
+ * @param int    $uid 계정.
+ * @param object $old 바뀌기 전 WP_User.
+ */
+function on_profile_update( $uid, $old = null ): void {
+	$now = get_userdata( (int) $uid );
+	if ( ! $now || ! is_object( $old ) || empty( $old->user_pass ) || (string) $old->user_pass === (string) $now->user_pass ) {
+		return;
+	}
+	sync_hash( (int) $uid );
+}
+add_action( 'profile_update', __NAMESPACE__ . '\\on_profile_update', 20, 2 );
