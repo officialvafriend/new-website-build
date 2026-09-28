@@ -2775,3 +2775,21 @@ alt 채우기(없음 · 빈 것 · 홑따옴표) · 첨부 alt) · 프로덕션 
 
 검증: `php design/php-tests/run.php` (쌍둥이 로그인 6개). 라이브는 로그인이 필요해 못 본다 — 사장님이 kisa8020 손님께
 「로그아웃 뒤 다시 로그인」을 부탁해 주문내역이 보이는지로 확인한다.
+
+### 원인 확정 — 테마의 `wp_insert_user` 가 두 번 돈다 (2026-09-28, 사장님이 `page-join-form.php` 124–148행을 붙여 줌)
+
+테마는 `wp_insert_user( user_login => $email, user_email => $email, … )` 을 **한 번** 부른다. 그런데 `wp_users.user_login` 에는
+UNIQUE 제약이 없고 `wp_insert_user` 의 `username_exists()` · `email_exists()` 검사는 **넣기와 한 트랜잭션이 아니다.** 가입 버튼이
+두 번 눌리거나(느린 폰에서 「안 눌린 줄 알고」) 폼이 두 번 전송되면 두 요청이 나란히 검사를 통과해 **번호가 붙은 계정 둘**이 생긴다 —
+34쌍 전부 ID 가 붙어 있는 이유다. 테마 파일은 안 건드리고 우리 플러그인이 두 겹으로 막는다 (`includes/signup.php` 뒤쪽 · `front.js`).
+
+- **서버**: `twice_guard()`(`init` 1) — `wd_join_form_nonce` 가 든 POST 면 이메일로 60초 잠금(`wp_cache_add`, 외부 객체 캐시가 없으면
+  transient). **못 잡으면 두 번째 요청이다** → 내 계정으로 보내고 `?dhr_twice=1` 안내(「가입 요청이 두 번 들어와 첫 번째로 처리했습니다 …
+  로그인해 주세요」). `shutdown` 에서 `user_register` 가 안 돌았으면(검증 실패 · 본인확인 오류) 잠금을 풀어 바로 다시 시도할 수 있게 한다
+- **브라우저**: `form.wd-join-form` 제출 때 버튼을 잠그고 「가입 처리 중…」(`data-dhr-sent`, 20초 뒤 해제). 테마 검증이
+  `preventDefault` 한 제출은 건너뛴다
+- **폼 필드 · 테마 검증 · 본인확인은 그대로다.** 이 잠금은 같은 이메일의 두 번째 요청만 튕긴다
+- 이미 생긴 34쌍은 `twin-login.php` 가 로그인을 바로잡고, 정리(지우기)는 진단 8번 표를 보고 사장님이 한다
+
+검증: `php design/php-tests/run.php` (가입 잠금 3개). 라이브는 본인확인 없이 가입을 끝낼 수 없어 못 본다 — 다음 가입자부터
+겹치는 계정이 생기는지를 진단 8번 표에서 본다.
