@@ -171,8 +171,8 @@ function drop_private_pages( array $entries ): array {
 			$entries,
 			function ( $e ) {
 				$path = entry_path( $e );
-				$last = '' !== $path ? (string) substr( strrchr( '/' . $path, '/' ), 1 ) : '';
-				return ! is_private_slug( $path ) && ! ( '' !== $last && str_starts_with( $path, 'category/' ) && is_private_slug( $last ) );
+				$last = '' !== $path ? (string) substr( strrchr( '/' . $path, '/' ), 1 ) : '';   // 글은 `2026/04/09/<slug>`, 분류는 `category/<slug>` — 마지막 조각을 본다
+				return ! is_private_slug( $path ) && ! is_private_slug( $last );
 			}
 		)
 	);
