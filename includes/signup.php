@@ -254,6 +254,14 @@ function twice_guard(): void {
 		);
 		return;
 	}
+	// 두 번째 요청. 2026-09-28 저녁: 튕겼더니 신규 가입이 통째로 막혔다(가입 화면이 되풀이됨) — 테마 흐름이 같은 폼을
+	// 두 번 보내는 것으로 보인다. 확인될 때까지 **기록만 하고 막지 않는다** (필터 `duckhoo_signup_twice_block` 로 다시 켠다).
+	$log   = (array) get_option( 'duckhoo_twice_log', array() );
+	$log[] = array( 't' => current_time( 'mysql' ), 'k' => substr( $key, -8 ), 'uri' => (string) ( $_SERVER['REQUEST_URI'] ?? '' ), 'ref' => (string) ( $_SERVER['HTTP_REFERER'] ?? '' ) );
+	update_option( 'duckhoo_twice_log', array_slice( $log, -30 ), false );
+	if ( ! apply_filters( 'duckhoo_signup_twice_block', false ) ) {
+		return;
+	}
 	$login = function_exists( 'wc_get_page_permalink' ) ? (string) wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
 	wp_safe_redirect( add_query_arg( 'dhr_twice', '1', $login ) );
 	exit;
