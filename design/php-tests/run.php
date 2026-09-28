@@ -2221,5 +2221,28 @@ $ok(($SP.'gone_target')('/product/%ED%81%AC%EB%9E%98%ED%94%84%ED%8A%B8-%E2%98%85
 $ok(($SP.'gone_target')('/product/크래프트-포도-9-8mg-30ml/', $map) === $map['크래프트'] && ($SP.'gone_target')('/product/노보-타박멘솔/', $map) === '' && ($SP.'gone_target')('/x/', ['' => 'y']) === '', '디코드된 주소도 잡고, 다른 상품 · 빈 열쇠는 안 잡는다');
 $ok(str_contains(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()['리퀴드랩-ㅇㅋㄹㅌ-9-8mg-30ml-2'], '아쿠아') && str_contains(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()['마르키사-오리지날-9-8mg-30ml'], '라즈베리'), '주소 ≠ 이름 상품 둘(아쿠아 · 라즈베리)의 글이 실제 상품을 말한다');
 
+// ───────────────────────────────────────────────── 옵션을 골라야 담긴다 (2026-09-28)
+require_once dirname(__DIR__, 2).'/includes/must-pick.php';
+$MP = 'Duckhoo\\Redesign\\MustPick\\';
+$ok(($MP.'products')() === [3435], '기본 대상은 조바 입호흡 전자담배 #3435');
+$ok(($MP.'picked')(['ppom' => ['fields' => ['id' => '99', 'joba_color' => '블랙']]]), 'PPOM 칸에 값이 있으면 골랐다 (칸 이름은 무엇이든)');
+$ok(!($MP.'picked')(['ppom' => ['fields' => ['id' => '99', 'joba_color' => '']]]) && !($MP.'picked')([]) && !($MP.'picked')(['ppom' => ['fields' => ['id' => '99']]]), '값이 비었거나 id 뿐이면 안 골랐다');
+$ok(($MP.'picked')(['wd_option_builder_json' => json_encode([['group_key' => 'required_main', 'label' => '블랙', 'qty' => 1]])]), '테마 빌더 JSON 의 required_main 줄도 골랐다로 본다');
+$ok(!($MP.'picked')(['wd_option_builder_json' => json_encode([['group_key' => 'addon_1', 'qty' => 2]])]), 'addon 줄만 있으면 안 골랐다');
+$ok(($MP.'item_picked')(['ppom' => ['fields' => ['x' => '퍼플']]]) && ($MP.'item_picked')(['wd_option_builder' => [['group_key' => 'required_main', 'qty' => 1]]]) && !($MP.'item_picked')(['product_id' => 3435]), '장바구니 줄도 같은 규칙');
+$GLOBALS['__postmeta'][3435] = []; $GLOBALS['__notices'] = []; $_POST = [];
+$ok(($MP.'validate_add')(true, 3435) === true && !$GLOBALS['__notices'], '옵션 그룹이 아직 안 이어진 상품은 막지 않는다 (판매가 서면 안 된다)');
+$GLOBALS['__postmeta'][3435]['_product_ppom'] = '41';
+$ok(($MP.'validate_add')(true, 3435) === false && ($GLOBALS['__notices'][0][1] ?? '') === '옵션(색상)을 선택해 주세요. 골라야 담을 수 있습니다.', '그룹이 이어졌는데 안 골랐으면 담기를 막고 안내한다');
+$_POST = ['ppom' => ['fields' => ['id' => '41', 'joba_color' => '샴페인 골드']]]; $GLOBALS['__notices'] = [];
+$ok(($MP.'validate_add')(true, 3435) === true && !$GLOBALS['__notices'], '골랐으면 통과');
+$ok(($MP.'validate_add')(true, 146) === true && ($MP.'validate_add')(false, 3435) === false, '다른 상품은 그대로 · 앞에서 이미 막힌 것은 그대로');
+$_POST = [];
+$caught = ''; try { ($MP.'store_add')(new WC_Product(3435, '조바 입호흡 전자담배', 58000)); } catch (\Throwable $e) { $caught = $e->getMessage(); }
+$ok(str_contains($caught, '옵션(색상)'), 'Store API 로는 이 상품을 못 담는다 (옵션을 실을 수 없는 길)');
+$caught = ''; try { ($MP.'store_add')(new WC_Product(146, '노보 10병', 130000)); } catch (\Throwable $e) { $caught = 'x'; }
+$ok($caught === '', '다른 상품은 Store API 그대로');
+unset($GLOBALS['__postmeta'][3435]);
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

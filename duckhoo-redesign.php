@@ -83,6 +83,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
 
 // 담아 둔 뒤 값이 바뀌면 옛 금액으로 주문된다 — 결제에서 막는다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/must-pick.php';   // 옵션(색상)을 고르지 않으면 못 담는다 — 서버 쪽 빗장
 // 옛 회원 재인증 문 — 인증 기록도 옛 사이트 확인 표시도 없는 회원만 결제 전에 테마 재인증 화면으로 (2026-09-24)
 require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/today.php';       // 오늘 할 일 — 화면 · 대시보드 위젯 · 아침 메일(크론이라 admin 밖)

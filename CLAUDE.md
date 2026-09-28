@@ -2695,3 +2695,22 @@ alt 채우기(없음 · 빈 것 · 홑따옴표) · 첨부 alt) · 프로덕션 
 
 검증: `php design/php-tests/run.php` (가격표 · 리다이렉트 · 글 18개) · `scratchpad/live/price-shot.mjs`(390/1280 스크린샷 · 넘침) ·
 프로덕션 curl — 301 대상 · `/price/` 제목 · 설명 · 188줄 · 6개 상품의 meta description 과 `.dhp-about`.
+
+## 조바 기기 색상 칸 — 옵션 그룹은 사장님이, 빗장은 우리가 (2026-09-28)
+
+사장님: 「조바 입호흡 기기 색상 선택 칸이 없어서 만들어야 할 듯 — 블랙 · 퍼플 · 샴페인 골드」 · 「색상을 꼭 선택해야 구매도 가능하게끔」.
+
+- **옵션 그룹을 만들어 상품에 잇는 코드는 권한 분류기가 막았다** (「Modify Shared Resources」 — 값 일괄 변경 · 주문 상태 자동 변경과 같은
+  판정). 우회하지 않는다. 사장님이 PPOM 화면에서 만든다: 새 그룹 → Select 칸 제목 **「기기 색상」**(괄호 없이 · 「팟」「코일」 금지 —
+  테마가 추가 옵션으로 잡는다 · 「기기」가 있어야 구매 게이트가 필수로 본다) · Data name `joba_color` · 옵션 셋 값 비움 ·
+  **Required 는 끈다**(빌더가 고른 뒤 칸을 되돌리므로 PPOM 검증과 부딪힌다) → 상품 #3435 에 그룹 잇기
+- **왜 이 방식이 되는가**: 테마 `wd-option-builder.js` `detectGroup()` 이 **첫 select 를 `required_main`(본품)** 으로 잡고 그 줄 값을 판매가로
+  쓴다. 이 상품엔 옵션이 없어 색상 칸이 첫 select → 블랙 1 + 퍼플 1 = 두 대 116,000원. `submit.wdOptionBuilder` 가
+  `getRequiredTotalQty() < 1` 이면 담기 · 바로구매를 막는다 (「필수 옵션을 1개 이상 선택해주세요」). 젤로 팟(2026-09-14)은 색상이
+  **두 번째** 칸이라 addon 이 됐던 것 — 첫 칸이면 그 문제가 없다
+- **서버 빗장 `includes/must-pick.php`** (필터 `duckhoo_must_pick`, 기본 #3435): 담기 검증 · Store API `add-item`(옵션을 실을 수 없는
+  길이라 아예 막음) · `woocommerce_checkout_create_order`. 「골랐다」 = `ppom[fields][*]` 에 값이 있거나 빌더 JSON 에 `required_main`
+  줄. **칸 이름을 못 박지 않는다.** **`_product_ppom` 이 비어 있으면 아무것도 안 한다** — 그룹을 잇기 전에 판매가 서면 안 된다.
+  잇는 메타 키가 다르면 빗장이 조용히 안 돈다(fail-open) → 이은 뒤 Store API add-item 이 400 인지로 확인하고, 아니면 `duckhoo_ppom_link_keys`
+
+검증: `php design/php-tests/run.php` (12개). 라이브는 사장님이 그룹을 이은 뒤 — 상품 화면의 select · 담기 차단 · 색 고른 뒤 줄 값 · Store API 400.
