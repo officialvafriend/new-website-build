@@ -283,26 +283,3 @@ function twice_notice(): void {
 		. '</div>';
 }
 add_action( 'wp_body_open', __NAMESPACE__ . '\\twice_notice', 7 );
-
-/**
- * front.js 의 옛 가입 버튼 잠금을 되돌린다 (2026-09-28 저녁, 임시).
- *
- * 옛 블록은 제출 이벤트 **안에서** `.wd-join-submit` 을 disabled 로 만드는데, 브라우저는 전송 데이터를 그 뒤에 만드므로
- * disabled 된 버튼의 name · value 가 빠진다 → 테마가 「가입하기를 눌렀는지」를 못 보고 폼만 다시 그린다 (신규 가입 전부 막힘).
- * 이 스크립트는 front.js **뒤**(wp_footer 99)에 실려 같은 submit 에서 나중에 돌며 버튼을 도로 켜고 옛 20초 잠금 표시를 지운다.
- * front.js 자체가 고쳤져 배포되면 이 함수는 지운다.
- *
- * @return void
- */
-function unlock_join_button(): void {
-	if ( is_admin() ) {
-		return;
-	}
-	echo '<script>(function(){var f=document.querySelector("form.wd-join-form");if(!f)return;var t=0;'
-		. 'f.addEventListener("submit",function(e){var b=f.querySelector(".wd-join-submit");'
-		. 'if(b&&b.disabled){b.disabled=false;b.removeAttribute("aria-disabled");if(b.dataset.dhrTxt){b.textContent=b.dataset.dhrTxt;}}'
-		. 'f.removeAttribute("data-dhr-sent");'
-		. 'if(t&&Date.now()-t<3000&&!e.defaultPrevented){e.preventDefault();return;}t=Date.now();'
-		. 'setTimeout(function(){if(b){b.setAttribute("aria-disabled","true");b.dataset.dhrTxt=b.textContent;b.textContent="가입 처리 중…";}},0);});})();</script>';
-}
-add_action( 'wp_footer', __NAMESPACE__ . '\\unlock_join_button', 99 );

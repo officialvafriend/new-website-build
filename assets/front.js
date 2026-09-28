@@ -1988,12 +1988,19 @@
 (function(){
   var form = document.querySelector('form.wd-join-form');
   if (!form) return;
+  /* 2026-09-28 저녁 정정: 제출 이벤트 안에서 버튼을 disabled 로 만들면 브라우저가 그 버튼의 name·value 를 전송 데이터에서
+     뺀다 — 테마가 그 값으로 「가입하기를 눌렀는지」를 보면 가입이 아예 안 되고 폼만 다시 그려진다 (신규 가입 전부 막힘).
+     그래서 전송 데이터가 만들어진 뒤(setTimeout 0)에 잠그고, 두 번째 제출을 막는 창도 3초로 줄인다. */
   form.addEventListener('submit', function(e){
     if (e.defaultPrevented) return;
-    if (form.getAttribute('data-dhr-sent')) { e.preventDefault(); return; }
-    form.setAttribute('data-dhr-sent', '1');
+    var last = Number(form.getAttribute('data-dhr-sent') || 0);
+    if (last && Date.now() - last < 3000) { e.preventDefault(); return; }
+    form.setAttribute('data-dhr-sent', String(Date.now()));
     var b = form.querySelector('.wd-join-submit');
-    if (b) { b.disabled = true; b.setAttribute('aria-disabled', 'true'); b.dataset.dhrTxt = b.textContent; b.textContent = '가입 처리 중…'; }
-    setTimeout(function(){ form.removeAttribute('data-dhr-sent'); if (b) { b.disabled = false; b.removeAttribute('aria-disabled'); if (b.dataset.dhrTxt) b.textContent = b.dataset.dhrTxt; } }, 20000);
+    setTimeout(function(){
+      if (!b) return;
+      b.setAttribute('aria-disabled', 'true'); b.dataset.dhrTxt = b.textContent; b.textContent = '가입 처리 중…';
+      setTimeout(function(){ b.removeAttribute('aria-disabled'); if (b.dataset.dhrTxt) b.textContent = b.dataset.dhrTxt; }, 20000);
+    }, 0);
   });
 })();
