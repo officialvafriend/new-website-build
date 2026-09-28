@@ -168,6 +168,7 @@ function pick( $user, $username = '', $password = '' ) {
 			$w = get_userdata( $win );
 			if ( $w instanceof \WP_User ) {
 				error_log( sprintf( '[duckhoo twin-login] %s → #%d 대신 #%d (쌍둥이 계정)', (string) $username, (int) $user->ID, $win ) ); // phpcs:ignore
+				$GLOBALS['dhr_twin_how'] = sprintf( '#%d 대신 (둘 다 맞음)', (int) $user->ID );
 				return $w;
 			}
 		}
@@ -183,6 +184,7 @@ function pick( $user, $username = '', $password = '' ) {
 			$w = get_userdata( $win );
 			if ( $w instanceof \WP_User ) {
 				error_log( sprintf( '[duckhoo twin-login] %s → 먼저 계정은 틀렸지만 #%d 의 비밀번호가 맞아 그 계정으로 (쌍둥이 계정)', (string) $username, $win ) ); // phpcs:ignore
+				$GLOBALS['dhr_twin_how'] = '먼저 계정은 안 맞아 이쪽으로';
 				return $w;
 			}
 		}
@@ -251,3 +253,19 @@ function on_profile_update( $uid, $old = null ): void {
 	sync_hash( (int) $uid );
 }
 add_action( 'profile_update', __NAMESPACE__ . '\\on_profile_update', 20, 2 );
+
+/**
+ * 쌍둥이가 있는 계정의 로그인 기록 — 진단용 (옵션 `duckhoo_twin_log`, 최근 30건, 아이디 · 번호 · 어느 갈래였는지만).
+ *
+ * @param string $login 아이디.
+ * @param object $user  실제로 들어간 WP_User.
+ */
+function log_login( $login, $user ): void {
+	if ( ! ( $user instanceof \WP_User ) || ! twins( $user ) ) {
+		return;
+	}
+	$log   = (array) get_option( 'duckhoo_twin_log', array() );
+	$log[] = array( 't' => current_time( 'mysql' ), 'login' => (string) $login, 'id' => (int) $user->ID, 'how' => (string) ( $GLOBALS['dhr_twin_how'] ?? '그대로' ) );
+	update_option( 'duckhoo_twin_log', array_slice( $log, -30 ), false );
+}
+add_action( 'wp_login', __NAMESPACE__ . '\\log_login', 99, 2 );

@@ -504,6 +504,16 @@ function screen(): void {
 				</tr>
 			<?php endforeach; ?>
 			</tbody></table>
+			<h3>로그인에 끼어드는 것 (<code>authenticate</code> 필터, 우선순위 순)</h3>
+			<p style="font-size:13px">우리 <code>TwinLogin\pick</code> 은 30 이다. <b>그보다 뒤(큰 숫자)에서 아이디로 회원을 다시 찾아 돌려주는 콜백</b>이 있으면 우리가 고른 계정이 덮인다.</p>
+			<ul style="font-family:monospace;font-size:12px"><?php foreach ( callbacks( 'authenticate' ) as $cbn ) : ?><li><?php echo esc_html( $cbn ); ?></li><?php endforeach; ?></ul>
+			<h3>쌍둥이 계정의 최근 로그인 (플러그인이 적은 것)</h3>
+			<?php $tlog = array_reverse( (array) get_option( 'duckhoo_twin_log', array() ) ); ?>
+			<?php if ( $tlog ) : ?>
+				<table class="widefat striped" style="max-width:700px"><thead><tr><th>시각</th><th>아이디</th><th>들어간 계정</th><th>어떻게</th></tr></thead><tbody>
+				<?php foreach ( array_slice( $tlog, 0, 15 ) as $e ) : ?><tr><td><?php echo esc_html( (string) ( $e['t'] ?? '' ) ); ?></td><td><?php echo esc_html( (string) ( $e['login'] ?? '' ) ); ?></td><td>#<?php echo (int) ( $e['id'] ?? 0 ); ?></td><td><?php echo esc_html( (string) ( $e['how'] ?? '' ) ); ?></td></tr><?php endforeach; ?>
+				</tbody></table>
+			<?php else : ?><p>아직 없음 — 이 기록은 배포 뒤의 로그인부터 쌓인다.</p><?php endif; ?>
 		<?php endif; ?>
 		<h2>2. 표에서 직접 센 주문 (<?php echo hpos() ? 'HPOS wc_orders.customer_id' : 'posts + _customer_user'; ?>)</h2>
 		<p><b><?php echo (int) $rawn; ?>건</b>
