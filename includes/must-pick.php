@@ -50,11 +50,25 @@ function has_group( int $pid ): bool {
 	if ( $forced ) {
 		return true;
 	}
+	// PPOM 자신에게 묻는다 — 상품 메타뿐 아니라 분류 · 태그로 붙인 그룹까지 PPOM 이 안다 (`PPOM_Meta::$is_exists`).
+	if ( class_exists( '\\PPOM_Meta' ) ) {
+		try {
+			$m = new \PPOM_Meta( $pid );
+			if ( isset( $m->is_exists ) ) {
+				return (bool) $m->is_exists;
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement
+			// 아래 메타 키로 본다.
+		}
+	}
 	if ( ! function_exists( 'get_post_meta' ) ) {
 		return false;
 	}
-	foreach ( (array) apply_filters( 'duckhoo_ppom_link_keys', array( '_product_ppom', 'ppom', '_ppom' ) ) as $k ) {
-		if ( '' !== trim( (string) get_post_meta( $pid, (string) $k, true ) ) ) {
+	// PPOM 34: `_product_meta_id` 에 그룹 번호 **배열**을 적는다 (`PPOM_PRODUCT_META_KEY`, `Helpers::attach_fields_to_product`).
+	// 처음엔 `_product_ppom` 이라고 짐작해 빗장이 조용히 안 돌았다 (2026-09-28, Store API 201) — 소스에서 확인한 이름만 쓴다.
+	foreach ( (array) apply_filters( 'duckhoo_ppom_link_keys', array( '_product_meta_id', '_product_ppom' ) ) as $k ) {
+		$v = get_post_meta( $pid, (string) $k, true );
+		if ( is_array( $v ) ? array_filter( array_map( 'intval', $v ) ) : '' !== trim( (string) $v ) ) {
 			return true;
 		}
 	}

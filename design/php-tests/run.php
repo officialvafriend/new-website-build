@@ -2232,12 +2232,13 @@ $ok(!($MP.'picked')(['wd_option_builder_json' => json_encode([['group_key' => 'a
 $ok(($MP.'item_picked')(['ppom' => ['fields' => ['x' => '퍼플']]]) && ($MP.'item_picked')(['wd_option_builder' => [['group_key' => 'required_main', 'qty' => 1]]]) && !($MP.'item_picked')(['product_id' => 3435]), '장바구니 줄도 같은 규칙');
 $GLOBALS['__postmeta'][3435] = []; $GLOBALS['__notices'] = []; $_POST = [];
 $ok(($MP.'validate_add')(true, 3435) === true && !$GLOBALS['__notices'], '옵션 그룹이 아직 안 이어진 상품은 막지 않는다 (판매가 서면 안 된다)');
-$GLOBALS['__postmeta'][3435]['_product_ppom'] = '41';
+$GLOBALS['__postmeta'][3435]['_product_meta_id'] = [61];   // PPOM 34 는 배열로 적는다
 $ok(($MP.'validate_add')(true, 3435) === false && ($GLOBALS['__notices'][0][1] ?? '') === '옵션(색상)을 선택해 주세요. 골라야 담을 수 있습니다.', '그룹이 이어졌는데 안 골랐으면 담기를 막고 안내한다');
 $_POST = ['ppom' => ['fields' => ['id' => '41', 'joba_color' => '샴페인 골드']]]; $GLOBALS['__notices'] = [];
 $ok(($MP.'validate_add')(true, 3435) === true && !$GLOBALS['__notices'], '골랐으면 통과');
 $ok(($MP.'validate_add')(true, 146) === true && ($MP.'validate_add')(false, 3435) === false, '다른 상품은 그대로 · 앞에서 이미 막힌 것은 그대로');
 $_POST = [];
+$ok(($MP.'has_group')(3435) && !($MP.'has_group')(146), '그룹 여부는 PPOM 메타 `_product_meta_id`(배열)로 본다');
 $caught = ''; try { ($MP.'store_add')(new WC_Product(3435, '조바 입호흡 전자담배', 58000)); } catch (\Throwable $e) { $caught = $e->getMessage(); }
 $ok(str_contains($caught, '옵션(색상)'), 'Store API 로는 이 상품을 못 담는다 (옵션을 실을 수 없는 길)');
 $caught = ''; try { ($MP.'store_add')(new WC_Product(146, '노보 10병', 130000)); } catch (\Throwable $e) { $caught = 'x'; }
