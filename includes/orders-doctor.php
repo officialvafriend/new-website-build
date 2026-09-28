@@ -500,7 +500,10 @@ function screen(): void {
 					<td><?php echo esc_html( $htype ); ?></td>
 					<td><?php echo '' !== $when ? '<b>' . esc_html( $when ) . '</b>' : ( '' !== $akey ? '있음' : '—' ); ?></td>
 					<td style="font-size:12px;max-width:380px"><?php echo $metas ? wp_kses_post( implode( '<br>', array_slice( $metas, 0, 14 ) ) ) : '—'; ?></td>
-					<td><form method="post" onsubmit="return confirm('#<?php echo (int) $sid; ?> 의 비밀번호를 같은 아이디의 다른 계정에도 그대로 적용합니다. 손님이 지금 쓰는 비밀번호가 이 계정 것일 때 누르세요.');"><?php wp_nonce_field( 'dhr_sync_pw' ); ?><input type="hidden" name="dhr_sync_from" value="<?php echo (int) $sid; ?>"><button class="button">이 계정 비밀번호를 쌍둥이에도</button></form></td>
+					<td><form method="post" onsubmit="return confirm('#<?php echo (int) $sid; ?> 의 비밀번호를 같은 아이디의 다른 계정에도 그대로 적용합니다. 손님이 지금 쓰는 비밀번호가 이 계정 것일 때 누르세요.');"><?php wp_nonce_field( 'dhr_sync_pw' ); ?><input type="hidden" name="dhr_sync_from" value="<?php echo (int) $sid; ?>"><button class="button">이 계정 비밀번호를 쌍둥이에도</button></form>
+					<?php if ( 0 === (int) order_count( (int) $sid ) && current_user_can( 'delete_users' ) ) : ?>
+						<p style="margin:6px 0 0"><a class="button" style="color:#B42318;border-color:#B42318" href="<?php echo esc_url( wp_nonce_url( admin_url( 'users.php?action=delete&user=' . (int) $sid ), 'bulk-users' ) ); ?>">워드프레스에서 #<?php echo (int) $sid; ?> 지우기 →</a><br><span style="font-size:12px;color:#555">주문 0건인 계정에만 보입니다. 워드프레스 확인 화면이 한 번 더 뜨고, 거기서 「귀속」 상대로 다른 계정을 고르면 됩니다.</span></p>
+					<?php endif; ?></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody></table>
