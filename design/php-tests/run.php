@@ -2131,6 +2131,11 @@ $kept = ($SP.'sitemap_posts')($pages, 'page');
 $ok(array_column($kept, 'loc') === ['https://duck-hoo.com/shop/', 'https://duck-hoo.com/register/', 'https://duck-hoo.com/'], '페이지 사이트맵에서 결제 · 마이페이지 · 시험 페이지(인코딩된 주소)를 빼고 전체 상품 · 가입 · 홈은 남긴다');
 $ok(($SP.'sitemap_posts')($pages, 'product') === $pages && ($SP.'sitemap_posts')('x', 'page') === 'x', '상품 사이트맵은 건드리지 않는다 · 배열이 아니면 그대로');
 $ok(($SP.'entry_path')(['loc' => 'https://duck-hoo.com/checkout/']) === 'checkout' && ($SP.'entry_path')('https://duck-hoo.com/') === '', '항목 주소 → 경로 (홈은 빈 문자열)');
+$demo = [['loc' => 'https://duck-hoo.com/2026/04/09/behind-the-product-fedora-hat/'], ['loc' => 'https://duck-hoo.com/2026/04/09/real-post/']];
+$ok(array_column(($SP.'sitemap_posts')($demo, 'post'), 'loc') === ['https://duck-hoo.com/2026/04/09/real-post/'], '테마 데모 글은 글 사이트맵에서 빠지고 다른 글은 남는다 (지우지 않는다)');
+$cats = [['loc' => 'https://duck-hoo.com/category/uncategorized/'], ['loc' => 'https://duck-hoo.com/category/news/']];
+$ok(array_column(($SP.'sitemap_terms')($cats), 'loc') === ['https://duck-hoo.com/category/news/'], '분류 사이트맵에서 uncategorized 만 빠진다');
+$ok(($SP.'post_slug')() === '', '글 화면이 아니면 글 슬러그는 빈 문자열');
 // kboard
 $GLOBALS['__pages']['inquiries'] = (object)['ID' => 30, 'post_content' => '<p>[kboard id="4"]</p>'];
 $ok(($SP.'private_boards')() === [4], '1:1 문의 게시판 번호는 페이지 본문의 [kboard id=N] 에서 읽는다');

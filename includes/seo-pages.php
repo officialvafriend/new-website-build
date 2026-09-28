@@ -51,6 +51,8 @@ function private_slugs(): array {
 						'agree',
 						'inquiries',
 						'본인인증테스트',
+						'behind-the-product-fedora-hat',   // 테마 데모 글 (지우지 않고 색인만 뺀다)
+						'uncategorized',                   // 그 글 하나뿐인 분류
 					)
 				)
 			)
@@ -90,7 +92,26 @@ function noindex_here(): bool {
 	if ( is_private_slug( page_slug() ) ) {
 		return true;
 	}
+	if ( is_private_slug( post_slug() ) ) {
+		return true;   // 테마 데모 글 — 사장님이 지우기 불안해하셔서 지우지 않고 색인만 뺀다 (2026-09-28)
+	}
+	if ( function_exists( 'is_category' ) && is_category() && in_array( 'uncategorized', private_slugs(), true ) ) {
+		return true;   // 그 데모 글 하나뿐인 분류 보관함
+	}
 	return function_exists( 'is_date' ) && is_date();
+}
+
+/**
+ * 지금 화면의 글(post) 슬러그. 글이 아니면 빈 문자열.
+ *
+ * @return string
+ */
+function post_slug(): string {
+	if ( ! function_exists( 'is_singular' ) || ! is_singular( 'post' ) || ! function_exists( 'get_queried_object' ) ) {
+		return '';
+	}
+	$o = get_queried_object();
+	return is_object( $o ) && isset( $o->post_name ) ? (string) $o->post_name : '';
 }
 
 /**
@@ -145,7 +166,16 @@ function entry_path( $entry ): string {
  * @return array
  */
 function drop_private_pages( array $entries ): array {
-	return array_values( array_filter( $entries, fn( $e ) => ! is_private_slug( entry_path( $e ) ) ) );
+	return array_values(
+		array_filter(
+			$entries,
+			function ( $e ) {
+				$path = entry_path( $e );
+				$last = '' !== $path ? (string) substr( strrchr( '/' . $path, '/' ), 1 ) : '';
+				return ! is_private_slug( $path ) && ! ( '' !== $last && str_starts_with( $path, 'category/' ) && is_private_slug( $last ) );
+			}
+		)
+	);
 }
 
 /**
@@ -164,7 +194,7 @@ function sitemap_posts( $entries, $type = '' ) {
 	if ( ! is_array( $entries ) ) {
 		return $entries;
 	}
-	if ( 'page' === (string) $type ) {
+	if ( 'page' === (string) $type || 'post' === (string) $type ) {
 		return drop_private_pages( $entries );
 	}
 	if ( 'kboard' === (string) $type ) {
@@ -173,6 +203,17 @@ function sitemap_posts( $entries, $type = '' ) {
 	return $entries;
 }
 add_filter( 'aioseo_sitemap_posts', __NAMESPACE__ . '\\sitemap_posts', 20, 2 );
+
+/**
+ * 분류 사이트맵(`aioseo_sitemap_terms`)에서도 같은 슬러그를 뺀다 — `/category/uncategorized/`.
+ *
+ * @param mixed $entries 항목들.
+ * @return mixed
+ */
+function sitemap_terms( $entries ) {
+	return is_array( $entries ) ? drop_private_pages( $entries ) : $entries;
+}
+add_filter( 'aioseo_sitemap_terms', __NAMESPACE__ . '\\sitemap_terms', 20 );
 
 /* ───────────────────────────── kboard 사이트맵 ───────────────────────────── */
 
