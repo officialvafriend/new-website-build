@@ -136,7 +136,7 @@ $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
 		<?php if ( '' !== $dhp_desc ) : ?>
 		<section class="dhp-sec dhp-desc" id="dhp-desc">
 			<h2>상품 설명</h2>
-			<div class="dhp-desc__body entry-content"><?php echo apply_filters( 'the_content', $dhp_desc ); // phpcs:ignore ?></div>
+			<div class="dhp-desc__body entry-content"><?php echo \Duckhoo\Redesign\Seo\Pages\img_alt( (string) apply_filters( 'the_content', $dhp_desc ), $product->get_name() ); // phpcs:ignore -- 설명 이미지에 alt 가 하나도 없었다 (네이버 진단 2026-09-26) ?></div>
 		</section>
 		<?php endif; ?>
 

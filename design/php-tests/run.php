@@ -2113,5 +2113,68 @@ $ok(!function_exists($M.'apply') && !function_exists($M.'revert'), '값을 바�
 $rows = ($M.'compare')($ours, $data, [242 => 'vm:노보 세븐펀치 30ml']);
 $ok($rows[0]['comp']['vm']['name'] === '노보 세븐펀치 30ml' && $rows[0]['comp']['w24']['single'] === 9000, '「vm:이름」은 그 가게에서만 못 박고 다른 가게는 이름으로 맞춘다');
 
+// ───────────────────────────────────────────────── 네이버 진단 — 페이지 설명 · noindex · 사이트맵 · alt (2026-09-28)
+require_once dirname(__DIR__, 2).'/includes/seo-pages.php';
+$SP = 'Duckhoo\\Redesign\\Seo\\Pages\\';
+$ok(($SP.'is_private_slug')('checkout') && ($SP.'is_private_slug')('inquiries') && ($SP.'is_private_slug')(rawurlencode('본인인증테스트')), '결제 · 1:1 문의 · 시험 페이지는 색인 제외 (인코딩된 슬러그도)');
+$ok(!($SP.'is_private_slug')('register') && !($SP.'is_private_slug')('shop') && !($SP.'is_private_slug')('notice') && !($SP.'is_private_slug')(''), '가입 1단계 · 전체 상품 · 공지는 색인한다 (빈 슬러그는 아니다)');
+$GLOBALS['__filters']['duckhoo_noindex_slugs'] = [fn($a) => array_merge($a, ['event'])];
+$ok(($SP.'is_private_slug')('event'), '필터로 슬러그를 더할 수 있다');
+unset($GLOBALS['__filters']['duckhoo_noindex_slugs']);
+$r = ($SP.'robots_aioseo')(['index' => 'index', 'max-image-preview' => 'max-image-preview:large']);
+$ok(($r['index'] ?? '') === 'index' && !isset($r['noindex']), '페이지가 아니면 robots 를 건드리지 않는다');
+$ex = ($SP.'sitemap_exclude')([5], 'product');
+$ok($ex === [5], '상품 사이트맵은 건드리지 않는다');
+$GLOBALS['__pages']['checkout'] = (object)['ID' => 777, 'post_content' => ''];
+$GLOBALS['__pages']['mypage'] = (object)['ID' => 778, 'post_content' => ''];
+$ex = ($SP.'sitemap_exclude')([5, 777], 'page');
+$ok(in_array(777, $ex, true) && in_array(778, $ex, true) && count(array_keys($ex, 777, true)) === 1 && in_array(5, $ex, true), '페이지 사이트맵에서 결제 · 마이페이지를 뺀다 (있던 것은 두고, 두 번 넣지 않는다)');
+unset($GLOBALS['__pages']['checkout'], $GLOBALS['__pages']['mypage']);
+// kboard
+$GLOBALS['__pages']['inquiries'] = (object)['ID' => 30, 'post_content' => '<p>[kboard id="4"]</p>'];
+$ok(($SP.'private_boards')() === [4], '1:1 문의 게시판 번호는 페이지 본문의 [kboard id=N] 에서 읽는다');
+$entries = [
+  ['loc' => 'https://duck-hoo.com/?kboard_content_redirect=99'],
+  ['loc' => 'https://duck-hoo.com/?kboard_content_redirect=33'],
+  ['url' => 'https://duck-hoo.com/?kboard_content_redirect=100'],
+  ['loc' => 'https://duck-hoo.com/tip/'],
+];
+$kept = ($SP.'drop_private')($entries, [99, 100]);
+$ok(count($kept) === 2 && ($SP.'entry_uid')($kept[0]) === 33 && ($kept[1]['loc'] ?? '') === 'https://duck-hoo.com/tip/', '비공개 게시판 글(uid 99 · 100)만 빠지고 팁 글 · 번호 없는 주소는 남는다 (loc · url 둘 다 읽는다)');
+$ok(($SP.'drop_private')($entries, []) === $entries, '뺄 번호를 모르면 아무것도 빼지 않는다');
+$ok(($SP.'kboard_sitemap')('not-an-array') === 'not-an-array', '배열이 아니면 그대로 돌려준다');
+unset($GLOBALS['__pages']['inquiries']);
+// 제목 · 설명
+$ok(($SP.'shop_title')(184) === '전자담배 액상 전체 상품 184종 | 액상덕후' && ($SP.'shop_title')(0) === '전자담배 액상 전체 상품 | 액상덕후', '전체 상품 제목 — 종수는 있을 때만');
+$d = ($SP.'shop_desc')(184, ['노보', '펠릭스']);
+$ok(str_starts_with($d, '노보 · 펠릭스 등 입호흡 · 폐호흡 액상 184종') && str_contains($d, '30,000원 이상 무료배송') && str_contains($d, '8,800원 적립') && str_contains($d, '19세 이상') && mb_strlen($d) <= 160, '전체 상품 설명 — 브랜드 · 종수 · 혜택 · 19세, 160자 이내');
+foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($d, $bad), "전체 상품 설명에 「{$bad}」 없음"); }
+$ok(str_contains(($SP.'page_desc')('login', 'login'), '로그인') && str_contains(($SP.'page_desc')('register', 'Sign In'), '본인확인'), '로그인 · 가입 페이지는 슬러그 글 (영문 제목을 안 쓴다)');
+$g = ($SP.'page_desc')('unknown-page', '<b>어떤</b> 페이지');
+$ok($g === '어떤 페이지 — 액상덕후, 전자담배 액상 전문몰. 30,000원 이상 무료배송 · 가입 즉시 8,800원 적립.', '모르는 페이지는 제목으로 엮는다 (태그는 뗀다)');
+foreach (($SP.'page_texts')() as $slug => $txt) { $ok(mb_strlen($txt) <= 160, "페이지 설명 160자 이내: {$slug}"); foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "페이지 설명에 「{$bad}」 없음: {$slug}"); } }
+$ok(($SP.'description')('사장님이 쓴 글') === '사장님이 쓴 글', '설명이 이미 있으면 그대로');
+$GLOBALS['__is_shop'] = true;
+$ok(str_contains(($SP.'description')(''), '입호흡 · 폐호흡 액상') && str_contains(($SP.'title')('상점 - 액상덕후'), '전자담배 액상 전체 상품'), '전체 상품 화면 — 빈 설명을 채우고 제목을 바꾼다');
+$GLOBALS['__is_shop'] = false;
+$ok(($SP.'title')('상점 - 액상덕후') === '상점 - 액상덕후' && ($SP.'description')('') === '', '전체 상품 화면이 아니면 제목 · 설명 그대로');
+// alt
+$html = '<p>x</p><img decoding="async" class="fr-dib" src="a.jpg" /><img src="b.jpg" alt=""><img src="c.jpg" alt="있음"><IMG src="d.jpg">';
+$out = ($SP.'img_alt')($html, '[노보] 타박멘솔 (9.8mg / 30ml)');
+$ok(str_contains($out, 'src="a.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 1" />') && str_contains($out, 'src="d.jpg" alt="[노보] 타박멘솔 (9.8mg / 30ml) 상세 이미지 2">'), 'alt 없는 이미지에만 「상품명 상세 이미지 N」을 붙인다 (닫는 슬래시 유지)');
+$ok(str_contains($out, 'alt=""') && str_contains($out, 'alt="있음"') && substr_count($out, ' alt=') === 4, 'alt="" 와 있는 alt 는 그대로 — 총 4개');
+$ok(($SP.'img_alt')($html, '') === $html && ($SP.'img_alt')('', 'x') === '', '이름이나 HTML 이 비면 손대지 않는다');
+$GLOBALS['product'] = new WC_Product(1, '[펠릭스] 더블라임', 20000);
+$a = ($SP.'attachment_alt')(['alt' => '', 'src' => 'x.jpg']);
+$ok(($a['alt'] ?? '') === '[펠릭스] 더블라임', '첨부 이미지의 빈 alt 는 지금 상품 이름으로');
+$a = ($SP.'attachment_alt')(['alt' => '사진', 'src' => 'x.jpg']);
+$ok($a['alt'] === '사진', '있는 alt 는 건드리지 않는다');
+unset($GLOBALS['product']);
+$GLOBALS['__posttype'][555] = 'product'; $GLOBALS['__products'][555] = new WC_Product(555, '[노보] 데저트', 13000);
+$a = ($SP.'attachment_alt')(['alt' => ''], (object)['post_parent' => 555]);
+$ok(($a['alt'] ?? '') === '[노보] 데저트', '전역 상품이 없으면 첨부의 부모 상품 이름으로');
+$a = ($SP.'attachment_alt')(['alt' => ''], (object)['post_parent' => 0]);
+$ok(($a['alt'] ?? '') === '', '상품과 무관한 이미지는 그대로 (없는 이름을 만들지 않는다)');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
