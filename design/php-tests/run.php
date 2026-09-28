@@ -2257,5 +2257,17 @@ $v = ($OD.'verdict')(1, 1, -2, true, 279209535, 279209536);
 $ok($v['level'] === 'bad' && str_contains($v['text'], '#279209535 로 들어가는데') && str_contains($v['text'], '#279209536 에 붙어'), '같은 아이디의 계정이 둘이면 로그인이 먼저 만든 계정으로 가는 것을 원인으로 짚는다');
 $ok(($OD.'verdict')(1, 1, -2, false, 279209536, 279209536)['level'] === 'ok', '로그인이 이 계정으로 오고 관리자라 못 그린 것(-2)은 정상으로 본다');
 
+// ───────────────────────────────────────────────── 쌍둥이 계정 로그인 (2026-09-28)
+require_once dirname(__DIR__, 2).'/includes/twin-login.php';
+$TL = 'Duckhoo\\Redesign\\TwinLogin\\';
+$ok(($TL.'best')([['id'=>535,'ok'=>true,'verified'=>false,'orders'=>0], ['id'=>536,'ok'=>true,'verified'=>true,'orders'=>1]]) === 536, '둘 다 비밀번호가 맞으면 본인확인 · 주문 있는 나중 계정');
+$ok(($TL.'best')([['id'=>535,'ok'=>true,'verified'=>false,'orders'=>0], ['id'=>536,'ok'=>false,'verified'=>true,'orders'=>1]]) === 535, '쌍둥이 비밀번호가 안 맞으면 워드프레스가 고른 계정 그대로 — 비밀번호 검증을 건너뛰지 않는다');
+$ok(($TL.'best')([['id'=>905,'ok'=>true,'verified'=>true,'orders'=>4], ['id'=>906,'ok'=>true,'verified'=>true,'orders'=>0]]) === 905, '본인확인이 둘 다면 주문 있는 쪽 (lymuzik86 처럼 먼저 계정)');
+$ok(($TL.'best')([['id'=>100,'ok'=>true,'verified'=>false,'orders'=>0], ['id'=>101,'ok'=>true,'verified'=>false,'orders'=>0]]) === 101, '아무것도 없으면 나중에 만들어진 쪽');
+$ok(($TL.'best')([['id'=>1,'ok'=>false], ['id'=>2,'ok'=>false]]) === 0 && ($TL.'best')([]) === 0, '맞는 것이 없으면 0');
+if (!class_exists('WP_Error')) { class WP_Error { public function __construct(public string $c = '', public string $m = '') {} } }
+$err = new \WP_Error('x','y');
+$ok(($TL.'pick')($err, 'a', 'b') === $err && ($TL.'pick')(null, 'a', '') === null, '이미 실패한 로그인 · 비밀번호 없는 호출은 그대로');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

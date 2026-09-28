@@ -458,11 +458,20 @@ function screen(): void {
 		<?php $dups = duplicates(); ?>
 		<?php if ( ! $dups ) : ?><p>없음</p><?php else : ?>
 		<p>같은 아이디 · 이메일로 계정이 둘 이상인 경우 <b><?php echo count( $dups ); ?>쌍</b>. 이런 손님은 로그인할 때마다 먼저 만들어진 계정으로 들어가므로, 나중 계정에 붙은 주문은 안 보입니다.</p>
-		<table class="widefat striped" style="max-width:900px"><thead><tr><th>무엇</th><th>값</th><th>계정 번호(먼저 만든 순)</th><th>주문 수</th></tr></thead><tbody>
-		<?php foreach ( $dups as $d ) : ?>
-			<tr><td><?php echo esc_html( $d['kind'] ); ?></td><td><?php echo esc_html( $d['val'] ); ?></td><td><?php echo esc_html( $d['ids'] ); ?></td><td><?php echo esc_html( implode( ' / ', array_map( fn( $i ) => '#' . (int) $i . ' ' . order_count( (int) $i ) . '건', explode( ',', $d['ids'] ) ) ) ); ?></td></tr>
+		<p class="description">계정마다: 가입 시각 · 본인확인(<code>V</code>) · 적립금 · 주문 수. <b>지워도 되는 쪽</b> = 주문 0 · 적립금 0 · 본인확인 없음. 지울 때 콘텐츠는 남는 계정에 귀속. 아이디 표와 이메일 표는 같은 쌍이 두 번 나온 것이다.</p>
+		<table class="widefat striped" style="max-width:1000px"><thead><tr><th>무엇</th><th>값</th><th>계정들 (먼저 만든 순)</th><th>제안</th></tr></thead><tbody>
+		<?php foreach ( $dups as $d ) : $ids = array_map( 'intval', explode( ',', $d['ids'] ) ); $cells = array(); $del = array(); $keep = 0; $first = null;
+			foreach ( $ids as $i ) { $ud = get_userdata( $i ); $reg = $ud ? (string) $ud->user_registered : ''; $ver = '' !== trim( (string) get_user_meta( $i, 'wd_phone_verified', true ) ); $pts = (int) get_user_meta( $i, '_keyple_points', true ); $oc = order_count( $i );
+				$first = $first ?? strtotime( $reg ); $gap = $first ? ( strtotime( $reg ) - $first ) : 0;
+				$cells[] = sprintf( '#%d · %s%s · %s · 적립 %s · 주문 <b>%d</b>', $i, esc_html( $reg ), $gap > 0 ? ' (+' . $gap . '초)' : '', $ver ? '<b>V</b>' : '-', number_format( $pts ), $oc );
+				if ( 0 === $oc && 0 === $pts && ! $ver ) { $del[] = $i; } else { $keep = $keep ?: $i; } }
+			$keepers = array_values( array_diff( $ids, $del ) );
+			if ( ! $keepers ) { $keepers = array( max( $ids ) ); $del = array_values( array_diff( $ids, $keepers ) ); }
+			$sug = count( $keepers ) === 1 ? '#' . implode( '', array_map( 'strval', $keepers ) ) . ' 남기고 ' . ( $del ? '#' . implode( ' · #', $del ) . ' 지움' : '지울 것 없음' ) : '<b style="color:#B42318">둘 다 무엇인가 있음 — 주문 · 적립금을 한쪽으로 옮긴 뒤 정리</b>'; ?>
+			<tr><td><?php echo esc_html( $d['kind'] ); ?></td><td><?php echo esc_html( $d['val'] ); ?></td><td><?php echo wp_kses_post( implode( '<br>', $cells ) ); ?></td><td><?php echo wp_kses_post( $sug ); ?></td></tr>
 		<?php endforeach; ?>
 		</tbody></table>
+		<p class="description">로그인은 이제 플러그인이 <b>비밀번호가 맞는 계정 중 본인확인 · 주문이 있는 쪽</b>으로 들여보냅니다 (<code>includes/twin-login.php</code>). 그래서 지우는 정리는 급하지 않습니다 — 다만 새로 생기는 것은 가입 흐름을 고쳐야 멈춥니다.</p>
 		<?php endif; ?>
 		<p class="description">이 화면 결과를 그대로 복사해 클로드에게 붙여 주시면 다음 손을 정합니다. 손님께는 「어느 계정(이메일)으로 로그인했는지」와 「마이페이지 → 주문내역 화면에 무엇이 보이는지(빈 목록인지 · 오류인지)」를 물어봐 주세요.</p>
 	</div>
