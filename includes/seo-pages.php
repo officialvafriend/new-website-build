@@ -434,6 +434,9 @@ function description( $d ): string {
 		return shop_desc( product_count(), brand_names() );
 	}
 	$slug = page_slug();
+	if ( 'price' === $slug && function_exists( 'Duckhoo\\Redesign\\PriceList\\seo' ) ) {
+		return \Duckhoo\Redesign\PriceList\seo( product_count() )['desc'];
+	}
 	if ( '' !== $slug && ! is_private_slug( $slug ) ) {
 		$o = get_queried_object();
 		return page_desc( $slug, (string) ( $o->post_title ?? '' ) );
@@ -454,10 +457,64 @@ function title( $t ): string {
 	if ( function_exists( 'is_shop' ) && is_shop() && ! ( function_exists( 'is_search' ) && is_search() ) ) {
 		return shop_title( product_count() );
 	}
+	if ( 'price' === page_slug() && function_exists( 'Duckhoo\\Redesign\\PriceList\\seo' ) ) {
+		return \Duckhoo\Redesign\PriceList\seo( product_count() )['title'];
+	}
 	return (string) $t;
 }
 add_filter( 'aioseo_title', __NAMESPACE__ . '\\title', 25 );
 add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 25 );
+
+/* ───────────────────────────── 지운 상품의 옛 주소 ───────────────────────────── */
+
+/**
+ * 지운 상품인데 검색엔진이 아직 보내는 주소 → 보낼 곳. 구글 28일치에서 「크래프트 포도 액상」 7 클릭 · 50 노출이
+ * 404 로 떨어지고 있었다 (크래프트는 단종 · 상품 삭제). 열쇠는 주소(디코드한 것)에 든 글자, 값은 보낼 주소.
+ *
+ * @return array<string,string>
+ */
+function gone_map(): array {
+	return (array) apply_filters(
+		'duckhoo_gone_redirects',
+		array(
+			'크래프트' => home_url( '/product-category/입호흡-액상/' ),   // 크래프트는 전부 입호흡 9.8mg 였다
+		)
+	);
+}
+
+/**
+ * 그 주소를 어디로 보낼까 — 순수 함수. 못 찾으면 빈 문자열.
+ *
+ * @param string               $path 요청 주소.
+ * @param array<string,string> $map  gone_map().
+ * @return string
+ */
+function gone_target( string $path, array $map ): string {
+	$path = rawurldecode( $path );
+	foreach ( $map as $needle => $url ) {
+		if ( '' !== (string) $needle && false !== mb_stripos( $path, (string) $needle ) ) {
+			return (string) $url;
+		}
+	}
+	return '';
+}
+
+/**
+ * 404 일 때만 본다 — 살아 있는 페이지는 절대 건드리지 않는다. 301 이라 검색엔진이 옛 주소의 평가를 옮겨 준다.
+ *
+ * @return void
+ */
+function gone_redirect(): void {
+	if ( ! function_exists( 'is_404' ) || ! is_404() ) {
+		return;
+	}
+	$to = gone_target( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), gone_map() ); // phpcs:ignore
+	if ( '' !== $to ) {
+		wp_safe_redirect( $to, 301 );
+		exit;
+	}
+}
+add_action( 'template_redirect', __NAMESPACE__ . '\\gone_redirect', 1 );
 
 /* ───────────────────────────── 이미지 alt ───────────────────────────── */
 

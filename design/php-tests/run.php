@@ -1304,7 +1304,7 @@ $ok(($S.'hand_text')($GLOBALS['__products'][901]) === '사장님이 상자에 �
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][902] = '노보-10-1';
 $GLOBALS['__slugs'][903] = rawurlencode('노보-블랙-블랙멘솔-9-8mg-30ml');
-$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 63, '상품 글이 실렸다 (주소 63개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다)');
+$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 69, '상품 글이 실렸다 (주소 69개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다, 2026-09-28 서치콘솔 6개 추가)');
 $ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
 foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
 
@@ -1834,8 +1834,8 @@ $GLOBALS['__postmeta'][13]['_dhr_pages_hash'] = md5('우리가 마지막에 쓴 
 $GLOBALS['__options']['duckhoo_pages_version'] = 1; $GLOBALS['__updated'] = []; $GLOBALS['__inserted'] = [];
 ($PG.'ensure')();
 $ok(count($GLOBALS['__updated']) === 1 && $GLOBALS['__updated'][0]['ID'] === 11 && str_contains($GLOBALS['__updated'][0]['post_content'], '월요일 오후 4시'), '손대지 않은 배송 페이지만 새 글로 바꾼다 (약관은 수정된 흔적 · 개인정보는 해시가 달라 그대로)');
-$ok(($GLOBALS['__postmeta'][11]['_dhr_pages_hash'] ?? '') === md5(trim($defs['shipping']['content'])) && $GLOBALS['__options']['duckhoo_pages_version'] === 2 && !$GLOBALS['__inserted'], '바꾼 글의 해시를 남기고 버전을 올린다 · 새로 만들지는 않는다');
-$GLOBALS['__options']['duckhoo_pages_version'] = 2; $GLOBALS['__updated'] = [];
+$ok(($GLOBALS['__postmeta'][11]['_dhr_pages_hash'] ?? '') === md5(trim($defs['shipping']['content'])) && $GLOBALS['__options']['duckhoo_pages_version'] === \Duckhoo\Redesign\Pages\VERSION && count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_name'] === 'price', '바꾼 글의 해시를 남기고 버전을 올린다 · 새로 만드는 것은 없던 /price/ 하나뿐');
+$GLOBALS['__options']['duckhoo_pages_version'] = \Duckhoo\Redesign\Pages\VERSION; $GLOBALS['__updated'] = [];
 ($PG.'ensure')();
 $ok(!$GLOBALS['__updated'], '버전이 같으면 아무것도 안 한다');
 $GLOBALS['__pages'] = [];
@@ -2183,6 +2183,43 @@ $a = ($SP.'attachment_alt')(['alt' => ''], (object)['post_parent' => 555]);
 $ok(($a['alt'] ?? '') === '[노보] 데저트', '전역 상품이 없으면 첨부의 부모 상품 이름으로');
 $a = ($SP.'attachment_alt')(['alt' => ''], (object)['post_parent' => 0]);
 $ok(($a['alt'] ?? '') === '', '상품과 무관한 이미지는 그대로 (없는 이름을 만들지 않는다)');
+
+// ───────────────────────────────────────────────── 가격표 · 지운 상품 리다이렉트 (2026-09-28)
+require_once dirname(__DIR__, 2).'/includes/pricelist.php';
+$PL = 'Duckhoo\\Redesign\\PriceList\\';
+$ok(($PL.'spec')('[노보] 타박멘솔 (9.8mg / 30ml)') === ['nic' => '9.8mg', 'ml' => '30ml'] && ($PL.'spec')('[디톡스] 톡스 알로에베라 모드 액상 (3MG/60ml)') === ['nic' => '3mg', 'ml' => '60ml'] && ($PL.'spec')('[액상덕후] 바나나 흑염룡 시리즈 (0.98MG / 30ml)')['nic'] === '0.98mg', '이름에서 니코틴 · 용량을 읽는다 (대소문자 · 빈칸 무관)');
+$ok(($PL.'spec')('[맥스쿨] 소다 무니코틴 액상')['nic'] === '무니코틴' && ($PL.'spec')('[젤로맥스] 젤로 맥스 0.6옴 팟') === ['nic' => '', 'ml' => ''], '무니코틴은 무니코틴, 팟은 빈칸');
+$ok(($PL.'group_of')(['기기 · 팟 · 코일'], '조바 입호흡 전자담배') === 'device' && ($PL.'group_of')(['무니코틴'], '[맥스쿨] 소다 무니코틴 액상') === 'nicfree' && ($PL.'group_of')(['폐호흡 액상'], 'x') === 'dl' && ($PL.'group_of')(['입호흡 액상', '타격감'], 'x') === 'mtl' && ($PL.'group_of')([], '[펠릭스] 모드 더블라임') === 'dl', '묶음 가르기 — 기기 · 무니코틴 · 폐호흡(모드) · 입호흡');
+$GLOBALS['__products'] = []; $GLOBALS['__transients'] = []; $GLOBALS['__pterms'] = [];
+$GLOBALS['__products'][1] = new WC_Product(1, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000);
+$GLOBALS['__products'][2] = new WC_Product(2, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000);
+$GLOBALS['__products'][3] = new WC_Product(3, '[맥스쿨] 소다 무니코틴 액상', 9000, false);
+$GLOBALS['__products'][4] = new WC_Product(4, '조바 입호흡 전자담배', 58000);
+$GLOBALS['__products'][5] = new WC_Product(5, '[펠릭스] 모드 더블라임 (3mg / 60ml)', 20000);
+$GLOBALS['__products'][6] = new WC_Product(6, '값 없는 상품', 0);
+$GLOBALS['__pterms'][1] = [(object)['name'=>'입호흡 액상'], (object)['name'=>'노보 액상']];
+$GLOBALS['__pterms'][2] = [(object)['name'=>'입호흡 액상']];
+$GLOBALS['__pterms'][3] = [(object)['name'=>'무니코틴']];
+$GLOBALS['__pterms'][4] = [(object)['name'=>'기기 / 팟 / 코일']];
+$GLOBALS['__pterms'][5] = [(object)['name'=>'폐호흡 액상']];
+$rows = ($PL.'rows')(array_values($GLOBALS['__products']));
+$ok(array_keys($rows) === ['mtl', 'dl', 'nicfree', 'device'], '묶음 순서는 입호흡 → 폐호흡 → 무니코틴 → 기기');
+$ok(count($rows['mtl']) === 2 && $rows['mtl'][0]['name'] === '10+1 | 금액 120,000원' && $rows['mtl'][0]['brand'] === '노보 리퀴드' && $rows['mtl'][0]['qty'] === 11 && (int) round($rows['mtl'][0]['per']) === 10909, '묶음은 병당(11병 · 10,909원)을 같이 낸다');
+$ok(!in_array('값 없는 상품', array_column(array_merge(...array_values($rows)), 'name'), true), '값이 0 인 상품은 표에 안 넣는다');
+$ok($rows['nicfree'][0]['stock'] === false, '품절은 그대로 실린다 (표가 완전해야 한다)');
+$html = ($PL.'table_html')($rows);
+$ok(str_contains($html, '전 상품 <b>5종</b>') && str_contains($html, '<h2>입호흡 액상 가격 <small>2종</small></h2>') && str_contains($html, 'id="pl-device"'), '표 머리 — 종수 · 묶음 제목 · 앵커');
+$ok(str_contains($html, '13,000원') && str_contains($html, '10,909원 <small>× 11병</small>') && str_contains($html, '<em>품절</em>') && str_contains($html, '9.8mg · 30ml'), '값 · 병당 · 품절 · 니코틴이 글자로 있다');
+$ok(substr_count($html, '<tr') === 5 + 4, '줄 수 = 상품 5 + 머리 4');
+foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($html, $bad), "가격표에 「{$bad}」 없음"); }
+$seo = ($PL.'seo')(184);
+$ok($seo['title'] === '전자담배 액상 가격표 — 입호흡 · 폐호흡 · 무니코틴 184종 | 액상덕후' && str_contains($seo['desc'], '전자담배 액상 가격을 한 표로') && mb_strlen($seo['desc']) <= 160, '가격표 제목 · 설명 (160자 이내)');
+$ok(str_contains(('Duckhoo\\Redesign\\Pages\\definitions')()['price']['content'] ?? '', '[duckhoo_price_table]') && \Duckhoo\Redesign\Pages\VERSION >= 3, 'pages.php 가 /price/ 를 만든다 (VERSION 3)');
+// 지운 상품 리다이렉트
+$map = ['크래프트' => 'https://duck-hoo.com/product-category/입호흡-액상/'];
+$ok(($SP.'gone_target')('/product/%ED%81%AC%EB%9E%98%ED%94%84%ED%8A%B8-%E2%98%85-5%EB%B3%91-event/', $map) === $map['크래프트'], '인코딩된 크래프트 주소 → 입호흡 분류');
+$ok(($SP.'gone_target')('/product/크래프트-포도-9-8mg-30ml/', $map) === $map['크래프트'] && ($SP.'gone_target')('/product/노보-타박멘솔/', $map) === '' && ($SP.'gone_target')('/x/', ['' => 'y']) === '', '디코드된 주소도 잡고, 다른 상품 · 빈 열쇠는 안 잡는다');
+$ok(str_contains(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()['리퀴드랩-ㅇㅋㄹㅌ-9-8mg-30ml-2'], '아쿠아') && str_contains(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()['마르키사-오리지날-9-8mg-30ml'], '라즈베리'), '주소 ≠ 이름 상품 둘(아쿠아 · 라즈베리)의 글이 실제 상품을 말한다');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

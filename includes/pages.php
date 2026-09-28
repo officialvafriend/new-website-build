@@ -18,7 +18,7 @@ namespace Duckhoo\Redesign\Pages;
 defined( 'ABSPATH' ) || exit;
 
 const VERSION_OPTION = 'duckhoo_pages_version';
-const VERSION        = 2;
+const VERSION        = 3;   // 3: /price/ 가격표 (2026-09-28)
 
 /**
  * 가게 정보. 한 곳에서 고치면 세 페이지가 같이 바뀐다.
@@ -62,6 +62,11 @@ function definitions(): array {
 		'privacy'  => array(
 			'title'   => '개인정보처리방침',
 			'content' => privacy_content( $s ),
+		),
+		// 2026-09-28: 「액상 가격」 계열 검색(28일 290 노출)에 답하는 표. 값은 숏코드가 그때그때 읽는다.
+		'price'    => array(
+			'title'   => '전자담배 액상 가격표',
+			'content' => '[duckhoo_price_table]',
 		),
 	) );
 }
@@ -257,6 +262,25 @@ function privacy_content( array $s ): string {
  *
  * @return void
  */
+/**
+ * 관리자를 열기 전에 손님이 새 페이지 주소로 먼저 오면 그 자리에서 만든다 — 404 일 때만 보므로 평소엔 비용이 없다.
+ *
+ * @return void
+ */
+function ensure_on_404(): void {
+	if ( function_exists( 'is_404' ) && is_404() && (int) get_option( VERSION_OPTION, 0 ) < VERSION ) {
+		$path = rawurldecode( (string) parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ) ); // phpcs:ignore
+		foreach ( array_keys( definitions() ) as $slug ) {
+			if ( trim( $path, '/' ) === $slug ) {
+				ensure();
+				wp_safe_redirect( home_url( '/' . $slug . '/' ), 302 );
+				exit;
+			}
+		}
+	}
+}
+add_action( 'template_redirect', __NAMESPACE__ . '\\ensure_on_404', 3 );
+
 function ensure(): void {
 	if ( (int) get_option( VERSION_OPTION, 0 ) >= VERSION ) {
 		return;

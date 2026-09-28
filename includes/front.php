@@ -958,6 +958,7 @@ function footer_html(): void {
 			<div class="fcol" data-fcol><button type="button" class="fcol__t" aria-expanded="false"><b>안내</b><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
 				<div class="fcol__list">
 					<a href="<?php echo esc_url( home_url( '/shipping/' ) ); ?>">배송 · 교환 · 환불</a>
+					<a href="<?php echo esc_url( home_url( '/price/' ) ); ?>">전 상품 가격표</a>
 					<a href="<?php echo esc_url( home_url( '/register/' ) ); ?>">회원가입</a>
 					<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">주문조회</a>
 					<a href="<?php echo esc_url( home_url( '/membership-cancel/' ) ); ?>">회원탈퇴</a></div></div>
