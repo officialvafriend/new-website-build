@@ -435,7 +435,7 @@ function handle(): void {
 		$msg = '대조 상대를 적었습니다.';
 	}
 	set_transient( 'dhr_market_msg_' . get_current_user_id(), $msg, 120 );
-	wp_safe_redirect( admin_url( 'tools.php?page=' . SLUG . '&mode=' . rawurlencode( sanitize_key( wp_unslash( $_POST['mode'] ?? 'min' ) ) ) ) );
+	wp_safe_redirect( admin_url( 'tools.php?page=' . SLUG . '&mode=' . rawurlencode( sanitize_key( wp_unslash( $_POST['mode'] ?? 'vm' ) ) ) ) );
 	exit;
 }
 add_action( 'admin_init', __NAMESPACE__ . '\\handle' );
@@ -444,7 +444,7 @@ function screen(): void {
 	if ( ! may() ) {
 		wp_die( '권한이 없습니다.' );
 	}
-	$mode = sanitize_key( wp_unslash( $_GET['mode'] ?? 'min' ) );
+	$mode = sanitize_key( wp_unslash( $_GET['mode'] ?? 'vm' ) ); // 기본은 브이몬스터 — 겨울마을은 재고 수량을 세지 않는 「재고 있음」 깃발뿐이라 실재고가 없을 수 있다 (사장님 2026-09-28)
 	if ( ! in_array( $mode, array( 'min', 'vm', 'w24' ), true ) ) {
 		$mode = 'min';
 	}
