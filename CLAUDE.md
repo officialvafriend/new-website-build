@@ -3075,7 +3075,7 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 
 ```bash
 curl -sS https://duck-hoo.com/wp-json/duckhoo/v1/brief -H "X-DHR-Key: $DUCKHOO_BRIEF_KEY" > /tmp/brief.json
-python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2026-09-monthly.html --boxes 828 --unit 2150 --returns 8 --waiting 37 \
+python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2026-09-monthly.html --boxes 850 --unit 2500 --returns 8 --waiting 37 \
   --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=18000000"
 ```
 
@@ -3102,6 +3102,7 @@ python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2
   맥스쿨(5병 45,000 · 낱병)은 원가가 없어 「모름」 123,900. 팟 옵션 줄은 세트 이름이라 15,000 으로 잡힌다 — 손 계산에서는 팟 70% 로 133,000 을 썼다
 - 보고서 `build.py`: API `monthly.imweb` 이 있으면 자동, 없으면 `--imweb-n · --imweb-sales · --imweb-cost · --imweb-unknown`. 손익표에
   「자사몰 매출 + 아임웹 매출 = 매출 합계」, 총 매출 · 주문 건수 · 순이익이 합산. 전월비 기준도 8월 보고서 합계(419건 · 22,689,678원)로 바꿨다.
-  9월(29일 잠정): 매출 합계 69,506,308 · 원가 35,332,650 · 배송비 1,780,200 · **순이익 32,393,458 (46.6%)**
+  **배송비는 사장님 지시로 건당 2,500원 × 850건 = 2,125,000** (8월 보고서와 같은 기준 · 우체국 요금 + 박스비, `--boxes 850 --unit 2500`).
+  9월(29일 잠정): 매출 합계 69,506,308 · 원가 35,332,650 · 배송비 2,125,000 · **순이익 32,048,658 (46.1%)**
 
 **서치콘솔의 `/product-category/7월-특가-할인/` 은 「7월 특가」가 아니다** — 분류 이름은 달마다 바뀌고(지금 「9월 특가 할인」) 주소만 7월에 만든 것이 남아 있다. 보고서에는 「특가 할인」이라 적는다 (사장님이 잡음, 2026-09-29).

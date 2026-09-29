@@ -17,7 +17,8 @@ import argparse, json, datetime, html
 ap = argparse.ArgumentParser()
 ap.add_argument('src'); ap.add_argument('out')
 ap.add_argument('--boxes', type=int, default=0, help='우체국 발송 상자 수 (액상덕후 몫)')
-ap.add_argument('--unit', type=int, default=2150, help='우체국 계약 단가')
+ap.add_argument('--unit', type=int, default=2150, help='건당 배송비 (우체국 계약 단가, 또는 박스비까지 넣은 값)')
+ap.add_argument('--ship-label', default='', help='배송비 줄 설명 (비우면 단가에 맞춰 자동)')
 ap.add_argument('--returns', type=int, default=0); ap.add_argument('--waiting', type=int, default=0, help='출고 대기 건수')
 ap.add_argument('--prev-sales', type=float, default=0); ap.add_argument('--prev-orders', type=int, default=0); ap.add_argument('--prev-aov', type=float, default=0)
 ap.add_argument('--prev-note', default='전월비는 8월 보고서의 자사몰 값 기준입니다.')
@@ -131,6 +132,7 @@ manual_txt = ' · '.join(f"{html.escape(pretty(k, ''))} 원가 {man(v)}" for k, 
 kmon = f"{mo}월"
 asof = a.asof or (f"{kmon} 1일 ~ {days}일 기준" + ('' if m['closed'] else ' (월중 잠정)'))
 dt_today = datetime.date.fromisoformat(today)
+ship_label = a.ship_label or (f"건당 {fmt(a.unit)}원 (우체국 요금 + 박스비) 기준" if a.unit != 2150 else "우체국 소포정산내역에서 확인한 계약 단가입니다")
 
 page = f'''<!doctype html>
 <html lang="ko">
@@ -199,7 +201,7 @@ page = f'''<!doctype html>
       {f'<tr class="sub"><td>+ 아임웹 매출 ({im_n}건)</td><td class="num">{fmt(im_sales)}</td><td class="num mut"></td></tr><tr class="sum"><td>매출 합계</td><td class="num">{fmt(total_sales)}</td><td class="num mut">100.0%</td></tr>' if im_on else ''}
       <tr class="sub"><td>상품 원가{' (아임웹은 자사몰 원가율로 추정)' if im_est else ''}</td><td class="num neg">−{fmt(cost_all + im_cost)}</td><td class="num mut">매출의 {(cost_all + im_cost)/total_sales*100:.1f}%</td></tr>
       <tr class="sum"><td>매출총이익</td><td class="num">{fmt(gross)}</td><td class="num mut">{gross/total_sales*100:.1f}%</td></tr>
-      <tr class="sub"><td>배송비 (우체국 계약소포 {boxes:,}상자 × {fmt(a.unit)}원)</td><td class="num neg">−{fmt(spend)}</td><td class="num mut">{spend/total_sales*100:.1f}%</td></tr>
+      <tr class="sub"><td>배송비 ({boxes:,}건 × {fmt(a.unit)}원)</td><td class="num neg">−{fmt(spend)}</td><td class="num mut">{spend/total_sales*100:.1f}%</td></tr>
       <tr class="sum"><td>순이익</td><td class="num">{fmt(profit)}</td><td class="num mut">{profit/total_sales*100:.1f}%</td></tr>
     </tbody>
   </table>
@@ -223,13 +225,13 @@ page = f'''<!doctype html>
     <div>
       <h2>배송</h2>
       <table class="kv"><tbody>
-        <tr><td>{kmon} 발송 (우체국 접수)</td><td class="num">{boxes:,}상자 · {fmt(spend)}원</td></tr>
+        <tr><td>{kmon} 발송 (우체국 접수)</td><td class="num">{boxes:,}건 · {fmt(spend)}원</td></tr>
         <tr><td>출고 대기</td><td class="num">{a.waiting}건 (다음 달 반영)</td></tr>
         <tr><td>반품</td><td class="num">{a.returns}건</td></tr>
         <tr><td>매출 대비 배송비</td><td class="num">{spend/sales*100:.1f}%</td></tr>
         <tr><td>상자당 매출</td><td class="num">{fmt(sales/boxes) if boxes else '—'}</td></tr>
       </tbody></table>
-      <p class="note">상자당 {fmt(a.unit)}원은 우체국 소포정산내역에서 확인한 계약 단가입니다.</p>
+      <p class="note">{ship_label}.</p>
     </div>
     <div>
       <h2>손님</h2>
