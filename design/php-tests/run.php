@@ -2406,6 +2406,12 @@ $ok(($Pc.'unit')()===2150 && ($Pc.'cost')($ps, ($Pc.'unit')())===10750, '단가 
 $GLOBALS['__options']['duckhoo_parcel_unit'] = 2300;
 $ok(($Pc.'unit')()===2300, '옵션에 넣은 단가가 이긴다');
 unset($GLOBALS['__options']['duckhoo_parcel_unit']);
+$ok(($Pc.'pack_unit')()===170 && ($Pc.'pack_cost')($ps, 0)===0 && ($Pc.'total_cost')($ps, 2150, 0)===10750 && ($Pc.'total_cost')($ps, 2150, ($Pc.'pack_unit')())===11600, '포장재 옵션이 비면 기본 170원(박스 119/229 가중) · 0 이면 합계는 우체국 요금만');
+$GLOBALS['__options']['duckhoo_parcel_pack'] = 450;
+$ok(($Pc.'pack_unit')()===450 && ($Pc.'pack_cost')($ps, 450)===2250 && ($Pc.'total_cost')($ps, 2150, 450)===13000, '포장재 450원 × 5상자 = 2,250 · 합계 13,000');
+$pl = ($Pc.'line')($ps, 2150, 450);
+$ok(str_contains($pl, '우체국 단가 2,150원 = 10,750원') && str_contains($pl, '포장재 450원 × 5 = 2,250원') && str_contains($pl, '배송비 지출 합계 13,000원') && str_contains(($Pc.'line')($ps, 2150, 0), '포장재 단가는 아직 없음'), '한 줄 요약에 우체국 · 포장재 · 합계');
+unset($GLOBALS['__options']['duckhoo_parcel_pack']);
 
 $SR = 'Duckhoo\\Redesign\\Seo\\Report\\';
 $GLOBALS['__options']['duckhoo_worklog'] = [];

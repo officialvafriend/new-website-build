@@ -27,12 +27,29 @@ const OPT_UNIT   = 'duckhoo_parcel_unit';
 /** 기본 단가 — 2026년 9월 소포정산내역에서 확인한 액상덕후 상자의 계약 단가 (동대구우체국 · 방문소포_기업직택배). */
 const DEFAULT_UNIT = 2150;
 
+/** 포장재 단가 옵션 — 상자 하나를 싸는 데 드는 자재값 (박스 + 완충재 + 테이프). 우체국 요금과 별개다. */
+const OPT_PACK = 'duckhoo_parcel_pack';
+
+/**
+ * 포장재 기본 단가 — 사장님 값(2026-09-29): 작은 박스 119원 · 큰 박스 229원. 9월 확정 763건 중 10병 이상 묶음이 348건(46%)이라
+ * 119 × 0.54 + 229 × 0.46 ≈ 170원. 완충재 · 테이프는 아직 안 들어 있다 — 값을 알면 옵션에 더한 값을 넣는다.
+ */
+const DEFAULT_PACK = 170;
+
 /**
  * 계약 단가 (상자 하나에 우체국에 내는 돈). 옵션이 비어 있으면 DEFAULT_UNIT.
  */
 function unit(): int {
 	$u = (int) get_option( OPT_UNIT, 0 );
 	return (int) apply_filters( 'duckhoo_parcel_unit', $u > 0 ? $u : DEFAULT_UNIT );
+}
+
+/**
+ * 포장재 단가 (박스 · 완충재 · 테이프 — 상자 하나 몫). 0 이면 모름 → 장부에 안 넣는다.
+ */
+function pack_unit(): int {
+	$p = (int) get_option( OPT_PACK, 0 );
+	return max( 0, (int) apply_filters( 'duckhoo_parcel_pack_unit', $p > 0 ? $p : DEFAULT_PACK ) );
 }
 
 /**
@@ -157,6 +174,20 @@ function cost( ?array $m, int $unit ): int {
 	return $m && $unit > 0 ? (int) $m['n'] * $unit : 0;
 }
 
+/**
+ * 포장재 = 상자 수 × 포장재 단가. 단가를 모르면 0.
+ */
+function pack_cost( ?array $m, int $pack ): int {
+	return $m && $pack > 0 ? (int) $m['n'] * $pack : 0;
+}
+
+/**
+ * 배송비 지출 합계 = 우체국 요금 + 포장재.
+ */
+function total_cost( ?array $m, int $unit, int $pack = 0 ): int {
+	return cost( $m, $unit ) + pack_cost( $m, $pack );
+}
+
 function months(): array {
 	return (array) get_option( OPT_MONTHS, array() );
 }
@@ -176,14 +207,19 @@ function month( string $ym ): ?array {
 /**
  * 한 줄 요약.
  */
-function line( ?array $m, int $unit = 0 ): string {
+function line( ?array $m, int $unit = 0, int $pack = 0 ): string {
 	if ( ! $m ) {
 		return '배송비 지출: 아직 없음 (월말 결산 화면에 우체국 소포 발송 내역을 올리고 계약 단가를 넣으면 장부에 들어갑니다)';
 	}
 	$w = fn( $n ) => number_format( (float) round( (float) $n ) );
 	$s = '우체국 소포 ' . (int) $m['n'] . '상자 (워드프레스 ' . (int) $m['wp'] . ' · 아임웹 ' . (int) $m['imweb'] . ( $m['none'] > 0 ? ' · 주문번호 없음 ' . (int) $m['none'] : '' ) . ( $m['ret'] > 0 ? ' · 반품 ' . (int) $m['ret'] : '' ) . ')';
 	if ( $unit > 0 ) {
-		$s .= ' × 단가 ' . $w( $unit ) . '원 = 배송비 지출 ' . $w( cost( $m, $unit ) ) . '원';
+		$s .= ' × 우체국 단가 ' . $w( $unit ) . '원 = ' . $w( cost( $m, $unit ) ) . '원';
+		if ( $pack > 0 ) {
+			$s .= ' + 포장재 ' . $w( $pack ) . '원 × ' . (int) $m['n'] . ' = ' . $w( pack_cost( $m, $pack ) ) . '원 → 배송비 지출 합계 ' . $w( total_cost( $m, $unit, $pack ) ) . '원';
+		} else {
+			$s .= ' (포장재 단가는 아직 없음)';
+		}
 	} else {
 		$s .= ' · 계약 단가를 아직 안 넣어 금액은 없음';
 	}
@@ -208,6 +244,13 @@ function handle_post(): string {
 			$msg = $u > 0 ? '계약 단가 ' . number_format( $u ) . '원을 저장했습니다. ' : '계약 단가를 비웠습니다. ';
 		}
 	}
+	if ( isset( $_POST['dhr_parcel_pack'] ) ) {
+		$pk = (int) preg_replace( '/\D/', '', (string) wp_unslash( (string) $_POST['dhr_parcel_pack'] ) ); // phpcs:ignore
+		if ( $pk !== (int) get_option( OPT_PACK, 0 ) ) {
+			update_option( OPT_PACK, $pk, false );
+			$msg .= $pk > 0 ? '포장재 단가 ' . number_format( $pk ) . '원을 저장했습니다. ' : '포장재 단가를 비웠습니다. ';
+		}
+	}
 	$txt = '';
 	if ( ! empty( $_FILES['dhr_parcel_file']['tmp_name'] ) && is_uploaded_file( (string) $_FILES['dhr_parcel_file']['tmp_name'] ) ) { // phpcs:ignore
 		$txt = (string) file_get_contents( (string) $_FILES['dhr_parcel_file']['tmp_name'] ); // phpcs:ignore
@@ -224,24 +267,26 @@ function handle_post(): string {
 			return $msg . '읽은 ' . count( $rows ) . '상자 중 ' . $ym . ' 등록분이 없습니다. 달을 확인해 주세요.';
 		}
 		put( $ym, $sum, 'paste' );
-		return $msg . $ym . ' 에 저장했습니다. ' . line( month( $ym ), unit() );
+		return $msg . $ym . ' 에 저장했습니다. ' . line( month( $ym ), unit(), pack_unit() );
 	}
 	return $msg;
 }
 
 function box( string $ym, string $msg = '' ): void {
 	$m = month( $ym );
-	$u = unit();
-	echo '<section class="dhr-sl-sec"><h2>배송비 지출 (우체국 소포)</h2>';
+	$u  = unit();
+	$pk = pack_unit();
+	echo '<section class="dhr-sl-sec"><h2>배송비 지출 (우체국 소포 + 포장재)</h2>';
 	if ( '' !== $msg ) {
 		echo '<div class="notice notice-info inline"><p>' . esc_html( $msg ) . '</p></div>';
 	}
-	echo '<p class="dhr-sl-note">' . esc_html( line( $m, $u ) ) . '</p>';
+	echo '<p class="dhr-sl-note">' . esc_html( line( $m, $u, $pk ) ) . '</p>';
 	echo '<form method="post" enctype="multipart/form-data" style="margin:0 0 12px">';
 	wp_nonce_field( 'dhr_parcel', 'dhr_parcel_nonce' );
 	echo '<input type="hidden" name="dhr_parcel_ym" value="' . esc_attr( $ym ) . '">';
 	echo '<p><b>① 계약 단가</b> — 상자 하나에 우체국에 내는 돈 (정산내역의 단가). <input type="text" name="dhr_parcel_unit" value="' . esc_attr( $u !== DEFAULT_UNIT ? (string) $u : '' ) . '" placeholder="' . esc_attr( (string) DEFAULT_UNIT ) . '" size="8" inputmode="numeric"> 원 — 비우면 ' . esc_html( number_format( DEFAULT_UNIT ) ) . '원 (2026년 9월 정산내역에서 확인한 기본 단가). 정산내역이 다른 공급지와 합산으로 나와도 액상덕후 상자는 이 단가라 통수 × 단가로 가르면 된다.</p>';
-	echo '<p><b>② 소포 발송 내역</b> — 우체국 계약소포 → 발송 내역 조회에서 ' . esc_html( $ym ) . ' 을 골라 엑셀(CSV)로 내려받아 그대로 올립니다. 등록일자 · 등기번호 · 고객주문번호 · 고객주문처 · 반품신청여부 칸을 이름으로 찾습니다.</p>';
+	echo '<p><b>② 포장재 단가</b> — 상자 하나를 싸는 데 드는 자재값 (박스 + 완충재 + 테이프 + 안전봉투). 구매 영수증의 값을 개수로 나눈 것. <input type="text" name="dhr_parcel_pack" value="' . esc_attr( $pk !== DEFAULT_PACK ? (string) $pk : '' ) . '" placeholder="' . esc_attr( (string) DEFAULT_PACK ) . '" size="8" inputmode="numeric"> 원 — 비우면 ' . esc_html( number_format( DEFAULT_PACK ) ) . '원 (작은 박스 119원 · 큰 박스 229원을 9월 묶음 비율 46% 로 섞은 값, 완충재 · 테이프는 안 들어 있음). 한 달 자재비 ÷ 상자 수로 넣으면 더 정확합니다.</p>';
+	echo '<p><b>③ 소포 발송 내역</b> — 우체국 계약소포 → 발송 내역 조회에서 ' . esc_html( $ym ) . ' 을 골라 엑셀(CSV)로 내려받아 그대로 올립니다. 등록일자 · 등기번호 · 고객주문번호 · 고객주문처 · 반품신청여부 칸을 이름으로 찾습니다.</p>';
 	echo '<p><input type="file" name="dhr_parcel_file" accept=".csv,.txt,.tsv"> &nbsp; 또는 붙여 넣기 ↓</p>';
 	echo '<p><textarea name="dhr_parcel_text" rows="3" style="width:100%;max-width:720px;font-size:12px" placeholder="소포주문번호,등록일자,배송진행 상태내역,…,등기번호,…"></textarea></p>';
 	echo '<p><button class="button button-primary" name="dhr_parcel_save" value="1">저장</button></p>';
