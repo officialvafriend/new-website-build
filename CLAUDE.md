@@ -3054,8 +3054,14 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
   `Cost\at( $v, $주문날짜 )` 가 고르고, `month_cost()` 는 주문 날짜(`$r['d']`)로 줄마다 센다. 붙여 넣기는 줄 끝 `2026-09-15부터`.
   `merge_costs()` 가 숫자 위에 날짜가 오면 옛 값을 빈 키로 남긴다
 - 사장님이 준 새 원가(2026-09-29): 노보 · 노보 블랙 병당 5,000 → **6,000** · 닷모드 투엑스 팟 7,200 → **8,000**(판매가 12,100) ·
-  브이메이트 V5 팟 **9,000**(판매가 12,000, 새 상품이라 `pid 164`). **노보 · 닷모드는 바뀐 날짜를 아직 못 받았다** — 받으면 씨앗을
-  `array( '' => 5000, '<날짜>' => 6000 )` 꼴로. 그 전까지 씨앗은 노보 6,000 · 닷모드 7,200 그대로. 파티팟은 표에 없다
+  브이메이트 V5 팟 **9,000**(판매가 12,000). **바뀐 날은 주문에서 읽었다** (사장님: 「우리 주문을 보면 오른 가격으로 받은 게 나올 테니
+  그거 보고 판단」) — `Cost\unit_prices( $pid, $since )` 가 주문 줄 단가(`_line_subtotal ÷ _qty`)를 날짜별로 세고 `switch_date()` 가
+  새 단가가 자리 잡은 첫 날을 고른다. 브리핑 API `price_watch`(필터 `duckhoo_price_watch`)로 읽는다. 옵션이 섞여 단가가 들쭉날쭉하지만
+  바뀐 날은 또렷했다: **노보 낱병 8,000 → 13,000 이 9/8 주문부터**(블랙 13,500 도 9/8) → 노보 6,000 은 `2026-09-08` 부터 ·
+  **V5 12,000 주문이 9/4 부터** → `pid 164 = array( '' => 6000(V4), '2026-09-04' => 9000 )` · 닷모드는 새 값 주문이 아직 없어 9/8 로.
+  **9/7 대량 주문(3,000병)은 9/8 전이라 옛 원가 5,000 × 3,000 = 15,000,000** 으로 `--manual` 에 넣는다. 파티팟은 표에 없다
+- 관리자가 **날짜 없이** 적은 숫자는 그 항목의 이력까지 통째로 덮는다. 이력을 살리려면 `…부터` 를 붙인다
+- `?fresh=1` 을 브리핑 GET 에 붙이면(열쇠 필요) 10분 캐시와 결산 30분 캐시를 건너뛰고 새로 읽는다 — 원가표를 고친 직후 보고서를 찍을 때
 - DB 의 「판매가」 칸은 옛 값(노보 8,000)이라 안 쓴다. 「자동_상품단가_DB」 시트는 부자재 원가가 절반으로 찍혀 있어(원가차이 −4,000) 원본_DB 만 믿는다
 
 검증: `php design/php-tests/run.php` (원가 15개 — 정규화 · 병 수 · 네 단계 · 옵션 우선 · 모르는 줄 · 주문별 · 순이익 · 붙여 넣기 · 결산 글).
@@ -3069,7 +3075,7 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 ```bash
 curl -sS https://duck-hoo.com/wp-json/duckhoo/v1/brief -H "X-DHR-Key: $DUCKHOO_BRIEF_KEY" > /tmp/brief.json
 python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2026-09-monthly.html --boxes 828 --unit 2150 --returns 8 --waiting 37 \
-  --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=18000000"
+  --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=15000000"
 ```
 
 - 순이익 = 매출 − 상품 원가 − 배송비. **원가를 모르는 매출은 원가 0 으로 들어가 순이익이 그만큼 높다** — 각주에 이름과 금액을 적는다.

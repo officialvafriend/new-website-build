@@ -182,12 +182,16 @@ function save( string $text ): void {
  *
  * @return array<string,mixed>
  */
-function payload(): array {
+function payload( bool $fresh = false ): array {
 	$today = (string) current_time( 'Y-m-d' );
 	$key   = 'dhr_brief_' . $today . '_' . (string) current_time( 'H' ) . substr( (string) current_time( 'i' ), 0, 1 );
-	$hit   = get_transient( $key );
+	$hit   = $fresh ? false : get_transient( $key );
 	if ( is_array( $hit ) ) {
 		return $hit;
+	}
+	if ( $fresh && function_exists( '\\Duckhoo\\Redesign\\Monthly\\data' ) ) {
+		// ?fresh=1 — 원가표를 고친 직후 보고서를 찍을 때. 결산 30분 캐시도 같이 새로 읽는다 (열쇠가 있어야 한다)
+		\Duckhoo\Redesign\Monthly\data( substr( $today, 0, 7 ), true );
 	}
 	$d = fn( int $back ): string => gmdate( 'Y-m-d', strtotime( $today . ' -' . $back . ' days' ) );
 
@@ -351,9 +355,10 @@ function routes(): void {
 	register_rest_route( 'duckhoo/v1', '/brief', array(
 		'methods'             => 'GET',
 		'permission_callback' => fn( $req ) => authorized( $req ),
-		'callback'            => function () {
+		'callback'            => function ( $req ) {
 			try {
-				return rest_ensure_response( payload() );
+				$fresh = is_object( $req ) && method_exists( $req, 'get_param' ) && '1' === (string) $req->get_param( 'fresh' );
+				return rest_ensure_response( payload( $fresh ) );
 			} catch ( \Throwable $e ) {
 				return new \WP_Error( 'dhr_brief_failed', $e->getMessage(), array( 'status' => 500 ) );
 			}

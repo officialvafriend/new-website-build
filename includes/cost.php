@@ -59,18 +59,18 @@ function at( $v, string $date = '' ): float {
 }
 
 /**
- * 두 표를 겹친다 — 뒤가 이긴다. 한쪽이 날짜 배열이면 날짜끼리 합친다 (숫자는 '' 키로).
+ * 두 표를 겹친다 — 뒤가 이긴다. 뒤가 숫자면 그 항목을 통째로 덮고(이력까지), 뒤가 날짜 배열이면 앞의 값 위에 날짜를 얹는다
+ * (앞이 숫자였으면 '' 키 = 그 전 값).
  */
 function merge_costs( array $base, array $over ): array {
 	foreach ( $over as $k => $v ) {
 		$b = $base[ $k ] ?? null;
-		if ( null === $b || ( ! is_array( $v ) && ! is_array( $b ) ) ) {
+		if ( null === $b || ! is_array( $v ) ) {
 			$base[ $k ] = $v;
 			continue;
 		}
 		$ba = is_array( $b ) ? $b : array( '' => $b );
-		$va = is_array( $v ) ? $v : array( '' => $v );
-		$base[ $k ] = array_replace( $ba, $va );
+		$base[ $k ] = array_replace( $ba, $v );
 	}
 	return $base;
 }
