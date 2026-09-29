@@ -64,9 +64,11 @@ function orders(): array {
 	$out = array();
 	if ( hpos() ) {
 		$rows = (array) $wpdb->get_results( // phpcs:ignore WordPress.DB
-			"SELECT o.id, o.status, o.date_created_gmt AS d, o.total_amount AS t, o.customer_id AS u, a.city, a.state
+			"SELECT o.id, o.status, o.date_created_gmt AS d, o.total_amount AS t, o.customer_id AS u,
+			        COALESCE(NULLIF(a.city,''), b.city) AS city, COALESCE(NULLIF(a.state,''), b.state) AS state
 			   FROM {$wpdb->prefix}wc_orders o
 			   LEFT JOIN {$wpdb->prefix}wc_order_addresses a ON a.order_id = o.id AND a.address_type = 'shipping'
+			   LEFT JOIN {$wpdb->prefix}wc_order_addresses b ON b.order_id = o.id AND b.address_type = 'billing'
 			  WHERE o.type = 'shop_order' AND o.status NOT IN ('wc-checkout-draft','trash','auto-draft')",
 			ARRAY_A
 		);
@@ -75,10 +77,10 @@ function orders(): array {
 			"SELECT p.ID AS id, p.post_status AS status, p.post_date_gmt AS d,
 			        MAX(CASE WHEN m.meta_key='_order_total' THEN m.meta_value END) AS t,
 			        MAX(CASE WHEN m.meta_key='_customer_user' THEN m.meta_value END) AS u,
-			        MAX(CASE WHEN m.meta_key='_shipping_city' THEN m.meta_value END) AS city,
-			        MAX(CASE WHEN m.meta_key='_shipping_state' THEN m.meta_value END) AS state
+			        COALESCE(NULLIF(MAX(CASE WHEN m.meta_key='_shipping_city' THEN m.meta_value END),''), MAX(CASE WHEN m.meta_key='_billing_city' THEN m.meta_value END)) AS city,
+			        COALESCE(NULLIF(MAX(CASE WHEN m.meta_key='_shipping_state' THEN m.meta_value END),''), MAX(CASE WHEN m.meta_key='_billing_state' THEN m.meta_value END)) AS state
 			   FROM {$wpdb->posts} p
-			   LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key IN ('_order_total','_customer_user','_shipping_city','_shipping_state')
+			   LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key IN ('_order_total','_customer_user','_shipping_city','_shipping_state','_billing_city','_billing_state')
 			  WHERE p.post_type = 'shop_order' AND p.post_status NOT IN ('wc-checkout-draft','trash','auto-draft')
 			  GROUP BY p.ID",
 			ARRAY_A
@@ -145,15 +147,49 @@ function items( array $ids ): array {
  * 이름 앞 `[브랜드]` → 묶은 브랜드. 없으면 '기타'.
  */
 function brand( string $name ): string {
-	if ( ! preg_match( '/^\s*\[([^\]]+)\]/u', $name, $m ) ) {
-		return '기타';
-	}
-	$b = trim( $m[1] );
-	if ( preg_match( '/이벤트|할인|특가/u', $b ) ) {
-		return '기타';
-	}
 	$al = function_exists( '\\Duckhoo\\Redesign\\Front\\brand_aliases' ) ? \Duckhoo\Redesign\Front\brand_aliases() : array( '노보 블랙' => '노보', '노보 리퀴드' => '노보', '노보 블랙 리퀴드' => '노보' );
-	return (string) ( $al[ $b ] ?? $b );
+	if ( preg_match( '/^\s*\[([^\]]+)\]/u', $name, $m ) ) {
+		$b = trim( $m[1] );
+		if ( ! preg_match( '/이벤트|할인|특가|한정|기획|묶음/u', $b ) ) {
+			return (string) ( $al[ $b ] ?? $b );
+		}
+	}
+	// 대괄호가 없거나 행사 이름표뿐인 옛 상품(「노보 10병 병당 7,000원」 · 「덕후 액상 10병 할인 !」 ·
+	// 「[한정수량] 크래프트 포도 10병 묶음」)은 이름 안의 낱말로 센다. 2026-09-29 첫 보고서에서
+	// 이런 줄이 「기타」 7,100만원으로 뭉쳐 노보 · 액상덕후가 실제보다 작게 나왔다.
+	foreach ( brand_keywords() as $kw => $b ) {
+		if ( false !== mb_stripos( $name, $kw ) ) {
+			return $b;
+		}
+	}
+	return '기타';
+}
+
+/**
+ * 이름 안에서 찾는 브랜드 낱말 → 브랜드. 긴 것부터 (「노보 블랙」이 「노보」보다 먼저).
+ * 필터 `duckhoo_anatomy_brand_keywords`.
+ *
+ * @return array<string,string>
+ */
+function brand_keywords(): array {
+	return (array) apply_filters( 'duckhoo_anatomy_brand_keywords', array(
+		'노보 블랙'      => '노보',
+		'노보'           => '노보',
+		'덕후 액상'      => '액상덕후',
+		'덕후액상'       => '액상덕후',
+		'액상덕후'       => '액상덕후',
+		'크래프트'       => '크래프트',
+		'화이트아웃'     => '화이트아웃',
+		'리퀴드랩'       => '리퀴드랩',
+		'디오리퀴드'     => '디오리퀴드',
+		'디오 리퀴드'    => '디오리퀴드',
+		'빌런'           => '빌런',
+		'펠릭스'         => '펠릭스',
+		'얼려먹구싶오'   => '얼려먹구싶오',
+		'젤로'           => '젤로',
+		'네스티'         => '네스티',
+		'맥스쿨'         => '맥스쿨',
+	) );
 }
 
 /**
@@ -255,6 +291,31 @@ function analyze( array $orders, array $items, int $now ): array {
 	$top10   = array_slice( array_values( $ltv ), 0, max( 1, (int) ceil( count( $ltv ) * 0.1 ) ) );
 	$top10_share = $sum_ltv > 0 ? round( 100 * array_sum( $top10 ) / $sum_ltv ) : 0;
 
+	/* 한 건짜리 큰 주문 — 평균 · 상위 10% 몫을 혼자 끌어올린다. 첫 보고서에서 2,100만원 한 건이 전체의 15% 였다. */
+	$big_min = (float) apply_filters( 'duckhoo_anatomy_big_order', 500000 );
+	$big     = array();
+	foreach ( $paid as $o ) {
+		if ( $o['t'] >= $big_min ) {
+			$fi    = $items[ $o['id'] ] ?? array();
+			$big[] = array( 'id' => $o['id'], 't' => $o['t'], 'day' => gmdate( 'Y-m-d', $o['ts'] ), 'name' => $fi ? short( (string) $fi[0]['name'] ) : '(줄 없음)' );
+		}
+	}
+	usort( $big, fn( $x, $y ) => $y['t'] <=> $x['t'] );
+	$big_sum = array_sum( array_column( $big, 't' ) );
+	$big_ids = array_column( $big, 'id' );
+	$ltv_ex  = $ltv;
+	foreach ( $by as $uid => $os ) {
+		foreach ( $os as $o ) {
+			if ( in_array( $o['id'], $big_ids, true ) ) {
+				$ltv_ex[ $uid ] -= $o['t'];
+			}
+		}
+	}
+	arsort( $ltv_ex );
+	$sum_ex   = array_sum( $ltv_ex );
+	$top10_ex = array_slice( array_values( $ltv_ex ), 0, max( 1, (int) ceil( count( $ltv_ex ) * 0.1 ) ) );
+	$top10_share_ex = $sum_ex > 0 ? round( 100 * array_sum( $top10_ex ) / $sum_ex ) : 0;
+
 	/* 요일 · 시간 */
 	$dow = array_fill( 0, 7, 0 );
 	$hour = array_fill( 0, 24, 0 );
@@ -346,6 +407,11 @@ function analyze( array $orders, array $items, int $now ): array {
 		'buckets'      => $buckets,
 		'lines_avg'    => $lines_per_order ? round( array_sum( $lines_per_order ) / count( $lines_per_order ), 2 ) : 0,
 		'top10_share'  => $top10_share,
+		'big'          => array_slice( $big, 0, 5 ),
+		'big_n'        => count( $big ),
+		'big_sum'      => $big_sum,
+		'aov_ex'       => ( count( $totals ) - count( $big ) ) > 0 ? round( ( array_sum( $totals ) - $big_sum ) / ( count( $totals ) - count( $big ) ) ) : 0,
+		'top10_share_ex' => $top10_share_ex,
 		'ltv_top'      => array_slice( $ltv, 0, 10, true ),
 		'ltv_median'   => round( median( array_values( $ltv ) ) ),
 		'one_first'    => array_slice( $one_first, 0, 12, true ),
@@ -376,6 +442,12 @@ function report( array $a, string $today ): string {
 	$L[] = "객단가 평균 " . $w( $a['aov'] ) . "원 · 중앙값 " . $w( $a['aov_median'] ) . "원 · 주문당 상품 줄 {$a['lines_avg']}개";
 	$L[] = '객단가 분포: ' . implode( ' · ', array_map( fn( $k, $v ) => "{$k} {$v}", array_keys( $a['buckets'] ), $a['buckets'] ) );
 	$L[] = "상위 10% 회원이 매출의 {$a['top10_share']}% · 회원당 누적 매출 중앙값 " . $w( $a['ltv_median'] ) . '원';
+	if ( ! empty( $a['big_n'] ) ) {
+		$L[] = "한 건짜리 큰 주문(50만원↑) {$a['big_n']}건 · 합계 " . $w( $a['big_sum'] ) . '원 — 이것을 빼면 객단가 평균 ' . $w( $a['aov_ex'] ) . "원 · 상위 10% 몫 {$a['top10_share_ex']}%";
+		foreach ( $a['big'] as $b ) {
+			$L[] = "  · {$b['day']} #{$b['id']} " . $w( $b['t'] ) . "원 — {$b['name']}";
+		}
+	}
 	$r = $a['recent90'];
 	$L[] = '최근 90일: 첫 주문 ' . $r['new_n'] . '건 ' . $w( $r['new_sales'] ) . '원 · 재구매 ' . $r['rep_n'] . '건 ' . $w( $r['rep_sales'] ) . '원';
 	$L[] = '';
