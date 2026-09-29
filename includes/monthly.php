@@ -349,7 +349,11 @@ function close( array $rows, array $items, array $prior, array $prev, string $ym
 	$days_in   = (int) gmdate( 't', strtotime( $from ) );
 	$days_done = $ym < substr( $today, 0, 7 ) ? $days_in : max( 1, min( $days_in, (int) substr( $today, 8, 2 ) ) );
 
+	/* 원가 (확정만) — includes/cost.php 가 있으면 */
+	$cost = function_exists( '\\Duckhoo\\Redesign\\Cost\\month_cost' ) ? \Duckhoo\Redesign\Cost\month_cost( $conf, $items ) : null;
+
 	return array(
+		'cost'       => $cost,
 		'ym'         => $ym,
 		'from'       => $from,
 		'to'         => $to,
@@ -413,6 +417,10 @@ function report( array $c ): string {
 	$pc = parcels( $c['ym'] );
 	if ( function_exists( '\\Duckhoo\\Redesign\\Parcels\\line' ) ) {
 		$L[] = '[지출] ' . \Duckhoo\Redesign\Parcels\line( $pc['m'], $pc['unit'], (int) ( $pc['pack'] ?? 0 ) ) . ( $pc['cost'] > 0 ? ' → 지출 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원' : '' );
+	}
+	$pf = profit( $c, $pc );
+	if ( $pf ) {
+		$L[] = '[원가] 상품 원가 ' . $w( $pf['cost'] ) . '원 (원가 아는 매출의 ' . $pf['cost_rate'] . '%) → 순이익 ' . $w( $pf['profit'] ) . '원 = 실입금의 ' . $pf['rate'] . '%' . ( $pf['unknown'] > 0 ? ' · 원가 모르는 매출 ' . $w( $pf['unknown'] ) . '원 (' . implode( ' · ', array_map( fn( $k, $v ) => $k . ' ' . $w( $v ), array_keys( array_slice( $pf['unknown_list'], 0, 5, true ) ), array_slice( $pf['unknown_list'], 0, 5 ) ) ) . ')' : '' );
 	}
 	$cu  = $c['cust'];
 	$L[] = "[손님] 산 회원 {$cu['buyers']}명 = 이 달 처음 {$cu['first_buyers']}명 + 전에도 산 {$cu['rep_buyers']}명 · 첫 주문 {$cu['first_n']}건 " . $w( $cu['first_sales'] ) . "원 · 재구매 {$cu['rep_n']}건 " . $w( $cu['rep_sales'] ) . '원' . ( $cu['guest_n'] ? " · 비회원 {$cu['guest_n']}건 " . $w( $cu['guest_sales'] ) . '원' : '' ) . " · 새 가입 {$c['signups']}명 (지난달 {$c['signups_prev']})";
@@ -488,6 +496,21 @@ function imweb( string $ym ): ?array {
 }
 
 /**
+ * 순이익 = 실입금 − 지출(배송비 · 박스비) − 상품 원가. 원가를 모르면 null.
+ *
+ * @return array{cost:float,profit:float,rate:float,cost_rate:float,unknown:float,coverage:int,unknown_list:array}|null
+ */
+function profit( array $c, array $pc ): ?array {
+	$mc = $c['cost'] ?? null;
+	if ( ! is_array( $mc ) || ! function_exists( '\\Duckhoo\\Redesign\\Cost\\profit' ) || (float) $mc['cost'] <= 0 ) {
+		return null;
+	}
+	$p = \Duckhoo\Redesign\Cost\profit( (float) $c['conf']['sales'], (float) $pc['cost'], $mc );
+	$p['unknown_list'] = (array) ( $mc['unknown_list'] ?? array() );
+	return $p;
+}
+
+/**
  * 우체국 소포 요약(있으면) 과 지출 — 배송비(상자 × 계약 단가) · 박스비(상자 × 박스 단가) · 합계.
  *
  * @return array{m:?array,unit:int,cost:int}
@@ -541,6 +564,10 @@ function brief_text( array $c, ?array $im, array $log, string $seo = '', bool $d
 	$pc = parcels( (string) $c['ym'] );
 	if ( $pc['cost'] > 0 ) {
 		$L[] = '· 지출 ' . $w( $pc['cost'] ) . '원 = 배송비 ' . $w( $pc['post'] ) . '원 (우체국 ' . (int) $pc['m']['n'] . '상자 × ' . $w( $pc['unit'] ) . '원)' . ( ! empty( $pc['pack_cost'] ) ? ' + 박스비 ' . $w( $pc['pack_cost'] ) . '원' : ' (박스비 단가 없음)' ) . ' → 지출 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원';
+	}
+	$pf = profit( $c, $pc );
+	if ( $pf ) {
+		$L[] = '· 순이익 ' . $w( $pf['profit'] ) . '원 (실입금의 ' . $pf['rate'] . '%) = 실입금 − 지출 − 상품 원가 ' . $w( $pf['cost'] ) . '원' . ( $pf['unknown'] > 0 ? ' · 원가 모르는 매출 ' . $w( $pf['unknown'] ) . '원은 원가표에 적으면 들어감' : '' );
 	}
 	$top = array_slice( $c['products'], 0, 3, true );
 	if ( $top ) {
@@ -782,9 +809,19 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 			echo '<tr><td class="dhr-sl-mut" colspan="3">박스비는 아래 상자의 「박스비 단가」를 넣으면 줄이 생깁니다.</td></tr>';
 		}
 		printf( '<tr><td><b>= 지출 합계</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">%s</td></tr>', esc_html( won( (float) $pc['cost'] ) ), esc_html( $m['sales'] > 0 ? sprintf( '실입금의 %.1f%%', (float) $pc['cost'] / $m['sales'] * 100 ) : '—' ) );
-		printf( '<tr><td><b>= 지출 뺀 실입금</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">상품 원가는 아직 없음</td></tr>', esc_html( won( (float) $m['sales'] - $pc['cost'] ) ) );
+		printf( '<tr><td><b>= 지출 뺀 실입금</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut"></td></tr>', esc_html( won( (float) $m['sales'] - $pc['cost'] ) ) );
 	} else {
 		echo '<tr><td class="dhr-sl-mut" colspan="3">지출(배송비 · 박스비)은 아래 「지출」 상자에 발송 내역을 올리면 여기에 줄이 생깁니다.</td></tr>';
+	}
+	$pf = profit( $c, $pc );
+	if ( $pf ) {
+		printf( '<tr><td>− 상품 원가</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">원가 아는 매출 %s 의 %s%% · 매출 → 원가표</td></tr>', esc_html( won( (float) $pf['cost'] ) ), esc_html( won( (float) $m['sales'] - (float) $pf['unknown'] ) ), esc_html( (string) $pf['cost_rate'] ) );
+		if ( $pf['unknown'] > 0 ) {
+			printf( '<tr><td class="dhr-sl-mut" colspan="3">원가를 모르는 매출 %s — %s. 원가표에 적으면 순이익에서 빠집니다.</td></tr>', esc_html( won( (float) $pf['unknown'] ) ), esc_html( implode( ' · ', array_map( fn( $k, $v ) => $k . ' ' . won( (float) $v ), array_keys( array_slice( $pf['unknown_list'], 0, 5, true ) ), array_slice( $pf['unknown_list'], 0, 5 ) ) ) ) );
+		}
+		printf( '<tr><td><b>= 순이익</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">실입금의 %s%%</td></tr>', esc_html( won( (float) $pf['profit'] ) ), esc_html( (string) $pf['rate'] ) );
+	} elseif ( $pc['cost'] > 0 ) {
+		echo '<tr><td class="dhr-sl-mut" colspan="3">상품 원가는 매출 → 원가표에 적으면 여기에 순이익 줄이 생깁니다.</td></tr>';
 	}
 	echo '</tbody></table></div></section>';
 

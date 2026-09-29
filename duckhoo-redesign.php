@@ -92,6 +92,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/brief.php';       // 클로
 require_once plugin_dir_path( __FILE__ ) . 'includes/seo-report.php';  // SEO 월간 보고서 — 작업 일지 REST · 유입 · 상품별 조회 (REST · 크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/imweb.php';       // 아임웹(옛 사이트) 주문 합치기 — 월말 결산이 부른다 (크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/parcels.php';     // 우체국 소포 발송 내역 → 배송비 지출 — 월말 결산이 부른다
+require_once plugin_dir_path( __FILE__ ) . 'includes/cost.php';        // 상품 원가표 → 순이익 (옵션만 쓴다 · 월말 결산이 부른다)
 require_once plugin_dir_path( __FILE__ ) . 'includes/monthly.php';     // 매출 → 월말 결산 (읽기 전용 · CSV · 디스코드 · 매달 1일 크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/market.php';      // 도구 → 시장가 대조 (읽기 전용) — 경쟁 값을 크론이 받는다 (크론이라 admin 밖)
 

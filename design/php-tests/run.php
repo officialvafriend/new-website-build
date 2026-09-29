@@ -2450,5 +2450,45 @@ $ok(($GLOBALS['__options']['duckhoo_monthly_sent'] ?? '') === '', '10월 5일에
 $GLOBALS['__now'] = mktime(15,0,0,10,1,2026); ($Mo.'cron_send')();
 $ok(($GLOBALS['__options']['duckhoo_monthly_sent'] ?? '') === '', '1일이라도 09:00 창 밖(15:00)이면 안 보낸다');
 
+
+// ── 원가표 → 순이익 (includes/cost.php) ─────────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/cost.php';
+$Co = 'Duckhoo\\Redesign\\Cost\\';
+unset($GLOBALS['__options']['duckhoo_costs']);
+$ok(($Co.'norm')('[액상덕후] 링고 흑염룡 시리즈 (0.98MG / 30ml) (멘솔 없음)') === ($Co.'norm')('[액상덕후] 링고 흑염룡 시리즈 (0.98MG/30ml)') && ($Co.'norm')('★ 입고완료 ★ 크래프트 5병 EVENT !') === ($Co.'norm')('입고완료 크래프트 5병 EVENT'), '이름 정규화: 빈칸 · ! · ★ · 「(멘솔 없음)」 무시 · 대소문자');
+$ok(($Co.'bottles')('[노보 리퀴드] 10+1 | 금액 120,000원') === 11 && ($Co.'bottles')('[디오리퀴드] 5+5 묶음 이벤트') === 10 && ($Co.'bottles')('[10병 묶음 할인 이벤트] 덕후 액상 10병 할인 !') === 10 && ($Co.'bottles')('[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 !') === 0 && ($Co.'bottles')('[노보] 타박멘솔 (9.8mg / 30ml)') === 1 && ($Co.'bottles')('[부푸] 브이메이트 V5 0.7옴팟') === 0, '병 수: 10+1 → 11 · 5+5 → 10 · 10병 → 10 · 기기 증정 · 팟은 0 · 낱병 1');
+$lc = ($Co.'line_cost')('[노보] 타박멘솔 (9.8mg / 30ml)', 2, 242);
+$ok($lc && $lc['cost'] == 10000.0 && $lc['src'] === '이름', '이름이 맞으면 표의 원가 × 수량 (타박멘솔 2병 10,000)');
+$lc = ($Co.'line_cost')('[노보 리퀴드] 10+1 | 금액 120,000원', 1, 4327);
+$ok($lc && $lc['cost'] == 55000.0 && $lc['src'] === '브랜드', '이름이 없으면 브랜드 병당 × 병 수 (노보 10+1 = 5,000 × 11)');
+$lc = ($Co.'line_cost')('[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 !', 2, 207);
+$ok($lc && $lc['cost'] == 30000.0 && $lc['src'] === '번호', '이름이 달라도 상품 번호로 맞춘 것 (#207 15,000 × 2)');
+$ok(($Co.'line_cost')('[맥스쿨] 맥스쿨 소다 무니코틴 액상', 1, 1283) === null && ($Co.'line_cost')('여기서 결제 도와드리겠습니다!', 1, 0) === null, '표에도 브랜드에도 없으면 null (숫자를 만들지 않는다)');
+$GLOBALS['__options']['duckhoo_costs'] = ['brand'=>['맥스쿨'=>3000], 'name'=>[($Co.'norm')('[노보] 타박멘솔 (9.8mg / 30ml)')=>5500]];
+$lc = ($Co.'line_cost')('[맥스쿨] 맥스쿨 소다 무니코틴 액상', 3, 1283);
+$ok($lc && $lc['cost'] == 9000.0 && ($Co.'line_cost')('[노보] 타박멘솔 (9.8mg / 30ml)', 1, 242)['cost'] == 5500.0, '관리자 옵션이 씨앗보다 먼저 (맥스쿨 3,000 × 3 · 타박멘솔 5,500)');
+unset($GLOBALS['__options']['duckhoo_costs']);
+$mconf = array_values(array_filter($mrows, fn($r) => in_array($r['s'], ['delivered','payment-confirmed'], true)));
+$mcst = ($Co.'month_cost')($mconf, $mitems);
+$ok($mcst['cost'] == 92000.0 && $mcst['known'] == 199000.0 && $mcst['unknown'] == 0.0 && $mcst['lines'] === 4 && $mcst['by_src']['이름'] === 3 && $mcst['by_src']['브랜드'] === 1, '한 달 원가: 타박멘솔 2병 10,000 + 펠릭스 2병 22,000 + 노보 10+1 55,000 + 타박멘솔 5,000 = 92,000 · 아는 매출 199,000');
+$mit2 = $mitems; $mit2[6] = [['pid'=>0,'name'=>'여기서 결제 도와드리겠습니다!','qty'=>1,'total'=>13000]];
+$mcst2 = ($Co.'month_cost')($mconf, $mit2);
+$ok($mcst2['cost'] == 87000.0 && $mcst2['unknown'] == 13000.0 && $mcst2['miss'] === 1 && array_key_first($mcst2['unknown_list']) === '여기서 결제 도와드리겠습니다!', '모르는 줄은 원가에 안 넣고 매출을 따로 센다');
+$mcst3 = ($Co.'month_cost')($mconf, $mit2, array_replace(($Co.'table')(), ['order'=>[6=>9000.0]]));
+$ok($mcst3['cost'] == 96000.0 && $mcst3['unknown'] == 0.0 && $mcst3['by_src']['주문'] === 1, '주문별 원가를 적으면 그 주문은 통째로 그 값');
+$pf = ($Co.'profit')(201000.0, 2500.0, $mcst);
+$ok($pf['cost'] == 92000.0 && $pf['profit'] == 106500.0 && $pf['rate'] == 53.0 && $pf['cost_rate'] == 46.2 && $pf['coverage'] === 100, '순이익 = 201,000 − 2,500 − 92,000 = 106,500 (53.0%) · 원가율 46.2% · 원가 아는 비율 100%');
+$pp = ($Co.'parse')("[노보] 타박멘솔 (9.8mg / 30ml) = 5,500원\n브랜드 맥스쿨 3000\n#207\t16000\n주문 202609180004850 15,000,000\n\n# 주석은 건너뜀\n이름만 있는 줄\n[빌런] 5병 EVENT, 0");
+$ok($pp['name'][($Co.'norm')('[노보] 타박멘솔 (9.8mg / 30ml)')] == 5500.0 && $pp['brand']['맥스쿨'] == 3000.0 && $pp['pid'][207] == 16000.0 && $pp['order'][202609180004850] == 15000000.0 && count($pp['name']) === 2 && $pp['name'][($Co.'norm')('[빌런] 5병 EVENT')] == 0.0, '붙여 넣기: 이름 = 원가(쉼표 · 원) · 브랜드 · #번호 · 주문 · 주석 · 0 은 지우기');
+$mc3 = ($Mo.'close')($mrows, $mitems, [11=>true], $mprev, '2026-09', 40, 25, '2026-10-02');
+$ok(is_array($mc3['cost']) && $mc3['cost']['cost'] == 92000.0, '결산 close() 에 원가가 실린다');
+$GLOBALS['__options']['duckhoo_parcel_months'] = []; unset($GLOBALS['__options']['duckhoo_parcel_unit']);
+$mrep3 = ($Mo.'report')($mc3);
+$ok(str_contains($mrep3, '[원가] 상품 원가 92,000원 (원가 아는 매출의 46.2%) → 순이익 109,000원 = 실입금의 54.2%') && !str_contains($mrep3, '원가 모르는'), '보고서 [원가] 줄: 지출이 없으면 실입금 − 원가');
+$mbt3 = ($Mo.'brief_text')($mc3, null, [], '', false);
+$ok(str_contains($mbt3, '· 순이익 109,000원 (실입금의 54.2%)'), '사장님용 한 장에 순이익 줄');
+$mc4 = ($Mo.'close')($mrows, $mit2, [11=>true], $mprev, '2026-09', 40, 25, '2026-10-02');
+$ok(str_contains(($Mo.'report')($mc4), '원가 모르는 매출 13,000원 (여기서 결제 도와드리겠습니다! 13,000)'), '모르는 매출은 이름과 함께 적는다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

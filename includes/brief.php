@@ -235,6 +235,7 @@ function payload(): array {
 		'week'      => period( $d( 6 ), $today ),
 		'prev_week' => period( $d( 13 ), $d( 7 ) ),
 		'month'     => period( gmdate( 'Y-m-01', strtotime( $today ) ), $today ),
+		'monthly'   => monthly_close( substr( $today, 0, 7 ) ),
 		'funnel'    => $funnel,
 		'catalog'   => $catalog,
 		'site'      => $site,
@@ -244,6 +245,43 @@ function payload(): array {
 	);
 	set_transient( $key, $out, 10 * MINUTE_IN_SECONDS );
 	return $out;
+}
+
+/**
+ * 월말 결산의 이 달 값 — 실입금 · 지출 · 원가 · 순이익 (집계만). 결산 모듈이 없거나 죽으면 빈 배열.
+ */
+function monthly_close( string $ym ): array {
+	if ( ! function_exists( '\\Duckhoo\\Redesign\\Monthly\\data' ) ) {
+		return array();
+	}
+	try {
+		$d  = \Duckhoo\Redesign\Monthly\data( $ym );
+		$c  = $d['c'];
+		$pc = \Duckhoo\Redesign\Monthly\parcels( $ym );
+		$pf = \Duckhoo\Redesign\Monthly\profit( $c, $pc );
+		return array(
+			'ym'        => $ym,
+			'orders'    => (int) $c['conf']['n'],
+			'sales'     => (float) $c['conf']['sales'],
+			'before'    => (float) $c['conf']['before'],
+			'points'    => (float) $c['conf']['points'],
+			'coupon'    => (float) $c['conf']['coupon'],
+			'fee'       => (float) $c['conf']['fee'],
+			'ship_in'   => (float) $c['conf']['ship'],
+			'spend'     => (float) $pc['cost'],
+			'boxes'     => (int) ( $pc['m']['n'] ?? 0 ),
+			'cost'      => $pf ? (float) $pf['cost'] : null,
+			'cost_rate' => $pf ? (float) $pf['cost_rate'] : null,
+			'unknown'   => $pf ? (float) $pf['unknown'] : null,
+			'unknown_list' => $pf ? (array) $pf['unknown_list'] : array(),
+			'profit'    => $pf ? (float) $pf['profit'] : null,
+			'rate'      => $pf ? (float) $pf['rate'] : null,
+			'by_src'    => (array) ( $c['cost']['by_src'] ?? array() ),
+			'units'     => (int) $c['units'],
+		);
+	} catch ( \Throwable $e ) {
+		return array( 'error' => $e->getMessage() );
+	}
 }
 
 /**
