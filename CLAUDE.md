@@ -3059,7 +3059,8 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
   새 단가가 자리 잡은 첫 날을 고른다. 브리핑 API `price_watch`(필터 `duckhoo_price_watch`)로 읽는다. 옵션이 섞여 단가가 들쭉날쭉하지만
   바뀐 날은 또렷했다: **노보 낱병 8,000 → 13,000 이 9/8 주문부터**(블랙 13,500 도 9/8) → 노보 6,000 은 `2026-09-08` 부터 ·
   **V5 12,000 주문이 9/4 부터** → `pid 164 = array( '' => 6000(V4), '2026-09-04' => 9000 )` · 닷모드는 새 값 주문이 아직 없어 9/8 로.
-  **9/7 대량 주문(3,000병)은 9/8 전이라 옛 원가 5,000 × 3,000 = 15,000,000** 으로 `--manual` 에 넣는다. 파티팟은 표에 없다
+  **9/7 대량 주문(3,000병)은 사장님 결정으로 6,000 × 3,000 = 18,000,000** 으로 `--manual` 에 넣는다 (날짜로는 9/8 전이지만 그 건은
+  새 원가로 들여온 물량 — 사장님 2026-09-29 「저 대량 건은 6000원 원가로」). 사이트 쪽 결산에도 넣으려면 원가표에 `주문 <번호> 18000000`. 파티팟은 표에 없다
 - 관리자가 **날짜 없이** 적은 숫자는 그 항목의 이력까지 통째로 덮는다. 이력을 살리려면 `…부터` 를 붙인다
 - `?fresh=1` 을 브리핑 GET 에 붙이면(열쇠 필요) 10분 캐시와 결산 30분 캐시를 건너뛰고 새로 읽는다 — 원가표를 고친 직후 보고서를 찍을 때
 - DB 의 「판매가」 칸은 옛 값(노보 8,000)이라 안 쓴다. 「자동_상품단가_DB」 시트는 부자재 원가가 절반으로 찍혀 있어(원가차이 −4,000) 원본_DB 만 믿는다
@@ -3075,7 +3076,7 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 ```bash
 curl -sS https://duck-hoo.com/wp-json/duckhoo/v1/brief -H "X-DHR-Key: $DUCKHOO_BRIEF_KEY" > /tmp/brief.json
 python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2026-09-monthly.html --boxes 828 --unit 2150 --returns 8 --waiting 37 \
-  --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=15000000"
+  --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=18000000"
 ```
 
 - 순이익 = 매출 − 상품 원가 − 배송비. **원가를 모르는 매출은 원가 0 으로 들어가 순이익이 그만큼 높다** — 각주에 이름과 금액을 적는다.
