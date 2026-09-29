@@ -26,6 +26,8 @@ ap.add_argument('--asof', default=''); ap.add_argument('--date', default='')
 ap.add_argument('--imweb', default='집계 전', help='아임웹 값이 없을 때 표에 적을 말')
 ap.add_argument('--imweb-n', type=int, default=0, help='아임웹 돈 들어온 주문 수 (API 에 없을 때 손으로)')
 ap.add_argument('--imweb-sales', type=float, default=0, help='아임웹 매출 (API 에 없을 때 손으로)')
+ap.add_argument('--imweb-cost', type=float, default=-1, help='아임웹 상품 원가 (모르면 자사몰 원가율로 추정)')
+ap.add_argument('--imweb-unknown', type=float, default=0, help='아임웹 매출 중 원가 모르는 몫')
 ap.add_argument('--big-min', type=float, default=5000000, help='이 금액 이상만 「대량 주문」으로 따로 말한다')
 ap.add_argument('--rename', action='append', default=[], help='"이름 조각=보여 줄 이름" — 상위 상품 표의 이름을 사람이 읽는 꼴로')
 a = ap.parse_args()
@@ -63,9 +65,16 @@ for spec in a.manual:
     if hit:
         k = hit[0]; manual_cost += val; manual_rows.append((k, ulist[k], val)); unknown -= ulist[k]; ulist.pop(k)
 cost_all = cost + manual_cost
+im_est = False
 if im_on:
-    # 아임웹은 상품 줄이 없어 자사몰 원가율(원가 아는 매출 기준)을 그대로 얹는다 — 추정이라 각주에 적는다
-    im_cost = im_sales * (cost_all / max(1.0, sales - unknown))
+    ic = a.imweb_cost if a.imweb_cost >= 0 else (float(im['cost']) if im and im.get('cost') is not None else -1)
+    if ic >= 0:
+        im_cost = ic
+        im_unknown = a.imweb_unknown or (float(im.get('unknown', 0)) if im else 0.0)
+        unknown += im_unknown
+    else:
+        # 상품 줄이 없으면 자사몰 원가율(원가 아는 매출 기준)을 그대로 얹는다 — 추정이라 각주에 적는다
+        im_cost = im_sales * (cost_all / max(1.0, sales - unknown)); im_est = True
 gross = sales + im_sales - cost_all - im_cost
 profit = gross - spend
 known_sales = sales - unknown
@@ -188,7 +197,7 @@ page = f'''<!doctype html>
       <tr class="sub"><td>쿠폰 할인</td><td class="num neg">−{fmt(m['coupon'])}</td><td class="num mut">{m['coupon']/m['before']*100:.1f}%</td></tr>
       <tr class="sum"><td>자사몰 매출 (손님이 실제로 입금한 돈)</td><td class="num">{fmt(sales)}</td><td class="num mut">{sales/m['before']*100:.1f}%</td></tr>
       {f'<tr class="sub"><td>+ 아임웹 매출 ({im_n}건)</td><td class="num">{fmt(im_sales)}</td><td class="num mut"></td></tr><tr class="sum"><td>매출 합계</td><td class="num">{fmt(total_sales)}</td><td class="num mut">100.0%</td></tr>' if im_on else ''}
-      <tr class="sub"><td>상품 원가{' (아임웹은 자사몰 원가율로 추정)' if im_on else ''}</td><td class="num neg">−{fmt(cost_all + im_cost)}</td><td class="num mut">매출의 {(cost_all + im_cost)/total_sales*100:.1f}%</td></tr>
+      <tr class="sub"><td>상품 원가{' (아임웹은 자사몰 원가율로 추정)' if im_est else ''}</td><td class="num neg">−{fmt(cost_all + im_cost)}</td><td class="num mut">매출의 {(cost_all + im_cost)/total_sales*100:.1f}%</td></tr>
       <tr class="sum"><td>매출총이익</td><td class="num">{fmt(gross)}</td><td class="num mut">{gross/total_sales*100:.1f}%</td></tr>
       <tr class="sub"><td>배송비 (우체국 계약소포 {boxes:,}상자 × {fmt(a.unit)}원)</td><td class="num neg">−{fmt(spend)}</td><td class="num mut">{spend/total_sales*100:.1f}%</td></tr>
       <tr class="sum"><td>순이익</td><td class="num">{fmt(profit)}</td><td class="num mut">{profit/total_sales*100:.1f}%</td></tr>

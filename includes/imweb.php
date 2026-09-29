@@ -84,10 +84,11 @@ function parse_api( array $json ): array {
 		$st  = (string) ( $o['status'] ?? $pay['pay_status'] ?? $o['pay_status'] ?? '' );
 		$ts  = (int) ( $o['order_time'] ?? $o['time'] ?? 0 );
 		$out[] = array(
-			'no'     => (string) ( $o['order_no'] ?? $o['order_code'] ?? $o['no'] ?? '' ),
-			'ts'     => $ts,
-			'status' => $st,
-			'total'  => (float) $amt,
+			'no'      => (string) ( $o['order_no'] ?? $o['order_code'] ?? $o['no'] ?? '' ),
+			'ts'      => $ts,
+			'status'  => $st,
+			'total'   => (float) $amt,
+			'paid_ts' => (int) ( $pay['payment_time'] ?? -1 ), // -1 = 칸 없음 (붙여 넣기 · 옛 꼴)
 		);
 	}
 	return $out;
@@ -100,9 +101,64 @@ function parse_api( array $json ): array {
  */
 function pages( array $json ): ?array {
 	$d = isset( $json['data'] ) && is_array( $json['data'] ) ? $json['data'] : $json;
-	$tp = (int) ( $d['total_page'] ?? $json['total_page'] ?? 0 );
-	$cp = (int) ( $d['current_page'] ?? $json['current_page'] ?? 0 );
+	$pg = isset( $d['pagenation'] ) && is_array( $d['pagenation'] ) ? $d['pagenation'] : $d; // 실제 응답(2026-09 확인)은 data.pagenation 아래
+	$tp = (int) ( $pg['total_page'] ?? $json['total_page'] ?? 0 );
+	$cp = (int) ( $pg['current_page'] ?? $json['current_page'] ?? 0 );
 	return $tp > 0 ? array( $tp, max( 1, $cp ) ) : null;
+}
+
+/**
+ * 주문 하나에 prod-orders(줄 상태 · 상품)를 붙인다 — 순수 함수. 주문 목록(v2)에는 상태가 없다 (2026-09 실제 응답으로 확인):
+ * 결제 여부는 payment.payment_time, 취소는 줄마다 status(COMPLETE · DELIVERING · CANCEL …). 줄이 전부 취소면 주문이 취소,
+ * 일부만 취소면 그 줄 값(void_part)을 뺀다. 상품 줄에는 원가표(Cost\line_cost)를 대서 원가 · 모르는 매출을 센다.
+ *
+ * @param array  $o    parse_api 가 만든 주문 행.
+ * @param array  $json prod-orders 응답 (data: 줄 배열).
+ * @param string $date 주문 날짜 Y-m-d (원가는 날짜별).
+ */
+function enrich( array $o, array $json, string $date = '' ): array {
+	$lines = isset( $json['data'] ) && is_array( $json['data'] ) ? $json['data'] : ( array_is_list( $json ) ? $json : array() );
+	$o['void_part'] = 0.0;
+	$o['cost']      = 0.0;
+	$o['unknown']   = 0.0;
+	$o['items']     = 0;
+	$n_void = 0;
+	$n_all  = 0;
+	foreach ( $lines as $po ) {
+		if ( ! is_array( $po ) ) {
+			continue;
+		}
+		$n_all++;
+		$void = 'void' === classify( (string) ( $po['status'] ?? '' ) );
+		if ( $void ) {
+			$n_void++;
+		}
+		foreach ( (array) ( $po['items'] ?? array() ) as $it ) {
+			if ( ! is_array( $it ) ) {
+				continue;
+			}
+			$pay   = isset( $it['payment'] ) && is_array( $it['payment'] ) ? $it['payment'] : array();
+			$cnt   = max( 1, (int) ( $pay['count'] ?? 1 ) );
+			$price = (float) ( $pay['price'] ?? 0 ) * $cnt;
+			if ( $void ) {
+				$o['void_part'] += $price;
+				continue;
+			}
+			$o['items']++;
+			$c = function_exists( '\\Duckhoo\\Redesign\\Cost\\line_cost' ) ? \Duckhoo\Redesign\Cost\line_cost( (string) ( $it['prod_name'] ?? '' ), $cnt, 0, null, $date ) : null;
+			if ( $c ) {
+				$o['cost'] += (float) $c['cost'];
+			} else {
+				$o['unknown'] += $price;
+			}
+		}
+	}
+	if ( $n_all > 0 && $n_void === $n_all ) {
+		$o['status'] = 'CANCEL';
+	} elseif ( '' === (string) $o['status'] && isset( $o['paid_ts'] ) && (int) $o['paid_ts'] <= 0 ) {
+		$o['status'] = 'PAY_WAIT';
+	}
+	return $o;
 }
 
 /**
@@ -166,7 +222,7 @@ function parse_export( string $text ): array {
  * @return array{n:int,sales:float,pend_n:int,pend:float,void_n:int,void:float}
  */
 function summarize( array $orders, string $ym = '', int $tz_offset = 32400 ): array {
-	$s = array( 'n' => 0, 'sales' => 0.0, 'pend_n' => 0, 'pend' => 0.0, 'void_n' => 0, 'void' => 0.0 );
+	$s = array( 'n' => 0, 'sales' => 0.0, 'pend_n' => 0, 'pend' => 0.0, 'void_n' => 0, 'void' => 0.0, 'cost' => 0.0, 'unknown' => 0.0, 'items' => 0 );
 	foreach ( $orders as $o ) {
 		if ( '' !== $ym && (int) $o['ts'] > 0 && gmdate( 'Y-m', (int) $o['ts'] + $tz_offset ) !== $ym ) {
 			continue;
@@ -174,7 +230,10 @@ function summarize( array $orders, string $ym = '', int $tz_offset = 32400 ): ar
 		$k = classify( (string) $o['status'] );
 		if ( 'paid' === $k ) {
 			$s['n']++;
-			$s['sales'] += (float) $o['total'];
+			$s['sales']   += (float) $o['total'] - (float) ( $o['void_part'] ?? 0 ); // 일부 취소된 줄은 뺀다
+			$s['cost']    += (float) ( $o['cost'] ?? 0 );
+			$s['unknown'] += (float) ( $o['unknown'] ?? 0 );
+			$s['items']   += (int) ( $o['items'] ?? 0 );
 		} elseif ( 'pend' === $k ) {
 			$s['pend_n']++;
 			$s['pend'] += (float) $o['total'];
@@ -226,8 +285,9 @@ function fetch_month( string $ym ): array {
 		return array( 'orders' => array(), 'err' => $t['err'], 'raw' => $t['raw'], 'pages' => 0 );
 	}
 	$tz    = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'Asia/Seoul' );
-	$from  = ( new \DateTime( $ym . '-01 00:00:00', $tz ) )->getTimestamp();
-	$to    = ( new \DateTime( $ym . '-01 00:00:00', $tz ) )->modify( '+1 month -1 second' )->getTimestamp();
+	$from  = $ym . '-01'; // Y-m-d 꼴이 실제로 통했다 (2026-09-29 확인)
+	$to    = ( new \DateTime( $ym . '-01 00:00:00', $tz ) )->modify( '+1 month -1 day' )->format( 'Y-m-d' );
+	$off   = (int) ( new \DateTime( 'now', $tz ) )->getOffset();
 	$all   = array();
 	$raw   = '';
 	$pages = 0;
@@ -271,6 +331,22 @@ function fetch_month( string $ym ): array {
 		if ( $got ) {
 			break; // v2 에서 나오면 v1 은 안 본다 (같은 주문이 두 번 잡힐 수 있다)
 		}
+	}
+	// 줄 상태 · 상품은 주문마다 prod-orders 를 따로 본다 (한 달 40건 안팎 · 300건까지)
+	$n = 0;
+	foreach ( $all as $i => $o ) {
+		if ( '' === (string) $o['no'] || $n >= 300 ) {
+			break;
+		}
+		$res = wp_remote_get( API . '/shop/orders/' . rawurlencode( (string) $o['no'] ) . '/prod-orders', array( 'timeout' => 30, 'headers' => array( 'access-token' => $t['token'] ) ) );
+		if ( is_wp_error( $res ) ) {
+			continue;
+		}
+		$j = json_decode( (string) wp_remote_retrieve_body( $res ), true );
+		if ( is_array( $j ) && isset( $j['data'] ) ) {
+			$all[ $i ] = enrich( $o, $j, (int) $o['ts'] > 0 ? gmdate( 'Y-m-d', (int) $o['ts'] + $off ) : '' );
+		}
+		$n++;
 	}
 	return array( 'orders' => $all, 'err' => '', 'raw' => $raw, 'pages' => $pages );
 }
@@ -324,7 +400,8 @@ function line( ?array $m ): string {
 		return '아임웹: 연결 안 됨 (월말 결산 화면에 API 키를 넣거나 주문 목록을 붙여 넣으면 합쳐집니다)';
 	}
 	$w = fn( $n ) => number_format( (float) round( (float) $n ) );
-	return '아임웹: 돈 들어온 주문 ' . (int) $m['n'] . '건 ' . $w( $m['sales'] ) . '원 · 입금 대기 ' . (int) $m['pend_n'] . '건 · 취소 ' . (int) $m['void_n'] . '건 (' . ( 'api' === ( $m['src'] ?? '' ) ? 'API' : '붙여 넣기' ) . ', ' . (string) ( $m['at'] ?? '' ) . ')';
+	$cost = ! empty( $m['cost'] ) ? ' · 상품 원가 ' . $w( $m['cost'] ) . '원' . ( ! empty( $m['unknown'] ) ? ' (원가 모르는 매출 ' . $w( $m['unknown'] ) . '원)' : '' ) : '';
+	return '아임웹: 돈 들어온 주문 ' . (int) $m['n'] . '건 ' . $w( $m['sales'] ) . '원 · 입금 대기 ' . (int) $m['pend_n'] . '건 · 취소 ' . (int) $m['void_n'] . '건' . $cost . ' (' . ( 'api' === ( $m['src'] ?? '' ) ? 'API' : '붙여 넣기' ) . ', ' . (string) ( $m['at'] ?? '' ) . ')';
 }
 
 /* ── 관리자 화면 조각 (월말 결산 화면이 부른다) ─────────────────────────── */

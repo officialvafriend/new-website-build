@@ -2356,11 +2356,24 @@ $j = ['msg'=>'SUCCESS','code'=>200,'data'=>['list'=>[
 ], 'data_count'=>3,'current_page'=>1,'total_page'=>1,'pagesize'=>100]];
 $os = ($Im.'parse_api')($j);
 $ok(count($os)===3 && $os[0]['no']==='A1' && $os[0]['total']==28000.0 && $os[1]['total']==13000.0, 'API 응답: data.list 에서 주문 3건 · 실결제(payment_amount)가 있으면 그것');
-$ok(($Im.'pages')($j)===[1,1] && ($Im.'pages')(['data'=>['list'=>[]]])===null, '쪽 넘김: total_page · current_page 있으면 [전체, 이번], 없으면 null');
+$ok(($Im.'pages')($j)===[1,1] && ($Im.'pages')(['data'=>['list'=>[]]])===null && ($Im.'pages')(['data'=>['list'=>[], 'pagenation'=>['data_count'=>38,'current_page'=>1,'total_page'=>2,'pagesize'=>100]]])===[2,1], '쪽 넘김: total_page · current_page 있으면 [전체, 이번], 없으면 null · 실제 응답은 data.pagenation');
 $ok(count(($Im.'parse_api')([['order_no'=>'B','status'=>'','total_price'=>1000]]))===1, '맨 위가 배열이어도 읽는다');
 $sm = ($Im.'summarize')($os, '2026-09');
 $ok($sm['n']===1 && $sm['sales']==28000.0 && $sm['pend_n']===1 && $sm['void_n']===0, '달로 거른다: 8/31 23:30 KST 취소는 9월이 아니다 · 돈 1건 28,000 · 대기 1');
 $ok(($Im.'summarize')($os)['void_n']===1, '달을 안 주면 전부 센다');
+// prod-orders 로 줄 상태 · 상품을 붙인다 (2026-09 실제 응답 꼴)
+$po = ['msg'=>'SUCCESS','code'=>200,'data'=>[
+  ['order_no'=>'202609119548991-001','status'=>'CANCEL','items'=>[['prod_name'=>'[젤로맥스] 젤로 맥스 0.6옴 팟','payment'=>['count'=>1,'price'=>13500]]]],
+  ['order_no'=>'202609119548991-002','status'=>'COMPLETE','items'=>[['prod_name'=>'[젤로 크리스탈] 젤로 크리스탈 전자담배 + 액상 5병 증정','payment'=>['count'=>1,'price'=>69000]], ['prod_name'=>'[ZERO]맥스쿨 입호흡 5병','payment'=>['count'=>2,'price'=>45000]]]],
+]];
+$eo = ($Im.'enrich')(['no'=>'202609119548991','ts'=>strtotime('2026-09-11 10:00:00 +0900'),'status'=>'','total'=>82500.0,'paid_ts'=>1790000000], $po, '2026-09-11');
+$ok($eo['status']==='' && $eo['void_part']==13500.0 && $eo['cost']==15000.0 && $eo['unknown']==90000.0 && $eo['items']===2, '일부 취소: 취소 줄 13,500 은 void_part · 젤로 세트 원가 15,000(아임웹 이름 별칭) · 맥스쿨은 원가 모름 90,000');
+$eo2 = ($Im.'enrich')(['no'=>'X','ts'=>0,'status'=>'','total'=>10000.0,'paid_ts'=>1790000000], ['data'=>[['status'=>'CANCEL','items'=>[]],['status'=>'CANCEL_COMPLETE','items'=>[]]]]);
+$eo3 = ($Im.'enrich')(['no'=>'Y','ts'=>0,'status'=>'','total'=>10000.0,'paid_ts'=>0], ['data'=>[]]);
+$ok($eo2['status']==='CANCEL' && $eo3['status']==='PAY_WAIT', '줄이 전부 취소면 주문 취소 · 결제 시각이 0 이면 입금 대기');
+$sm2 = ($Im.'summarize')([$eo, $eo2, $eo3]);
+$ok($sm2['n']===1 && $sm2['sales']==69000.0 && $sm2['cost']==15000.0 && $sm2['unknown']==90000.0 && $sm2['void_n']===1 && $sm2['pend_n']===1, '요약: 매출은 취소 줄을 뺀 69,000 · 원가 · 모르는 매출 · 취소 1 · 대기 1');
+$ok(str_contains(($Im.'line')(array_merge($sm2, ['src'=>'api','at'=>'x'])), '상품 원가 15,000원 (원가 모르는 매출 90,000원)'), '한 줄 요약에 원가');
 $tsv = "주문번호\t주문일시\t주문상태\t상품명\t결제금액\n"
   . "20260901-1\t2026-09-01 12:00\t배송완료\t노보 타박멘솔\t26,000원\n"
   . "20260901-1\t2026-09-01 12:00\t배송완료\t노보 블랙멘솔\t26,000원\n"

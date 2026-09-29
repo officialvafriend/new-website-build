@@ -3085,4 +3085,23 @@ python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2
   curl 로만 볼 때는 30분 기다린다 (`monthly.cost_rate` 가 바뀌는지로 안다)
 - 10월 1일: 같은 명령을 `--asof "10월 1일 ~ 30일 확정"` 으로 한 번 더 돌리면 확정본
 
+### 아임웹 API 실제 응답 — 주문 목록에는 상태가 없다 (2026-09-29, 키를 받아 이 세션에서 직접 읽음)
+
+사장님이 아임웹 API 키 · 시크릿을 대화창에 붙였다 (저장소에는 안 적었다 · **사이트 「매출 → 월말 결산」 아임웹 상자에 넣어야 자동으로 돈다** ·
+대화에 올라간 키라 아임웹에서 새로 발급하는 게 안전하다). 확인한 것:
+
+- `GET /v2/auth?key&secret` → `access_token` · `GET /v2/shop/orders?order_date_from=Y-m-d&order_date_to=Y-m-d&order_version=v2&limit=100&offset=0`
+  → `data.list` + `data.pagenation{data_count,current_page,total_page,pagesize}`. **주문에 상태 칸이 없다** — 결제는 `payment.payment_time`(0 이면 미결제),
+  실결제는 `payment.payment_amount`(적립금 · 쿠폰 뺀 값), `total_price` · `point` · `coupon` · `deliv_price` · `pay_type`(kakaopay · kbpay · card · virtual · cash)
+- 줄 상태 · 상품은 **`GET /v2/shop/orders/{order_no}/prod-orders`** (order_code 가 아니라 **order_no**) → `data[]` 에 `status`(COMPLETE · DELIVERING · CANCEL …) ·
+  `items[]{prod_name, payment{count, price}, options}`. `Imweb\enrich()` 가 줄이 전부 취소면 주문 취소, 일부면 그 줄 값을 `void_part` 로 빼고,
+  상품 줄에 `Cost\line_cost` 를 대서 원가 · 모르는 매출을 센다 (`summarize` 에 `cost` · `unknown` · `items`)
+- **9월 실측**: 38건 전부 결제, 한 건에서 젤로맥스 팟 13,500 만 취소 → **매출 2,579,400원**. 결제수단 카카오페이 24 · 카드 5 · KB Pay 4 · 현금 4 · 가상계좌 1.
+  상품은 젤로 크리스탈 기기 + 5병(69,000) 32건이 거의 전부 — 옵션 팟이 **같은 상품 이름으로 10,000 · 20,000 · 30,000 줄**로 따로 실린다.
+  아임웹 이름은 우리 표와 달라 `cost-table.php` 에 별칭 4개(젤로 세트 · 얼려 5병 특가 · 제로닉 5병 · ZERONIC 옥수수수염차)를 넣었다.
+  맥스쿨(5병 45,000 · 낱병)은 원가가 없어 「모름」 123,900. 팟 옵션 줄은 세트 이름이라 15,000 으로 잡힌다 — 손 계산에서는 팟 70% 로 133,000 을 썼다
+- 보고서 `build.py`: API `monthly.imweb` 이 있으면 자동, 없으면 `--imweb-n · --imweb-sales · --imweb-cost · --imweb-unknown`. 손익표에
+  「자사몰 매출 + 아임웹 매출 = 매출 합계」, 총 매출 · 주문 건수 · 순이익이 합산. 전월비 기준도 8월 보고서 합계(419건 · 22,689,678원)로 바꿨다.
+  9월(29일 잠정): 매출 합계 69,506,308 · 원가 35,332,650 · 배송비 1,780,200 · **순이익 32,393,458 (46.6%)**
+
 **서치콘솔의 `/product-category/7월-특가-할인/` 은 「7월 특가」가 아니다** — 분류 이름은 달마다 바뀌고(지금 「9월 특가 할인」) 주소만 7월에 만든 것이 남아 있다. 보고서에는 「특가 할인」이라 적는다 (사장님이 잡음, 2026-09-29).
