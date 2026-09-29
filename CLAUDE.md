@@ -2946,3 +2946,17 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 
 검증: `php design/php-tests/run.php` (아임웹 12개 · SEO 보고 9개 · 1~3분 글 5개 · 크론 문 2개 = 1,307개) · `scratchpad/monthly-render.php`(가짜 데이터 + 아임웹 + 일지로 화면 · 글 · 390/1280 넘침 0) ·
 프로덕션: `/wp-json/duckhoo/v1/log` 키 없이 거절 · 키로 두 줄 적음 · smoke 20개.
+
+### SEO 월간 보고서는 PDF 로 따로 만든다 (사장님 2026-09-29 「자세하면서도 쉽게 · PDF」)
+
+디스코드 짧은 판(플러그인 자동)과 별개로 **매달 클로드가 PDF 한 부를 만든다.** 첫 부: `design/seo-reports/2026-09-seo.html` → `2026-09-seo.pdf` (10쪽).
+- 만드는 법: HTML 을 쓰고 `scratchpad/pdf.mjs` (Playwright `page.pdf`, A4, `preferCSSPageSize`)로 찍는다. 글꼴은 `design/demo-src/pretendard.css`(data URI 서브셋)를
+  상대 경로로 link — 컨테이너에 한글 글꼴이 없어 이것 없이는 네모만 찍힌다. 쪽 확인은 `pip install pymupdf` 로 래스터해 본다 (`pdftoppm` 없음)
+- 구성: 표지(핵심 숫자 3) → 1 한 장 요약(이렇게 했고 · 이런 결과 · 앞으로) → 2 순위표(네이버 웹문서 15개 실측 · 구글 서치콘솔) → 3 타임라인 →
+  4 결과 자세히(구글 28일 · 네이버 진단 전후 · 사이트가 센 것 · 갖춰짐 표) → 5 10월 계획(셋만) + 하지 않을 것 → 6 낱말 풀이 → 7 어떻게 쟀나
+- **네이버 순위 재는 법**: `search.naver.com/search.naver?where=web&query=…` 를 curl(크롬 UA)로 받아 `fds-web-doc-root` 블록 순서에서 duck-hoo.com 자리
+  (`scratchpad/seo2` 의 스크립트, `naver-rank.json`). 9/29: 「노보 액상」 2 · 4위(9/21 전 21위) · 「노보 블랙 액상」 「입호흡 액상 가격」 「전자담배 액상 가격표」
+  「디오리퀴드 액상」 「화이트아웃 액상」 1위 · 「액상 가격」 「폐호흡 액상 가격」 「무니코틴 액상」 「마르키사 라즈베리」 8위 · 「크래프트 포도 액상」 없음
+- 상품 184종 실측(9/29): 검색 설명 옛 템플릿 0 · 상세 글 상자 62종 · 우리 규칙 제목 22종. 구글 28일(8/29~9/25) 585 클릭 · 2,940 노출 · 6.3위 · 브랜드 61%
+- 보고서 안에서도 담배사업법 금지 표현은 낱말 자체를 안 쓴다 (grep 으로 확인). 경쟁사 품절 언급은 사장님용 내부 보고서라 사실로 적되 손님 문구에는 안 쓴다
+- 다음 부는 11월 1일 — 같은 표를 놓고 오른 것 · 그대로인 것을 적는다. 10월부터 검색 유입 · 상품별 조회(플러그인)가 들어간다
