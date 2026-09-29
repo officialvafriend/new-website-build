@@ -410,6 +410,10 @@ function report( array $c ): string {
 		$L[] = '[' . \Duckhoo\Redesign\Imweb\line( $im ) . ']' . ( $im ? ' → 워드프레스 + 아임웹 = ' . $w( (float) $m['sales'] + (float) $im['sales'] ) . '원' : '' );
 	}
 	$L[] = '[뺄셈 장부] 할인 전 ' . $w( $m['before'] ) . '원 (상품 ' . $w( $m['goods'] ) . ' + 배송비 ' . $w( $m['ship'] ) . ') − 적립금 ' . $w( $m['points'] ) . ' − 쿠폰 ' . $w( $m['coupon'] ) . ' − 자동 할인 ' . $w( $m['fee'] ) . ' = 확정 매출 ' . $w( $m['sales'] ) . '원';
+	$pc = parcels( $c['ym'] );
+	if ( function_exists( '\\Duckhoo\\Redesign\\Parcels\\line' ) ) {
+		$L[] = '[배송비 지출] ' . \Duckhoo\Redesign\Parcels\line( $pc['m'], $pc['unit'] ) . ( $pc['cost'] > 0 ? ' → 배송비 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원' : '' );
+	}
 	$cu  = $c['cust'];
 	$L[] = "[손님] 산 회원 {$cu['buyers']}명 = 이 달 처음 {$cu['first_buyers']}명 + 전에도 산 {$cu['rep_buyers']}명 · 첫 주문 {$cu['first_n']}건 " . $w( $cu['first_sales'] ) . "원 · 재구매 {$cu['rep_n']}건 " . $w( $cu['rep_sales'] ) . '원' . ( $cu['guest_n'] ? " · 비회원 {$cu['guest_n']}건 " . $w( $cu['guest_sales'] ) . '원' : '' ) . " · 새 가입 {$c['signups']}명 (지난달 {$c['signups_prev']})";
 	$L[] = '';
@@ -484,6 +488,20 @@ function imweb( string $ym ): ?array {
 }
 
 /**
+ * 우체국 소포 요약(있으면) 과 계약 단가 · 배송비 지출. 상자 수 × 단가.
+ *
+ * @return array{m:?array,unit:int,cost:int}
+ */
+function parcels( string $ym ): array {
+	if ( ! function_exists( '\\Duckhoo\\Redesign\\Parcels\\month' ) ) {
+		return array( 'm' => null, 'unit' => 0, 'cost' => 0 );
+	}
+	$m = \Duckhoo\Redesign\Parcels\month( $ym );
+	$u = \Duckhoo\Redesign\Parcels\unit();
+	return array( 'm' => $m, 'unit' => $u, 'cost' => \Duckhoo\Redesign\Parcels\cost( $m, $u ) );
+}
+
+/**
  * 사장님이 1~3분에 읽는 글 — 「이렇게 했고 · 이런 결과 · 앞으로」. 디스코드 · 메일 공용.
  * 숫자만 나열하지 않는다: 결과는 지난달과 견줘 한 줄씩, 앞으로는 숫자가 가리키는 것만.
  *
@@ -516,6 +534,10 @@ function brief_text( array $c, ?array $im, array $log, string $seo = '', bool $d
 	$cu  = $c['cust'];
 	$L[] = '· 처음 산 회원 ' . $cu['first_buyers'] . '명 · 다시 산 회원 ' . $cu['rep_buyers'] . '명 · 새 가입 ' . $c['signups'] . '명 (지난달 ' . $c['signups_prev'] . ')';
 	$L[] = '· 취소 · 환불 ' . $c['void']['n'] . '건 ' . $w( $c['void']['sales'] ) . '원 = 접수의 ' . $c['cancel_rate'] . '% (지난달 ' . $pv['cancel_rate'] . '%)' . ( $c['pend']['n'] > 0 ? ' · 아직 입금 안 된 주문 ' . $c['pend']['n'] . '건 ' . $w( $c['pend']['sales'] ) . '원' : '' );
+	$pc = parcels( (string) $c['ym'] );
+	if ( $pc['cost'] > 0 ) {
+		$L[] = '· 배송비 지출 ' . $w( $pc['cost'] ) . '원 (우체국 ' . (int) $pc['m']['n'] . '상자 × ' . $w( $pc['unit'] ) . '원) → 배송비 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원';
+	}
 	$top = array_slice( $c['products'], 0, 3, true );
 	if ( $top ) {
 		$L[] = '· 많이 팔린 것: ' . implode( ' · ', array_map( fn( $k, $p ) => "{$k} " . $w( $p['sales'] ) . '원', array_keys( $top ), $top ) );
@@ -676,6 +698,7 @@ function screen(): void {
 	}
 	$ym    = ym_from_request();
 	$imsg  = function_exists( '\\Duckhoo\\Redesign\\Imweb\\handle_post' ) ? \Duckhoo\Redesign\Imweb\handle_post() : '';
+	$pmsg  = function_exists( '\\Duckhoo\\Redesign\\Parcels\\handle_post' ) ? \Duckhoo\Redesign\Parcels\handle_post() : '';
 	$fresh = isset( $_GET['dhr_fresh'] ) && check_admin_referer( 'dhr-monthly-fresh' ); // phpcs:ignore WordPress.Security.NonceVerification
 	echo '<div class="wrap dhr-sl">';
 	if ( function_exists( '\\Duckhoo\\Redesign\\Sales\\styles' ) ) {
@@ -695,7 +718,7 @@ function screen(): void {
 /**
  * 몸통 — 데이터를 받아 그린다 (가짜 데이터로도 그릴 수 있게 따로).
  */
-function render( array $c, string $ym, string $built, float $took, string $imsg = '' ): void {
+function render( array $c, string $ym, string $built, float $took, string $imsg = '', string $pmsg = '' ): void {
 	$w    = fn( $n ) => number_format( (float) round( (float) $n ) );
 	$card = function ( string $l, string $v, string $n = '', string $tone = '' ) {
 		if ( function_exists( '\\Duckhoo\\Redesign\\Sales\\card' ) ) {
@@ -745,6 +768,13 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 		printf( '<tr><td>%s</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-num dhr-sl-mut">%s</td></tr>', esc_html( $label ), esc_html( won( (float) $v ) ), esc_html( $m['before'] > 0 ? sprintf( '할인 전의 %.1f%%', (float) $v / $m['before'] * 100 ) : '—' ) );
 	}
 	printf( '<tr><td><b>= 확정 매출 (실제로 받은 돈)</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">%d건</td></tr>', esc_html( won( (float) $m['sales'] ) ), (int) $m['n'] );
+	$pc = parcels( $ym );
+	if ( $pc['cost'] > 0 ) {
+		printf( '<tr><td>− 배송비 지출 (우체국)</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d상자 × %s원 · 손님에게 받은 배송비 %s 는 위 실입금에 들어 있음</td></tr>', esc_html( won( (float) $pc['cost'] ) ), (int) $pc['m']['n'], esc_html( number_format( $pc['unit'] ) ), esc_html( won( (float) $m['ship'] ) ) );
+		printf( '<tr><td><b>= 배송비 뺀 실입금</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">상품 원가는 아직 없음</td></tr>', esc_html( won( (float) $m['sales'] - $pc['cost'] ) ) );
+	} else {
+		echo '<tr><td class="dhr-sl-mut" colspan="3">배송비 지출은 아래 「배송비 지출 (우체국 소포)」에 발송 내역과 계약 단가를 넣으면 여기에 줄이 생깁니다.</td></tr>';
+	}
 	echo '</tbody></table></div></section>';
 
 	/* 일별 */
@@ -795,6 +825,9 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 	if ( function_exists( '\\Duckhoo\\Redesign\\Imweb\\box' ) ) {
 		\Duckhoo\Redesign\Imweb\box( $ym, $imsg );
 	}
+	if ( function_exists( '\\Duckhoo\\Redesign\\Parcels\\box' ) ) {
+		\Duckhoo\Redesign\Parcels\box( $ym, $pmsg );
+	}
 
 	/* 내보내기 · 붙여 넣기 */
 	$csv_url = wp_nonce_url( add_query_arg( array( 'action' => 'dhr_monthly_csv', 'dhr_m' => $ym ), admin_url( 'admin-post.php' ) ), 'dhr-monthly-csv' );
@@ -812,5 +845,5 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 	echo '<textarea readonly style="width:100%;min-height:260px;font-family:inherit;font-size:13px" onclick="this.select()">' . esc_textarea( report( $c ) ) . '</textarea>';
 	echo '</section>';
 
-	echo '<div class="dhr-sl-foot"><p>' . esc_html( $built ) . ' 에 읽음 (' . esc_html( (string) $took ) . '초). 닫힌 달은 하루, 진행 중인 달은 30분 캐시. 확정 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( confirmed() ) : confirmed() ) ) . ' · 입금 대기 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( pending() ) : pending() ) ) . '. 「이 달 처음 산 회원」은 이 달 전에 돈 들어온 주문이 하나도 없는 회원입니다. 배송비는 아직 매출에서 떼지 않습니다.</p></div>';
+	echo '<div class="dhr-sl-foot"><p>' . esc_html( $built ) . ' 에 읽음 (' . esc_html( (string) $took ) . '초). 닫힌 달은 하루, 진행 중인 달은 30분 캐시. 확정 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( confirmed() ) : confirmed() ) ) . ' · 입금 대기 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( pending() ) : pending() ) ) . '. 「이 달 처음 산 회원」은 이 달 전에 돈 들어온 주문이 하나도 없는 회원입니다. 배송비 지출은 우체국 발송 내역 × 계약 단가입니다.</p></div>';
 }
