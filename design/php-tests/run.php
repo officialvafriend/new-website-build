@@ -2401,6 +2401,11 @@ $ok(count(($Pc.'parse')($ptsv))===1, '탭 구분도 읽는다');
 $GLOBALS['__options']['duckhoo_parcel_months'] = [];
 ($Pc.'put')('2026-09', $ps);
 $ok(($Pc.'month')('2026-09')['n']===5 && ($Pc.'month')('2026-08')===null, '달마다 저장 · 없는 달은 null');
+unset($GLOBALS['__options']['duckhoo_parcel_unit']);
+$ok(($Pc.'unit')()===2150 && ($Pc.'cost')($ps, ($Pc.'unit')())===10750, '단가 옵션이 비어 있으면 2026-09 정산내역의 기본 단가 2,150 · 5상자 = 10,750원');
+$GLOBALS['__options']['duckhoo_parcel_unit'] = 2300;
+$ok(($Pc.'unit')()===2300, '옵션에 넣은 단가가 이긴다');
+unset($GLOBALS['__options']['duckhoo_parcel_unit']);
 
 $SR = 'Duckhoo\\Redesign\\Seo\\Report\\';
 $GLOBALS['__options']['duckhoo_worklog'] = [];

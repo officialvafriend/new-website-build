@@ -4,7 +4,12 @@
  *
  * 우체국 「소포 발송 내역」 CSV 에는 요금 칸이 없다 (보험취급수수료만 있고 비어 있다).
  * 그래서 이 파일이 주는 것은 「몇 상자를 보냈나」뿐이고, 배송비 지출 = 상자 수 × 계약 단가다.
- * 단가는 우체국 월 청구서의 값을 사람이 한 번 넣는다 (옵션). 주문 · 회원에는 아무것도 쓰지 않는다.
+ * 단가는 우체국 「소포정산내역조회」에서 읽은 값을 옵션에 넣는다 (없으면 DEFAULT_UNIT). 주문 · 회원에는 아무것도 쓰지 않는다.
+ *
+ * 정산내역(2026-09, 마감일 18일치 · 1,010통 · 2,297,150원)은 같은 계약 계정을 쓰는 다른 공급지와 **합산**으로 나온다.
+ * 소포실적조회의 공급지별 접수일 통수와 맞추면 하루 0~2통 차이로 붙고, 액상덕후만 나간 날(9/2 · 9/8 · 9/18)은
+ * 금액 = 통수 × 2,150 으로 정확히 맞는다. 무게 추가요금은 거의 다 다른 공급지 상자에 붙어 있다 (그쪽 상자당 +661원).
+ * 그래서 액상덕후 몫 = 액상덕후 통수 × 2,150 이다 (9월 828통 → 1,780,200원). 비례 배분(통수 비율)은 185만원으로 덕후 몫을 부풀린다.
  *
  * 실측 (2026-09, 831상자): 고객주문처 = 액상덕후W(워드프레스) 761 · 액상덕후I(아임웹) 38 · 빈칸 27 · 액상덕후 5.
  * 고객주문번호는 워드프레스가 15자리(2026090100038xx), 아임웹은 다른 꼴. 반품신청여부 「예」 8.
@@ -19,11 +24,15 @@ defined( 'ABSPATH' ) || exit;
 const OPT_MONTHS = 'duckhoo_parcel_months';
 const OPT_UNIT   = 'duckhoo_parcel_unit';
 
+/** 기본 단가 — 2026년 9월 소포정산내역에서 확인한 액상덕후 상자의 계약 단가 (동대구우체국 · 방문소포_기업직택배). */
+const DEFAULT_UNIT = 2150;
+
 /**
- * 계약 단가 (상자 하나에 우체국에 내는 돈). 0 이면 모름.
+ * 계약 단가 (상자 하나에 우체국에 내는 돈). 옵션이 비어 있으면 DEFAULT_UNIT.
  */
 function unit(): int {
-	return (int) apply_filters( 'duckhoo_parcel_unit', (int) get_option( OPT_UNIT, 0 ) );
+	$u = (int) get_option( OPT_UNIT, 0 );
+	return (int) apply_filters( 'duckhoo_parcel_unit', $u > 0 ? $u : DEFAULT_UNIT );
 }
 
 /**
@@ -231,7 +240,7 @@ function box( string $ym, string $msg = '' ): void {
 	echo '<form method="post" enctype="multipart/form-data" style="margin:0 0 12px">';
 	wp_nonce_field( 'dhr_parcel', 'dhr_parcel_nonce' );
 	echo '<input type="hidden" name="dhr_parcel_ym" value="' . esc_attr( $ym ) . '">';
-	echo '<p><b>① 계약 단가</b> — 상자 하나에 우체국에 내는 돈 (월 청구서의 단가). <input type="text" name="dhr_parcel_unit" value="' . esc_attr( $u > 0 ? (string) $u : '' ) . '" placeholder="예) 2700" size="8" inputmode="numeric"> 원</p>';
+	echo '<p><b>① 계약 단가</b> — 상자 하나에 우체국에 내는 돈 (정산내역의 단가). <input type="text" name="dhr_parcel_unit" value="' . esc_attr( $u !== DEFAULT_UNIT ? (string) $u : '' ) . '" placeholder="' . esc_attr( (string) DEFAULT_UNIT ) . '" size="8" inputmode="numeric"> 원 — 비우면 ' . esc_html( number_format( DEFAULT_UNIT ) ) . '원 (2026년 9월 정산내역에서 확인한 기본 단가). 정산내역이 다른 공급지와 합산으로 나와도 액상덕후 상자는 이 단가라 통수 × 단가로 가르면 된다.</p>';
 	echo '<p><b>② 소포 발송 내역</b> — 우체국 계약소포 → 발송 내역 조회에서 ' . esc_html( $ym ) . ' 을 골라 엑셀(CSV)로 내려받아 그대로 올립니다. 등록일자 · 등기번호 · 고객주문번호 · 고객주문처 · 반품신청여부 칸을 이름으로 찾습니다.</p>';
 	echo '<p><input type="file" name="dhr_parcel_file" accept=".csv,.txt,.tsv"> &nbsp; 또는 붙여 넣기 ↓</p>';
 	echo '<p><textarea name="dhr_parcel_text" rows="3" style="width:100%;max-width:720px;font-size:12px" placeholder="소포주문번호,등록일자,배송진행 상태내역,…,등기번호,…"></textarea></p>';
