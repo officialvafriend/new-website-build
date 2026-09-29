@@ -400,7 +400,7 @@ function report( array $c ): string {
 	$pv = $c['prev'];
 	$L  = array();
 	$L[] = '액상덕후 ' . kmonth( $c['ym'] ) . ' 결산' . ( $c['closed'] ? '' : " (진행 중 · {$c['days_done']}일까지)" );
-	$L[] = "접수 {$c['all']['n']}건 · 확정(실입금) {$m['n']}건 " . $w( $m['sales'] ) . "원 · 입금 대기 {$c['pend']['n']}건 " . $w( $c['pend']['sales'] ) . "원 · 취소·환불 {$c['void']['n']}건 ({$c['cancel_rate']}%)";
+	$L[] = "접수 {$c['all']['n']}건 · 확정(실입금) {$m['n']}건 " . $w( $m['sales'] ) . "원 · 입금 대기 {$c['pend']['n']}건 " . $w( $c['pend']['sales'] ) . "원 · 취소·환불 {$c['void']['n']}건 " . $w( $c['void']['sales'] ) . "원 ({$c['cancel_rate']}%)";
 	$L[] = '하루 평균 ' . $w( $c['per_day'] ) . "원 · 객단가 평균 " . $w( $c['aov'] ) . '원 · 중앙값 ' . $w( $c['aov_median'] ) . "원 · 상품 수량 {$c['units']}개";
 	$dl  = delta( (float) $m['sales'], (float) $pv['conf']['sales'] );
 	$L[] = '지난달(' . kmonth( $pv['ym'] ) . ') 확정 ' . $pv['conf']['n'] . '건 ' . $w( $pv['conf']['sales'] ) . '원' . ( '' !== $dl ? " → {$dl}" : '' ) . " · 지난달 취소율 {$pv['cancel_rate']}% · 지난달 객단가 " . $w( $pv['aov'] ) . '원';
@@ -515,7 +515,7 @@ function brief_text( array $c, ?array $im, array $log, string $seo = '', bool $d
 	$L[] = '· 한 번 살 때 ' . $w( $c['aov'] ) . '원' . ( '' !== $da ? " (지난달보다 {$da})" : '' ) . ' · 하루 평균 ' . $w( $c['per_day'] ) . '원';
 	$cu  = $c['cust'];
 	$L[] = '· 처음 산 회원 ' . $cu['first_buyers'] . '명 · 다시 산 회원 ' . $cu['rep_buyers'] . '명 · 새 가입 ' . $c['signups'] . '명 (지난달 ' . $c['signups_prev'] . ')';
-	$L[] = '· 취소 · 환불 ' . $c['void']['n'] . '건 = 접수의 ' . $c['cancel_rate'] . '% (지난달 ' . $pv['cancel_rate'] . '%)' . ( $c['pend']['n'] > 0 ? ' · 아직 입금 안 된 주문 ' . $c['pend']['n'] . '건 ' . $w( $c['pend']['sales'] ) . '원' : '' );
+	$L[] = '· 취소 · 환불 ' . $c['void']['n'] . '건 ' . $w( $c['void']['sales'] ) . '원 = 접수의 ' . $c['cancel_rate'] . '% (지난달 ' . $pv['cancel_rate'] . '%)' . ( $c['pend']['n'] > 0 ? ' · 아직 입금 안 된 주문 ' . $c['pend']['n'] . '건 ' . $w( $c['pend']['sales'] ) . '원' : '' );
 	$top = array_slice( $c['products'], 0, 3, true );
 	if ( $top ) {
 		$L[] = '· 많이 팔린 것: ' . implode( ' · ', array_map( fn( $k, $p ) => "{$k} " . $w( $p['sales'] ) . '원', array_keys( $top ), $top ) );

@@ -244,15 +244,24 @@ function fee_map( array $ids ): array {
 			ARRAY_A
 		);
 		foreach ( $rows as $r ) {
-			$amt = (float) ( $r['amt'] ?? 0 );
+			$amt  = (float) ( $r['amt'] ?? 0 );
+			$oid  = (int) ( $r['oid'] ?? 0 );
+			$name = (string) ( $r['name'] ?? '' );
+			// 이 테마는 배송비를 워드커머스 배송 줄이 아니라 「배송비」 수수료 줄(+2,500)로 붙인다
+			// (Store API 실측 2026-09-29). get_shipping_total() 은 늘 0 이라 여기서 센다.
+			if ( $amt > 0 && false !== mb_strpos( $name, '배송' ) ) {
+				if ( ! isset( $out[ $oid ] ) ) {
+					$out[ $oid ] = array( 'fee' => 0.0, 'points' => 0.0, 'ship' => 0.0 );
+				}
+				$out[ $oid ]['ship'] += $amt;
+				continue;
+			}
 			if ( $amt >= 0 ) {
 				continue;
 			}
-			$oid = (int) ( $r['oid'] ?? 0 );
 			if ( ! isset( $out[ $oid ] ) ) {
-				$out[ $oid ] = array( 'fee' => 0.0, 'points' => 0.0 );
+				$out[ $oid ] = array( 'fee' => 0.0, 'points' => 0.0, 'ship' => 0.0 );
 			}
-			$name = (string) ( $r['name'] ?? '' );
 			if ( function_exists( '\\Duckhoo\\Redesign\\Points\\is_points_label' )
 				&& \Duckhoo\Redesign\Points\is_points_label( $name ) ) {
 				$out[ $oid ]['points'] += abs( $amt );
@@ -311,6 +320,9 @@ function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): 
 			continue;
 		}
 		$out[ $i ]['fee'] = (float) $f['fee'];
+		if ( ! empty( $f['ship'] ) ) {
+			$out[ $i ]['ship'] = (float) $r['ship'] + (float) $f['ship'];
+		}
 		if ( $r['p'] <= 0 && $f['points'] > 0 ) {
 			$out[ $i ]['p'] = (float) $f['points'];
 		}

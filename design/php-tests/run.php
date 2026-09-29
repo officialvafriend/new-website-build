@@ -817,11 +817,13 @@ $GLOBALS['__fee_rows'] = [
   ['oid'=>21,'name'=>'🎁 금액 자동 할인','amt'=>'-10000'],
   ['oid'=>21,'name'=>'적립금 할인',      'amt'=>'-3000'],
   ['oid'=>22,'name'=>'포장비',           'amt'=>'2000'],
+  ['oid'=>21,'name'=>'배송비',           'amt'=>'2500'],
 ];
 $fm = ($S.'fee_map')([21,22]);
 $ok(($fm[21]['fee'] ?? 0) === 10000.0, '자동 할인은 나가는 돈으로 센다');
 $ok(($fm[21]['points'] ?? 0) === 3000.0, '적립금 줄은 적립금으로 가른다');
 $ok(!isset($fm[22]), '양수 수수료는 할인이 아니므로 세지 않는다');
+$ok(($fm[21]['ship'] ?? 0) === 2500.0 && ($fm[21]['fee'] ?? 0) === 10000.0, '「배송비」 수수료 줄(양수)은 배송비로 센다 — 할인에 섞이지 않는다');
 
 $GLOBALS['__orders'] = [
   new DhrSalesOrder(21, '2026-09-02', 'delivered', 90000.0, 7),
@@ -831,6 +833,7 @@ $GLOBALS['__fee_rows'][] = ['oid'=>23,'name'=>'적립금 할인','amt'=>'-9999']
 $got = [];
 foreach (($S.'fetch')([]) as $r2) { $got[$r2['id']] = $r2; }
 $ok($got[21]['p'] === 3000.0 && $got[21]['fee'] === 10000.0, '메타가 없으면 수수료 줄의 적립금을 쓴다');
+$ok($got[21]['ship'] === 2500.0, '배송비 수수료 줄이 주문의 배송비로 들어간다 (get_shipping_total 은 0)');
 $ok($got[23]['p'] === 5000.0, '메타가 있으면 그쪽이 맞다 — 수수료 줄로 덮지 않는다');
 $GLOBALS['__orders'] = [];
 $GLOBALS['__fee_rows'] = [];
@@ -2399,7 +2402,7 @@ $ok(str_contains(($SR.'text')($r0,false), '이 달에 적힌 작업이 없습니
 
 // 1~3분 글 — 결산 + 아임웹
 $bt = ($Mo.'brief_text')($mc, ['n'=>3,'sales'=>90000,'pend_n'=>1,'pend'=>10000,'void_n'=>0,'void'=>0,'src'=>'api','at'=>'2026-10-01 09:00'], ($SR.'entries')('2026-09'), '', false);
-$ok(str_starts_with($bt, '액상덕후 2026년 9월 결산') && str_contains($bt, '이런 결과') && str_contains($bt, '실제 들어온 돈 201,000원 (4건)') && str_contains($bt, '아임웹까지 합치면 291,000원 (아임웹 3건 90,000원)') && str_contains($bt, '처음 산 회원 1명 · 다시 산 회원 1명 · 새 가입 40명 (지난달 25)') && str_contains($bt, '취소 · 환불 2건 = 접수의 29% (지난달 33%)'), '1~3분 글: 결과 — 실입금 · 아임웹 합산 · 손님 · 취소');
+$ok(str_starts_with($bt, '액상덕후 2026년 9월 결산') && str_contains($bt, '이런 결과') && str_contains($bt, '실제 들어온 돈 201,000원 (4건)') && str_contains($bt, '아임웹까지 합치면 291,000원 (아임웹 3건 90,000원)') && str_contains($bt, '처음 산 회원 1명 · 다시 산 회원 1명 · 새 가입 40명 (지난달 25)') && str_contains($bt, '취소 · 환불 2건 ') && str_contains($bt, '원 = 접수의 29% (지난달 33%)'), '1~3분 글: 결과 — 실입금 · 아임웹 합산 · 손님 · 취소');
 $ok(str_contains($bt, '이렇게 했고') && str_contains($bt, '09-21 노보 15종') && str_contains($bt, '09-29 월말 결산 화면 만듦') && str_contains($bt, '앞으로') && str_contains($bt, '취소가 접수의 29%'), '1~3분 글: 이렇게 했고(일지) · 앞으로(취소율 20% 넘음)');
 $bt2 = ($Mo.'brief_text')($mc, null, [], '**검색 노출 월간 보고**', true);
 $ok(str_contains($bt2, '아임웹은 아직 안 합쳐짐') && str_contains($bt2, '아임웹 주문을 합치려면') && str_ends_with($bt2, '**검색 노출 월간 보고**') && str_starts_with($bt2, '**액상덕후'), '아임웹 없으면 안내 두 줄 · SEO 글은 끝에 · 디스코드 굵기');
