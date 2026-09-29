@@ -24,6 +24,8 @@ ap.add_argument('--prev-note', default='전월비는 8월 보고서의 자사몰
 ap.add_argument('--manual', action='append', default=[], help='"이름 조각=원가" — 원가 모름 줄에 손으로 원가를 붙인다 (수동 결제 등)')
 ap.add_argument('--asof', default=''); ap.add_argument('--date', default='')
 ap.add_argument('--imweb', default='집계 전')
+ap.add_argument('--big-min', type=float, default=5000000, help='이 금액 이상만 「대량 주문」으로 따로 말한다')
+ap.add_argument('--rename', action='append', default=[], help='"이름 조각=보여 줄 이름" — 상위 상품 표의 이름을 사람이 읽는 꼴로')
 a = ap.parse_args()
 
 d = json.load(open(a.src, encoding='utf-8'))
@@ -58,7 +60,7 @@ profit = gross - spend
 known_sales = sales - unknown
 
 # 큰 주문
-big = m.get('big') or []
+big = [b for b in (m.get('big') or []) if b['t'] >= a.big_min]
 big_total = sum(b['t'] for b in big)
 big_cost = sum(v for k, s_, v in manual_rows if any(k in ln['name'] for b in big for ln in b['lines']))
 ex_sales = sales - big_total
@@ -82,15 +84,28 @@ best = max(((k, v) for k, v in vals.items() if k not in big_days), key=lambda x:
 first_k = min(vals) if vals else ''; last_k = max(vals) if vals else ''
 kd = lambda k: f"{int(k[5:7])}/{int(k[8:10])}"
 
+import re
+def pretty(name, brand):
+    for spec in a.rename:
+        k, v = spec.rsplit('=', 1)
+        if k in name: return v
+    n = re.sub(r'\|\s*금액\s*[\d,]+\s*원', '', name)
+    n = re.sub(r'\(멘솔 없음\)|할인\s*!|이벤트\s*!?|병당\s*[\d,]+원\s*/?|/\s*금액\s*[\d,]+|★[^★]*★|\s*!\s*$', '', n)
+    n = re.sub(r'\s+', ' ', n).strip(' -·|')
+    if brand and brand != '기타' and brand not in n: n = f"{brand} {n}"
+    if re.search(r'\d\+\d|\d+\s*병', n) and '묶음' not in n and '증정' not in n: n += ' 묶음'
+    return n
 prods = list(m['products'].items())[:8]
 top = sum(p['sales'] for _, p in prods)
-rows = ''.join(f'<tr><td class="num mut">{i+1}</td><td>{html.escape(n)}</td><td class="num">{p["n"]}</td><td class="num">{fmt(p["sales"])}</td><td class="num mut">{p["sales"]/sales*100:.1f}%</td></tr>' for i, (n, p) in enumerate(prods))
+rows = ''.join(f'<tr><td class="num mut">{i+1}</td><td>{html.escape(pretty(n, p["brand"]))}</td><td class="num">{p["n"]}</td><td class="num">{fmt(p["sales"])}</td><td class="num mut">{p["sales"]/sales*100:.1f}%</td></tr>' for i, (n, p) in enumerate(prods))
 brands = list(m['brands'].items())[:4]
 brand_txt = ' · '.join(f"{b} {man(v)}({v/sales*100:.0f}%)" for b, v in brands)
 
 cu = m['cust']; pv = m['prev']
-unknown_txt = ' · '.join(f"{html.escape(k)} {fmt(v)}" for k, v in list(ulist.items())[:4])
-manual_txt = ' · '.join(f"{html.escape(k)} → 원가 {fmt(v)}" for k, s_, v in manual_rows)
+def short(k):
+    k = re.sub(r'여기서 결제 도와드리겠습니다!?|결제 도와드리겠습니다\.?', '', k); return re.sub(r'\s+', ' ', k).strip(' []')
+unknown_txt = ' · '.join(f"{html.escape(short(k))} {man(v)}" for k, v in list(ulist.items())[:3]) + (' 등' if len(ulist) > 3 else '')
+manual_txt = ' · '.join(f"{html.escape(pretty(k, ''))} 원가 {man(v)}" for k, s_, v in manual_rows)
 kmon = f"{mo}월"
 asof = a.asof or (f"{kmon} 1일 ~ {days}일 기준" + ('' if m['closed'] else ' (월중 잠정)'))
 dt_today = datetime.date.fromisoformat(today)
@@ -165,7 +180,7 @@ page = f'''<!doctype html>
       <tr class="sum"><td>순이익</td><td class="num">{fmt(profit)}</td><td class="num mut">{profit/sales*100:.1f}%</td></tr>
     </tbody>
   </table>
-  <p class="note">매출은 입금이 확인된 주문 기준이며 미입금 · 취소 건은 제외돼 있습니다. 상품 원가는 상품별 매입 단가 × 수량입니다{(' — 원가를 모르는 매출 ' + fmt(unknown) + '원(' + unknown_txt + ')은 원가 0으로 두었으므로 순이익이 그만큼 높게 잡혀 있습니다') if unknown > 0 else ''}.{(' 수동 결제 줄은 따로 붙였습니다: ' + manual_txt + '.') if manual_rows else ''} 박스 · 완충재 같은 포장 자재와 문자 발송비는 넣지 않았습니다.</p>
+  <p class="note">매출은 입금 확인된 주문 기준(미입금 · 취소 제외). 상품 원가는 상품별 매입 단가 × 수량이며 값이 바뀐 상품은 주문 날짜의 단가로 셉니다.{(' 수동 결제는 따로 붙였습니다(' + manual_txt + ').') if manual_rows else ''}{(' 원가를 모르는 매출 ' + man(unknown) + '(' + unknown_txt + ')은 원가 0으로 들어가 순이익이 그만큼 높습니다.') if unknown > 0 else ''} 포장 자재 · 문자 발송비는 넣지 않았습니다.</p>
 
   <h2>일별 매출 추이</h2>
   <div class="bars">{bars}</div>
