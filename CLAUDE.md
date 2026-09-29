@@ -2916,3 +2916,33 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 
 검증: `php design/php-tests/run.php` (월말 결산 19개 — 달 경계 · 기본 달 · 확정/대기/취소 · 취소율 · 뺄셈 장부 · 처음/재구매/비회원 · 일별 ·
 상품 · 브랜드 · 지난달 · 보고서 · 진행 중 · CSV) · `scratchpad/monthly-render.php` + `shot-monthly.mjs`(가짜 420건으로 390/1280 스크린샷 · 넘침 0).
+
+## 보고서는 「이렇게 했고 · 이런 결과 · 앞으로」 — 1~3분 (사장님 2026-09-29)
+
+사장님: 「네가 만드는 보고서는 1~3분만 훑어도 이해가 가능한 수준으로. 이렇게 했고, 이런 결과가 있었고, 앞으로는 이렇게 할 예정」.
+**모든 보고서(아침 브리핑 · 월말 결산 · SEO 월간)에 적용한다.** 줄마다 한 가지, 숫자는 지난번과 견줘 한 줄, 표 · 긴 목록 · 과정 설명 없음.
+- 아침 브리핑 루틴(`trig_01YCFsCJB4NB66bz5AYoGfkg`) 프롬프트를 이 순서로 고쳤고, `Brief\rules()` 에 한 줄 넣었다 (루틴은 rules 를 먼저 읽는다)
+- 「이렇게 했고」의 재료는 **작업 일지**다 — 옵션 `duckhoo_worklog`, `POST /wp-json/duckhoo/v1/log` (브리핑 열쇠 `X-DHR-Key`, `area`=seo|shop|ops|etc · `text` · `day`) 또는
+  도구 → 검색 노출 화면의 칸. **클로드가 일을 끝내면 한 줄 남긴다** — 이 세션은 `$DUCKHOO_BRIEF_KEY` 가 환경에 있어 curl 로 바로 적을 수 있다 (키는 찍지 않는다)
+
+### 매달 1일 자동 발송 · 아임웹 합치기 · SEO 월간 보고서 (2026-09-29)
+
+- **`Monthly\brief_text()`** — 사장님용 한 장(결과 → 이렇게 했고 → 앞으로). 결과는 실입금 · 아임웹 합산 · 객단가 · 처음/다시 산 회원 · 가입 · 취소율을 지난달과 한 줄씩,
+  앞으로는 숫자가 가리키는 것만(취소 20%↑ · 매출 15%↓ · 미입금 10건↑ · 아임웹 미연결). 끝에 SEO 월간 보고를 붙인다. 화면의 「사장님용 한 장」 상자 · 「디스코드 · 메일로 보내기」 버튼이 같은 글
+- **크론 `duckhoo_monthly_check`** — 매일 09:00(사이트 시간)에 깨어나 **1일(놓치면 2 · 3일)** 이고 지난달을 아직 안 보냈으면 `send()`: 디스코드(오늘 할 일 웹훅) + 관리자 메일(오늘 할 일 메일이 켜져 있을 때).
+  옵션 `duckhoo_monthly_sent` = 보낸 달 — 보내기 전에 적어 겹쳐 불려도 한 통. 09:00 앞뒤 창 밖이면 안 보낸다 (오늘 할 일 크론과 같은 문). 첫 발송은 **10월 1일 09:00**
+- **아임웹 `includes/imweb.php`** — 옛 사이트(액상덕후.com, 아임웹)에도 주문이 들어온다(사장님). 두 길: ①API — 아임웹 관리자 → 환경설정 → API 의 키 · 시크릿을 월말 결산 화면에 넣으면
+  `GET api.imweb.me/v2/auth?key&secret` → `access_token`, 헤더 `access-token`, `GET /v2/shop/orders?order_date_from&to&order_version=v2` (없으면 v1) 로 그 달치를 읽는다
+  ②붙여 넣기 — 아임웹 주문 목록 엑셀을 머리줄부터 통째로 붙이면 주문번호 · 상태 · 결제금액 칸을 이름으로 찾는다. 결과는 달마다 옵션 `duckhoo_imweb_months` 에 `{n, sales, pend_n, void_n, src, at}`.
+  **API 는 공개 문서로만 확인했다** — 응답 꼴(`data.list`, `total_page`) · 상태 낱말은 짐작이 섞여 있어 「연결 시험」이 첫 응답 앞부분을 화면에 보여 준다. 상태는 글자로 가른다(WAIT → 대기 · CANCEL/REFUND/RETURN → 취소 · 나머지 돈 들어옴).
+  키 · 시크릿은 옵션에만 — 화면에도 「있음」만 찍는다. 옛 도메인은 비로그인 403 「접근 제한」이라 밖에서 확인할 수 없다
+- **SEO 월간 보고서 `includes/seo-report.php`** — 도구 → 검색 노출 아래 + 매달 1일 결산 뒤에 붙는다. 숫자는 전부 플러그인 자신의 것(서치콘솔 · 서치어드바이저는 못 읽는다):
+  · **검색 유입**: front.js 가 그날 처음 들어온 사람의 referrer 를 `src_google · src_naver · src_daum · src_other · src_direct` 로 깔때기 표에 보낸다 (사람마다 하루 한 번, 사이트 안 이동은 안 셈)
+  · **상품별 조회** `p:<번호>` — 상품 상세를 본 사람 수 (사람마다 상품마다 하루 한 번, 하루 80개까지). `Funnel\extra_ok()` 가 이 덧신호를 받는다 — 깔때기 표에는 안 그린다
+  · **덮음새 스냅샷** `duckhoo_seo_snap[ym]`(글 있는 상품 · 설명 없는/긴 분류 · 브랜드 페이지) — 지난달과 차이가 「이렇게 했고」에 자동으로 들어간다
+  · **앞으로**: 많이 봤는데 글 없는 상품 · 품절인데 계속 찾는 상품 · 설명 없는 분류 · 160자 넘는 분류 · 검색 유입 0
+  2026-09-29 배포부터 세므로 **10월 1일 첫 보고서는 이틀치**뿐이다 — 11월 1일부터 달 대 달이 된다
+- 크론은 관리자 밖에서 도는데 주문 읽기가 `Sales\fetch` · `Anatomy\items` 라 monthly.php 가 그 둘을 `function_exists` 로 든다. `monthly.php` · `imweb.php` · `seo-report.php` 는 admin 블록 **밖**에서 require
+
+검증: `php design/php-tests/run.php` (아임웹 12개 · SEO 보고 9개 · 1~3분 글 5개 · 크론 문 2개 = 1,307개) · `scratchpad/monthly-render.php`(가짜 데이터 + 아임웹 + 일지로 화면 · 글 · 390/1280 넘침 0) ·
+프로덕션: `/wp-json/duckhoo/v1/log` 키 없이 거절 · 키로 두 줄 적음 · smoke 20개.
