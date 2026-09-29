@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>액상덕후 월말 결산 — 2026년 9월</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css">
+<style>
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #111; font-size: 11.5pt; line-height: 1.6; word-break: keep-all; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  h1 { font-size: 26pt; font-weight: 800; line-height: 1.2; margin: 0 0 6pt; }
+  h2 { font-size: 17pt; font-weight: 800; margin: 0 0 10pt; padding-bottom: 6pt; border-bottom: 3px solid #111; }
+  h3 { font-size: 12.5pt; font-weight: 700; margin: 14pt 0 6pt; }
+  p { margin: 0 0 8pt; }
+  .eb { font-size: 9.5pt; font-weight: 700; letter-spacing: .08em; color: #C2410C; text-transform: uppercase; margin-bottom: 4pt; }
+  .mut { color: #4E565F; }
+  .small { font-size: 9.5pt; }
+  .cover { display: flex; flex-direction: column; justify-content: space-between; min-height: 240mm; }
+  .cover .big { font-size: 34pt; font-weight: 800; line-height: 1.15; margin: 40mm 0 8pt; }
+  .cover .sub { font-size: 14pt; color: #4E565F; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; margin: 10pt 0 14pt; }
+  .kpi { border: 1.5px solid #111; border-radius: 10pt; padding: 10pt 12pt; }
+  .kpi .l { font-size: 9.5pt; color: #4E565F; font-weight: 600; }
+  .kpi .v { font-size: 22pt; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .kpi .n { font-size: 9.5pt; color: #4E565F; }
+  .kpi.warm .v { color: #C2410C; }
+  .three { display: grid; grid-template-columns: 1fr; gap: 7pt; }
+  .box.warn { border-left-color: #8A8A8F; background: #F4F6F7; }
+  .box li b.n { font-variant-numeric: tabular-nums; }
+  .box { border-left: 5px solid #C2410C; background: #FBF4EF; padding: 9pt 12pt; border-radius: 0 8pt 8pt 0; }
+  .box.ink { border-left-color: #111; background: #F4F6F7; }
+  .box .t { font-weight: 800; font-size: 12pt; margin-bottom: 4pt; }
+  .box ul { margin: 0; padding-left: 16pt; }
+  .box li { margin: 0 0 3pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 6pt 0 10pt; }
+  th { text-align: left; font-weight: 700; color: #4E565F; font-size: 9.5pt; border-bottom: 1.5px solid #111; padding: 5pt 6pt; }
+  td { padding: 5pt 6pt; border-bottom: 1px solid #E1E5E8; vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rank { display: inline-block; min-width: 22pt; text-align: center; font-weight: 800; border-radius: 6pt; padding: 1pt 5pt; }
+  .r1 { background: #111; color: #fff; }
+  .r2 { background: #C2410C; color: #fff; }
+  .r3 { background: #ECEDF0; color: #111; }
+  .r0 { background: #fff; color: #8A8A8F; border: 1px solid #E1E5E8; }
+  .bars { display: flex; align-items: flex-end; gap: 2pt; height: 60pt; margin: 6pt 0 2pt; }
+  .bars i { flex: 1 1 0; background: #C2410C; border-radius: 2pt 2pt 0 0; display: block; }
+  .bars i.g { background: #C9CED3; }
+  .axis { display: flex; justify-content: space-between; font-size: 8.5pt; color: #4E565F; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+  .note { font-size: 9.5pt; color: #4E565F; border-top: 1px solid #E1E5E8; padding-top: 6pt; margin-top: 8pt; }
+  .foot { position: fixed; bottom: -8mm; left: 0; right: 0; font-size: 8.5pt; color: #8A8A8F; text-align: right; }
+  .tl td:first-child { white-space: nowrap; font-weight: 700; width: 46pt; }
+  .tag { display: inline-block; font-size: 8.5pt; font-weight: 700; padding: 1pt 5pt; border-radius: 4pt; background: #ECEDF0; color: #111; margin-right: 3pt; }
+  .tag.w { background: #C2410C; color: #fff; }
+  dl { margin: 0; }
+  dt { font-weight: 700; margin-top: 6pt; }
+  dd { margin: 0 0 2pt; color: #333; }
+  .bars2 { display: flex; align-items: flex-end; gap: 3pt; height: 70pt; margin: 6pt 0 2pt; }
+  .bars2 i { flex: 1 1 0; background: #C2410C; border-radius: 2pt 2pt 0 0; display: block; position: relative; }
+  .bars2 i.g { background: #C9CED3; }
+  .bars2 i.cap { background: repeating-linear-gradient(135deg,#C2410C 0 3pt,#E8A98F 3pt 6pt); }
+  .ledger td:first-child { width: 46%; }
+  .ledger tr.sum td { font-weight: 800; border-top: 2px solid #111; }
+  .kpi .d { font-size: 9.5pt; color: #4E565F; }
+  .kpi .d b { color: #111; }
+  .wk td.num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<section class="page cover">
+  <div>
+    <div class="eb">액상덕후 · 월말 결산 보고서</div>
+    <div class="big">2026년 9월<br>한 달 동안 돈이<br>어떻게 들어왔나</div>
+    <div class="sub">9월 1일 ~ 29일 집계 · 30일까지의 확정본은 10월 1일 아침에 따로 나갑니다</div>
+  </div>
+  <div>
+    <div class="kpis">
+      <div class="kpi warm"><div class="l">실입금 (확정 매출)</div><div class="v">6,634만원</div><div class="n">8월 2,085만원의 3.2배 · 763건</div></div>
+      <div class="kpi"><div class="l">이 달 처음 산 손님</div><div class="v">600명</div><div class="n">산 회원 727명 중 83%</div></div>
+      <div class="kpi"><div class="l">취소율</div><div class="v">21%</div><div class="n">8월 27% → 210건</div></div>
+    </div>
+    <p class="small mut"><b>보고 대상</b> 대표님 · 이사님 &nbsp;·&nbsp; <b>작성</b> 온라인몰 운영 &nbsp;·&nbsp; <b>작성일</b> 2026년 9월 29일<br>읽는 순서: <b>1쪽 요약만 보셔도 됩니다 (1분).</b> 그 뒤는 「매출 흐름 → 손님 · 상품 → 장부 → 앞으로」 순서로 자세히 적었고, 마지막에 낱말 풀이와 집계 기준을 붙였습니다.</p>
+  </div>
+</section>
+
+<!-- 1. 한 장 요약 -->
+<section class="page">
+  <h2>1. 한 장 요약</h2>
+  <div class="three">
+    <div class="box ink">
+      <div class="t">이렇게 했고</div>
+      <ul>
+        <li><b>새 화면을 운영에 올렸습니다 (9/4).</b> 폰 우선 화면 · 가입 즉시 8,800원 적립 · 상품 사진은 성인인증 회원에게만.</li>
+        <li><b>노보 재고를 앞세웠습니다 (9/21).</b> 다른 곳에서 노보가 품절이던 때 홈 · 분류 · 검색 결과에 「전 라인 재고 있음」을 세웠습니다.</li>
+        <li><b>10만원 이상 1만원 자동 할인을 9/9 에 끝냈습니다.</b> 이 달 자동 할인으로 나간 돈은 44만 8천원입니다.</li>
+        <li>후기 · 쿠폰 · 송장 조회 · 응대 시간 안내 · 추석 출고 안내를 손님 화면에 붙였고, 옛 사이트에서 넘어온 회원의 성인인증 기록을 정리했습니다.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="t">이런 결과가 있었고</div>
+      <ul>
+        <li><b>실입금 6,634만원, 8월(2,085만원)의 3.2배</b>입니다. 9/7 의 2,100만원 한 건을 빼도 4,534만원으로 2.2배. 지출(우체국 배송비 178만원, 828상자)을 빼면 6,456만원입니다.</li>
+        <li><b>처음 산 손님 600명 (8월 266명)</b>, 새 가입 1,626명(8월 631명) 중 37%가 첫 주문까지 갔습니다.</li>
+        <li><b>취소율 21%, 8월 27%에서 내려왔습니다.</b> 취소 210건 중 148건이 9/6~15 열흘에 몰렸고 9/16 이후 14일은 17건입니다.</li>
+        <li>브랜드는 노보 3,753만원(57%)이 1위이고, 큰 주문 한 건을 빼도 1,653만원으로 1위입니다.</li>
+      </ul>
+    </div>
+    <div class="box warn">
+      <div class="t">걸리는 것</div>
+      <ul>
+        <li><b>한 건이 15%입니다.</b> 9/7 대량 주문(2,100만원)이 평균 객단가를 86,948원으로 끌어올렸습니다. 빼면 59,504원, 중앙값은 50,000원입니다.</li>
+        <li><b>재구매 매출은 14%뿐입니다.</b> 산 회원 727명 중 전에도 산 회원은 127명(17%)입니다. 새 손님이 끄는 가게입니다.</li>
+        <li><b>옛 사이트(아임웹) 주문이 아직 안 합쳐져 있습니다.</b> 이 숫자는 새 사이트만의 것입니다.</li>
+      </ul>
+    </div>
+    <div class="box ink">
+      <div class="t">앞으로 이렇게</div>
+      <ul>
+        <li><b>① 노보 재고 현금화를 이어 갑니다.</b> 값이 시장보다 높은 품목(노보 낱병 13,000원 vs 큰 가게 11,500원)은 경영진 검토를 요청드립니다.</li>
+        <li><b>② 재구매를 올립니다.</b> 배송완료 뒤 「사진 후기 1,000원」을 보이는 자리에 세우고, 낱병 손님을 다시 부릅니다 (10월 첫째 주).</li>
+        <li><b>③ 취소 210건의 이유를 가릅니다.</b> 입금 안 함(자동 취소)인지 손님 취소인지 주문 메모로 나눠 10월 결산에 적습니다.</li>
+        <li>아임웹 주문은 10월 결산부터 합산합니다 (API 연결 예정).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. 매출 흐름 -->
+<section class="page">
+  <h2>2. 매출 흐름 — 9월 1일 ~ 29일</h2>
+  <div class="kpis">
+    <div class="kpi warm"><div class="l">실입금</div><div class="v">6,634만원</div><div class="d">763건 · 하루 평균 229만원<br>큰 주문 제외 <b>4,534만원</b> · 하루 156만원</div></div>
+    <div class="kpi"><div class="l">8월</div><div class="v">2,085만원</div><div class="d">395건 · 객단가 52,784원<br>9월은 <b>+218%</b> (제외 시 +117%)</div></div>
+    <div class="kpi"><div class="l">객단가</div><div class="v">86,948원</div><div class="d">중앙값 50,000원<br>큰 주문 제외 <b>59,504원</b></div></div>
+  </div>
+  <h3>주별로 보면</h3>
+  <table class="wk">
+    <thead><tr><th>주</th><th class="num">확정 건수</th><th class="num">실입금</th><th class="num">접수</th><th class="num">취소</th><th>읽는 법</th></tr></thead>
+    <tbody>
+      <tr><td>9/1 ~ 7</td><td class="num">263</td><td class="num">3,720만원</td><td class="num">351</td><td class="num">88</td><td>노보 품절 몰림 · 9/7 하루 101건 접수 + 대량 주문 2,100만원</td></tr>
+      <tr><td>9/8 ~ 14</td><td class="num">174</td><td class="num">947만원</td><td class="num">268</td><td class="num">94</td><td>몰림이 빠지며 취소가 가장 많은 주 (접수의 35%)</td></tr>
+      <tr><td>9/15 ~ 21</td><td class="num">231</td><td class="num">1,286만원</td><td class="num">258</td><td class="num">27</td><td>「노보 재고 있음」 · 검색 순위 상승 · 취소 10%로 내려옴</td></tr>
+      <tr><td>9/22 ~ 29</td><td class="num">95</td><td class="num">681만원</td><td class="num">105</td><td class="num">1</td><td>추석 연휴(24~27일) 나흘 150만원 · 28일 242만원으로 회복</td></tr>
+    </tbody>
+  </table>
+  <h3>날짜별 실입금</h3>
+  <div class="bars2"><i style="height:66%" title="9/1 1,792,664"></i><i style="height:65%" title="9/2 1,760,245"></i><i style="height:88%" title="9/3 2,387,125"></i><i style="height:89%" title="9/4 2,403,430"></i><i style="height:38%" title="9/5 1,034,462"></i><i style="height:83%" title="9/6 2,230,500"></i><i class="cap" style="height:100%" title="9/7 25,586,655"></i><i style="height:92%" title="9/8 2,488,708"></i><i style="height:42%" title="9/9 1,128,100"></i><i style="height:64%" title="9/10 1,739,914"></i><i style="height:42%" title="9/11 1,132,680"></i><i style="height:25%" title="9/12 666,100"></i><i style="height:26%" title="9/13 699,991"></i><i style="height:60%" title="9/14 1,619,918"></i><i style="height:43%" title="9/15 1,165,924"></i><i style="height:99%" title="9/16 2,670,226"></i><i style="height:84%" title="9/17 2,278,311"></i><i style="height:55%" title="9/18 1,481,400"></i><i style="height:49%" title="9/19 1,327,210"></i><i style="height:83%" title="9/20 2,244,564"></i><i style="height:63%" title="9/21 1,694,942"></i><i style="height:42%" title="9/22 1,142,518"></i><i style="height:31%" title="9/23 835,100"></i><i class="g" style="height:10%" title="9/24 265,500"></i><i class="g" style="height:21%" title="9/25 572,635"></i><i class="g" style="height:11%" title="9/26 283,871"></i><i class="g" style="height:14%" title="9/27 369,600"></i><i style="height:90%" title="9/28 2,421,214"></i><i style="height:34%" title="9/29 918,151"></i></div>
+  <div class="axis"><span>9/1</span><span>9/8</span><span>9/15</span><span>9/22</span><span>9/29</span></div>
+  <p class="small mut">빗금(9/7)은 대량 주문 2,100만원을 뺀 높이(459만원)입니다. 회색 나흘은 추석 연휴입니다.</p>
+  <h3>날짜별 취소 건수</h3>
+  <div class="bars2" style="height:40pt"><i class="g" style="height:37%"></i><i class="g" style="height:27%"></i><i class="g" style="height:27%"></i><i class="g" style="height:33%"></i><i class="g" style="height:27%"></i><i class="g" style="height:43%"></i><i class="g" style="height:100%"></i><i class="g" style="height:70%"></i><i class="g" style="height:67%"></i><i class="g" style="height:37%"></i><i class="g" style="height:57%"></i><i class="g" style="height:23%"></i><i class="g" style="height:23%"></i><i class="g" style="height:37%"></i><i class="g" style="height:37%"></i><i class="g" style="height:10%"></i><i class="g" style="height:10%"></i><i class="g" style="height:2%"></i><i class="g" style="height:3%"></i><i class="g" style="height:3%"></i><i class="g" style="height:7%"></i><i class="g" style="height:10%"></i><i class="g" style="height:7%"></i><i class="g" style="height:2%"></i><i class="g" style="height:2%"></i><i class="g" style="height:3%"></i><i class="g" style="height:3%"></i><i class="g" style="height:2%"></i><i class="g" style="height:2%"></i></div>
+  <div class="axis"><span>9/1</span><span>9/8</span><span>9/15</span><span>9/22</span><span>9/29</span></div>
+  <p><b>읽는 법.</b> 취소는 9/6~15 열흘에 148건(전체의 70%)이 몰렸습니다. 노보 품절로 몰려온 손님 가운데 담기만 하고 입금하지 않은 주문이 대부분으로 보입니다. 9/16 이후 14일은 17건이라 지금은 정상 범위입니다. 입금 대기는 29일 기준 9건 50만원뿐입니다.</p>
+</section>
+
+<!-- 3. 손님 · 상품 · 브랜드 -->
+<section class="page">
+  <h2>3. 누가 무엇을 샀나</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="l">산 회원</div><div class="v">727명</div><div class="d">처음 산 회원 <b>600명</b> · 전에도 산 회원 127명</div></div>
+    <div class="kpi warm"><div class="l">새 가입</div><div class="v">1,626명</div><div class="d">8월 631명 · 가입 → 첫 주문 <b>37%</b></div></div>
+    <div class="kpi"><div class="l">재구매 매출</div><div class="v">898만원</div><div class="d">163건 · 실입금의 <b>14%</b> (첫 주문 5,736만원 86%)</div></div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>브랜드별 실입금</h3>
+      <table>
+        <tr><td>노보</td><td class="num">3,753만원</td><td class="num mut">57%</td></tr>
+        <tr><td class="mut">&nbsp;&nbsp;└ 대량 주문 1건 제외</td><td class="num mut">1,653만원</td><td class="num mut">36%</td></tr>
+        <tr><td>액상덕후 (자체 묶음)</td><td class="num">1,226만원</td><td class="num mut">18%</td></tr>
+        <tr><td>디오리퀴드</td><td class="num">517만원</td><td class="num mut">8%</td></tr>
+        <tr><td>젤로 크리스탈 (기기)</td><td class="num">425만원</td><td class="num mut">6%</td></tr>
+        <tr><td>빌런</td><td class="num">275만원</td><td class="num mut">4%</td></tr>
+        <tr><td>화이트아웃</td><td class="num">224만원</td><td class="num mut">3%</td></tr>
+        <tr><td>펠릭스 · 얼려먹구싶오 · 그 밖</td><td class="num">214만원</td><td class="num mut">3%</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>상품 상위 (건수 · 실입금)</h3>
+      <table>
+        <tr><td>덕후 액상 10병 묶음</td><td class="num">159건</td><td class="num">844만원</td></tr>
+        <tr><td>노보 10병 묶음</td><td class="num">59건</td><td class="num">640만원</td></tr>
+        <tr><td>젤로 크리스탈 기기 + 액상 5병</td><td class="num">58건</td><td class="num">407만원</td></tr>
+        <tr><td>노보 10+1</td><td class="num">23건</td><td class="num">299만원</td></tr>
+        <tr><td>디오리퀴드 5+5 묶음</td><td class="num">35건</td><td class="num">284만원</td></tr>
+        <tr><td>흑염룡 10병 묶음</td><td class="num">64건</td><td class="num">241만원</td></tr>
+        <tr><td>노보 블랙 10+1</td><td class="num">8건</td><td class="num">235만원</td></tr>
+        <tr><td>디오리퀴드 3+1 묶음</td><td class="num">59건</td><td class="num">200만원</td></tr>
+        <tr><td>빌런 5병 묶음</td><td class="num">54건</td><td class="num">199만원</td></tr>
+        <tr><td>노보 타박멘솔 낱병</td><td class="num">41건</td><td class="num">189만원</td></tr>
+      </table>
+    </div>
+  </div>
+  <p><b>읽는 법.</b> 열 손님 중 여덟이 이 달 처음 산 손님이고 매출의 86%가 첫 주문입니다. 재고를 빨리 현금화하는 데는 맞는 구조이지만, 다음 달 매출이 새 손님 수에 그대로 걸려 있다는 뜻이기도 합니다. 묶음(10병 · 5+5 · 10+1)이 상위를 차지하고 낱병은 노보 타박멘솔 · 블랙멘솔 두 종만 상위에 듭니다. 대량 주문 1건(노보 타박멘솔 2,000병 · 블랙멘솔 1,000병, 2,100만원)은 실제 주문이라 그대로 두되 따로 표시했습니다.</p>
+</section>
+
+<!-- 4. 장부 · 상태 -->
+<section class="page">
+  <h2>4. 장부 — 돈이 어디로 갔나</h2>
+  <h3>뺄셈 장부 (실입금이 나오기까지)</h3>
+  <table class="ledger">
+    <tbody>
+      <tr><td>할인 전 주문 금액 (배송비 포함)</td><td class="num">68,490,000원</td><td class="mut">확정 763건의 정가 기준 합계</td></tr>
+      <tr><td>− 적립금 사용</td><td class="num">1,661,342원</td><td class="mut">할인 전의 2.4% · 가입 적립 8,800원이 대부분</td></tr>
+      <tr><td>− 쿠폰</td><td class="num">39,000원</td><td class="mut">0.1%</td></tr>
+      <tr><td>− 자동 할인 (9/9 종료)</td><td class="num">448,000원</td><td class="mut">0.7% · 10만원 이상 1만원</td></tr>
+      <tr class="sum"><td>= 실입금</td><td class="num">66,341,658원</td><td class="mut">손님이 실제로 입금한 돈</td></tr>
+      <tr><td colspan="3"><b>지출</b> <span class="mut">— 항목별로 따로 적고 여기서 합칩니다</span></td></tr>
+      <tr><td>− 배송비 (우체국 계약소포 요금)</td><td class="num">1,780,200원</td><td class="mut">828상자 × 2,150원</td></tr>
+      <tr class="sum"><td>= 지출 합계</td><td class="num">1,780,200원</td><td class="mut">실입금의 2.7% (큰 주문 제외 3.9%)</td></tr>
+      <tr class="sum"><td>= 지출 뺀 실입금</td><td class="num">64,561,458원</td><td class="mut">큰 주문 제외 4,356만원</td></tr>
+    </tbody>
+  </table>
+  <p class="small mut">배송비는 우체국 소포정산내역(9/1~28 마감분)에서 읽었습니다. 정산은 같은 계약 계정을 쓰는 다른 사업장과 합산으로 나오므로 공급지별 상자 수로 액상덕후 828상자만 골라 기본 단가 2,150원을 곱했습니다(액상덕후만 발송한 날은 정산 금액과 정확히 일치). 박스 · 완충재 같은 포장 자재는 이 판의 지출에 넣지 않았습니다. 손님에게 받은 배송비(건당 2,500원)는 상품 금액 안에 들어 있고 10월부터 따로 셉니다. 상품 원가는 아직 없습니다.</p>
+
+  <h3>주문 상태 (29일 기준)</h3>
+  <table>
+    <thead><tr><th>상태</th><th class="num">건수</th><th>뜻</th></tr></thead>
+    <tbody>
+      <tr><td>배송완료</td><td class="num">733</td><td>끝난 주문</td></tr>
+      <tr><td>입금확인 · 배송준비중 · 배송중</td><td class="num">30</td><td>돈은 들어왔고 출고 진행 중 (18 · 6 · 6)</td></tr>
+      <tr><td>결제 확인 중 (입금 대기)</td><td class="num">9</td><td>50만 4,700원 · 아직 안 들어온 돈</td></tr>
+      <tr><td>취소 · 환불</td><td class="num">210</td><td>접수의 21%</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- 5. 앞으로 · 낱말 풀이 · 기준 -->
+<section class="page">
+  <h2>5. 앞으로 이렇게 — 10월</h2>
+  <h3>이 달의 걸림돌 셋</h3>
+  <ul>
+    <li><b>취소 210건의 이유를 아직 모릅니다.</b> 무통장입금 가게라 「담고 안 부친 것」이 자동 취소된 몫과 손님이 직접 취소한 몫이 섞여 있습니다. 10월에 주문 메모로 나눕니다.</li>
+    <li><b>옛 이름으로 팔리는 상품이 있습니다.</b> 「노보 10병 병당 7,000원」이라는 이름으로 59건이 평균 108,000원에 팔렸습니다. 손님이 보는 이름과 값이 다르니 이름을 바로잡습니다.</li>
+    <li><b>수동 결제 상품으로 5건 81만원이 들어왔습니다.</b> 전화 · 채팅으로 받은 주문을 「여기서 결제 도와드리겠습니다」 상품으로 처리한 것입니다. 정산 때 따로 가릅니다.</li>
+  </ul>
+  <table>
+    <thead><tr><th style="width:26%">무엇</th><th>왜</th><th style="width:22%">누가 · 언제</th></tr></thead>
+    <tbody>
+      <tr><td><b>① 노보 재고 현금화</b></td><td>9월 매출의 절반이 노보입니다. 재입고가 없는 재고라 「비싸게 오래」가 아니라 「빨리」가 목표입니다. 낱병 값이 시장보다 1,500원 높습니다.</td><td>경영진 검토 · 10월 첫째 주</td></tr>
+      <tr><td><b>② 재구매 올리기</b></td><td>재구매 매출 14%. 배송완료 뒤 「사진 후기 1,000원」을 보이는 자리에 세우고, 낱병으로 산 손님(재구매율이 묶음보다 높음)을 다시 부릅니다.</td><td>운영 · 10월 첫째 주</td></tr>
+      <tr><td><b>③ 취소 이유 가르기</b></td><td>자동 취소인지 손님 취소인지 나눠야 다음 손이 정해집니다. 안 부친 것이 대부분이면 입금 안내를, 손님 취소가 많으면 상품 · 값을 봅니다.</td><td>운영 · 10월 결산에 반영</td></tr>
+      <tr><td>④ 아임웹 주문 합산</td><td>옛 사이트 주문이 이 결산에 빠져 있습니다. API 를 연결하면 매달 1일 자동으로 합쳐집니다.</td><td>운영 · 10월 초</td></tr>
+      <tr><td>⑤ 원가 장부</td><td>지출(배송비)은 이 판부터 장부에 들어갔습니다. 포장 자재와 손님에게 받은 배송비는 10월부터 따로 세고, 상품 원가가 들어가야 이익이 보입니다.</td><td>받은 배송비 10월 · 원가는 자료 받는 대로</td></tr>
+    </tbody>
+  </table>
+  <h3>10월 결산에서 다시 볼 숫자</h3>
+  <p>실입금(큰 주문 제외 4,534만원 기준) · 취소율(21%) · 처음 산 손님(600명) · 재구매 매출 비율(14%) · 가입 → 첫 주문(37%) · 노보 비중(36%, 큰 주문 제외).</p>
+
+</section>
+<section class="page">
+  <h2>6. 낱말 풀이 · 집계 기준</h2>
+  <dl>
+    <dt>실입금 (확정 매출)</dt><dd>입금이 확인된 주문의 금액. 적립금 · 쿠폰 · 자동 할인이 이미 빠진, 손님이 실제로 보낸 돈입니다. 입금 전 주문과 취소는 들어 있지 않습니다.</dd>
+    <dt>접수</dt><dd>이 달에 들어온 주문 전부 (입금 전 · 취소 포함). 취소율은 취소 ÷ 접수입니다.</dd>
+    <dt>객단가</dt><dd>실입금 ÷ 확정 건수. 큰 주문 하나가 평균을 끌어올리므로 중앙값과 「큰 주문 제외」 값을 같이 적었습니다.</dd>
+    <dt>처음 산 회원 · 전에도 산 회원</dt><dd>이 달 전에 입금이 확인된 주문이 한 건이라도 있었으면 「전에도 산 회원」입니다. 가게 전체 이력으로 봅니다.</dd>
+    <dt>큰 주문</dt><dd>한 건 50만원 이상. 이 달은 9/7 의 2,100만원 한 건입니다 (노보 타박멘솔 2,000병 · 블랙멘솔 1,000병).</dd>
+    <dt>집계 범위</dt><dd>2026년 9월 1일 ~ 29일, 새 사이트(duck-hoo.com) 주문만. 옛 사이트(아임웹) 주문은 아직 없습니다. 30일까지의 확정본은 10월 1일 아침에 자동으로 나갑니다.</dd>
+  </dl>
+</section>
+
+</body>
+</html>
