@@ -248,6 +248,22 @@ function payload(): array {
 }
 
 /**
+ * 50만원 넘는 확정 주문 — 금액 · 날짜 · 상품 줄 이름만 (누구인지는 없다). 보고서가 「큰 주문 제외」 값을 내는 데 쓴다.
+ */
+function big_orders( array $rows, array $items ): array {
+	$min  = (float) apply_filters( 'duckhoo_anatomy_big_order', 500000 );
+	$conf = function_exists( '\\Duckhoo\\Redesign\\Monthly\\confirmed' ) ? \Duckhoo\Redesign\Monthly\confirmed() : array();
+	$out  = array();
+	foreach ( $rows as $r ) {
+		if ( (float) $r['t'] >= $min && in_array( (string) $r['s'], $conf, true ) ) {
+			$out[] = array( 'd' => (string) $r['d'], 't' => (float) $r['t'], 'lines' => array_values( array_map( fn( $l ) => array( 'name' => (string) $l['name'], 'qty' => (int) $l['qty'], 'total' => (float) $l['total'] ), (array) ( $items[ (int) $r['id'] ] ?? array() ) ) ) );
+		}
+	}
+	usort( $out, fn( $a, $b ) => $b['t'] <=> $a['t'] );
+	return array_slice( $out, 0, 5 );
+}
+
+/**
  * 월말 결산의 이 달 값 — 실입금 · 지출 · 원가 · 순이익 (집계만). 결산 모듈이 없거나 죽으면 빈 배열.
  */
 function monthly_close( string $ym ): array {
@@ -278,6 +294,29 @@ function monthly_close( string $ym ): array {
 			'rate'      => $pf ? (float) $pf['rate'] : null,
 			'by_src'    => (array) ( $c['cost']['by_src'] ?? array() ),
 			'units'     => (int) $c['units'],
+			// 보고서(PDF)를 API 하나로 찍기 위한 나머지 — 전부 집계값, 이름 · 연락처 없음
+			'built'     => (string) ( $d['built'] ?? '' ),
+			'days_done' => (int) $c['days_done'],
+			'closed'    => (bool) $c['closed'],
+			'all_n'     => (int) $c['all']['n'],
+			'pend_n'    => (int) $c['pend']['n'],
+			'pend'      => (float) $c['pend']['sales'],
+			'void_n'    => (int) $c['void']['n'],
+			'void'      => (float) $c['void']['sales'],
+			'cancel_rate' => (int) $c['cancel_rate'],
+			'aov'       => (float) $c['aov'],
+			'aov_median' => (float) $c['aov_median'],
+			'per_day'   => (float) $c['per_day'],
+			'best_day'  => (string) $c['best_day'],
+			'cust'      => (array) $c['cust'],
+			'signups'   => (int) $c['signups'],
+			'signups_prev' => (int) $c['signups_prev'],
+			'daily'     => array_map( fn( $x ) => array( 'n' => (int) $x['n'], 'sales' => (float) $x['sales'], 'all' => (int) $x['all'], 'void' => (int) $x['void'] ), (array) $c['daily'] ),
+			'products'  => array_map( fn( $p ) => array( 'n' => (int) $p['n'], 'qty' => (int) $p['qty'], 'sales' => (float) $p['sales'], 'brand' => (string) $p['brand'] ), (array) array_slice( $c['products'], 0, 12, true ) ),
+			'brands'    => array_map( 'floatval', (array) array_slice( $c['brands'], 0, 10, true ) ),
+			'by_status' => array_map( fn( $x ) => (int) $x['n'], (array) $c['by_status'] ),
+			'prev'      => array( 'ym' => (string) $c['prev']['ym'], 'orders' => (int) $c['prev']['conf']['n'], 'sales' => (float) $c['prev']['conf']['sales'], 'cancel_rate' => (int) $c['prev']['cancel_rate'], 'aov' => (float) $c['prev']['aov'] ),
+			'big'       => big_orders( (array) ( $d['rows'] ?? array() ), (array) ( $d['items'] ?? array() ) ),
 		);
 	} catch ( \Throwable $e ) {
 		return array( 'error' => $e->getMessage() );
