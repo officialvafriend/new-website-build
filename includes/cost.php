@@ -37,6 +37,45 @@ function seed(): array {
 }
 
 /**
+ * 원가 하나는 숫자이거나 「언제부터 얼마」 배열이다: array( '' => 5000, '2026-09-15' => 6000 ) — 9/15 전 주문은 5,000, 그 뒤는 6,000.
+ * 값이 중간에 바뀐 상품은 옛 주문을 옛 원가로 세야 맞다 (사장님 2026-09-29).
+ *
+ * @param mixed  $v    숫자 또는 날짜 배열.
+ * @param string $date 주문 날짜(Y-m-d). 빈 문자열이면 가장 최근 값.
+ */
+function at( $v, string $date = '' ): float {
+	if ( ! is_array( $v ) ) {
+		return (float) $v;
+	}
+	ksort( $v );
+	$hit = 0.0;
+	foreach ( $v as $from => $c ) {
+		$from = (string) $from;
+		if ( '' === $from || '' === $date || $from <= $date ) {
+			$hit = (float) $c;
+		}
+	}
+	return $hit;
+}
+
+/**
+ * 두 표를 겹친다 — 뒤가 이긴다. 한쪽이 날짜 배열이면 날짜끼리 합친다 (숫자는 '' 키로).
+ */
+function merge_costs( array $base, array $over ): array {
+	foreach ( $over as $k => $v ) {
+		$b = $base[ $k ] ?? null;
+		if ( null === $b || ( ! is_array( $v ) && ! is_array( $b ) ) ) {
+			$base[ $k ] = $v;
+			continue;
+		}
+		$ba = is_array( $b ) ? $b : array( '' => $b );
+		$va = is_array( $v ) ? $v : array( '' => $v );
+		$base[ $k ] = array_replace( $ba, $va );
+	}
+	return $base;
+}
+
+/**
  * 씨앗 + 관리자 옵션. 옵션이 이긴다.
  */
 function table(): array {
@@ -44,7 +83,7 @@ function table(): array {
 	$o = (array) get_option( OPT, array() );
 	$t = array();
 	foreach ( array( 'name', 'brand', 'pid', 'order' ) as $k ) {
-		$t[ $k ] = array_replace( (array) ( $s[ $k ] ?? array() ), (array) ( $o[ $k ] ?? array() ) );
+		$t[ $k ] = merge_costs( (array) ( $s[ $k ] ?? array() ), (array) ( $o[ $k ] ?? array() ) );
 	}
 	return (array) apply_filters( 'duckhoo_cost_table', $t );
 }
@@ -82,20 +121,20 @@ function brand_of( string $name ): string {
  *
  * @return array{cost:float,src:string}|null
  */
-function line_cost( string $name, int $qty, int $pid = 0, ?array $t = null ): ?array {
+function line_cost( string $name, int $qty, int $pid = 0, ?array $t = null, string $date = '' ): ?array {
 	$t   = $t ?? table();
 	$qty = max( 1, $qty );
-	if ( $pid > 0 && isset( $t['pid'][ $pid ] ) && (float) $t['pid'][ $pid ] > 0 ) {
-		return array( 'cost' => (float) $t['pid'][ $pid ] * $qty, 'src' => '번호' );
+	if ( $pid > 0 && isset( $t['pid'][ $pid ] ) && at( $t['pid'][ $pid ], $date ) > 0 ) {
+		return array( 'cost' => at( $t['pid'][ $pid ], $date ) * $qty, 'src' => '번호' );
 	}
 	$k = norm( $name );
-	if ( '' !== $k && isset( $t['name'][ $k ] ) && (float) $t['name'][ $k ] > 0 ) {
-		return array( 'cost' => (float) $t['name'][ $k ] * $qty, 'src' => '이름' );
+	if ( '' !== $k && isset( $t['name'][ $k ] ) && at( $t['name'][ $k ], $date ) > 0 ) {
+		return array( 'cost' => at( $t['name'][ $k ], $date ) * $qty, 'src' => '이름' );
 	}
 	$b = brand_of( $name );
 	$n = bottles( $name );
-	if ( $n > 0 && isset( $t['brand'][ $b ] ) && (float) $t['brand'][ $b ] > 0 ) {
-		return array( 'cost' => (float) $t['brand'][ $b ] * $n * $qty, 'src' => '브랜드' );
+	if ( $n > 0 && isset( $t['brand'][ $b ] ) && at( $t['brand'][ $b ], $date ) > 0 ) {
+		return array( 'cost' => at( $t['brand'][ $b ], $date ) * $n * $qty, 'src' => '브랜드' );
 	}
 	return null;
 }
@@ -111,16 +150,17 @@ function month_cost( array $conf, array $items, ?array $t = null ): array {
 	$out = array( 'cost' => 0.0, 'known' => 0.0, 'unknown' => 0.0, 'lines' => 0, 'miss' => 0, 'unknown_list' => array(), 'by_src' => array() );
 	$ul  = array();
 	foreach ( $conf as $r ) {
-		$oid = (int) $r['id'];
-		if ( isset( $t['order'][ $oid ] ) && (float) $t['order'][ $oid ] > 0 ) {
-			$out['cost']  += (float) $t['order'][ $oid ];
+		$oid  = (int) $r['id'];
+		$date = (string) ( $r['d'] ?? '' );
+		if ( isset( $t['order'][ $oid ] ) && at( $t['order'][ $oid ] ) > 0 ) {
+			$out['cost']  += at( $t['order'][ $oid ] );
 			$out['known'] += (float) $r['t'];
 			$out['by_src']['주문'] = ( $out['by_src']['주문'] ?? 0 ) + 1;
 			continue;
 		}
 		foreach ( $items[ $oid ] ?? array() as $l ) {
 			$out['lines']++;
-			$c = line_cost( (string) $l['name'], (int) $l['qty'], (int) ( $l['pid'] ?? 0 ), $t );
+			$c = line_cost( (string) $l['name'], (int) $l['qty'], (int) ( $l['pid'] ?? 0 ), $t, $date );
 			if ( $c ) {
 				$out['cost']  += $c['cost'];
 				$out['known'] += (float) $l['total'];
@@ -169,6 +209,12 @@ function parse( string $text ): array {
 		if ( '' === $line || str_starts_with( $line, '#' ) && ! preg_match( '/^#\d+/', $line ) ) {
 			continue;
 		}
+		// 꼬리 「2026-09-15부터」 / 「(2026-09-15부터)」 / 「from 2026-09-15」 → 그날부터의 값
+		$from = '';
+		if ( preg_match( '/\(?\s*(?:from\s+)?(\d{4}-\d{2}-\d{2})\s*부터?\s*\)?\s*$/u', $line, $dm ) ) {
+			$from = $dm[1];
+			$line = trim( (string) substr( $line, 0, -strlen( $dm[0] ) ) );
+		}
 		if ( ! preg_match( '/^(.*?)[\s=,\t]+([\d,]+)\s*원?\s*$/u', $line, $m ) ) {
 			continue;
 		}
@@ -177,14 +223,25 @@ function parse( string $text ): array {
 		if ( '' === $key ) {
 			continue;
 		}
+		$put = function ( string $sect, $k ) use ( &$o, $from, $val ): void {
+			$cur = $o[ $sect ][ $k ] ?? null;
+			if ( '' === $from && ! is_array( $cur ) ) {
+				$o[ $sect ][ $k ] = $val;
+				return;
+			}
+			$arr = is_array( $cur ) ? $cur : ( null === $cur ? array() : array( '' => $cur ) );
+			$arr[ $from ] = $val;
+			ksort( $arr );
+			$o[ $sect ][ $k ] = $arr;
+		};
 		if ( preg_match( '/^브랜드\s+(.+)$/u', $key, $b ) ) {
-			$o['brand'][ trim( $b[1] ) ] = $val;
+			$put( 'brand', trim( $b[1] ) );
 		} elseif ( preg_match( '/^주문\s*#?\s*(\d+)$/u', $key, $b ) ) {
-			$o['order'][ (int) $b[1] ] = $val;
+			$put( 'order', (int) $b[1] );
 		} elseif ( preg_match( '/^#(\d+)$/', $key, $b ) ) {
-			$o['pid'][ (int) $b[1] ] = $val;
+			$put( 'pid', (int) $b[1] );
 		} else {
-			$o['name'][ norm( $key ) ] = $val;
+			$put( 'name', norm( $key ) );
 		}
 	}
 	return $o;
@@ -236,7 +293,9 @@ function handle_post(): string {
 	$n   = 0;
 	foreach ( $p as $k => $vals ) {
 		foreach ( $vals as $key => $v ) {
-			if ( $v > 0 ) {
+			if ( is_array( $v ) ) {
+				$o[ $k ] = merge_costs( (array) ( $o[ $k ] ?? array() ), array( $key => array_filter( $v, fn( $x ) => (float) $x > 0 ) ) );
+			} elseif ( $v > 0 ) {
 				$o[ $k ][ $key ] = $v;
 			} else {
 				unset( $o[ $k ][ $key ] );
@@ -266,14 +325,19 @@ function screen(): void {
 
 	echo '<section class="dhr-sl-sec"><h2>원가 적기</h2><form method="post">';
 	wp_nonce_field( 'dhr_cost', 'dhr_cost_nonce' );
-	echo '<p>한 줄에 하나. <code>상품 이름 = 원가</code>(파는 단위 하나) · <code>브랜드 노보 5000</code>(병당) · <code>#207 15000</code>(상품 번호) · <code>주문 202609180004850 15000000</code>(그 주문 통째로 — 수동 결제 같은 것). 0 이면 지우기.</p>';
+	echo '<p>한 줄에 하나. <code>상품 이름 = 원가</code>(파는 단위 하나) · <code>브랜드 노보 6000</code>(병당) · <code>#207 15000</code>(상품 번호) · <code>주문 202609180004850 15000000</code>(그 주문 통째로 — 수동 결제 같은 것). 0 이면 지우기. <b>값이 중간에 바뀌었으면</b> 줄 끝에 <code>2026-09-15부터</code> 를 붙인다 — 그날 전 주문은 옛 원가로, 그 뒤는 새 원가로 센다.</p>';
 	echo '<p><textarea name="dhr_cost_text" rows="6" style="width:100%;max-width:720px;font-size:12px" placeholder="[노보] 타박멘솔 (9.8mg / 30ml) = 5000&#10;브랜드 맥스쿨 3000&#10;주문 202609070004123 15000000"></textarea></p>';
 	echo '<p><button class="button button-primary">저장</button> &nbsp; <button class="button" name="dhr_cost_clear" value="1" onclick="return confirm(\'관리자에서 적은 원가를 모두 지울까요? 씨앗 표는 남습니다.\')">관리자 값 모두 지우기</button></p></form>';
 	if ( $o ) {
 		echo '<details class="dhr-sl-tab"><summary>지금 관리자에 적힌 값</summary><pre style="font-size:12px">';
 		foreach ( array( 'brand' => '브랜드 ', 'pid' => '#', 'order' => '주문 ', 'name' => '' ) as $k => $pre ) {
 			foreach ( (array) ( $o[ $k ] ?? array() ) as $key => $v ) {
-				echo esc_html( $pre . $key . ' = ' . number_format( (float) $v ) ) . "\n";
+				if ( is_array( $v ) ) {
+					ksort( $v );
+					echo esc_html( $pre . $key . ' = ' . implode( ' → ', array_map( fn( $f, $c ) => number_format( (float) $c ) . ( '' !== (string) $f ? " ({$f}부터)" : '' ), array_keys( $v ), $v ) ) ) . "\n";
+				} else {
+					echo esc_html( $pre . $key . ' = ' . number_format( (float) $v ) ) . "\n";
+				}
 			}
 		}
 		echo '</pre></details>';
@@ -283,12 +347,12 @@ function screen(): void {
 	echo '<section class="dhr-sl-sec"><h2>상품마다 어떻게 세는지</h2>';
 	$prods = function_exists( 'wc_get_products' ) ? (array) wc_get_products( array( 'status' => 'publish', 'limit' => -1, 'orderby' => 'title', 'order' => 'ASC' ) ) : array();
 	$miss  = 0;
-	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>#</th><th>상품</th><th class="dhr-sl-num">판매가</th><th class="dhr-sl-num">원가 (단위 하나)</th><th>어디서</th><th class="dhr-sl-num">원가율</th></tr></thead><tbody>';
+	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>#</th><th>상품</th><th class="dhr-sl-num">판매가</th><th class="dhr-sl-num">원가 (단위 하나 · 오늘 값)</th><th>어디서</th><th class="dhr-sl-num">원가율</th></tr></thead><tbody>';
 	foreach ( $prods as $p ) {
 		if ( ! is_object( $p ) || ! method_exists( $p, 'get_name' ) ) {
 			continue;
 		}
-		$c   = line_cost( (string) $p->get_name(), 1, (int) $p->get_id(), $t );
+		$c   = line_cost( (string) $p->get_name(), 1, (int) $p->get_id(), $t, (string) current_time( 'Y-m-d' ) );
 		$pr  = (float) $p->get_price();
 		if ( ! $c ) {
 			$miss++;
