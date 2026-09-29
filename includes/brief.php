@@ -322,6 +322,7 @@ function monthly_close( string $ym ): array {
 			'by_status' => array_map( fn( $x ) => (int) $x['n'], (array) $c['by_status'] ),
 			'prev'      => array( 'ym' => (string) $c['prev']['ym'], 'orders' => (int) $c['prev']['conf']['n'], 'sales' => (float) $c['prev']['conf']['sales'], 'cancel_rate' => (int) $c['prev']['cancel_rate'], 'aov' => (float) $c['prev']['aov'] ),
 			'big'       => big_orders( (array) ( $d['rows'] ?? array() ), (array) ( $d['items'] ?? array() ) ),
+			'imweb'     => function_exists( '\\Duckhoo\\Redesign\\Imweb\\month' ) ? \Duckhoo\Redesign\Imweb\month( $ym ) : null,
 		);
 	} catch ( \Throwable $e ) {
 		return array( 'error' => $e->getMessage() );

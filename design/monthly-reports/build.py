@@ -23,7 +23,9 @@ ap.add_argument('--prev-sales', type=float, default=0); ap.add_argument('--prev-
 ap.add_argument('--prev-note', default='전월비는 8월 보고서의 자사몰 값 기준입니다.')
 ap.add_argument('--manual', action='append', default=[], help='"이름 조각=원가" — 원가 모름 줄에 손으로 원가를 붙인다 (수동 결제 등)')
 ap.add_argument('--asof', default=''); ap.add_argument('--date', default='')
-ap.add_argument('--imweb', default='집계 전')
+ap.add_argument('--imweb', default='집계 전', help='아임웹 값이 없을 때 표에 적을 말')
+ap.add_argument('--imweb-n', type=int, default=0, help='아임웹 돈 들어온 주문 수 (API 에 없을 때 손으로)')
+ap.add_argument('--imweb-sales', type=float, default=0, help='아임웹 매출 (API 에 없을 때 손으로)')
 ap.add_argument('--big-min', type=float, default=5000000, help='이 금액 이상만 「대량 주문」으로 따로 말한다')
 ap.add_argument('--rename', action='append', default=[], help='"이름 조각=보여 줄 이름" — 상위 상품 표의 이름을 사람이 읽는 꼴로')
 a = ap.parse_args()
@@ -42,6 +44,12 @@ def arrow(x, y):
     return f'<span class="{cls}">{"▲" if v>=0 else "▼"} {abs(v):.1f}%</span> 전월비'
 
 sales = m['sales']; orders = m['orders']; aov = m['aov']
+# 아임웹 — API 블록(월말 결산 화면에서 키를 넣거나 붙여 넣은 값) 또는 손으로
+im = m.get('imweb') or None
+im_n = a.imweb_n or (int(im['n']) if im else 0)
+im_sales = a.imweb_sales or (float(im['sales']) if im else 0.0)
+im_on = im_n > 0 or im_sales > 0
+im_cost = 0.0
 spend = m['spend'] or (a.boxes * a.unit)
 boxes = m['boxes'] or a.boxes
 cost = m['cost'] or 0.0; unknown = m['unknown'] or 0.0
@@ -55,9 +63,14 @@ for spec in a.manual:
     if hit:
         k = hit[0]; manual_cost += val; manual_rows.append((k, ulist[k], val)); unknown -= ulist[k]; ulist.pop(k)
 cost_all = cost + manual_cost
-gross = sales - cost_all
+if im_on:
+    # 아임웹은 상품 줄이 없어 자사몰 원가율(원가 아는 매출 기준)을 그대로 얹는다 — 추정이라 각주에 적는다
+    im_cost = im_sales * (cost_all / max(1.0, sales - unknown))
+gross = sales + im_sales - cost_all - im_cost
 profit = gross - spend
 known_sales = sales - unknown
+total_sales = sales + im_sales
+total_orders = orders + im_n
 
 # 큰 주문
 big = [b for b in (m.get('big') or []) if b['t'] >= a.big_min]
@@ -159,9 +172,9 @@ page = f'''<!doctype html>
   <div class="sub">{asof} · 작성 온라인몰 운영 · {dt_today.year}년 {dt_today.month}월 {dt_today.day}일</div>
 
   <div class="kpis">
-    <div class="kpi"><div class="l">총 매출 (실입금)</div><div class="v">{fmt(sales)}</div><div class="n">{arrow(sales, a.prev_sales)}</div></div>
-    <div class="kpi hi"><div class="l">순이익</div><div class="v">{fmt(profit)}</div><div class="n">순이익률 {profit/sales*100:.1f}%</div></div>
-    <div class="kpi"><div class="l">주문 건수</div><div class="v">{orders}</div><div class="n">{arrow(orders, a.prev_orders)}</div></div>
+    <div class="kpi"><div class="l">총 매출 (실입금{' · 자사몰 + 아임웹' if im_on else ''})</div><div class="v">{fmt(total_sales)}</div><div class="n">{arrow(total_sales, a.prev_sales)}</div></div>
+    <div class="kpi hi"><div class="l">순이익</div><div class="v">{fmt(profit)}</div><div class="n">순이익률 {profit/total_sales*100:.1f}%</div></div>
+    <div class="kpi"><div class="l">주문 건수</div><div class="v">{total_orders}</div><div class="n">{arrow(total_orders, a.prev_orders)}</div></div>
     <div class="kpi"><div class="l">객단가</div><div class="v">{fmt(aov)}</div><div class="n">{arrow(aov, a.prev_aov)}{' · 큰 주문 제외 ' + fmt(ex_aov) if big else ''}</div></div>
   </div>
   {"<p class='note'>" + f"{kd(big[0]['d'])} 대량 주문 {len(big)}건({man(big_total)})이 매출의 {big_total/sales*100:.0f}%입니다. 빼면 매출 {man(ex_sales)}(전월비 {pct(ex_sales, a.prev_sales)}) · 순이익 {man(ex_profit)} · 객단가 {fmt(ex_aov)}원입니다. " + a.prev_note + "</p>" if big else "<p class='note'>" + a.prev_note + "</p>"}
@@ -173,11 +186,12 @@ page = f'''<!doctype html>
       <tr class="sub"><td>금액 자동 할인</td><td class="num neg">−{fmt(m['fee'])}</td><td class="num mut">{m['fee']/m['before']*100:.1f}%</td></tr>
       <tr class="sub"><td>적립금 사용</td><td class="num neg">−{fmt(m['points'])}</td><td class="num mut">{m['points']/m['before']*100:.1f}%</td></tr>
       <tr class="sub"><td>쿠폰 할인</td><td class="num neg">−{fmt(m['coupon'])}</td><td class="num mut">{m['coupon']/m['before']*100:.1f}%</td></tr>
-      <tr class="sum"><td>매출 (손님이 실제로 입금한 돈)</td><td class="num">{fmt(sales)}</td><td class="num mut">{sales/m['before']*100:.1f}%</td></tr>
-      <tr class="sub"><td>상품 원가</td><td class="num neg">−{fmt(cost_all)}</td><td class="num mut">매출의 {cost_all/sales*100:.1f}%</td></tr>
-      <tr class="sum"><td>매출총이익</td><td class="num">{fmt(gross)}</td><td class="num mut">{gross/sales*100:.1f}%</td></tr>
-      <tr class="sub"><td>배송비 (우체국 계약소포 {boxes:,}상자 × {fmt(a.unit)}원)</td><td class="num neg">−{fmt(spend)}</td><td class="num mut">{spend/sales*100:.1f}%</td></tr>
-      <tr class="sum"><td>순이익</td><td class="num">{fmt(profit)}</td><td class="num mut">{profit/sales*100:.1f}%</td></tr>
+      <tr class="sum"><td>자사몰 매출 (손님이 실제로 입금한 돈)</td><td class="num">{fmt(sales)}</td><td class="num mut">{sales/m['before']*100:.1f}%</td></tr>
+      {f'<tr class="sub"><td>+ 아임웹 매출 ({im_n}건)</td><td class="num">{fmt(im_sales)}</td><td class="num mut"></td></tr><tr class="sum"><td>매출 합계</td><td class="num">{fmt(total_sales)}</td><td class="num mut">100.0%</td></tr>' if im_on else ''}
+      <tr class="sub"><td>상품 원가{' (아임웹은 자사몰 원가율로 추정)' if im_on else ''}</td><td class="num neg">−{fmt(cost_all + im_cost)}</td><td class="num mut">매출의 {(cost_all + im_cost)/total_sales*100:.1f}%</td></tr>
+      <tr class="sum"><td>매출총이익</td><td class="num">{fmt(gross)}</td><td class="num mut">{gross/total_sales*100:.1f}%</td></tr>
+      <tr class="sub"><td>배송비 (우체국 계약소포 {boxes:,}상자 × {fmt(a.unit)}원)</td><td class="num neg">−{fmt(spend)}</td><td class="num mut">{spend/total_sales*100:.1f}%</td></tr>
+      <tr class="sum"><td>순이익</td><td class="num">{fmt(profit)}</td><td class="num mut">{profit/total_sales*100:.1f}%</td></tr>
     </tbody>
   </table>
   <p class="note">매출은 입금 확인된 주문 기준(미입금 · 취소 제외). 상품 원가는 상품별 매입 단가 × 수량이며 값이 바뀐 상품은 주문 날짜의 단가로 셉니다.{(' 수동 결제는 따로 붙였습니다(' + manual_txt + ').') if manual_rows else ''}{(' 원가를 모르는 매출 ' + man(unknown) + '(' + unknown_txt + ')은 원가 0으로 들어가 순이익이 그만큼 높습니다.') if unknown > 0 else ''} 포장 자재 · 문자 발송비는 넣지 않았습니다.</p>
@@ -216,12 +230,12 @@ page = f'''<!doctype html>
         <tr><td>새 가입 (자사몰)</td><td class="num">{m['signups']:,}명 (전월 {m['signups_prev']:,}명)</td></tr>
         <tr><td>취소 · 환불</td><td class="num">{m['void_n']}건 · 접수의 {m['cancel_rate']}% (전월 {pv['cancel_rate']}%)</td></tr>
         <tr><td>입금 대기</td><td class="num">{m['pend_n']}건 · {fmt(m['pend'])}원</td></tr>
-        <tr><td>아임웹 채널</td><td class="num">{a.imweb}</td></tr>
+        <tr><td>아임웹 채널</td><td class="num">{f'{im_n}건 · {fmt(im_sales)}원' if im_on else a.imweb}</td></tr>
       </tbody></table>
     </div>
   </div>
 
-  <div class="foot">액상덕후 {ym} 월말보고 · {dt_today.year}년 {dt_today.month}월 {dt_today.day}일 생성 · 자사몰(WooCommerce)은 입금확인 이후 상태 기준, 취소 · 미입금 제외 · 아임웹은 API 연결 뒤 합산 · 집계 {m.get('built','')}</div>
+  <div class="foot">액상덕후 {ym} 월말보고 · {dt_today.year}년 {dt_today.month}월 {dt_today.day}일 생성 · 자사몰(WooCommerce)은 입금확인 이후 상태 기준, 취소 · 미입금 제외 · {'아임웹은 결제완료일 기준' if im_on else '아임웹은 API 연결 뒤 합산'} · 집계 {m.get('built','')}</div>
 </section>
 </body>
 </html>
