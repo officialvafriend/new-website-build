@@ -89,6 +89,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/twin-login.php';  // 같은
 require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/today.php';       // 오늘 할 일 — 화면 · 대시보드 위젯 · 아침 메일(크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/brief.php';       // 클로드 아침 브리핑 — 집계 숫자를 키로 닫힌 REST 주소로 (REST 라 admin 밖)
+require_once plugin_dir_path( __FILE__ ) . 'includes/seo-report.php';  // SEO 월간 보고서 — 작업 일지 REST · 유입 · 상품별 조회 (REST · 크론이라 admin 밖)
+require_once plugin_dir_path( __FILE__ ) . 'includes/imweb.php';       // 아임웹(옛 사이트) 주문 합치기 — 월말 결산이 부른다 (크론이라 admin 밖)
+require_once plugin_dir_path( __FILE__ ) . 'includes/monthly.php';     // 매출 → 월말 결산 (읽기 전용 · CSV · 디스코드 · 매달 1일 크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/market.php';      // 도구 → 시장가 대조 (읽기 전용) — 경쟁 값을 크론이 받는다 (크론이라 admin 밖)
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
@@ -100,7 +103,6 @@ if ( is_admin() ) {
 	// 매출 대시보드 — 이 가게의 진짜 주문 상태로 센다(관리자 · 읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/sales.php';
 	require_once plugin_dir_path( __FILE__ ) . 'includes/anatomy.php';   // 매출 → 주문 해부 (읽기 전용)
-	require_once plugin_dir_path( __FILE__ ) . 'includes/monthly.php';   // 매출 → 월말 결산 (읽기 전용 · CSV · 디스코드)
 	// 도구 → 코드 찾기 — 화면 문구가 테마 · 스니펫 어디서 나오는지 (읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/finder.php';
 	// 마케팅 → 쿠폰 한 번에 만들기 — 손님마다 다른 금액의 쿠폰을 한 번에 만들고 문자 목록을 뽑는다.

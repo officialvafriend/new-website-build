@@ -2339,5 +2339,77 @@ $ok(str_contains($csv, '"3","2026-09-02"') && str_contains($csv, '"[노보 리�
 $ok(str_contains($csv, '"1","2026-09-01"') && strpos($csv, '"1","2026-09-01"') < strpos($csv, '"3","2026-09-02"') && !str_contains($csv, '"7","2026-09-11"'), 'CSV 는 날짜순 · 임시글 없음');
 $ok(!preg_match('/건강|금연|순하|해롭/', $mrep), '보고서에 금지어 없음');
 
+
+// ───────────────────────────────────────────────── 아임웹 합치기 · SEO 월간 보고서 · 1~3분 글 (2026-09-29)
+foreach (['delete_option'=>'function delete_option($k){ unset($GLOBALS["__options"][$k]); return true; }','delete_transient'=>'function delete_transient($k){ unset($GLOBALS["__transients"][$k]); return true; }','register_rest_route'=>'function register_rest_route(...$a){ return true; }','rest_ensure_response'=>'function rest_ensure_response($r){ return $r; }'] as $fn=>$src) if(!function_exists($fn)) eval($src);
+require_once dirname(__DIR__, 2).'/includes/imweb.php';
+require_once dirname(__DIR__, 2).'/includes/seo-report.php';
+$Im = 'Duckhoo\\Redesign\\Imweb\\';
+$ok(($Im.'classify')('PAY_WAIT')==='pend' && ($Im.'classify')('입금대기')==='pend' && ($Im.'classify')('CANCEL_COMPLETE')==='void' && ($Im.'classify')('환불완료')==='void' && ($Im.'classify')('DELIVERY_COMPLETE')==='paid' && ($Im.'classify')('결제완료')==='paid' && ($Im.'classify')('')==='paid', '아임웹 상태 낱말: 대기 · 취소/환불 · 나머지는 돈 들어옴 (영문 · 한글)');
+$j = ['msg'=>'SUCCESS','code'=>200,'data'=>['list'=>[
+  ['order_no'=>'A1','order_time'=>strtotime('2026-09-05 10:00:00 +0900'),'status'=>'DELIVERY_COMPLETE','payment'=>['total_price'=>30000,'payment_amount'=>28000]],
+  ['order_no'=>'A2','order_time'=>strtotime('2026-09-06 10:00:00 +0900'),'status'=>'PAY_WAIT','payment'=>['total_price'=>13000]],
+  ['order_no'=>'A3','order_time'=>strtotime('2026-08-31 23:30:00 +0900'),'status'=>'CANCEL','payment'=>['total_price'=>50000]],
+], 'data_count'=>3,'current_page'=>1,'total_page'=>1,'pagesize'=>100]];
+$os = ($Im.'parse_api')($j);
+$ok(count($os)===3 && $os[0]['no']==='A1' && $os[0]['total']==28000.0 && $os[1]['total']==13000.0, 'API 응답: data.list 에서 주문 3건 · 실결제(payment_amount)가 있으면 그것');
+$ok(($Im.'pages')($j)===[1,1] && ($Im.'pages')(['data'=>['list'=>[]]])===null, '쪽 넘김: total_page · current_page 있으면 [전체, 이번], 없으면 null');
+$ok(count(($Im.'parse_api')([['order_no'=>'B','status'=>'','total_price'=>1000]]))===1, '맨 위가 배열이어도 읽는다');
+$sm = ($Im.'summarize')($os, '2026-09');
+$ok($sm['n']===1 && $sm['sales']==28000.0 && $sm['pend_n']===1 && $sm['void_n']===0, '달로 거른다: 8/31 23:30 KST 취소는 9월이 아니다 · 돈 1건 28,000 · 대기 1');
+$ok(($Im.'summarize')($os)['void_n']===1, '달을 안 주면 전부 센다');
+$tsv = "주문번호\t주문일시\t주문상태\t상품명\t결제금액\n"
+  . "20260901-1\t2026-09-01 12:00\t배송완료\t노보 타박멘솔\t26,000원\n"
+  . "20260901-1\t2026-09-01 12:00\t배송완료\t노보 블랙멘솔\t26,000원\n"
+  . "20260902-7\t2026-09-02 09:00\t입금대기\t펠릭스\t20,000\n"
+  . "20260903-2\t2026-09-03 09:00\t취소\t화이트아웃\t13,000\n";
+$ex = ($Im.'parse_export')($tsv);
+$ok(count($ex)===3 && $ex[0]['no']==='20260901-1' && $ex[0]['total']==26000.0 && $ex[0]['status']==='배송완료', '붙여 넣기: 같은 주문번호 두 줄은 한 주문 · 결제금액 칸이면 첫 줄만 · 「원」 · 쉼표 뗌');
+$sx = ($Im.'summarize')($ex, '2026-09');
+$ok($sx['n']===1 && $sx['sales']==26000.0 && $sx['pend_n']===1 && $sx['void_n']===1, '붙여 넣기 요약: 돈 1건 26,000 · 대기 1 · 취소 1');
+$csvx = "주문번호,상태,상품금액\nX1,결제완료,1000\nX1,결제완료,2000\n";
+$ok(($Im.'parse_export')($csvx)[0]['total']==3000.0, '결제금액 칸이 없고 상품금액뿐이면 줄을 더한다 (쉼표 구분)');
+$ok(($Im.'parse_export')("아무 글\n둘째 줄")===[] && ($Im.'parse_export')('')===[], '주문번호 · 금액 칸을 못 찾으면 빈 배열');
+$GLOBALS['__options']['duckhoo_imweb_months'] = [];
+($Im.'put')('2026-09', $sx, 'paste');
+$ok(str_contains(($Im.'line')(($Im.'months')()['2026-09']), '돈 들어온 주문 1건 26,000원') && str_contains(($Im.'line')(null), '연결 안 됨'), '한 줄 요약 · 없으면 「연결 안 됨」');
+
+$SR = 'Duckhoo\\Redesign\\Seo\\Report\\';
+$GLOBALS['__options']['duckhoo_worklog'] = [];
+$ok(($SR.'log_add')('seo', '  노보 15종  제목 새로 씀 ', '2026-09-21') === true && ($SR.'log_add')('seo', '   ') === false, '작업 일지: 빈칸 정리 · 빈 글은 안 적음');
+($SR.'log_add')('shop', '월말 결산 화면 만듦', '2026-09-29'); ($SR.'log_add')('seo', '8월 것', '2026-08-30');
+$ok(count(($SR.'entries')('2026-09'))===2 && count(($SR.'entries')('2026-09','seo'))===1 && ($SR.'entries')('2026-09')[0]['t']==='노보 15종 제목 새로 씀', '달 · 구역으로 거르고 날짜순');
+$views = [101=>40, 102=>25, 103=>9, 104=>3];
+$info  = [101=>['name'=>'타박멘솔','text'=>true,'out'=>false], 102=>['name'=>'더블라임','text'=>false,'out'=>false], 103=>['name'=>'크로닉 모드','text'=>false,'out'=>true], 104=>['name'=>'체리','text'=>true,'out'=>false]];
+$src  = ['src_google'=>30,'src_naver'=>50,'src_daum'=>2,'src_other'=>10,'src_direct'=>60];
+$srcp = ['src_google'=>20,'src_naver'=>30,'src_daum'=>0,'src_other'=>5,'src_direct'=>40];
+$snap = ['products'=>184,'with_text'=>140,'cats'=>8,'cats_empty'=>1,'cats_long'=>0,'brands'=>12];
+$snpv = ['products'=>184,'with_text'=>120,'cats'=>8,'cats_empty'=>3,'cats_long'=>1,'brands'=>12];
+$r = ($SR.'build')('2026-09', $src, $srcp, $views, $info, $snap, $snpv, ($SR.'entries')('2026-09','seo'), ['signups'=>130,'first_buyers'=>95]);
+$ok($r['search']===82 && $r['search_prev']===50 && $r['all']===152, '검색 유입 82(구글 30 + 네이버 50 + 다음 2) · 지난달 50 · 전체 152');
+$ok(count($r['did'])===4 && str_contains($r['did'][0], '09-21 노보 15종') && in_array('글 있는 상품 120 → 140', $r['did'], true) && in_array('설명 없는 분류 3 → 1', $r['did'], true), '이렇게 했고: 일지 + 스냅샷 차이(글 · 설명 없는 분류 · 긴 설명)');
+$ok(count($r['top'])===4 && $r['no_text'][0]['name']==='더블라임' && $r['out_hot'][0]['name']==='크로닉 모드', '많이 본 상품 · 글 없는 것 · 품절인데 찾는 것');
+$ok(str_contains($r['next'][0], '더블라임(25명)') && str_contains(implode(' ', $r['next']), '품절인데 계속 찾는') && str_contains(implode(' ', $r['next']), '설명 없는 분류 1개'), '앞으로: 글 붙일 상품 · 품절 · 빈 분류');
+$t = ($SR.'text')($r, true);
+$ok(str_starts_with($t, '**검색 노출 월간 보고 — 2026년 9월**') && str_contains($t, '**이렇게 했고**') && str_contains($t, '검색에서 들어온 사람 82명 (구글 30 · 네이버 50 · 다음 2) — 지난달 대비 +64%') && str_contains($t, '새 가입 130명 · 이 달 처음 산 회원 95명') && str_contains($t, '**앞으로**') && !str_contains(($SR.'text')($r,false), '**'), 'SEO 글: 제목 · 세 절 · 검색 유입 +64% · 가입 · 굵기는 디스코드만');
+$ok(($SR.'pct_delta')(82,50)==='+64%' && ($SR.'pct_delta')(40,50)==='−20%' && ($SR.'pct_delta')(5,0)==='', '지난달 대비 %');
+$ok(!preg_match('/건강|금연|순하|해롭/', $t), 'SEO 글에 금지어 없음');
+$r0 = ($SR.'build')('2026-09', ['src_google'=>0,'src_naver'=>0,'src_daum'=>0,'src_other'=>3,'src_direct'=>9], [], [], [], null, null, [], []);
+$ok(str_contains(($SR.'text')($r0,false), '이 달에 적힌 작업이 없습니다') && str_contains(implode(' ', $r0['next']), '검색 유입이 0'), '아무것도 없을 때: 일지 안내 · 검색 유입 0 경고');
+
+// 1~3분 글 — 결산 + 아임웹
+$bt = ($Mo.'brief_text')($mc, ['n'=>3,'sales'=>90000,'pend_n'=>1,'pend'=>10000,'void_n'=>0,'void'=>0,'src'=>'api','at'=>'2026-10-01 09:00'], ($SR.'entries')('2026-09'), '', false);
+$ok(str_starts_with($bt, '액상덕후 2026년 9월 결산') && str_contains($bt, '이런 결과') && str_contains($bt, '실제 들어온 돈 201,000원 (4건)') && str_contains($bt, '아임웹까지 합치면 291,000원 (아임웹 3건 90,000원)') && str_contains($bt, '처음 산 회원 1명 · 다시 산 회원 1명 · 새 가입 40명 (지난달 25)') && str_contains($bt, '취소 · 환불 2건 = 접수의 29% (지난달 33%)'), '1~3분 글: 결과 — 실입금 · 아임웹 합산 · 손님 · 취소');
+$ok(str_contains($bt, '이렇게 했고') && str_contains($bt, '09-21 노보 15종') && str_contains($bt, '09-29 월말 결산 화면 만듦') && str_contains($bt, '앞으로') && str_contains($bt, '취소가 접수의 29%'), '1~3분 글: 이렇게 했고(일지) · 앞으로(취소율 20% 넘음)');
+$bt2 = ($Mo.'brief_text')($mc, null, [], '**검색 노출 월간 보고**', true);
+$ok(str_contains($bt2, '아임웹은 아직 안 합쳐짐') && str_contains($bt2, '아임웹 주문을 합치려면') && str_ends_with($bt2, '**검색 노출 월간 보고**') && str_starts_with($bt2, '**액상덕후'), '아임웹 없으면 안내 두 줄 · SEO 글은 끝에 · 디스코드 굵기');
+$ok(!preg_match('/건강|금연|순하|해롭/', $bt), '1~3분 글에 금지어 없음');
+$ok(str_contains(($Mo.'report')($mc), '[아임웹: 연결 안 됨') || str_contains(($Mo.'report')($mc), '[아임웹: 돈 들어온'), '붙여 넣기용 글에도 아임웹 줄');
+// 크론 문 — 4일 이후 · 창 밖에서는 안 보낸다
+$GLOBALS['__options']['duckhoo_monthly_sent'] = ''; $GLOBALS['__now'] = mktime(9,0,0,10,5,2026); ($Mo.'cron_send')();
+$ok(($GLOBALS['__options']['duckhoo_monthly_sent'] ?? '') === '', '10월 5일에는 안 보낸다');
+$GLOBALS['__now'] = mktime(15,0,0,10,1,2026); ($Mo.'cron_send')();
+$ok(($GLOBALS['__options']['duckhoo_monthly_sent'] ?? '') === '', '1일이라도 09:00 창 밖(15:00)이면 안 보낸다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

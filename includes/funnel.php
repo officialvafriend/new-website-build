@@ -48,6 +48,19 @@ function stages(): array {
 }
 
 /**
+ * 깔때기 단계가 아닌 **덧신호** — 같은 표에 같이 쌓인다 (2026-09-29, SEO 월간 보고서용).
+ * `src_google · src_naver · src_daum · src_other · src_direct` = 그날 처음 들어올 때 어디서 왔나 (referrer 로),
+ * `p:<상품번호>` = 그 상품 상세를 본 사람 수 (하루에 사람마다 상품마다 한 번). 깔때기 표에는 안 그린다.
+ */
+function sources(): array {
+	return array( 'src_google' => '구글', 'src_naver' => '네이버', 'src_daum' => '다음', 'src_other' => '다른 곳', 'src_direct' => '직접' );
+}
+
+function extra_ok( string $stage ): bool {
+	return isset( sources()[ $stage ] ) || (bool) preg_match( '/^p:[1-9]\d{0,17}$/', $stage );
+}
+
+/**
  * 표 이름.
  *
  * @return string
@@ -114,7 +127,7 @@ function today(): string {
  */
 function hit( string $stage, bool $member, int $n = 1 ): bool {
 	global $wpdb;
-	if ( ! isset( $wpdb ) || ! isset( stages()[ $stage ] ) || $n <= 0 ) {
+	if ( ! isset( $wpdb ) || ( ! isset( stages()[ $stage ] ) && ! extra_ok( $stage ) ) || $n <= 0 ) {
 		return false;
 	}
 	if ( ! apply_filters( 'duckhoo_funnel_on', true ) ) {
@@ -218,7 +231,7 @@ function beacon( $req ) {
  */
 function accept( string $stage, string $ua ): bool {
 	$s = stages();
-	return isset( $s[ $stage ] ) && empty( $s[ $stage ]['event'] ) && ! is_bot( $ua );
+	return ( ( isset( $s[ $stage ] ) && empty( $s[ $stage ]['event'] ) ) || extra_ok( $stage ) ) && ! is_bot( $ua );
 }
 
 // 서버 사건 — 캐시와 무관하게 정확하다.
@@ -246,6 +259,9 @@ function js_config( array $cfg ): array {
 	if ( '' !== $stage && apply_filters( 'duckhoo_funnel_on', true ) ) {
 		$cfg['stage']  = $stage;
 		$cfg['beacon'] = function_exists( 'rest_url' ) ? rest_url( 'duckhoo/v1/f' ) : '/wp-json/duckhoo/v1/f';
+		if ( 'product' === $stage && function_exists( 'get_queried_object_id' ) ) {
+			$cfg['pid'] = (int) get_queried_object_id();
+		}
 	}
 	return $cfg;
 }

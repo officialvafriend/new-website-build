@@ -1070,7 +1070,8 @@ function screen(): void {
 		update_option( OPT_NAVER, clean_code( wp_unslash( (string) ( $_POST['naver'] ?? '' ) ) ) ); // phpcs:ignore
 		$saved = true;
 	}
-	$code = naver_code();
+	$code   = naver_code();
+	$wl_msg = function_exists( '\\Duckhoo\\Redesign\\Seo\\Report\\handle_post' ) ? \Duckhoo\Redesign\Seo\Report\handle_post() : '';
 
 	// 글 없는 상품 수
 	$no_text = 0;
@@ -1123,5 +1124,8 @@ function screen(): void {
 	echo '<tr><th>상품 구조화 데이터</th><td>브랜드 · 설명을 채웁니다. 가격 · 재고는 워드커머스 값 그대로.</td></tr>';
 	echo '</tbody></table>';
 	echo '<p class="description" style="max-width:720px">글에 쓰지 않는 말: 건강 · 금연 · 순하다 · 해롭지 않다 (담배사업법 광고 제한). 맛 · 용량 · 니코틴 · 기기 호환 · 가격 · 배송만 말합니다.</p>';
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Report\\box' ) ) {
+		\Duckhoo\Redesign\Seo\Report\box( $wl_msg );
+	}
 	echo '</div>';
 }

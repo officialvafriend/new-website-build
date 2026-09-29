@@ -18,8 +18,18 @@ namespace Duckhoo\Redesign\Monthly;
 
 defined( 'ABSPATH' ) || exit;
 
+// 크론(매달 1일)은 관리자 밖에서 도는데 주문 읽기는 매출 화면 · 주문 해부의 함수를 쓴다 — 없으면 여기서 든다.
+if ( ! function_exists( '\\Duckhoo\\Redesign\\Sales\\fetch' ) ) {
+	require_once __DIR__ . '/sales.php';
+}
+if ( ! function_exists( '\\Duckhoo\\Redesign\\Anatomy\\items' ) ) {
+	require_once __DIR__ . '/anatomy.php';
+}
+
 const SLUG  = 'duckhoo-monthly';
 const CACHE = 'dhr_monthly';
+const CRON  = 'duckhoo_monthly_check'; // 매일 사이트 시간 SEND_AT 에 깨어나 1일이면 지난달 결산을 보낸다
+const SEND_AT = '09:00';
 
 function may(): bool {
 	return function_exists( '\\Duckhoo\\Redesign\\Sales\\allowed' ) ? \Duckhoo\Redesign\Sales\allowed() : current_user_can( 'manage_options' );
@@ -34,6 +44,8 @@ function menu(): void {
 add_action( 'admin_menu', __NAMESPACE__ . '\\menu', 12 );
 add_action( 'admin_post_dhr_monthly_csv', __NAMESPACE__ . '\\export' );
 add_action( 'admin_post_dhr_monthly_discord', __NAMESPACE__ . '\\to_discord' );
+add_action( CRON, __NAMESPACE__ . '\\cron_send' );
+add_action( 'admin_init', __NAMESPACE__ . '\\schedule' );
 
 /* ── 달 ─────────────────────────────────────────────────────────────── */
 
@@ -393,6 +405,10 @@ function report( array $c ): string {
 	$dl  = delta( (float) $m['sales'], (float) $pv['conf']['sales'] );
 	$L[] = '지난달(' . kmonth( $pv['ym'] ) . ') 확정 ' . $pv['conf']['n'] . '건 ' . $w( $pv['conf']['sales'] ) . '원' . ( '' !== $dl ? " → {$dl}" : '' ) . " · 지난달 취소율 {$pv['cancel_rate']}% · 지난달 객단가 " . $w( $pv['aov'] ) . '원';
 	$L[] = '';
+	$im = imweb( $c['ym'] );
+	if ( function_exists( '\\Duckhoo\\Redesign\\Imweb\\line' ) ) {
+		$L[] = '[' . \Duckhoo\Redesign\Imweb\line( $im ) . ']' . ( $im ? ' → 워드프레스 + 아임웹 = ' . $w( (float) $m['sales'] + (float) $im['sales'] ) . '원' : '' );
+	}
 	$L[] = '[뺄셈 장부] 할인 전 ' . $w( $m['before'] ) . '원 (상품 ' . $w( $m['goods'] ) . ' + 배송비 ' . $w( $m['ship'] ) . ') − 적립금 ' . $w( $m['points'] ) . ' − 쿠폰 ' . $w( $m['coupon'] ) . ' − 자동 할인 ' . $w( $m['fee'] ) . ' = 확정 매출 ' . $w( $m['sales'] ) . '원';
 	$cu  = $c['cust'];
 	$L[] = "[손님] 산 회원 {$cu['buyers']}명 = 이 달 처음 {$cu['first_buyers']}명 + 전에도 산 {$cu['rep_buyers']}명 · 첫 주문 {$cu['first_n']}건 " . $w( $cu['first_sales'] ) . "원 · 재구매 {$cu['rep_n']}건 " . $w( $cu['rep_sales'] ) . '원' . ( $cu['guest_n'] ? " · 비회원 {$cu['guest_n']}건 " . $w( $cu['guest_sales'] ) . '원' : '' ) . " · 새 가입 {$c['signups']}명 (지난달 {$c['signups_prev']})";
@@ -457,6 +473,163 @@ function csv( array $rows, array $items ): string {
 	return "\xEF\xBB\xBF" . implode( "\r\n", $out ) . "\r\n";
 }
 
+
+/* ── 1~3분용 글 · 아임웹 합산 · 매달 1일 발송 ─────────────────────────── */
+
+/**
+ * 아임웹 달 요약 (없으면 null).
+ */
+function imweb( string $ym ): ?array {
+	return function_exists( '\\Duckhoo\\Redesign\\Imweb\\month' ) ? \Duckhoo\Redesign\Imweb\month( $ym ) : null;
+}
+
+/**
+ * 사장님이 1~3분에 읽는 글 — 「이렇게 했고 · 이런 결과 · 앞으로」. 디스코드 · 메일 공용.
+ * 숫자만 나열하지 않는다: 결과는 지난달과 견줘 한 줄씩, 앞으로는 숫자가 가리키는 것만.
+ *
+ * @param array      $c      close() 결과.
+ * @param array|null $im     아임웹 달 요약.
+ * @param array      $log    이 달 작업 일지 전부 ([d, a, t]).
+ * @param string     $seo    SEO 월간 보고 글 (없으면 빈 문자열).
+ * @param bool       $discord 굵은 글씨를 쓸지.
+ */
+function brief_text( array $c, ?array $im, array $log, string $seo = '', bool $discord = true ): string {
+	$b  = fn( $s ) => $discord ? "**{$s}**" : $s;
+	$w  = fn( $n ) => number_format( (float) round( (float) $n ) );
+	$m  = $c['conf'];
+	$pv = $c['prev'];
+	$L  = array();
+	$L[] = $b( '액상덕후 ' . kmonth( $c['ym'] ) . ' 결산' . ( $c['closed'] ? '' : " (진행 중 · {$c['days_done']}일까지)" ) );
+
+	/* 결과 */
+	$L[] = $b( '이런 결과' );
+	$dl  = delta( (float) $m['sales'], (float) $pv['conf']['sales'] );
+	$L[] = '· 실제 들어온 돈 ' . $w( $m['sales'] ) . '원 (' . $m['n'] . '건)' . ( '' !== $dl ? " — 지난달 {$w( $pv['conf']['sales'] )}원보다 {$dl}" : '' );
+	if ( $im ) {
+		$tot = (float) $m['sales'] + (float) $im['sales'];
+		$L[] = '· 아임웹까지 합치면 ' . $w( $tot ) . '원 (아임웹 ' . (int) $im['n'] . '건 ' . $w( $im['sales'] ) . '원)';
+	} else {
+		$L[] = '· 아임웹은 아직 안 합쳐짐 — 월말 결산 화면에 API 키를 넣거나 주문 목록을 붙여 넣으면 다음부터 같이 옵니다';
+	}
+	$da  = delta( (float) $c['aov'], (float) $pv['aov'] );
+	$L[] = '· 한 번 살 때 ' . $w( $c['aov'] ) . '원' . ( '' !== $da ? " (지난달보다 {$da})" : '' ) . ' · 하루 평균 ' . $w( $c['per_day'] ) . '원';
+	$cu  = $c['cust'];
+	$L[] = '· 처음 산 회원 ' . $cu['first_buyers'] . '명 · 다시 산 회원 ' . $cu['rep_buyers'] . '명 · 새 가입 ' . $c['signups'] . '명 (지난달 ' . $c['signups_prev'] . ')';
+	$L[] = '· 취소 · 환불 ' . $c['void']['n'] . '건 = 접수의 ' . $c['cancel_rate'] . '% (지난달 ' . $pv['cancel_rate'] . '%)' . ( $c['pend']['n'] > 0 ? ' · 아직 입금 안 된 주문 ' . $c['pend']['n'] . '건 ' . $w( $c['pend']['sales'] ) . '원' : '' );
+	$top = array_slice( $c['products'], 0, 3, true );
+	if ( $top ) {
+		$L[] = '· 많이 팔린 것: ' . implode( ' · ', array_map( fn( $k, $p ) => "{$k} " . $w( $p['sales'] ) . '원', array_keys( $top ), $top ) );
+	}
+
+	/* 이렇게 했고 */
+	$L[] = $b( '이렇게 했고' );
+	if ( $log ) {
+		foreach ( array_slice( $log, 0, 8 ) as $e ) {
+			$L[] = '· ' . substr( $e['d'], 5 ) . ' ' . $e['t'];
+		}
+	} else {
+		$L[] = '· 이 달에 적힌 작업이 없습니다 (도구 → 검색 노출 화면의 작업 일지에 적으면 여기에 옵니다)';
+	}
+
+	/* 앞으로 */
+	$L[] = $b( '앞으로' );
+	$next = array();
+	if ( (int) $c['cancel_rate'] >= 20 ) {
+		$next[] = '취소가 접수의 ' . $c['cancel_rate'] . '% — 미입금 자동 취소인지 손님 취소인지 주문 메모로 가르고, 미입금이면 주문 직후 안내(계좌 · 기한)를 손본다';
+	}
+	if ( $pv['conf']['sales'] > 0 && (float) $m['sales'] < (float) $pv['conf']['sales'] * 0.85 && $c['closed'] ) {
+		$next[] = '매출이 지난달보다 15% 넘게 줄었다 — 신규 손님 수(가입 · 처음 산 회원)가 먼저 줄었는지 본다';
+	}
+	if ( $c['pend']['n'] >= 10 ) {
+		$next[] = '입금 안 된 주문 ' . $c['pend']['n'] . '건 — 5일 넘은 것은 오늘 할 일에서 정리';
+	}
+	if ( ! $im ) {
+		$next[] = '아임웹 주문을 합치려면 월말 결산 화면에서 API 키 저장 또는 주문 목록 붙여 넣기';
+	}
+	if ( ! $next ) {
+		$next[] = '숫자가 가리키는 급한 일 없음 — 다음 달도 같은 자리에서 본다';
+	}
+	foreach ( array_slice( $next, 0, 4 ) as $n ) {
+		$L[] = '· ' . $n;
+	}
+	if ( '' !== $seo ) {
+		$L[] = '';
+		$L[] = $seo;
+	}
+	return implode( "\n", $L );
+}
+
+/**
+ * 보낼 글 통째 — 결산 + SEO 보고. `$ym` 달의 것.
+ */
+function send_text( string $ym, bool $discord = true ): string {
+	$d   = data( $ym );
+	$log = function_exists( '\\Duckhoo\\Redesign\\Seo\\Report\\entries' ) ? \Duckhoo\Redesign\Seo\Report\entries( $ym ) : array();
+	$seo = '';
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Report\\report' ) ) {
+		try {
+			$rep = \Duckhoo\Redesign\Seo\Report\report( $ym, array( 'signups' => $d['c']['signups'], 'first_buyers' => $d['c']['cust']['first_buyers'] ) );
+			$seo = $discord ? (string) $rep['text'] : (string) $rep['plain'];
+		} catch ( \Throwable $e ) {
+			$seo = '';
+		}
+	}
+	return brief_text( $d['c'], imweb( $ym ), $log, $seo, $discord );
+}
+
+/**
+ * 보낸다 — 디스코드(오늘 할 일의 웹훅) + 관리자 메일(오늘 할 일 메일이 켜져 있을 때).
+ *
+ * @return int 디스코드 조각 수 (0 이면 못 보냄) · 메일은 따로 안 센다.
+ */
+function send( string $ym ): int {
+	$text = send_text( $ym, true );
+	$n    = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_send' ) ? \Duckhoo\Redesign\Today\discord_send( $text ) : 0;
+	if ( function_exists( '\\Duckhoo\\Redesign\\Today\\mail_on' ) && \Duckhoo\Redesign\Today\mail_on() && function_exists( 'wp_mail' ) ) {
+		$to = function_exists( '\\Duckhoo\\Redesign\\Today\\mail_to' ) ? \Duckhoo\Redesign\Today\mail_to() : (string) get_option( 'admin_email', '' );
+		if ( '' !== $to ) {
+			wp_mail( $to, '[액상덕후] ' . kmonth( $ym ) . ' 결산', send_text( $ym, false ) . "\n\n" . page_url( $ym ) );
+		}
+	}
+	return $n;
+}
+
+/**
+ * 크론 — 매일 SEND_AT 에 깨어나, 1일(놓치면 2 · 3일)이고 지난달을 아직 안 보냈으면 보낸다.
+ * 오늘 할 일 크론처럼 「언제 불리든」 여기서 거른다 — 한 달에 한 통.
+ */
+function cron_send(): void {
+	$today = (string) current_time( 'Y-m-d' );
+	$day   = (int) substr( $today, 8, 2 );
+	if ( $day > 3 ) {
+		return;
+	}
+	$ym = prev_ym( substr( $today, 0, 7 ) );
+	if ( (string) get_option( 'duckhoo_monthly_sent', '' ) === $ym ) {
+		return;
+	}
+	$now = (int) current_time( 'H' ) * 60 + (int) current_time( 'i' );
+	list( $h, $mi ) = array_map( 'intval', explode( ':', SEND_AT ) );
+	$at = $h * 60 + $mi;
+	if ( $now < $at - 10 || $now > $at + 120 ) {
+		return;
+	}
+	update_option( 'duckhoo_monthly_sent', $ym, false ); // 보내기 전에 적는다 — 겹쳐 불려도 한 통
+	send( $ym );
+}
+
+function schedule(): void {
+	if ( ! function_exists( 'wp_next_scheduled' ) || wp_next_scheduled( CRON ) ) {
+		return;
+	}
+	$tz    = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'Asia/Seoul' );
+	$first = new \DateTime( 'today ' . SEND_AT, $tz );
+	if ( $first->getTimestamp() <= time() ) {
+		$first->modify( '+1 day' );
+	}
+	wp_schedule_event( $first->getTimestamp(), 'daily', CRON );
+}
+
 /* ── 화면 ───────────────────────────────────────────────────────────── */
 
 function ym_from_request(): string {
@@ -492,8 +665,7 @@ function to_discord(): void {
 	if ( ! valid_ym( $ym ) ) {
 		wp_die( '달이 잘못됐습니다.' );
 	}
-	$d = data( $ym );
-	$n = function_exists( '\\Duckhoo\\Redesign\\Today\\discord_send' ) ? \Duckhoo\Redesign\Today\discord_send( report( $d['c'] ) ) : 0;
+	$n = send( $ym );
 	wp_safe_redirect( add_query_arg( 'sent', (string) $n, page_url( $ym ) ) );
 	exit;
 }
@@ -503,6 +675,7 @@ function screen(): void {
 		wp_die( '권한이 없습니다.' );
 	}
 	$ym    = ym_from_request();
+	$imsg  = function_exists( '\\Duckhoo\\Redesign\\Imweb\\handle_post' ) ? \Duckhoo\Redesign\Imweb\handle_post() : '';
 	$fresh = isset( $_GET['dhr_fresh'] ) && check_admin_referer( 'dhr-monthly-fresh' ); // phpcs:ignore WordPress.Security.NonceVerification
 	echo '<div class="wrap dhr-sl">';
 	if ( function_exists( '\\Duckhoo\\Redesign\\Sales\\styles' ) ) {
@@ -515,14 +688,14 @@ function screen(): void {
 		echo '<div class="notice notice-error"><p>읽다 멈췄습니다: ' . esc_html( $e->getMessage() ) . ' (' . esc_html( basename( $e->getFile() ) . ':' . $e->getLine() ) . ')</p></div></div>';
 		return;
 	}
-	render( $d['c'], $ym, (string) $d['built'], (float) $d['took'] );
+	render( $d['c'], $ym, (string) $d['built'], (float) $d['took'], $imsg );
 	echo '</div>';
 }
 
 /**
  * 몸통 — 데이터를 받아 그린다 (가짜 데이터로도 그릴 수 있게 따로).
  */
-function render( array $c, string $ym, string $built, float $took ): void {
+function render( array $c, string $ym, string $built, float $took, string $imsg = '' ): void {
 	$w    = fn( $n ) => number_format( (float) round( (float) $n ) );
 	$card = function ( string $l, string $v, string $n = '', string $tone = '' ) {
 		if ( function_exists( '\\Duckhoo\\Redesign\\Sales\\card' ) ) {
@@ -618,13 +791,23 @@ function render( array $c, string $ym, string $built, float $took ): void {
 	}
 	echo '</tbody></table></div></section>';
 
+	/* 아임웹 */
+	if ( function_exists( '\\Duckhoo\\Redesign\\Imweb\\box' ) ) {
+		\Duckhoo\Redesign\Imweb\box( $ym, $imsg );
+	}
+
 	/* 내보내기 · 붙여 넣기 */
 	$csv_url = wp_nonce_url( add_query_arg( array( 'action' => 'dhr_monthly_csv', 'dhr_m' => $ym ), admin_url( 'admin-post.php' ) ), 'dhr-monthly-csv' );
 	$dc_url  = wp_nonce_url( add_query_arg( array( 'action' => 'dhr_monthly_discord', 'dhr_m' => $ym ), admin_url( 'admin-post.php' ) ), 'dhr-monthly-discord' );
 	$re_url  = wp_nonce_url( add_query_arg( 'dhr_fresh', '1', page_url( $ym ) ), 'dhr-monthly-fresh' );
 	echo '<section class="dhr-sl-sec"><h2>내보내기</h2>';
-	echo '<p><a class="button button-primary" href="' . esc_url( $csv_url ) . '">회계용 CSV 내려받기</a> <a class="button" href="' . esc_url( $dc_url ) . '">디스코드로 보내기</a> <a class="button" href="' . esc_url( $re_url ) . '">지금 다시 읽기</a></p>';
+	echo '<p><a class="button button-primary" href="' . esc_url( $csv_url ) . '">회계용 CSV 내려받기</a> <a class="button" href="' . esc_url( $dc_url ) . '">디스코드 · 메일로 보내기</a> <a class="button" href="' . esc_url( $re_url ) . '">지금 다시 읽기</a></p>';
 	echo '<p class="dhr-sl-note">CSV 는 접수된 주문 한 줄에 상태 · 할인 전 · 상품 금액 · 배송비 · 쿠폰 · 적립금 · 자동 할인 · 실결제. 엑셀에서 바로 열립니다 (취소 주문도 들어 있으니 상태 칸으로 거르세요).</p>';
+	echo '<h2 style="margin-top:14px">사장님용 한 장 (디스코드 · 메일로 가는 글)</h2>';
+	$im  = imweb( $ym );
+	$log = function_exists( '\\Duckhoo\\Redesign\\Seo\\Report\\entries' ) ? \Duckhoo\Redesign\Seo\Report\entries( $ym ) : array();
+	echo '<textarea readonly style="width:100%;min-height:200px;font-family:inherit;font-size:13px" onclick="this.select()">' . esc_textarea( brief_text( $c, $im, $log, '', false ) ) . '</textarea>';
+	echo '<p class="dhr-sl-note">매달 1일 ' . esc_html( SEND_AT ) . ' 에 지난달 것이 이 글 + 검색 노출 월간 보고로 디스코드(오늘 할 일 웹훅)와 관리자 메일로 갑니다. 「이렇게 했고」는 도구 → 검색 노출 화면의 작업 일지에서 옵니다.</p>';
 	echo '<h2 style="margin-top:14px">클로드에게 보내기</h2>';
 	echo '<textarea readonly style="width:100%;min-height:260px;font-family:inherit;font-size:13px" onclick="this.select()">' . esc_textarea( report( $c ) ) . '</textarea>';
 	echo '</section>';

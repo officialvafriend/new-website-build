@@ -1937,14 +1937,36 @@
   try{ seen = JSON.parse(localStorage.getItem('dhr-f') || '{}'); }catch(e){ seen = {}; }
   if(seen.d !== day){ seen = { d: day, s: [] }; }
   if(!seen.s) seen.s = [];
-  if(seen.s.indexOf(C.stage) !== -1) return;
-  seen.s.push(C.stage);
+  var send = function(stage){
+    var body = 's=' + encodeURIComponent(stage) + '&m=' + (C.loggedIn ? '1' : '0');
+    try{
+      fetch(C.beacon, { method:'POST', keepalive:true, credentials:'omit',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body: body }).catch(function(){});
+    }catch(e){}
+  };
+  /* 어디서 왔나 — 그날 처음 한 번만 (referrer 의 호스트로: 구글 · 네이버 · 다음 · 다른 곳 · 직접). SEO 월간 보고서가 센다. */
+  if(!seen.src){
+    var ref = '', host = '';
+    try{ ref = document.referrer || ''; host = ref ? new URL(ref).hostname : ''; }catch(e){}
+    var src = '';
+    if(!host){ src = 'src_direct'; }
+    else if(host === location.hostname){ src = ''; }
+    else if(/(^|\.)google\./.test(host)){ src = 'src_google'; }
+    else if(/(^|\.)naver\.com$/.test(host)){ src = 'src_naver'; }
+    else if(/(^|\.)daum\.net$/.test(host)){ src = 'src_daum'; }
+    else { src = 'src_other'; }
+    if(src){ seen.src = src; send(src); }
+  }
+  /* 상품 상세 — 사람마다 상품마다 하루 한 번 */
+  if(C.stage === 'product' && C.pid){
+    if(!seen.p) seen.p = [];
+    if(seen.p.indexOf(C.pid) === -1 && seen.p.length < 80){ seen.p.push(C.pid); send('p:' + C.pid); }
+  }
+  if(seen.s.indexOf(C.stage) === -1){
+    seen.s.push(C.stage);
+    send(C.stage);
+  }
   try{ localStorage.setItem('dhr-f', JSON.stringify(seen)); }catch(e){}
-  var body = 's=' + encodeURIComponent(C.stage) + '&m=' + (C.loggedIn ? '1' : '0');
-  try{
-    fetch(C.beacon, { method:'POST', keepalive:true, credentials:'omit',
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body: body }).catch(function(){});
-  }catch(e){}
 })();
 
 /* 주문 목록의 `배송조회` 는 택배사 화면으로 나간다 — 새 창으로 연다.
