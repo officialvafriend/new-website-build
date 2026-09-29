@@ -2290,5 +2290,54 @@ $ok(($SG.'lock_take')($k) === true && ($SG.'lock_take')($k) === false, '첫 요�
 ($SG.'lock_drop')($k);
 $ok(($SG.'lock_take')($k) === true, '풀면 다시 잡힌다 (검증 실패 뒤 다시 내는 손님)');
 
+
+// ───────────────────────────────────────────────── 월말 결산 (2026-09-29)
+// 한 달을 닫는 한 장 — 읽기 전용. 확정(실입금) · 입금 대기 · 취소를 나누고 뺄셈 장부 · 첫 주문/재구매 · 일별 · CSV.
+require_once dirname(__DIR__, 2).'/includes/monthly.php';
+$Mo = 'Duckhoo\\Redesign\\Monthly\\';
+$ok(($Mo.'bounds')('2026-09') === ['2026-09-01','2026-09-30'] && ($Mo.'bounds')('2026-02') === ['2026-02-01','2026-02-28'], '달의 첫날 · 끝날 (2월 28일)');
+$ok(($Mo.'default_ym')('2026-10-02') === '2026-09' && ($Mo.'default_ym')('2026-10-04') === '2026-10' && ($Mo.'default_ym')('2026-01-01') === '2025-12', '기본 달: 1~3일엔 지난달, 그 뒤엔 이번 달 · 해 넘김');
+$ok(($Mo.'prev_ym')('2026-01') === '2025-12' && ($Mo.'kmonth')('2026-09') === '2026년 9월' && ($Mo.'valid_ym')('2026-13') === false && ($Mo.'valid_ym')('2026-09') === true, '한 달 앞 · 한글 달 이름 · 꼴 검사');
+$mr = fn(int $id, string $d, string $s, float $t, int $c, float $p=0, float $coup=0, float $ship=0, float $fee=0) => ['id'=>$id,'d'=>$d,'ts'=>strtotime($d.' 12:00:00'),'s'=>$s,'t'=>$t,'c'=>$c,'p'=>$p,'coup'=>$coup,'ship'=>$ship,'fee'=>$fee];
+$mrows = [
+  $mr(1,'2026-09-01','delivered', 26000, 10),                       // 손님10 — 이 달 처음 (prior 에 없음)
+  $mr(2,'2026-09-05','delivered', 42000, 10, 0, 0, 2500),           // 손님10 둘째 → 재구매 (같은 달)
+  $mr(3,'2026-09-02','payment-confirmed', 120000, 11, 8800, 1000, 0, 0), // 손님11 — 전에도 산 회원, 적립금 · 쿠폰
+  $mr(4,'2026-09-03','on-hold', 30000, 12),                         // 입금 대기
+  $mr(5,'2026-09-03','cancelled', 50000, 13),                       // 취소
+  $mr(6,'2026-09-10','delivered', 13000, 0),                        // 비회원
+  $mr(7,'2026-09-11','checkout-draft', 99000, 14),                  // 임시글 — 아예 안 센다
+  $mr(8,'2026-09-12','refunded', 20000, 11),                        // 환불
+];
+$mitems = [
+  1=>[['pid'=>1,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>2,'total'=>26000]],
+  2=>[['pid'=>2,'name'=>'[펠릭스] 더블라임 (9.8mg / 30ml)','qty'=>2,'total'=>40000]],
+  3=>[['pid'=>3,'name'=>'[노보 리퀴드] 10+1','qty'=>1,'total'=>120000]],
+  6=>[['pid'=>1,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>1,'total'=>13000]],
+];
+$mprev = [ $mr(90,'2026-08-10','delivered', 50000, 11), $mr(91,'2026-08-11','cancelled', 10000, 12), $mr(92,'2026-08-12','delivered', 30000, 15) ];
+$mc = ($Mo.'close')($mrows, $mitems, [11=>true], $mprev, '2026-09', 40, 25, '2026-10-02');
+$ok($mc['closed'] === true && $mc['days_done'] === 30 && $mc['all']['n'] === 7, '10월 2일에 본 9월은 닫힌 달 · 30일 · 임시글은 접수에서 뺀다');
+$ok($mc['conf']['n'] === 4 && $mc['conf']['sales'] == 201000.0 && $mc['pend']['n'] === 1 && $mc['pend']['sales'] == 30000.0 && $mc['void']['n'] === 2, '확정 4건 201,000 · 입금 대기 1건 30,000 · 취소·환불 2건');
+$ok($mc['cancel_rate'] === 29 && $mc['prev']['cancel_rate'] === 33, '취소율 2/7 = 29% · 지난달 1/3 = 33%');
+$ok($mc['conf']['before'] == 210800.0 && $mc['conf']['ship'] == 2500.0 && $mc['conf']['goods'] == 208300.0 && $mc['conf']['points'] == 8800.0 && $mc['conf']['coupon'] == 1000.0, '뺄셈 장부: 할인 전 210,800 = 실입금 201,000 + 적립금 8,800 + 쿠폰 1,000 · 배송비 2,500 · 상품 208,300');
+$cu = $mc['cust'];
+$ok($cu['buyers'] === 2 && $cu['first_buyers'] === 1 && $cu['rep_buyers'] === 1 && $cu['first_n'] === 1 && $cu['first_sales'] == 26000.0 && $cu['rep_n'] === 2 && $cu['rep_sales'] == 162000.0 && $cu['guest_n'] === 1, '손님: 처음 산 회원 1(첫 주문 1건) · 전에도 산 회원 1 · 재구매 2건(같은 달 둘째 주문 포함) · 비회원 1건');
+$ok($mc['aov'] == 50250 && $mc['per_day'] == 6700 && $mc['units'] === 6, '객단가 평균 50,250 · 하루 평균 6,700 · 수량 6');
+$ok($mc['daily']['2026-09-03']['all'] === 2 && $mc['daily']['2026-09-03']['n'] === 0 && $mc['daily']['2026-09-03']['void'] === 1 && $mc['best_day'] === '2026-09-02' && count($mc['daily']) === 30, '일별: 9/3 접수 2 확정 0 취소 1 · 가장 큰 날 9/2 · 30줄');
+$ok(array_key_first($mc['products']) === '10+1' && $mc['brands']['노보'] == 159000.0 && $mc['brands']['펠릭스'] == 40000.0, '상품 1위 10+1 · 브랜드 노보 159,000 · 펠릭스 40,000');
+$ok($mc['by_status']['delivered']['n'] === 3 && !isset($mc['by_status']['checkout-draft']), '상태별: 배송완료 3 · 임시글 없음');
+$ok($mc['prev']['conf']['sales'] == 80000.0 && $mc['prev']['aov'] == 40000, '지난달 확정 80,000 · 객단가 40,000');
+$mrep = ($Mo.'report')($mc);
+$ok(str_contains($mrep, '2026년 9월 결산') && str_contains($mrep, '확정(실입금) 4건 201,000원') && str_contains($mrep, '= 확정 매출 201,000원') && str_contains($mrep, '새 가입 40명 (지난달 25)') && str_contains($mrep, '09-03: 0 · 0 · 2 · 1') && !str_contains($mrep, '진행 중'), '보고서: 제목 · 확정 · 뺄셈 · 가입 · 일별 줄 · 닫힌 달엔 「진행 중」 없음');
+$mo = ($Mo.'close')($mrows, $mitems, [11=>true], $mprev, '2026-09', 40, 25, '2026-09-15');
+$ok($mo['closed'] === false && $mo['days_done'] === 15 && $mo['per_day'] == 13400 && str_contains(($Mo.'report')($mo), '진행 중 · 15일까지') && !str_contains(($Mo.'report')($mo), "\n09-16:"), '진행 중인 달: 15일 기준 하루 평균 · 보고서 일별은 15일까지');
+$csv = ($Mo.'csv')($mrows, $mitems);
+$lines = explode("\r\n", trim($csv));
+$ok(str_starts_with($csv, "\xEF\xBB\xBF") && count($lines) === 8 && str_contains($lines[0], '"실결제"'), 'CSV: BOM · 머리 1줄 + 주문 7줄(임시글 제외)');
+$ok(str_contains($csv, '"3","2026-09-02"') && str_contains($csv, '"[노보 리퀴드] 10+1","129800","129800","0","1000","8800","0","120000"'), 'CSV 한 줄: 할인 전 129,800 · 쿠폰 1,000 · 적립금 8,800 · 실결제 120,000');
+$ok(str_contains($csv, '"1","2026-09-01"') && strpos($csv, '"1","2026-09-01"') < strpos($csv, '"3","2026-09-02"') && !str_contains($csv, '"7","2026-09-11"'), 'CSV 는 날짜순 · 임시글 없음');
+$ok(!preg_match('/건강|금연|순하|해롭/', $mrep), '보고서에 금지어 없음');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
