@@ -2913,6 +2913,9 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 - 디스코드는 오늘 할 일의 웹훅(`Today\discord_send`)을 그대로 쓴다 — 주소를 이 화면이 따로 쥐지 않는다
 - 폰에서 뺄셈 장부의 셋째 칸(「상품 … + 배송비 …」)이 `nowrap` 이라 590px 로 넘쳤다 → `.dhr-sl-scroll` 로 감쌌다 (다른 표와 같다). 넘침 0 확인
 - **아직 없는 것**: 매달 1일 자동 발송 (사장님이 원하면 `duckhoo_today_mail` 크론 옆에 한 줄) · 배송비 빼기 · 상품 원가
+- **배송비는 워드커머스 배송 줄이 아니다** (2026-09-29, Store API 실측 — 낱병 13,000 담으면 `fees: [배송비 2,500]`, `shipping_rates: []`).
+  `get_shipping_total()` 이 늘 0 이라 결산의 배송비가 0 이었고 그 돈이 「상품」 안에 섞여 있었다. `Sales\fee_map()` 이 이름에 「배송」이
+  든 **양수** 수수료 줄을 `ship` 으로 세고 `fetch()` 가 더한다. 매출 화면 · 월말 결산 · CSV 의 배송비 칸이 이제 채워진다
 
 검증: `php design/php-tests/run.php` (월말 결산 19개 — 달 경계 · 기본 달 · 확정/대기/취소 · 취소율 · 뺄셈 장부 · 처음/재구매/비회원 · 일별 ·
 상품 · 브랜드 · 지난달 · 보고서 · 진행 중 · CSV) · `scratchpad/monthly-render.php` + `shot-monthly.mjs`(가짜 420건으로 390/1280 스크린샷 · 넘침 0).
