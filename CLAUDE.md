@@ -3055,4 +3055,22 @@ NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/sm
 
 검증: `php design/php-tests/run.php` (원가 15개 — 정규화 · 병 수 · 네 단계 · 옵션 우선 · 모르는 줄 · 주문별 · 순이익 · 붙여 넣기 · 결산 글).
 
+### 월말 보고서는 API 한 번 + 스크립트로 찍는다 (2026-09-29)
+
+`design/monthly-reports/build.py` 가 브리핑 API 의 `monthly` 블록(실입금 · 할인 · 원가 · 순이익 · 일별 · 상품 · 브랜드 · 손님 · 큰 주문)으로
+표 위주 A4 두 장 HTML 을 만든다 → `scratchpad/pdf.mjs` 로 PDF. 손으로 옮기는 숫자는 우체국 상자 수 · 단가 · 반품 · 출고 대기 · 전월 기준 ·
+수동 결제 줄의 원가(`--manual "이름 조각=원가"`)뿐이다.
+
+```bash
+curl -sS https://duck-hoo.com/wp-json/duckhoo/v1/brief -H "X-DHR-Key: $DUCKHOO_BRIEF_KEY" > /tmp/brief.json
+python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2026-09-monthly.html --boxes 828 --unit 2150 --returns 8 --waiting 37 \
+  --prev-sales 19822458 --prev-orders 376 --prev-aov 52719 --manual "노보 타박멘솔2000=18000000"
+```
+
+- 순이익 = 매출 − 상품 원가 − 배송비. **원가를 모르는 매출은 원가 0 으로 들어가 순이익이 그만큼 높다** — 각주에 이름과 금액을 적는다.
+  큰 주문(50만원↑)은 `big` 으로 와서 「제외」 값을 카드 각주에 붙인다
+- 브리핑 GET 은 10분 · 결산 데이터는 30분 캐시라 원가표를 고친 직후에는 옛 값이 온다. 원가표 화면에서 저장하면 이번 달 캐시가 비지만
+  curl 로만 볼 때는 30분 기다린다 (`monthly.cost_rate` 가 바뀌는지로 안다)
+- 10월 1일: 같은 명령을 `--asof "10월 1일 ~ 30일 확정"` 으로 한 번 더 돌리면 확정본
+
 **서치콘솔의 `/product-category/7월-특가-할인/` 은 「7월 특가」가 아니다** — 분류 이름은 달마다 바뀌고(지금 「9월 특가 할인」) 주소만 7월에 만든 것이 남아 있다. 보고서에는 「특가 할인」이라 적는다 (사장님이 잡음, 2026-09-29).
