@@ -236,6 +236,7 @@ function payload(): array {
 		'prev_week' => period( $d( 13 ), $d( 7 ) ),
 		'month'     => period( gmdate( 'Y-m-01', strtotime( $today ) ), $today ),
 		'monthly'   => monthly_close( substr( $today, 0, 7 ) ),
+		'price_watch' => function_exists( '\\Duckhoo\\Redesign\\Cost\\price_watch' ) ? \Duckhoo\Redesign\Cost\price_watch( $d( 120 ) ) : array(),
 		'funnel'    => $funnel,
 		'catalog'   => $catalog,
 		'site'      => $site,

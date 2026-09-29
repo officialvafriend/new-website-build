@@ -265,6 +265,82 @@ function order_ids( array $order ): array {
 	return $out;
 }
 
+/**
+ * 상품 하나의 주문 줄 단가를 날짜별로 센다 — 「판매가가 언제 바뀌었나」를 주문에서 읽는다 (사장님 2026-09-29: 원가가 바뀐 날은
+ * 판매가가 오른 날과 같으니 주문을 보고 판단). 읽기만 한다. 반환: 날짜 → array( 단가 => 줄 수 ).
+ */
+function unit_prices( int $pid, string $since ): array {
+	global $wpdb;
+	if ( $pid <= 0 || ! isset( $wpdb ) ) {
+		return array();
+	}
+	$hpos = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
+	$date = $hpos ? "o.date_created_gmt" : "p.post_date_gmt";
+	$join = $hpos
+		? "JOIN {$wpdb->prefix}wc_orders o ON o.id = oi.order_id AND o.type = 'shop_order' AND o.status NOT IN ('wc-checkout-draft','trash','auto-draft','wc-cancelled','wc-failed')"
+		: "JOIN {$wpdb->posts} p ON p.ID = oi.order_id AND p.post_type = 'shop_order' AND p.post_status NOT IN ('wc-checkout-draft','trash','auto-draft','wc-cancelled','wc-failed')";
+	$rows = (array) $wpdb->get_results( $wpdb->prepare( // phpcs:ignore WordPress.DB
+		"SELECT DATE(DATE_ADD({$date}, INTERVAL 9 HOUR)) AS d,
+		        MAX(CASE WHEN m.meta_key='_qty' THEN m.meta_value END) AS qty,
+		        MAX(CASE WHEN m.meta_key='_line_subtotal' THEN m.meta_value END) AS sub
+		   FROM {$wpdb->prefix}woocommerce_order_items oi
+		   {$join}
+		   JOIN {$wpdb->prefix}woocommerce_order_itemmeta pm ON pm.order_item_id = oi.order_item_id AND pm.meta_key = '_product_id' AND pm.meta_value = %s
+		   LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta m ON m.order_item_id = oi.order_item_id AND m.meta_key IN ('_qty','_line_subtotal')
+		  WHERE oi.order_item_type = 'line_item' AND {$date} >= %s
+		  GROUP BY oi.order_item_id",
+		(string) $pid, $since . ' 00:00:00'
+	), ARRAY_A );
+	$out = array();
+	foreach ( $rows as $r ) {
+		$q = max( 1, (int) $r['qty'] );
+		$u = (int) round( (float) $r['sub'] / $q );
+		$d = (string) $r['d'];
+		$out[ $d ][ $u ] = ( $out[ $d ][ $u ] ?? 0 ) + 1;
+	}
+	ksort( $out );
+	return $out;
+}
+
+/**
+ * 판매가가 바뀐 날 짐작 — 마지막 단가가 처음으로 나타난 뒤 옛 단가가 다시는 안 나오는 첫 날. 못 찾으면 ''.
+ */
+function switch_date( array $hist ): array {
+	if ( ! $hist ) {
+		return array( 'from' => '', 'old' => 0, 'new' => 0 );
+	}
+	$last = array_key_last( $hist );
+	$mode = fn( array $u ) => (int) array_keys( $u, max( $u ), true )[0];
+	$new  = $mode( $hist[ $last ] );
+	$from = '';
+	$old  = 0;
+	foreach ( $hist as $d => $u ) {
+		$m = $mode( $u );
+		if ( $m === $new ) {
+			if ( '' === $from ) {
+				$from = (string) $d;
+			}
+		} else {
+			$from = '';
+			$old  = $m;
+		}
+	}
+	return array( 'from' => $from, 'old' => $old, 'new' => $new );
+}
+
+/**
+ * 브리핑 API 용 — 지켜볼 상품들의 단가 역사 (필터 duckhoo_price_watch).
+ */
+function price_watch( string $since ): array {
+	$out = array();
+	foreach ( (array) apply_filters( 'duckhoo_price_watch', array( 242, 249, 173, 164, 146, 4327, 123 ) ) as $pid ) {
+		$h = unit_prices( (int) $pid, $since );
+		$name = function_exists( 'wc_get_product' ) && ( $p = wc_get_product( (int) $pid ) ) ? (string) $p->get_name() : '';
+		$out[ (int) $pid ] = array( 'name' => $name, 'switch' => switch_date( $h ), 'days' => $h );
+	}
+	return $out;
+}
+
 /* ── 관리자 ─────────────────────────────────────────────────────────────── */
 
 function may(): bool {
