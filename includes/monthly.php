@@ -412,7 +412,7 @@ function report( array $c ): string {
 	$L[] = '[뺄셈 장부] 할인 전 ' . $w( $m['before'] ) . '원 (상품 ' . $w( $m['goods'] ) . ' + 배송비 ' . $w( $m['ship'] ) . ') − 적립금 ' . $w( $m['points'] ) . ' − 쿠폰 ' . $w( $m['coupon'] ) . ' − 자동 할인 ' . $w( $m['fee'] ) . ' = 확정 매출 ' . $w( $m['sales'] ) . '원';
 	$pc = parcels( $c['ym'] );
 	if ( function_exists( '\\Duckhoo\\Redesign\\Parcels\\line' ) ) {
-		$L[] = '[배송비 지출] ' . \Duckhoo\Redesign\Parcels\line( $pc['m'], $pc['unit'], (int) ( $pc['pack'] ?? 0 ) ) . ( $pc['cost'] > 0 ? ' → 배송비 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원' : '' );
+		$L[] = '[지출] ' . \Duckhoo\Redesign\Parcels\line( $pc['m'], $pc['unit'], (int) ( $pc['pack'] ?? 0 ) ) . ( $pc['cost'] > 0 ? ' → 지출 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원' : '' );
 	}
 	$cu  = $c['cust'];
 	$L[] = "[손님] 산 회원 {$cu['buyers']}명 = 이 달 처음 {$cu['first_buyers']}명 + 전에도 산 {$cu['rep_buyers']}명 · 첫 주문 {$cu['first_n']}건 " . $w( $cu['first_sales'] ) . "원 · 재구매 {$cu['rep_n']}건 " . $w( $cu['rep_sales'] ) . '원' . ( $cu['guest_n'] ? " · 비회원 {$cu['guest_n']}건 " . $w( $cu['guest_sales'] ) . '원' : '' ) . " · 새 가입 {$c['signups']}명 (지난달 {$c['signups_prev']})";
@@ -488,7 +488,7 @@ function imweb( string $ym ): ?array {
 }
 
 /**
- * 우체국 소포 요약(있으면) 과 계약 단가 · 배송비 지출. 상자 수 × 단가.
+ * 우체국 소포 요약(있으면) 과 지출 — 배송비(상자 × 계약 단가) · 박스비(상자 × 박스 단가) · 합계.
  *
  * @return array{m:?array,unit:int,cost:int}
  */
@@ -501,7 +501,7 @@ function parcels( string $ym ): array {
 	$pk = function_exists( '\\Duckhoo\\Redesign\\Parcels\\pack_unit' ) ? \Duckhoo\Redesign\Parcels\pack_unit() : 0;
 	$po = \Duckhoo\Redesign\Parcels\cost( $m, $u );
 	$pc = function_exists( '\\Duckhoo\\Redesign\\Parcels\\pack_cost' ) ? \Duckhoo\Redesign\Parcels\pack_cost( $m, $pk ) : 0;
-	// cost = 합계(우체국 요금 + 포장재). 나눠 볼 때는 post · pack.
+	// cost = 지출 합계(배송비 post + 박스비 pack_cost).
 	return array( 'm' => $m, 'unit' => $u, 'pack' => $pk, 'post' => $po, 'pack_cost' => $pc, 'cost' => $po + $pc );
 }
 
@@ -540,7 +540,7 @@ function brief_text( array $c, ?array $im, array $log, string $seo = '', bool $d
 	$L[] = '· 취소 · 환불 ' . $c['void']['n'] . '건 ' . $w( $c['void']['sales'] ) . '원 = 접수의 ' . $c['cancel_rate'] . '% (지난달 ' . $pv['cancel_rate'] . '%)' . ( $c['pend']['n'] > 0 ? ' · 아직 입금 안 된 주문 ' . $c['pend']['n'] . '건 ' . $w( $c['pend']['sales'] ) . '원' : '' );
 	$pc = parcels( (string) $c['ym'] );
 	if ( $pc['cost'] > 0 ) {
-		$L[] = '· 배송비 지출 ' . $w( $pc['cost'] ) . '원 (우체국 ' . (int) $pc['m']['n'] . '상자 × ' . $w( $pc['unit'] ) . '원' . ( ! empty( $pc['pack_cost'] ) ? ' + 포장재 ' . $w( $pc['pack_cost'] ) . '원' : ' · 포장재 단가 없음' ) . ') → 배송비 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원';
+		$L[] = '· 지출 ' . $w( $pc['cost'] ) . '원 = 배송비 ' . $w( $pc['post'] ) . '원 (우체국 ' . (int) $pc['m']['n'] . '상자 × ' . $w( $pc['unit'] ) . '원)' . ( ! empty( $pc['pack_cost'] ) ? ' + 박스비 ' . $w( $pc['pack_cost'] ) . '원' : ' (박스비 단가 없음)' ) . ' → 지출 뺀 실입금 ' . $w( (float) $m['sales'] - $pc['cost'] ) . '원';
 	}
 	$top = array_slice( $c['products'], 0, 3, true );
 	if ( $top ) {
@@ -774,15 +774,17 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 	printf( '<tr><td><b>= 확정 매출 (실제로 받은 돈)</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">%d건</td></tr>', esc_html( won( (float) $m['sales'] ) ), (int) $m['n'] );
 	$pc = parcels( $ym );
 	if ( $pc['cost'] > 0 ) {
-		printf( '<tr><td>− 우체국 요금</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d상자 × %s원 · 손님에게 받은 배송비 %s 는 위 실입금에 들어 있음</td></tr>', esc_html( won( (float) $pc['post'] ) ), (int) $pc['m']['n'], esc_html( number_format( $pc['unit'] ) ), esc_html( won( (float) $m['ship'] ) ) );
+		echo '<tr><td colspan="3"><b>지출</b> <span class="dhr-sl-mut">— 배송비와 박스비는 따로 적고 여기서 합칩니다</span></td></tr>';
+		printf( '<tr><td>− 배송비 (우체국 요금)</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d상자 × %s원 · 손님에게 받은 배송비 %s 는 위 실입금에 들어 있음</td></tr>', esc_html( won( (float) $pc['post'] ) ), (int) $pc['m']['n'], esc_html( number_format( $pc['unit'] ) ), esc_html( won( (float) $m['ship'] ) ) );
 		if ( ! empty( $pc['pack_cost'] ) ) {
-			printf( '<tr><td>− 포장재 (박스 · 완충재 · 테이프)</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d상자 × %s원</td></tr>', esc_html( won( (float) $pc['pack_cost'] ) ), (int) $pc['m']['n'], esc_html( number_format( (int) $pc['pack'] ) ) );
+			printf( '<tr><td>− 박스비</td><td class="dhr-sl-num">%s</td><td class="dhr-sl-mut">%d상자 × %s원</td></tr>', esc_html( won( (float) $pc['pack_cost'] ) ), (int) $pc['m']['n'], esc_html( number_format( (int) $pc['pack'] ) ) );
 		} else {
-			echo '<tr><td class="dhr-sl-mut" colspan="3">포장재(박스 · 완충재)는 아래 상자의 「포장재 단가」를 넣으면 줄이 생깁니다.</td></tr>';
+			echo '<tr><td class="dhr-sl-mut" colspan="3">박스비는 아래 상자의 「박스비 단가」를 넣으면 줄이 생깁니다.</td></tr>';
 		}
-		printf( '<tr><td><b>= 배송비 뺀 실입금</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">상품 원가는 아직 없음</td></tr>', esc_html( won( (float) $m['sales'] - $pc['cost'] ) ) );
+		printf( '<tr><td><b>= 지출 합계</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">%s</td></tr>', esc_html( won( (float) $pc['cost'] ) ), esc_html( $m['sales'] > 0 ? sprintf( '실입금의 %.1f%%', (float) $pc['cost'] / $m['sales'] * 100 ) : '—' ) );
+		printf( '<tr><td><b>= 지출 뺀 실입금</b></td><td class="dhr-sl-num"><b>%s</b></td><td class="dhr-sl-mut">상품 원가는 아직 없음</td></tr>', esc_html( won( (float) $m['sales'] - $pc['cost'] ) ) );
 	} else {
-		echo '<tr><td class="dhr-sl-mut" colspan="3">배송비 지출은 아래 「배송비 지출 (우체국 소포)」에 발송 내역과 계약 단가를 넣으면 여기에 줄이 생깁니다.</td></tr>';
+		echo '<tr><td class="dhr-sl-mut" colspan="3">지출(배송비 · 박스비)은 아래 「지출」 상자에 발송 내역을 올리면 여기에 줄이 생깁니다.</td></tr>';
 	}
 	echo '</tbody></table></div></section>';
 
@@ -854,5 +856,5 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 	echo '<textarea readonly style="width:100%;min-height:260px;font-family:inherit;font-size:13px" onclick="this.select()">' . esc_textarea( report( $c ) ) . '</textarea>';
 	echo '</section>';
 
-	echo '<div class="dhr-sl-foot"><p>' . esc_html( $built ) . ' 에 읽음 (' . esc_html( (string) $took ) . '초). 닫힌 달은 하루, 진행 중인 달은 30분 캐시. 확정 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( confirmed() ) : confirmed() ) ) . ' · 입금 대기 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( pending() ) : pending() ) ) . '. 「이 달 처음 산 회원」은 이 달 전에 돈 들어온 주문이 하나도 없는 회원입니다. 배송비 지출은 우체국 발송 내역 × (계약 단가 + 포장재 단가)입니다.</p></div>';
+	echo '<div class="dhr-sl-foot"><p>' . esc_html( $built ) . ' 에 읽음 (' . esc_html( (string) $took ) . '초). 닫힌 달은 하루, 진행 중인 달은 30분 캐시. 확정 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( confirmed() ) : confirmed() ) ) . ' · 입금 대기 = ' . esc_html( implode( ' · ', function_exists( '\\Duckhoo\\Redesign\\Sales\\names' ) ? \Duckhoo\Redesign\Sales\names( pending() ) : pending() ) ) . '. 「이 달 처음 산 회원」은 이 달 전에 돈 들어온 주문이 하나도 없는 회원입니다. 지출은 우체국 발송 내역의 상자 수 × 계약 단가(배송비) 와 × 박스 단가(박스비)를 따로 적어 합친 것입니다.</p></div>';
 }
