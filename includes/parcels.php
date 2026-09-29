@@ -31,10 +31,10 @@ const DEFAULT_UNIT = 2150;
 const OPT_PACK = 'duckhoo_parcel_pack';
 
 /**
- * 박스비 기본 단가 — 사장님 값(2026-09-29): 작은 박스 119원 · 큰 박스 229원. 9월 확정 763건 중 10병 이상 묶음이 348건(46%)이라
- * 119 × 0.54 + 229 × 0.46 ≈ 170원. 완충재 · 테이프는 아직 안 들어 있다 — 값을 알면 옵션에 더한 값을 넣는다.
+ * 박스비 기본 단가 — 0 = 장부에 넣지 않는다 (사장님 2026-09-29 「박스비는 제외」). 참고로 재 둔 값: 작은 박스 119원 · 큰 박스 229원,
+ * 9월 10병 이상 묶음 46% 가중 평균 ≈ 170원. 다시 넣으려면 옵션(월말 결산 화면 「박스비 단가」)에 값을 적으면 그때부터 줄이 생긴다.
  */
-const DEFAULT_PACK = 170;
+const DEFAULT_PACK = 0;
 
 /**
  * 계약 단가 (상자 하나에 우체국에 내는 돈). 옵션이 비어 있으면 DEFAULT_UNIT.
@@ -285,7 +285,7 @@ function box( string $ym, string $msg = '' ): void {
 	wp_nonce_field( 'dhr_parcel', 'dhr_parcel_nonce' );
 	echo '<input type="hidden" name="dhr_parcel_ym" value="' . esc_attr( $ym ) . '">';
 	echo '<p><b>① 계약 단가</b> — 상자 하나에 우체국에 내는 돈 (정산내역의 단가). <input type="text" name="dhr_parcel_unit" value="' . esc_attr( $u !== DEFAULT_UNIT ? (string) $u : '' ) . '" placeholder="' . esc_attr( (string) DEFAULT_UNIT ) . '" size="8" inputmode="numeric"> 원 — 비우면 ' . esc_html( number_format( DEFAULT_UNIT ) ) . '원 (2026년 9월 정산내역에서 확인한 기본 단가). 정산내역이 다른 공급지와 합산으로 나와도 액상덕후 상자는 이 단가라 통수 × 단가로 가르면 된다.</p>';
-	echo '<p><b>② 박스비 단가</b> — 상자 하나 몫의 박스 값. 완충재 · 테이프까지 넣으려면 한 달 자재비 ÷ 상자 수. <input type="text" name="dhr_parcel_pack" value="' . esc_attr( $pk !== DEFAULT_PACK ? (string) $pk : '' ) . '" placeholder="' . esc_attr( (string) DEFAULT_PACK ) . '" size="8" inputmode="numeric"> 원 — 비우면 ' . esc_html( number_format( DEFAULT_PACK ) ) . '원 (작은 박스 119원 · 큰 박스 229원을 9월 묶음 비율 46% 로 섞은 값). 배송비와 따로 적고 「지출」로 합칩니다.</p>';
+	echo '<p><b>② 박스비 단가</b> — 상자 하나 몫의 박스 값. 완충재 · 테이프까지 넣으려면 한 달 자재비 ÷ 상자 수. <input type="text" name="dhr_parcel_pack" value="' . esc_attr( $pk > 0 ? (string) $pk : '' ) . '" placeholder="비움" size="8" inputmode="numeric"> 원 — 지금은 비워 두어 장부에 박스비 줄이 없습니다. 값을 넣으면 그때부터 「지출」에 배송비와 따로 적힙니다 (참고: 작은 박스 119원 · 큰 박스 229원, 묶음 비율로 섞으면 약 170원).</p>';
 	echo '<p><b>③ 소포 발송 내역</b> — 우체국 계약소포 → 발송 내역 조회에서 ' . esc_html( $ym ) . ' 을 골라 엑셀(CSV)로 내려받아 그대로 올립니다. 등록일자 · 등기번호 · 고객주문번호 · 고객주문처 · 반품신청여부 칸을 이름으로 찾습니다.</p>';
 	echo '<p><input type="file" name="dhr_parcel_file" accept=".csv,.txt,.tsv"> &nbsp; 또는 붙여 넣기 ↓</p>';
 	echo '<p><textarea name="dhr_parcel_text" rows="3" style="width:100%;max-width:720px;font-size:12px" placeholder="소포주문번호,등록일자,배송진행 상태내역,…,등기번호,…"></textarea></p>';

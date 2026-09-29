@@ -2406,7 +2406,7 @@ $ok(($Pc.'unit')()===2150 && ($Pc.'cost')($ps, ($Pc.'unit')())===10750, '단가 
 $GLOBALS['__options']['duckhoo_parcel_unit'] = 2300;
 $ok(($Pc.'unit')()===2300, '옵션에 넣은 단가가 이긴다');
 unset($GLOBALS['__options']['duckhoo_parcel_unit']);
-$ok(($Pc.'pack_unit')()===170 && ($Pc.'pack_cost')($ps, 0)===0 && ($Pc.'total_cost')($ps, 2150, 0)===10750 && ($Pc.'total_cost')($ps, 2150, ($Pc.'pack_unit')())===11600, '박스비 옵션이 비면 기본 170원(박스 119/229 가중) · 0 이면 합계는 배송비만');
+$ok(($Pc.'pack_unit')()===0 && ($Pc.'pack_cost')($ps, 0)===0 && ($Pc.'total_cost')($ps, 2150, ($Pc.'pack_unit')())===10750, '박스비는 기본 제외(0) — 지출 합계는 배송비만');
 $GLOBALS['__options']['duckhoo_parcel_pack'] = 450;
 $ok(($Pc.'pack_unit')()===450 && ($Pc.'pack_cost')($ps, 450)===2250 && ($Pc.'total_cost')($ps, 2150, 450)===13000, '박스비 450원 × 5상자 = 2,250 · 지출 합계 13,000');
 $pl = ($Pc.'line')($ps, 2150, 450);
