@@ -863,10 +863,18 @@ function noted_cat() {
 		return null;
 	}
 	$t = get_queried_object();
-	if ( ! is_object( $t ) || empty( $t->slug ) || empty( cat_notes()[ (string) $t->slug ] ) ) {
+	if ( ! is_object( $t ) || empty( $t->slug ) ) {
 		return null;
 	}
-	return $t;
+	if ( ! empty( cat_notes()[ (string) $t->slug ] ) ) {
+		return $t;
+	}
+	// 2026-10-01: 입호흡 · 폐호흡 분류도 우리가 제목 · 설명을 쓴다 (「전담 액상」 목표). 이름으로 가른다 —
+	// 한글 슬러그는 DB 에 퍼센트 인코딩으로 들어가 슬러그 비교가 깨진다. 끄기: duckhoo_broad_cats → false
+	if ( apply_filters( 'duckhoo_broad_cats', true ) && function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\kind' ) && '' !== Broad\kind( $t ) ) {
+		return $t;
+	}
+	return null;
 }
 
 /**
@@ -906,6 +914,9 @@ function cat_prices( $t ): array {
  * @return string
  */
 function cat_title( $t ): string {
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\kind' ) && '' !== Broad\kind( $t ) ) {
+		return Broad\cat_title( $t );   // 입호흡 · 폐호흡 (broad-seo.php)
+	}
 	$c = cat_prices( $t );
 	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' 전 라인 재고 보유 · 바로 주문 | ' . get_bloginfo( 'name' );
 }
@@ -917,6 +928,9 @@ function cat_title( $t ): string {
  * @return string
  */
 function cat_note_text( $t ): string {
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\kind' ) && '' !== Broad\kind( $t ) ) {
+		return Broad\cat_text( $t );
+	}
 	$c     = cat_prices( $t );
 	$price = array();
 	if ( $c['single'] > 0 ) {

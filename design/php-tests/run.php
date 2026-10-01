@@ -1769,7 +1769,7 @@ $ok(!str_contains($d, '7,000'), '손으로 쓴 옛 값(7,000원)은 검색 결�
 $ok(!preg_match('/건강|금연|순하|해롭지/u', $d), '광고 제한 낱말이 없다');
 ob_start(); ($S2.'head')(); $hh = ob_get_clean();
 $ok(str_contains($hh, 'og:title" content="노보 액상 3종 전 라인 재고 보유 · 바로 주문 | 액상덕후"') && str_contains($hh, 'og:description" content="액상덕후는 노보'), '노보 분류에는 og 를 우리가 찍는다 — 카카오톡 미리보기용 (AIOSEO 가 분류에는 안 찍는다)');
-$GLOBALS['__qobj'] = (object) ['slug' => 'other-cat', 'name' => '입호흡 액상', 'description' => ''];
+$GLOBALS['__qobj'] = (object) ['slug' => 'other-cat', 'name' => '기기 / 팟 / 코일', 'description' => ''];   // 2026-10-01: 입호흡 · 폐호흡은 이제 우리가 쓴다 — 다른 분류로 본다
 $ok(($S2.'title')('그대로') === '그대로' && str_contains(($S2.'description')('사장님 글'), '사장님 글'), '다른 분류는 손대지 않는다');
 $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
 add_filter('duckhoo_cat_notes', fn($v = null) => []);
@@ -1867,7 +1867,7 @@ $GLOBALS['__postmeta'][13]['_dhr_pages_hash'] = md5('우리가 마지막에 쓴 
 $GLOBALS['__options']['duckhoo_pages_version'] = 1; $GLOBALS['__updated'] = []; $GLOBALS['__inserted'] = [];
 ($PG.'ensure')();
 $ok(count($GLOBALS['__updated']) === 1 && $GLOBALS['__updated'][0]['ID'] === 11 && str_contains($GLOBALS['__updated'][0]['post_content'], '월요일 오후 4시'), '손대지 않은 배송 페이지만 새 글로 바꾼다 (약관은 수정된 흔적 · 개인정보는 해시가 달라 그대로)');
-$ok(($GLOBALS['__postmeta'][11]['_dhr_pages_hash'] ?? '') === md5(trim($defs['shipping']['content'])) && $GLOBALS['__options']['duckhoo_pages_version'] === \Duckhoo\Redesign\Pages\VERSION && count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_name'] === 'price', '바꾼 글의 해시를 남기고 버전을 올린다 · 새로 만드는 것은 없던 /price/ 하나뿐');
+$ok(($GLOBALS['__postmeta'][11]['_dhr_pages_hash'] ?? '') === md5(trim($defs['shipping']['content'])) && $GLOBALS['__options']['duckhoo_pages_version'] === \Duckhoo\Redesign\Pages\VERSION && count($GLOBALS['__inserted']) === 3 && $GLOBALS['__inserted'][0]['post_name'] === 'price' && $GLOBALS['__inserted'][1]['post_name'] === 'liquid-guide' && $GLOBALS['__inserted'][2]['post_name'] === 'mtl-vs-dl', '바꾼 글의 해시를 남기고 버전을 올린다 · 새로 만드는 것은 없던 /price/ · 안내 글 두 장(2026-10-01)');
 $GLOBALS['__options']['duckhoo_pages_version'] = \Duckhoo\Redesign\Pages\VERSION; $GLOBALS['__updated'] = [];
 ($PG.'ensure')();
 $ok(!$GLOBALS['__updated'], '버전이 같으면 아무것도 안 한다');
@@ -2192,9 +2192,9 @@ $ok(($SP.'drop_private')($entries, []) === $entries, '뺄 번호를 모르면 �
 unset($GLOBALS['__pages']['inquiries']);
 $ok(($SP.'sitemap_posts')($entries, 'kboard') === $entries, 'kboard 표를 읽을 수 없으면(테스트) 아무것도 빼지 않는다 — 모를 때는 그대로');
 // 제목 · 설명
-$ok(($SP.'shop_title')(184) === '전자담배 액상 전체 상품 184종 | 액상덕후' && ($SP.'shop_title')(0) === '전자담배 액상 전체 상품 | 액상덕후', '전체 상품 제목 — 종수는 있을 때만');
+$ok(($SP.'shop_title')(184) === '전자담배 액상 전체 상품 184종 | 전담 액상 사이트 액상덕후' && ($SP.'shop_title')(0) === '전자담배 액상 전체 상품 | 전담 액상 사이트 액상덕후', '전체 상품 제목 — 종수는 있을 때만, 「전담 액상 사이트」(2026-10-01)');
 $d = ($SP.'shop_desc')(184, ['노보', '펠릭스']);
-$ok(str_starts_with($d, '노보 · 펠릭스 등 입호흡 · 폐호흡 액상 184종') && str_contains($d, '30,000원 이상 무료배송') && str_contains($d, '8,800원 적립') && str_contains($d, '19세 이상') && mb_strlen($d) <= 160, '전체 상품 설명 — 브랜드 · 종수 · 혜택 · 19세, 160자 이내');
+$ok(str_starts_with($d, '전자담배 액상(전담 액상) 전문 사이트. 노보 · 펠릭스 등 입호흡 · 폐호흡 액상 184종') && str_contains($d, '30,000원 이상 무료배송') && str_contains($d, '8,800원 적립') && str_contains($d, '19세 이상') && mb_strlen($d) <= 160, '전체 상품 설명 — 브랜드 · 종수 · 혜택 · 19세, 160자 이내');
 foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($d, $bad), "전체 상품 설명에 「{$bad}」 없음"); }
 $ok(str_contains(($SP.'page_desc')('login', 'login'), '로그인') && str_contains(($SP.'page_desc')('register', 'Sign In'), '본인확인'), '로그인 · 가입 페이지는 슬러그 글 (영문 제목을 안 쓴다)');
 $g = ($SP.'page_desc')('unknown-page', '<b>어떤</b> 페이지');
@@ -2576,6 +2576,67 @@ $ok(str_contains($nt['title'], '2026년 10월') && str_contains($nt['content'], 
 $GLOBALS['__inserted'] = []; unset($GLOBALS['__options']['duckhoo_novo_notice_post']);
 ($NS.'ensure_notice')(); ($NS.'ensure_notice')();
 $ok(count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_status'] === 'draft' && $GLOBALS['__inserted'][0]['post_type'] === 'post', '안내 글은 초안(draft)으로 딱 한 번만 만든다 — 공개는 사장님이 누른다');
+$GLOBALS['__products'] = [];
+
+/* ── 넓은 말 SEO — 「전담 액상」 목표 (includes/broad-seo.php · pages.php v4, 2026-10-01) ─── */
+require_once dirname(__DIR__, 2).'/includes/broad-seo.php';
+$BR = 'Duckhoo\\Redesign\\Seo\\Broad\\'; $GLOBALS['dhr_test'] = true;
+$GLOBALS['__transients'] = [];
+$GLOBALS['__products'] = [
+  8101 => new WC_Product(8101, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000.0, true),
+  8102 => new WC_Product(8102, '[디오리퀴드] 로젤하트 (9.8mg / 30ml)', 8000.0, true),
+  8103 => new WC_Product(8103, '[펠릭스] 더블라임 (9.8mg / 30ml)', 20000.0, true),
+  8104 => new WC_Product(8104, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true),
+  8105 => new WC_Product(8105, '[화이트아웃] 체리 (9.8mg / 30ml)', 7000.0, false),   // 품절 — 최저가에서 빠져야 한다
+  8106 => new WC_Product(8106, '[조바] 젤로 기기', 58000.0, true),                     // 기기 — 액상 값에서 빠져야 한다
+];
+$mtl = (object) ['slug' => '%ec%9e%85%ed%98%b8%ed%9d%a1-%ec%95%a1%ec%83%81', 'name' => '입호흡 액상', 'description' => ''];
+$dlc = (object) ['slug' => 'x-dl', 'name' => '폐호흡 액상', 'description' => ''];
+$ok(($BR.'kind')($mtl) === 'mtl' && ($BR.'kind')($dlc) === 'dl' && ($BR.'kind')((object)['name'=>'무니코틴 입호흡 액상']) === '' && ($BR.'kind')((object)['name'=>'기기 / 팟 / 코일']) === '', '분류는 이름으로 가른다 (슬러그는 퍼센트 인코딩) · 무니코틴 · 기기는 아니다');
+$ct = ($BR.'cat_title')($mtl);
+$ok($ct === '입호흡 액상 5종 가격 8,000원~ | 전자담배 입호흡(MTL) 액상 사이트 액상덕후', "입호흡 제목: 종수(재고 5) · 최저가(8,000 — 품절 7,000 제외) · 「전자담배 입호흡(MTL) 액상 사이트」 → {$ct}");
+$ok(str_starts_with(($BR.'cat_title')($dlc), '폐호흡 액상') && str_contains(($BR.'cat_title')($dlc), '폐호흡(DL) 액상 사이트'), '폐호흡 제목');
+$cd = ($BR.'cat_text')($mtl);
+$ok(str_contains($cd, '입호흡(MTL) 전자담배 액상 5종') && str_contains($cd, '노보 · 디오리퀴드 · 펠릭스') && str_contains($cd, '낱병 8,000원부터') && str_contains($cd, '병당 약 10,900원') && str_contains($cd, '19세'), '입호흡 설명: 종류 · 브랜드(재고 있는 것만, 많은 순) · 낱병 · 병당 · 19세');
+$ok(!preg_match('/건강|금연|순하|해롭/u', $cd.$ct), '분류 글에 광고 제한 낱말 없음');
+// seo.php 가 입호흡 분류를 noted_cat 으로 보고 Broad 로 넘긴다
+$GLOBALS['__is_ptax'] = true; $GLOBALS['__qobj'] = $mtl;
+$ok(($S2.'title')('입호흡 액상 가격 8,000원~ | 69종 모음 - 액상덕후') === $ct, '분류 화면 <title> 은 손으로 쓴 옛 값(69종)이 아니라 우리 제목 — 종수가 상품을 따라간다');
+$ok(str_contains(($S2.'description')('옛 설명'), '입호흡(MTL) 전자담배 액상'), '분류 메타 설명도 우리 글');
+add_filter('duckhoo_broad_cats', fn($v = null) => false);
+$ok(($S2.'title')('그대로') === '그대로', '필터 duckhoo_broad_cats → false 면 AIOSEO 글로 돌아간다');
+$GLOBALS['__filters']['duckhoo_broad_cats'] = [];
+// FAQ — 입호흡 분류 · 전체 상품
+$f1 = ($BR.'faq')('mtl', $mtl); $t1 = implode(' ', array_map(fn($i) => $i['q'].' '.$i['a'], $f1));
+$ok(count($f1) >= 5 && str_contains($t1, '입호흡 액상이란') && str_contains($t1, '8,000원부터') && str_contains($t1, '9.8mg') && str_contains($t1, '19세'), '입호흡 FAQ: 뜻 · 값(상품에서) · 농도 · 19세');
+$GLOBALS['__is_ptax'] = false; unset($GLOBALS['__qobj']); $GLOBALS['__is_shop'] = true;
+$ok(($BR.'ctx')() === 'shop', '전체 상품 화면의 FAQ 문맥은 shop');
+$f2 = ($BR.'faq')('shop'); $t2 = implode(' ', array_map(fn($i) => $i['q'].' '.$i['a'], $f2));
+$ok(count($f2) >= 5 && str_contains($t2, '전담 액상(전자담배 액상)은 어디서') && str_contains($t2, '낱병은 8,000원부터') && str_contains($t2, '병당 약 10,900원') && str_contains($t2, '무통장입금'), '전체 상품 FAQ: 어디서 · 값(낱병 최저 · 10+1 병당) · 입금');
+$ok(!preg_match('/건강|금연|순하다|해롭지/u', $t1.$t2) && !preg_match('/노보마트|브이몬스터|겨울마을|다른 (곳|가게|사이트)/u', $t1.$t2), 'FAQ 에 금지 낱말 · 다른 가게 얘기 없음');
+ob_start(); ($BR.'faq_html')(); $fh = ob_get_clean();
+$ok(str_contains($fh, '전자담배 액상 자주 묻는 질문') && substr_count($fh, '<details') === count($f2) && str_contains($fh, '/liquid-guide/') && str_contains($fh, '/mtl-vs-dl/'), 'FAQ HTML: 제목 · 항목 수 · 안내 글 두 장 링크');
+ob_start(); ($BR.'faq_jsonld')(); $fj = ob_get_clean();
+$ok(str_contains($fj, '"@type":"FAQPage"') && substr_count($fj, '"@type":"Question"') === count($f2), 'FAQPage JSON-LD 가 같은 항목을 싣는다');
+$GLOBALS['__is_shop'] = false;
+$ok(($BR.'ctx')() === '' && ($BR.'faq_html')() === null, '검색도 분류도 전체 상품도 아니면 FAQ 를 안 그린다');
+// 홈
+$ht = ($BR.'home_title')();
+$ok($ht === '전자담배 액상 · 전담 액상 사이트 액상덕후 | 입호흡 · 폐호흡 6종 · 노보 재고 있음', "홈 제목: 손님이 치는 말 둘 앞에 · 종수 · 노보 재고(재고 있을 때만) → {$ht}");
+$hd = ($BR.'home_desc')();
+$ok(str_starts_with($hd, '전자담배 액상(전담 액상) 전문 사이트 액상덕후.') && str_contains($hd, '낱병 8,000원부터') && str_contains($hd, '노보 전 라인 재고 있음') && str_contains($hd, '19세'), '홈 설명: 전담 액상 · 브랜드 · 최저가 · 노보 · 19세');
+$ok(str_contains(($BR.'home_h1')(), '전담 액상 사이트'), '홈 숨은 h1 에도 전담 액상');
+$GLOBALS['__products'][8101] = new WC_Product(8101, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000.0, false); $GLOBALS['__products'][8104] = new WC_Product(8104, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, false); $GLOBALS['__transients'] = [];
+$ok(!str_contains(($BR.'home_title')(), '노보 재고 있음'), '노보가 전부 품절이면 제목에서 「노보 재고 있음」이 빠진다');
+// 안내 글 두 장 (pages.php v4)
+$PG = 'Duckhoo\\Redesign\\Pages\\';
+$defs = ($PG.'definitions')();
+$ok(isset($defs['liquid-guide'], $defs['mtl-vs-dl']) && \Duckhoo\Redesign\Pages\VERSION === 4, '안내 글 두 장이 정의에 있고 VERSION 4');
+$gc = $defs['liquid-guide']['content'].$defs['mtl-vs-dl']['content'];
+$ok(!preg_match('/건강|금연|순하|해롭|노보마트|브이몬스터|겨울마을/u', $gc), '안내 글에 광고 제한 낱말 · 다른 가게 없음');
+$ok(str_contains($gc, '/product-category/입호흡-액상/') && str_contains($gc, '/product-category/폐호흡-액상/') && str_contains($gc, '/price/') && str_contains($defs['liquid-guide']['content'], '/mtl-vs-dl/') && str_contains($defs['mtl-vs-dl']['content'], '/liquid-guide/'), '안내 글은 분류 · 가격표 · 서로를 링크한다');
+$ok(!preg_match('/\d+종/u', $gc) && str_contains($gc, '9.8mg') && str_contains($gc, '<table>'), '안내 글에 종수 같은 변하는 숫자가 없고(DB 글), 농도 · 표는 있다');
+$ok(str_contains(($SP.'page_desc')('liquid-guide', '전자담배 액상 고르는 법'), '전담 액상 사이트') && str_contains(($SP.'page_desc')('mtl-vs-dl', 'x'), '입호흡(MTL) 액상과 폐호흡(DL) 액상의 차이'), '안내 글 두 장의 메타 설명');
 $GLOBALS['__products'] = [];
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";

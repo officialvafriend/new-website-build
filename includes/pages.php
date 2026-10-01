@@ -18,7 +18,7 @@ namespace Duckhoo\Redesign\Pages;
 defined( 'ABSPATH' ) || exit;
 
 const VERSION_OPTION = 'duckhoo_pages_version';
-const VERSION        = 3;   // 3: /price/ 가격표 (2026-09-28)
+const VERSION        = 4;   // 3: /price/ 가격표 (2026-09-28) · 4: /liquid-guide/ · /mtl-vs-dl/ 안내 글 (2026-10-01, 「전담 액상」 목표)
 
 /**
  * 가게 정보. 한 곳에서 고치면 세 페이지가 같이 바뀐다.
@@ -68,7 +68,136 @@ function definitions(): array {
 			'title'   => '전자담배 액상 가격표',
 			'content' => '[duckhoo_price_table]',
 		),
+		// 2026-10-01: 「전담 액상」 「전자담배 액상」 같은 넓은 말은 상품 목록보다 **글**이 먼저 걸린다.
+		// 숫자(종수 · 값)는 적지 않는다 — DB 글이라 바뀌면 거짓이 된다. 값은 가격표 · 분류로 보낸다.
+		'liquid-guide' => array(
+			'title'   => '전자담배 액상 고르는 법 — 입호흡 · 폐호흡 · 니코틴 · 용량',
+			'content' => guide_content( $s ),
+		),
+		'mtl-vs-dl'    => array(
+			'title'   => '입호흡 액상과 폐호흡 액상의 차이',
+			'content' => mtl_dl_content( $s ),
+		),
 	) );
+}
+
+/**
+ * 전자담배 액상 고르는 법. 사실만 — 기기 · 농도 · 용량 · 값 · 주문. 광고 제한 낱말(건강 · 금연 · 순하다 · 해롭지 않다)은 쓰지 않는다.
+ *
+ * @param array<string,string> $s 가게 정보.
+ * @return string
+ */
+function guide_content( array $s ): string {
+	$mtl   = home_url( '/product-category/입호흡-액상/' );
+	$dl    = home_url( '/product-category/폐호흡-액상/' );
+	$price = home_url( '/price/' );
+	$diff  = home_url( '/mtl-vs-dl/' );
+	$shop  = home_url( '/shop/' );
+	$novo  = home_url( '/product-category/novo-liquid/' );
+	return '
+<p>전자담배 액상(전담 액상)은 <strong>쓰는 기기</strong>에 맞춰 고르는 것이 먼저입니다. 그다음이 니코틴 농도, 용량, 맛 계열, 값 순서입니다. ' . $s['name'] . '에서 파는 액상을 기준으로 고르는 순서를 정리했습니다.</p>
+
+<h2>1. 기기부터 본다 — 입호흡인가, 폐호흡인가</h2>
+<ul>
+<li><strong>입호흡(MTL) 기기</strong> — 팟 · 소형 기기. 코일 저항이 1옴 안팎이고 출력이 낮습니다. 담배처럼 입에 머금었다 들이마시는 방식이라 <a href="' . esc_url( $mtl ) . '">입호흡 액상</a>을 씁니다.</li>
+<li><strong>폐호흡(DL) 기기</strong> — 서브옴(1옴 미만) 코일의 고출력 기기 · 탱크. 연기를 바로 들이마시는 방식이라 <a href="' . esc_url( $dl ) . '">폐호흡 액상</a>을 씁니다.</li>
+<li>서로 바꿔 넣으면 맛과 연무가 제대로 나지 않고 코일이 빨리 탑니다. 기기 설명서의 권장 저항 · 출력을 먼저 확인하세요. 둘의 차이는 <a href="' . esc_url( $diff ) . '">입호흡 액상과 폐호흡 액상의 차이</a>에 표로 정리해 두었습니다.</li>
+</ul>
+
+<h2>2. 니코틴 농도 — 이름의 「mg」 읽는 법</h2>
+<ul>
+<li>상품 이름의 <strong>(9.8mg / 30ml)</strong> 가 농도와 용량입니다. mg 은 1ml 에 든 니코틴 양입니다.</li>
+<li>입호흡 액상은 <strong>9.8mg</strong> 이 가장 흔합니다. 저출력으로 피우는 만큼 농도가 높은 쪽입니다.</li>
+<li>폐호흡 액상은 <strong>3mg</strong> 안팎이 흔합니다. 한 번에 들이마시는 양이 많아 농도가 낮은 쪽입니다.</li>
+<li>농도가 0 인 제품은 <strong>무니코틴 액상</strong>으로 따로 분류돼 있습니다.</li>
+<li>2026년 4월 24일 개정 담배사업법 시행 뒤 니코틴 액상은 <strong>법 시행 전 들여온 재고만</strong> 판매하며 새로 들어오지 않습니다. 품절되면 다시 채워지지 않으므로 사이트의 「재고 있음」 표시를 보고 고르시면 됩니다.</li>
+</ul>
+
+<h2>3. 용량 — 30ml 와 60ml</h2>
+<ul>
+<li>입호흡 액상은 <strong>30ml</strong> 한 병이 기본입니다. 팟 하나에 2ml 안팎이 들어가므로 한 병으로 열 번 넘게 채웁니다.</li>
+<li>폐호흡 액상은 <strong>60ml</strong> 모드 제품이 많습니다. 탱크 용량이 커 소모가 빠르기 때문입니다.</li>
+<li>같은 맛을 계속 쓰신다면 <strong>묶음(5병 · 10병 · 10+1)</strong>이 병당 가격이 가장 낮습니다. 묶음 상품은 구성과 맛을 고르는 옵션이 있습니다.</li>
+</ul>
+
+<h2>4. 맛 계열 — 이름이 말해 준다</h2>
+<ul>
+<li><strong>연초 · 멘솔</strong> — 타박멘솔 · 블랙멘솔 · 멘솔시가처럼 담배 계열 이름. <a href="' . esc_url( $novo ) . '">노보</a> · 노보 블랙이 대표입니다.</li>
+<li><strong>과일</strong> — 더블라임 · 알로에 그레이프 · 블루레몬에이드 같은 이름. 디오리퀴드 · 화이트아웃 · 펠릭스에 많습니다.</li>
+<li><strong>음료 · 디저트</strong> — 소다 · 커피 · 데저트 같은 이름.</li>
+<li>처음 고르시면 낱병 한 병으로 맛을 본 뒤 묶음으로 가는 순서가 안전합니다. 액상은 개봉하면 교환 · 환불이 되지 않습니다.</li>
+</ul>
+
+<h2>5. 값 보는 법</h2>
+<ul>
+<li>모든 상품의 판매가와 <strong>병당 가격</strong>은 <a href="' . esc_url( $price ) . '">전 상품 가격표</a> 한 장에 있습니다. 묶음은 병당으로 비교하세요.</li>
+<li>가입 즉시 적립금이 들어오고 ' . $s['ship_free'] . ' 이상은 무료배송입니다. 적립금은 결제 화면에서 바로 씁니다.</li>
+</ul>
+
+<h2>6. 주문에서 받기까지</h2>
+<ul>
+<li><strong>19세 이상</strong> 휴대폰 본인확인을 마친 회원만 구매할 수 있습니다. 비로그인 상태에서는 상품 사진이 가려져 보입니다.</li>
+<li>결제는 <strong>무통장입금</strong>입니다. 입금자명을 주문자명과 똑같이 넣으면 입금이 자동으로 확인됩니다.</li>
+<li>평일 오후 4시 이전에 입금이 확인된 주문은 <strong>당일 출고</strong>합니다. 주말 · 공휴일 출고는 없습니다. 자세한 것은 <a href="' . esc_url( home_url( '/shipping/' ) ) . '">배송 · 교환 · 환불 안내</a>.</li>
+</ul>
+
+<h2>7. 보관</h2>
+<ul>
+<li>직사광선과 고온을 피해 뚜껑을 닫아 세워 두세요. 색이 짙어지는 것은 니코틴 액상의 자연스러운 변화입니다.</li>
+<li>어린이와 반려동물의 손이 닿지 않는 곳에 보관하세요.</li>
+</ul>
+
+<p><a href="' . esc_url( $shop ) . '">전체 상품 보기</a> · <a href="' . esc_url( $mtl ) . '">입호흡 액상</a> · <a href="' . esc_url( $dl ) . '">폐호흡 액상</a> · <a href="' . esc_url( $price ) . '">전 상품 가격표</a></p>
+';
+}
+
+/**
+ * 입호흡 액상 vs 폐호흡 액상 — 한 표.
+ *
+ * @param array<string,string> $s 가게 정보.
+ * @return string
+ */
+function mtl_dl_content( array $s ): string {
+	$mtl   = home_url( '/product-category/입호흡-액상/' );
+	$dl    = home_url( '/product-category/폐호흡-액상/' );
+	$price = home_url( '/price/' );
+	$guide = home_url( '/liquid-guide/' );
+	return '
+<p>전자담배 액상은 <strong>입호흡(MTL, Mouth To Lung)</strong> 액상과 <strong>폐호흡(DL, Direct Lung)</strong> 액상으로 나뉩니다. 액상 자체가 다른 것이 아니라 <strong>어떤 기기로 어떻게 피우는가</strong>에 맞춰 니코틴 농도와 점도를 달리 만든 것입니다. 기기와 액상이 맞지 않으면 맛이 제대로 나지 않습니다.</p>
+
+<h2>한 표로 보는 차이</h2>
+<table>
+<thead><tr><th></th><th>입호흡(MTL) 액상</th><th>폐호흡(DL) 액상</th></tr></thead>
+<tbody>
+<tr><td><strong>피우는 방식</strong></td><td>입에 머금었다가 들이마신다 (담배와 같다)</td><td>연기를 바로 깊이 들이마신다</td></tr>
+<tr><td><strong>기기</strong></td><td>팟 · 소형 기기</td><td>고출력 기기 · 탱크 · 모드</td></tr>
+<tr><td><strong>코일 저항</strong></td><td>1옴 안팎 이상</td><td>1옴 미만(서브옴)</td></tr>
+<tr><td><strong>출력</strong></td><td>낮다 (10~20W 안팎)</td><td>높다 (40W 이상)</td></tr>
+<tr><td><strong>니코틴 농도</strong></td><td>높은 편 — 9.8mg 이 흔하다</td><td>낮은 편 — 3mg 안팎</td></tr>
+<tr><td><strong>용량</strong></td><td>30ml 기본</td><td>60ml 가 많다</td></tr>
+<tr><td><strong>연무량</strong></td><td>적다</td><td>많다</td></tr>
+<tr><td><strong>소모 속도</strong></td><td>느리다 — 30ml 로 팟 열 번 이상</td><td>빠르다</td></tr>
+<tr><td><strong>' . $s['name'] . ' 분류</strong></td><td><a href="' . esc_url( $mtl ) . '">입호흡 액상</a></td><td><a href="' . esc_url( $dl ) . '">폐호흡 액상</a></td></tr>
+</tbody>
+</table>
+
+<h2>어느 쪽을 골라야 하나</h2>
+<ul>
+<li><strong>팟 기기 · 소형 기기를 쓴다</strong> → 입호흡 액상. 노보 · 디오리퀴드 · 화이트아웃 · 펠릭스(30ml) 같은 9.8mg 액상이 여기입니다.</li>
+<li><strong>서브옴 탱크 · 모드 기기를 쓴다</strong> → 폐호흡 액상. 펠릭스 모드(60ml) 같은 3mg 액상이 여기입니다.</li>
+<li>같은 브랜드가 두 분류에 다 있는 경우가 있습니다(펠릭스 더블라임 입호흡 · 폐호흡). <strong>이름 뒤의 mg · ml 로 구분</strong>하세요.</li>
+</ul>
+
+<h2>바꿔 넣으면 어떻게 되나</h2>
+<ul>
+<li>입호흡 액상(9.8mg)을 고출력 기기에 넣으면 농도가 너무 높아 한 모금에도 목에 세게 걸립니다.</li>
+<li>폐호흡 액상(3mg)을 팟 기기에 넣으면 농도가 낮아 맛이 흐리고, 점도가 높은 제품은 팟 코일이 빨리 탑니다.</li>
+<li>기기 설명서의 권장 저항 · 출력을 먼저 확인하고, 그 범위에 맞는 분류에서 고르면 됩니다.</li>
+</ul>
+
+<h2>값</h2>
+<p>두 분류의 판매가와 묶음 병당 가격은 <a href="' . esc_url( $price ) . '">전 상품 가격표</a>에서 한 번에 비교할 수 있습니다. 농도 · 용량 · 맛 계열까지 고르는 순서는 <a href="' . esc_url( $guide ) . '">전자담배 액상 고르는 법</a>에 있습니다. ' . $s['ship_free'] . ' 이상 무료배송, 19세 이상 본인확인 회원만 구매할 수 있습니다.</p>
+';
 }
 
 /**

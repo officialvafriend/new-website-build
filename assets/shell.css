@@ -2666,3 +2666,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dha-faq h2{ margin: 0 0 .6rem !important; font-
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i{ border-top: 1px solid var(--dh-line, #E1E5E8); padding: .55rem 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i summary{ cursor: pointer; font-size: 15.5px; font-weight: 800; color: var(--dh-ink, #111); line-height: 1.5; padding: .25rem 0; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i p{ margin: .35rem 0 .2rem !important; font-size: 14.5px; line-height: 1.65; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
+
+/* 2026-10-01 넓은 말 SEO — FAQ 아래 안내 글 링크 */
+html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more{margin:14px 0 0;font-size:14px;line-height:1.6;color:#5b6570}
+html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more a{color:#C2410C;font-weight:700;text-decoration:none}
+html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more a:hover{text-decoration:underline}
