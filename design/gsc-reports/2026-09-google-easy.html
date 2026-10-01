@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>9월 구글 검색 — 쉬운 보고서</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css">
+<style>
+  @page { size: A4; margin: 11mm 13mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", sans-serif; color: #111; font-size: 11.5pt; line-height: 1.5; word-break: keep-all; }
+  .eb { font-size: 10pt; letter-spacing: .08em; color: #C2410C; font-weight: 800; }
+  h1 { font-size: 24pt; line-height: 1.25; margin: 4pt 0 2pt; font-weight: 900; }
+  .sub { color: #4E565F; font-size: 10.5pt; margin-bottom: 10pt; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9pt; margin-bottom: 10pt; }
+  .kpi { border: 1.5px solid #111; border-radius: 12pt; padding: 11pt 12pt 10pt; }
+  .kpi .l { font-size: 11pt; font-weight: 700; margin-bottom: 2pt; }
+  .kpi .v { font-size: 27pt; font-weight: 900; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .kpi .v small { font-size: 13pt; font-weight: 700; color: #4E565F; margin-left: 2pt; }
+  .kpi .d { font-size: 11pt; margin-top: 2pt; }
+  .kpi .d b { color: #C2410C; }
+  .kpi.warm { background: #FBF4EF; border-color: #C2410C; }
+  .bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 0 0 10pt; }
+  .bar { border: 1px solid #E1E5E8; border-radius: 12pt; padding: 10pt 12pt 8pt; }
+  .bar .t { font-weight: 800; font-size: 11.5pt; margin-bottom: 6pt; }
+  .row { display: grid; grid-template-columns: 34pt 1fr 52pt; align-items: center; gap: 8pt; margin: 4pt 0; font-size: 11pt; }
+  .row .m { color: #4E565F; font-weight: 700; }
+  .row .f { height: 16pt; border-radius: 4pt; background: #CBD2D8; }
+  .row.now .f { background: #C2410C; }
+  .row .n { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+  .box { border-left: 5px solid #111; background: #F4F6F7; padding: 8pt 11pt 7pt; border-radius: 0 10pt 10pt 0; margin-bottom: 8pt; }
+  .box.warm { border-left-color: #C2410C; background: #FBF4EF; }
+  .box .t { font-weight: 900; font-size: 13pt; margin-bottom: 3pt; }
+  .box p, .box li { margin: 0 0 3pt; font-size: 11pt; }
+  .box ul { margin: 0; padding-left: 15pt; }
+  .one { font-size: 13pt; font-weight: 800; line-height: 1.45; border-top: 2px solid #111; border-bottom: 2px solid #111; padding: 9pt 2pt; margin: 0 0 12pt; }
+  .one b { color: #C2410C; }
+  .note { font-size: 9.5pt; color: #4E565F; border-top: 1px solid #E1E5E8; padding-top: 6pt; margin-top: 6pt; }
+</style>
+</head>
+<body>
+<div class="eb">액상덕후 · 9월 구글 검색 보고</div>
+<h1>9월에 구글로 들어온 손님, 8월보다 45% 늘었습니다</h1>
+<div class="sub">구글에서 검색해 우리 사이트로 들어온 사람을 센 것입니다. 네이버는 따로 봅니다. · 보고 대상 대표님 · 이사님 · 작성 온라인몰 운영 · 2026년 10월 1일</div>
+
+<div class="kpis">
+  <div class="kpi warm"><div class="l">구글로 들어온 손님</div><div class="v">598<small>명</small></div><div class="d">8월 413명 → <b>+45%</b></div></div>
+  <div class="kpi"><div class="l">검색 결과에 우리가 보인 횟수</div><div class="v">3,257<small>번</small></div><div class="d">8월 2,471번 → <b>+32%</b></div></div>
+  <div class="kpi"><div class="l">우리 이름을 모르고 온 새 손님</div><div class="v">60<small>명</small></div><div class="d">8월 18명 → <b>3.3배</b></div></div>
+</div>
+
+<div class="one">한 줄로: 8월까지는 「액상덕후」라고 <b>이름을 아는 사람만</b> 구글로 왔는데, 9월부터는 「노보 액상」처럼 <b>상품을 검색한 사람</b>도 들어오기 시작했습니다. 그 새 손님 60명 중 32명이 노보를 찾은 사람입니다.</div>
+
+<div class="bars">
+  <div class="bar"><div class="t">구글로 들어온 손님 (명)</div>
+    <div class="row"><span class="m">8월</span><div class="f" style="width:69%"></div><span class="n">413</span></div>
+    <div class="row now"><span class="m">9월</span><div class="f" style="width:100%"></div><span class="n">598</span></div>
+  </div>
+  <div class="bar"><div class="t">그중 이름을 모르고 온 새 손님 (명)</div>
+    <div class="row"><span class="m">8월</span><div class="f" style="width:30%"></div><span class="n">18</span></div>
+    <div class="row now"><span class="m">9월</span><div class="f" style="width:100%"></div><span class="n">60</span></div>
+  </div>
+</div>
+
+<div class="two">
+  <div>
+    <div class="box"><div class="t">왜 늘었나 — 9월에 한 일 셋</div><ul>
+      <li>상품 184개에 <b>구글이 읽을 수 있는 설명 글</b>을 붙였습니다. 전에는 사진뿐이라 구글이 우리 상품을 몰랐습니다.</li>
+      <li>노보 상품과 분류의 제목을 <b>손님이 검색창에 치는 말</b>(「노보 액상」 · 「재고 있음」)로 바꿨습니다.</li>
+      <li>로그인 · 마이페이지처럼 <b>손님이 검색으로 올 필요 없는 화면</b>을 검색에서 뺐습니다.</li>
+    </ul></div>
+    <div class="box"><div class="t">10월에 할 일</div><ul>
+      <li>「전담 액상」 「전자담배 액상」처럼 <b>큰 말에서도 보이게</b> 홈 · 분류 제목을 바꾸고 안내 글 두 장을 열었습니다 (10월 1일). 효과는 몇 주 뒤에 나타납니다.</li>
+      <li>많이 보였는데 눌리지 않은 상품 10개에 <b>설명 글</b>을 붙입니다.</li>
+          </ul></div>
+  </div>
+  <div>
+    <div class="box warm"><div class="t">아직 안 되는 것 둘</div><ul>
+      <li><b>값을 묻는 사람이 안 들어옵니다.</b> 「액상 가격」을 검색한 사람에게 315번 보였는데 6번만 눌렀습니다. 그래서 9월 28일에 전 상품 가격표 페이지를 열었고, 10월에 효과를 봅니다.</li>
+      <li><b>「전담 액상」 같은 큰 말에서는 아직 안 보입니다.</b> 그 자리는 「액상」이 이름에 든 쇼핑몰들이 차지하고 있어 몇 달이 걸립니다.</li>
+    </ul></div>
+    <div class="box"><div class="t">낱말 두 개만 알면 됩니다</div>
+      <p><b>보인 횟수</b> — 누가 구글에서 검색했을 때 결과 목록에 우리 가게가 뜬 횟수. 길에서 간판이 눈에 띈 것.</p>
+      <p><b>들어온 손님</b> — 그 결과를 눌러 실제로 우리 사이트에 들어온 사람. 간판을 보고 문을 연 것.</p>
+      <p>보인 횟수가 먼저 늘고, 들어온 손님은 몇 주 뒤에 따라옵니다. 지금은 그 첫 단계입니다.</p>
+    </div>
+  </div>
+</div>
+
+<p class="note">2026년 10월 1일 집계 · 숫자는 구글 서치콘솔(구글이 사이트 주인에게 주는 통계)에서 8월 · 9월을 같은 날 내보낸 것입니다 · 검색어 · 페이지별 자세한 표는 별첨 7쪽 보고서에 있습니다.</p>
+</body>
+</html>
