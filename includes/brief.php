@@ -182,9 +182,10 @@ function save( string $text ): void {
  *
  * @return array<string,mixed>
  */
-function payload( bool $fresh = false ): array {
+function payload( bool $fresh = false, string $ym = '' ): array {
 	$today = (string) current_time( 'Y-m-d' );
-	$key   = 'dhr_brief_' . $today . '_' . (string) current_time( 'H' ) . substr( (string) current_time( 'i' ), 0, 1 );
+	$ym    = preg_match( '/^\d{4}-(0[1-9]|1[0-2])$/', $ym ) ? $ym : substr( $today, 0, 7 );
+	$key   = 'dhr_brief_' . $today . '_' . (string) current_time( 'H' ) . substr( (string) current_time( 'i' ), 0, 1 ) . '_' . $ym;
 	$hit   = $fresh ? false : get_transient( $key );
 	if ( is_array( $hit ) ) {
 		return $hit;
@@ -239,7 +240,7 @@ function payload( bool $fresh = false ): array {
 		'week'      => period( $d( 6 ), $today ),
 		'prev_week' => period( $d( 13 ), $d( 7 ) ),
 		'month'     => period( gmdate( 'Y-m-01', strtotime( $today ) ), $today ),
-		'monthly'   => monthly_close( substr( $today, 0, 7 ) ),
+		'monthly'   => monthly_close( $ym ),
 		'price_watch' => function_exists( '\\Duckhoo\\Redesign\\Cost\\price_watch' ) ? \Duckhoo\Redesign\Cost\price_watch( $d( 120 ) ) : array(),
 		'funnel'    => $funnel,
 		'catalog'   => $catalog,
@@ -359,7 +360,8 @@ function routes(): void {
 		'callback'            => function ( $req ) {
 			try {
 				$fresh = is_object( $req ) && method_exists( $req, 'get_param' ) && '1' === (string) $req->get_param( 'fresh' );
-				return rest_ensure_response( payload( $fresh ) );
+				$ym    = is_object( $req ) && method_exists( $req, 'get_param' ) ? (string) $req->get_param( 'ym' ) : '';
+				return rest_ensure_response( payload( $fresh, $ym ) );
 			} catch ( \Throwable $e ) {
 				return new \WP_Error( 'dhr_brief_failed', $e->getMessage(), array( 'status' => 500 ) );
 			}
