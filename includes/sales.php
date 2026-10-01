@@ -187,6 +187,10 @@ function row( $o ): ?array {
 	if ( ! is_object( $o ) || ! method_exists( $o, 'get_id' ) ) {
 		return null;
 	}
+	// 환불 기록(WC_Order_Refund)에는 get_customer_id() 가 없다. 주문이 아니니 세지 않는다.
+	if ( ! method_exists( $o, 'get_customer_id' ) || ( method_exists( $o, 'get_type' ) && 'shop_order' !== (string) $o->get_type() ) ) {
+		return null;
+	}
 
 	$created = method_exists( $o, 'get_date_created' ) ? $o->get_date_created() : null;
 	$points  = 0.0;
@@ -348,6 +352,7 @@ function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): 
 			'limit'   => $size,
 			'page'    => $page,
 			'status'  => 'any',
+			'type'    => 'shop_order', // 환불 기록(shop_order_refund)은 주문이 아니다 — 2026-10-01 그것이 섞여 죽었다.
 			'orderby' => 'date',
 			'order'   => 'ASC',
 		), $args );

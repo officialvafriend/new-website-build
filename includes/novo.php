@@ -417,6 +417,7 @@ function tally_orders( int $uid ): array {
 				'customer_id'  => (int) $one,
 				'limit'        => 60,
 				'status'       => $statuses ? $statuses : 'any',
+				'type'         => 'shop_order',
 				'date_created' => '>=' . day_start(),
 				'return'       => 'objects',
 			)

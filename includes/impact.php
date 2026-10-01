@@ -104,12 +104,13 @@ function orders( string $from, string $to ): array {
 			'limit'        => 200,
 			'page'         => $page,
 			'status'       => 'any',
+			'type'         => 'shop_order', // 환불 기록은 뺀다 — get_customer_id() 가 없어 죽는다 (2026-10-01).
 			'date_created' => $from . '...' . $to,
 			'orderby'      => 'date',
 			'order'        => 'ASC',
 		) );
 		foreach ( (array) $batch as $o ) {
-			if ( ! is_object( $o ) || ! method_exists( $o, 'get_id' ) ) {
+			if ( ! is_object( $o ) || ! method_exists( $o, 'get_id' ) || ! method_exists( $o, 'get_customer_id' ) ) {
 				continue;
 			}
 			$status  = (string) $o->get_status();

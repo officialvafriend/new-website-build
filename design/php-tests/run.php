@@ -878,6 +878,17 @@ $ok(count($sk3) === 1 && (int)$sk3[0]['id'] === 302 && str_contains((string)$sk3
 $GLOBALS['__orders'] = [];
 $GLOBALS['dhr_sales_skipped'] = [];
 
+// 진짜 원인(2026-10-01 사장님 캡처): 환불 기록 #5153 · #5154 이 주문 목록에 섞여 get_customer_id() 가 없어 죽었다
+if (!class_exists('DhrFakeRefund')) {
+  class DhrFakeRefund { public function __construct(public int $id){} public function get_id(){ return $this->id; } public function get_type(){ return 'shop_order_refund'; }
+    public function get_status(){ return 'completed'; } public function get_total(){ return -13500.0; } public function get_date_created(){ return null; } }
+}
+$GLOBALS['__orders'] = [ new DhrSalesOrder(401, '2026-09-30', 'delivered', 1000.0, 1), new DhrFakeRefund(5153), new DhrSalesOrder(402, '2026-09-30', 'delivered', 2000.0, 1) ];
+$got4 = ($S.'fetch')([]);
+$ok(array_column($got4, 'id') === [401, 402] && empty($GLOBALS['dhr_sales_skipped']), '환불 기록은 주문이 아니다 — 세지 않고 오류로도 적지 않는다');
+$ok(($S.'row')(new DhrFakeRefund(5154)) === null, 'row() 가 환불 객체를 null 로 돌려준다');
+$GLOBALS['__orders'] = [];
+
 
 // ── 「19」 가림을 벽이 아니라 문으로 (구매 여정 목 1, 2026-09-10) ──────────
 $F = 'Duckhoo\\Redesign\\Front\\';
