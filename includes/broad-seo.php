@@ -126,7 +126,10 @@ function top_brands( $t = null, int $n = 4 ): array {
 		if ( '' === $b || preg_match( '/이벤트|할인|특가|초특가|한정/u', $b ) ) {
 			continue;
 		}
-		$b         = (string) ( brand_aliases()[ $b ] ?? $b );
+		$b = (string) ( brand_aliases()[ $b ] ?? $b );
+		if ( $b === site() ) {
+			continue;   // 가게 이름이 브랜드로 서면 「액상덕후 · 노보 …」 — 설명에서 이상하다
+		}
 		$out[ $b ] = ( $out[ $b ] ?? 0 ) + 1;
 	}
 	arsort( $out );
@@ -178,9 +181,22 @@ function home_title(): string {
 	return (string) apply_filters( 'duckhoo_home_title', $t );
 }
 
+/**
+ * 홈 · 전체 상품 설명에 쓰는 브랜드 — 주력 브랜드(노보 · 디오리퀴드 · 화이트아웃 · 펠릭스). 상품 수로 세면
+ * 무니코틴 브랜드와 가게 이름(액상덕후)이 앞에 선다 — 사장님 방침(무니코틴은 밀지 않는다)과 어긋난다.
+ *
+ * @return string[]
+ */
+function lead_brands(): array {
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Pages\\brand_names' ) ) {
+		return (array) \Duckhoo\Redesign\Seo\Pages\brand_names();
+	}
+	return top_brands( null, 4 );
+}
+
 function home_desc(): string {
 	$n  = count_all();
-	$b  = top_brands( null, 4 );
+	$b  = lead_brands();
 	$pr = all_prices();
 	$t  = '전자담배 액상(전담 액상) 전문 사이트 ' . site() . '. '
 		. ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '입호흡 · 폐호흡 액상' . ( $n > 0 ? ' ' . $n . '종' : '' )
@@ -347,7 +363,7 @@ function faq( string $ctx, $t = null ): array {
 
 	if ( 'shop' === $ctx ) {
 		$n  = count_all();
-		$b  = top_brands( null, 5 );
+		$b  = lead_brands();
 		$pr = all_prices();
 		$items[] = array(
 			'q' => '전담 액상(전자담배 액상)은 어디서 살 수 있나요?',
@@ -367,7 +383,7 @@ function faq( string $ctx, $t = null ): array {
 		);
 		$items[] = array(
 			'q' => '어떤 브랜드 액상이 있나요?',
-			'a' => ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '브랜드별 낱병과 묶음을 판매합니다. 노보는 전 라인 재고가 있습니다.',
+			'a' => ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '브랜드별 낱병과 묶음을 판매합니다.' . ( novo_in_stock() ? ' 노보는 전 라인 재고가 있습니다.' : '' ),
 		);
 		$items[] = array(
 			'q' => '주문하면 언제 받을 수 있나요?',

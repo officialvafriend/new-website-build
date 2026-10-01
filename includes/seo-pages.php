@@ -431,6 +431,12 @@ function page_desc( string $slug, string $title ): string {
  */
 function description( $d ): string {
 	$d = trim( (string) $d );
+	// 2026-10-01: 우리가 만든 안내 글 두 장은 AIOSEO 가 본문 첫 줄을 잘라 채우므로(「… 1. 기기부터 본다 —」) 늘 우리 글로.
+	$slug = page_slug();
+	if ( in_array( $slug, (array) apply_filters( 'duckhoo_forced_desc_slugs', array( 'liquid-guide', 'mtl-vs-dl' ) ), true ) ) {
+		$o = get_queried_object();
+		return page_desc( $slug, (string) ( $o->post_title ?? '' ) );
+	}
 	if ( '' !== $d ) {
 		return $d;
 	}
