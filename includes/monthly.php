@@ -774,6 +774,10 @@ function render( array $c, string $ym, string $built, float $took, string $imsg 
 		echo $m_i === $ym ? '<b>' . esc_html( kmonth( $m_i ) ) . '</b>' : '<a href="' . esc_url( page_url( $m_i ) ) . '">' . esc_html( kmonth( $m_i ) ) . '</a>';
 	}
 	echo '</p>';
+	if ( $ym !== $cur && ! isset( $_GET['dhr_m'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		// 매달 1~3일은 지난달 결산을 먼저 연다 — 이번 달이 「안 보인다」고 느끼지 않게 길을 적어 둔다.
+		echo '<div class="notice notice-info inline"><p><b>' . esc_html( kmonth( $ym ) ) . ' 결산</b>을 먼저 보여 드립니다 (매달 1~3일은 지난달을 닫는 기간). 진행 중인 <a href="' . esc_url( page_url( $cur ) ) . '"><b>' . esc_html( kmonth( $cur ) ) . ' 보기 →</b></a></p></div>';
+	}
 	echo '<p class="dhr-sl-note">' . ( $c['closed'] ? '닫힌 달입니다.' : '진행 중인 달입니다 — ' . (int) $c['days_done'] . '일까지 접수된 주문으로 셉니다.' ) . ' 확정 = 입금확인 이후 상태(손님이 실제로 입금한 돈). 읽기만 합니다.</p>';
 
 	/* 카드 */
