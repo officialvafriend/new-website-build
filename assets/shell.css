@@ -2671,3 +2671,25 @@ html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i p{ margin: .35rem 0 .2rem !important
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more{margin:14px 0 0;font-size:14px;line-height:1.6;color:#5b6570}
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more a{color:#C2410C;font-weight:700;text-decoration:none}
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__more a:hover{text-decoration:underline}
+
+/* 2026-10-01 안내 글 두 장(/liquid-guide/ · /mtl-vs-dl/) — 테마 페이지 본문(.wd-page__content)의 링크 · 표.
+   링크가 본문과 같은 색이라 눌리는지 몰랐고, 표는 테두리 없이 폭 절반에 서 있었다. */
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account):not(.woocommerce-cart):not(.woocommerce-checkout) .wd-page__content a:not(.btn){
+  color: var(--dh-accent, #C2410C); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+}
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content table{
+  width: 100%; max-width: 100%; border-collapse: collapse; margin: .6rem 0 1.4rem; font-size: 15px; line-height: 1.5;
+  border: 1px solid var(--dh-line, #E1E5E8); border-radius: 12px; overflow: hidden;
+}
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content th,
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content td{
+  padding: 10px 12px; border-bottom: 1px solid var(--dh-line, #E1E5E8); vertical-align: top; text-align: left; word-break: keep-all;
+}
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content th{ background: #F4F6F7; color: var(--dh-ink, #111); font-weight: 800; }
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content td:first-child{ color: var(--dh-ink, #111); white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content tr:last-child td{ border-bottom: 0; }
+@media (max-width: 599px){
+  html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content table{ font-size: 14px; }
+  html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content th,
+  html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content td{ padding: 8px 8px; }
+}
