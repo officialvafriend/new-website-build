@@ -1108,7 +1108,7 @@ function stock_banner(): void {
 		array(
 			'eb'         => '노보 액상',
 			'head'       => array( '노보 · 노보 블랙 ', '전 라인 재고 있습니다' ),
-			'lead'       => $what . ' 모두 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
+			'lead'       => '노보 리퀴드 ' . $what . ' 모두 품절 없이 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
 			'notes'      => array( \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상 사시면 10+1 묶음이 병당 더 저렴합니다' ),
 			'price_head' => '가격 인상 안내',
 			'price_lead' => '노보 액상 판매가가 올랐습니다. 지금 가격은 아래와 같습니다.',

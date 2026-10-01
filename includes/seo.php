@@ -526,6 +526,10 @@ function product_title( \WC_Product $p ): string {
 	} else {
 		$parts = array( $line . ' ' . $flavor . ' 입호흡 액상', $spec, $won );
 	}
+	// 2026-10-01 — 노보를 찾아 돌아다니는 사람에게 제목에서 바로 답한다. 상품에서 읽은 값이라 품절이면 저절로 빠진다.
+	if ( $p->is_in_stock() ) {
+		$parts[] = '재고 있음';
+	}
 	return trim( implode( ' ', array_filter( $parts, fn( $x ) => '' !== trim( (string) $x ) ) ) ) . ' | ' . get_bloginfo( 'name' );
 }
 
@@ -826,8 +830,8 @@ add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
 function brand_notes(): array {
 	return (array) apply_filters( 'duckhoo_brand_notes', array(
 		'노보' => array(
-			'title' => '전 라인 재고 보유',
-			'lead'  => '액상덕후는 노보 전 라인 재고를 보유하고 있습니다.',
+			'title' => '전 라인 재고 보유 · 바로 주문',
+			'lead'  => '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.',
 		),
 	) );
 }
@@ -903,7 +907,7 @@ function cat_prices( $t ): array {
  */
 function cat_title( $t ): string {
 	$c = cat_prices( $t );
-	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' 전 라인 재고 보유 | ' . get_bloginfo( 'name' );
+	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' 전 라인 재고 보유 · 바로 주문 | ' . get_bloginfo( 'name' );
 }
 
 /**
@@ -922,7 +926,7 @@ function cat_note_text( $t ): string {
 		$price[] = '10+1 묶음(' . (int) $c['bundle_n'] . '병) ' . number_format( $c['bundle'] ) . '원'
 			. ( $c['bundle_n'] > 0 ? ' (병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원)' : '' );
 	}
-	$t = '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있습니다.'
+	$t = '액상덕후는 노보 · 노보 블랙 전 라인 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.'
 		. ( $price ? ' ' . implode( ' · ', $price ) . '.' : '' )
 		. ' 30ml · 니코틴 9.8mg · 입호흡(MTL). 평일 오후 4시 이전 입금 확인 시 당일 출고, '
 		. number_format( free_ship() ) . '원 이상 무료배송.';

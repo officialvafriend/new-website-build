@@ -74,6 +74,24 @@ $hero_pick( array_filter( products( array( 'limit' => 24, 'orderby' => 'populari
 $hero_pick( $newest );
 $hero = $heroes[0] ?? null;
 
+// 노보 전 라인 줄 (2026-10-01, 사장님 「노보 주문 안 되서 품절되고 있다 — 노를 무지하게 저어야 한다」).
+// 재고 있는 노보 상품 전부 — 묶음(10+1)이 앞, 낱병이 뒤. 히어로 한 장은 5초마다 넘어가
+// 손님이 놓치므로 따로 한 줄을 세운다. 필터 duckhoo_home_novo 로 끈다.
+$novo_row = array();
+$novo_sub = '';
+if ( $novo_cat && apply_filters( 'duckhoo_home_novo', true ) ) {
+	$novo_all = array_values( array_filter(
+		products( array( 'category' => array( $novo_cat->slug ), 'limit' => -1, 'orderby' => 'popularity' ) ),
+		fn( $p ) => $p->is_in_stock() && ! preg_match( '/결제|드립팁|첨가제|코일|팟\b/u', $p->get_name() )
+	) );
+	$is_bundle = fn( $p ) => (bool) preg_match( '/묶음|세트|\d+\s*병|\d\s*\+\s*\d/u', $p->get_name() );
+	$novo_row  = array_merge( array_filter( $novo_all, $is_bundle ), array_filter( $novo_all, fn( $p ) => ! $is_bundle( $p ) ) );
+	$n_single  = count( array_filter( $novo_all, fn( $p ) => ! $is_bundle( $p ) ) );
+	$n_bundle  = count( $novo_all ) - $n_single;
+	$novo_sub  = ( $n_single ? '낱병 ' . $n_single . '종' : '' ) . ( $n_single && $n_bundle ? ' · ' : '' ) . ( $n_bundle ? '10+1 묶음' : '' )
+		. ' — 평일 오후 4시 이전 입금 확인분 당일 출고';
+}
+
 $grid   = $rank_cat ? products( array( 'category' => array( $rank_cat->slug ), 'limit' => 12 ) ) : array();
 if ( count( $grid ) < 12 ) {
 	$grid = array_merge( $grid, products( array( 'limit' => 12 - count( $grid ), 'orderby' => 'popularity', 'exclude' => array_map( fn( $p ) => $p->get_id(), $grid ) ) ) );
@@ -202,6 +220,12 @@ $month = (int) wp_date( 'n' );
 	<?php endif; ?>
 
 	<?php echo gate_note(); // phpcs:ignore — 비로그인: 사진이 왜 안 보이는지 ?>
+
+	<?php if ( $novo_row ) : // 2026-10-01 — 노보가 시장에서 끊기는 때. 첫 화면에 노보 전 라인을 통째로 세운다. ?>
+	<section class="sec sec--novo">
+		<?php section_head( '노보 액상 · 재고 있음', '노보 전 라인 지금 바로 주문', $novo_sub, $novo_cat ? get_term_link( $novo_cat ) : $shop_url ); ?>
+		<?php carousel( $novo_row, '노보 액상 전 라인' ); ?></section>
+	<?php endif; ?>
 
 	<?php if ( $deals ) : ?>
 	<section class="deals"><div class="deals-h"><div><p class="sh-eb"><i></i><?php echo (int) $month; ?>월 특가</p><h2>오늘의 특가</h2></div>
