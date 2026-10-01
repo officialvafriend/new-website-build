@@ -853,7 +853,7 @@ $ok(($S.'budget')() > 0 && ($S.'budget')() <= 60, '읽는 시간에 상한이 �
 $GLOBALS['__orders'] = array_map(fn($i) => new DhrSalesOrder($i, '2026-09-02', 'delivered', 1000.0, 1), range(1, 200));
 $part = false;
 $got2 = ($S.'fetch')([], microtime(true) - 1, $part);
-$ok($part === true && count($got2) === 200, '시간이 넘으면 멈추고 「일부」라고 알린다');
+$ok($part === true && count($got2) === 100, '시간이 넘으면 첫 묶음(100건)까지만 읽고 「일부」라고 알린다');
 $part = false;
 ($S.'fetch')([], microtime(true) + 60, $part);
 $ok($part === false, '시간이 남으면 「일부」가 아니다');

@@ -289,9 +289,11 @@ function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): 
 
 	$page = 1;
 	$cap  = max_orders();
+	$size = 100; // 200 이면 한 묶음에 몇 초가 걸려 시간 한도를 한참 넘기고서야 멈춘다.
 	do {
+		$GLOBALS['dhr_sales_stage'] = '주문 읽기 ' . count( $out ) . '건째';
 		$batch = wc_get_orders( array_merge( array(
-			'limit'   => 200,
+			'limit'   => $size,
 			'page'    => $page,
 			'status'  => 'any',
 			'orderby' => 'date',
@@ -305,13 +307,15 @@ function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): 
 			}
 		}
 		$page++;
+		$full = count( $batch ) === $size;
 
 		// 시간이 넘으면 읽던 만큼으로 그린다. 통째로 죽는 것보다 낫다.
-		if ( null !== $deadline && microtime( true ) > $deadline && count( $batch ) === 200 ) {
+		if ( null !== $deadline && microtime( true ) > $deadline && $full ) {
 			$partial = true;
 			break;
 		}
-	} while ( count( $batch ) === 200 && count( $out ) < $cap );
+	} while ( $full && count( $out ) < $cap );
+	$GLOBALS['dhr_sales_stage'] = '수수료 줄 읽기 (' . count( $out ) . '건)';
 
 	$fees = fee_map( wp_list_pluck( $out, 'id' ) );
 	foreach ( $out as $i => $r ) {
@@ -350,6 +354,10 @@ function data( bool $fresh = false ): array {
 	$today = current_time( 'Y-m-d' );
 	$from  = gmdate( 'Y-m-d', strtotime( $today . ' -' . scan_days() . ' days' ) );
 	$began = microtime( true );
+	$GLOBALS['dhr_sales_began'] = $began;
+	if ( function_exists( 'set_time_limit' ) ) {
+		@set_time_limit( (int) budget() * 3 + 30 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- 호스팅이 막으면 그냥 지나간다.
+	}
 
 	// 열려 있는 주문을 **먼저** 읽는다. 「지금 얼마가 묶여 있나」가 이 화면에서
 	// 제일 급한 숫자이고 건수도 적다 — 시간이 모자라면 긴 쪽이 잘려야 한다.
@@ -361,6 +369,7 @@ function data( bool $fresh = false ): array {
 		$po
 	);
 	$rows = fetch( array( 'date_created' => $from . '...' . $today ), $began + budget(), $pr );
+	$GLOBALS['dhr_sales_stage'] = '그리기';
 
 	$out = array(
 		'rows'    => $rows,
@@ -392,14 +401,24 @@ function watch_render(): void {
 		if ( empty( $GLOBALS['dhr_sales_rendering'] ) ) {
 			return;
 		}
-		$e   = error_get_last();
-		$bad = array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR, E_USER_ERROR );
+		$e     = error_get_last();
+		$bad   = array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR );
+		$began = (float) ( $GLOBALS['dhr_sales_began'] ?? 0 );
+		$took  = $began > 0 ? round( microtime( true ) - $began, 1 ) : 0;
+		$stage = (string) ( $GLOBALS['dhr_sales_stage'] ?? '시작' );
+		$mem   = function_exists( 'memory_get_peak_usage' ) ? round( memory_get_peak_usage( true ) / 1048576 ) : 0;
 		echo '<div class="notice notice-error"><p><b>매출 화면을 그리다 멈췄습니다.</b> ';
 		if ( is_array( $e ) && in_array( (int) $e['type'], $bad, true ) ) {
 			echo esc_html( (string) $e['message'] ) . ' — '
 				. esc_html( basename( (string) $e['file'] ) . ':' . (int) $e['line'] );
 		} else {
 			echo '주문을 읽는 데 시간이 너무 걸린 것으로 보입니다. 기간을 짧게 잡아 보세요.';
+		}
+		echo '<br>멈춘 자리: <b>' . esc_html( $stage ) . '</b> · ' . esc_html( (string) $took ) . '초 · 메모리 ' . esc_html( (string) $mem ) . 'MB'
+			. ' · 시간 한도 ' . esc_html( (string) (int) ini_get( 'max_execution_time' ) ) . '초'
+			. ' · 메모리 한도 ' . esc_html( (string) ini_get( 'memory_limit' ) );
+		if ( is_array( $e ) && ! in_array( (int) $e['type'], $bad, true ) ) {
+			echo '<br>마지막 PHP 메시지(치명 아님): ' . esc_html( (string) $e['message'] ) . ' — ' . esc_html( basename( (string) $e['file'] ) . ':' . (int) $e['line'] );
 		}
 		echo '</p></div>';
 	} );

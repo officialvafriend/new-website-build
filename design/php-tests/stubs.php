@@ -86,6 +86,11 @@ function wc_get_orders($args){
     $want = array_map(fn($s) => preg_replace('/^wc-/', '', (string)$s), $args['status']);
     $out = array_values(array_filter($out, fn($o) => !is_object($o) || !property_exists($o,'status') || in_array($o->status, $want, true)));
   }
+  // 쪽 나누기 — 매출 화면이 묶음 단위로 시간을 재므로 limit · page 를 실제처럼 따른다.
+  if (!empty($args['limit']) && (int)$args['limit'] > 0) {
+    $page = max(1, (int)($args['page'] ?? 1));
+    $out = array_slice($out, ((int)$args['limit']) * ($page - 1), (int)$args['limit']);
+  }
   return $out;
 }
 
