@@ -3198,3 +3198,19 @@ python3 design/monthly-reports/build.py /tmp/brief.json design/monthly-reports/2
 
 검증: `php design/php-tests/run.php` (깨진 주문 테스트 2개 — 셋 중 하나가 `TypeError` 를 던지면 둘을 읽고 번호 · 메시지를 남긴다, 1,356개) ·
 smoke 20개(배포 전). 사장님이 새로고침하면 화면이 그려지며 건너뛴 주문 번호가 보이거나, 다른 종류의 오류면 그 메시지가 그대로 찍힌다.
+
+### 진짜 원인은 **환불 기록**이었다 — `status => 'any'` 는 환불도 돌려준다 (2026-10-01, 세 번째 캡처)
+
+건너뛰기 안내가 번호와 메시지를 그대로 보여 줬다: `#5153 · #5154 · Call to undefined method OrderRefund::get_customer_id()`.
+주문이 깨진 것이 아니라 **환불 기록(`shop_order_refund`)** 이 주문 목록에 섞여 온 것이다. `wc_get_orders( status => 'any' )` 는
+`type` 을 안 주면 주문과 환불을 함께 돌려주고, 환불 객체에는 `get_customer_id()` 가 없다. 이 가게에 환불 기록이 처음 생긴 것이
+9월 말이라 그때부터 화면이 죽었다 — 코드는 그 전부터 같았다.
+
+- `wc_get_orders` 에 **`'type' => 'shop_order'`** 를 준다 (sales.php `fetch()` · impact.php · novo.php). today.php · brief.php ·
+  tracking-admin.php · review-ask.php 는 이미 주고 있었다. 고객 번호 · 상태로 거르는 질의(bank-second · product · membership-cancel)는
+  환불이 안 걸리지만, **주문을 넓게 읽는 새 질의에는 늘 `type` 을 준다**
+- `row()` 는 `get_customer_id` 가 없거나 `get_type()` 이 `shop_order` 가 아니면 null — 세지 않고 오류로도 적지 않는다
+- 건너뛰기 안내(바로 앞 절)는 그대로 둔다. 이번처럼 **번호 · 메시지가 화면에 찍히면 캡처 한 장으로 끝난다**
+- 환불 금액은 원래 주문의 `get_total()` 에 반영되지 않는다 — 환불을 매출에서 빼는 셈은 아직 없다 (환불 2건 · 사장님 판단)
+
+검증: `php design/php-tests/run.php` (환불 객체 2개 — 섞여도 둘만 읽고 skipped 비어 있음, 1,358개) · smoke 20개(배포 전후).
