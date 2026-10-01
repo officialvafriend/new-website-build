@@ -275,6 +275,58 @@ function fee_map( array $ids ): array {
 }
 
 /**
+ * 묶음을 읽다 PHP 오류가 났을 때 — 그 묶음을 **하나씩** 다시 읽습니다.
+ *
+ * 2026-10-01 매출 화면이 「주문 읽기 1800건째」에서 1.8초 만에 죽었다. 시간도
+ * 메모리도 아니고 주문 100건 중 하나를 읽다 난 오류였는데, 워드프레스 자체
+ * 오류 처리기가 뒤에 돌며 진짜 메시지를 덮어 원인을 볼 수 없었다. 깨진 주문은
+ * 건너뛰고 번호 · 메시지를 `$GLOBALS['dhr_sales_skipped']` 에 남긴다 — 화면이
+ * 그것을 안내로 찍는다.
+ *
+ * @param array<string,mixed> $q    wc_get_orders 인자 (그 묶음 그대로).
+ * @param array               $out  읽은 줄 (참조로 더한다).
+ * @param \Throwable          $t    묶음을 통째로 읽을 때 난 오류.
+ * @return int 그 묶음에 있던 주문 수 (쪽 넘김을 이어 가기 위해).
+ */
+function salvage( array $q, array &$out, \Throwable $t ): int {
+	$skipped = (array) ( $GLOBALS['dhr_sales_skipped'] ?? array() );
+	$where = static function ( \Throwable $e ): string {
+		return get_class( $e ) . ': ' . $e->getMessage() . ' — ' . basename( (string) $e->getFile() ) . ':' . (int) $e->getLine();
+	};
+
+	try {
+		$ids = wc_get_orders( array_merge( $q, array( 'return' => 'ids' ) ) );
+		$ids = is_array( $ids ) ? $ids : array();
+	} catch ( \Throwable $e ) {
+		// 번호조차 못 읽으면 이 묶음은 포기한다 — 그래도 화면은 살아야 한다.
+		$skipped[]                    = array( 'id' => 0, 'msg' => '묶음(' . (int) ( $q['page'] ?? 0 ) . '쪽) 통째로 못 읽음 · ' . $where( $e ) );
+		$GLOBALS['dhr_sales_skipped'] = $skipped;
+		return 0;
+	}
+
+	foreach ( $ids as $id ) {
+		try {
+			$o = is_object( $id ) ? $id : ( function_exists( 'wc_get_order' ) ? wc_get_order( (int) $id ) : null );
+			$r = row( $o );
+			if ( $r ) {
+				$out[] = $r;
+			}
+		} catch ( \Throwable $e ) {
+			$skipped[] = array(
+				'id'  => is_object( $id ) && method_exists( $id, 'get_id' ) ? (int) $id->get_id() : (int) $id,
+				'msg' => $where( $e ),
+			);
+		}
+	}
+	if ( ! $ids ) {
+		$skipped[] = array( 'id' => 0, 'msg' => '묶음(' . (int) ( $q['page'] ?? 0 ) . '쪽) · ' . $where( $t ) );
+	}
+	$GLOBALS['dhr_sales_skipped'] = $skipped;
+
+	return count( $ids );
+}
+
+/**
  * 주문을 읽어 옵니다. 상태로 거를 수 있고, 날짜로 자를 수 있습니다.
  *
  * @param array<string,mixed> $args status · date_created 등.
@@ -292,22 +344,33 @@ function fetch( array $args, ?float $deadline = null, ?bool &$partial = null ): 
 	$size = 100; // 200 이면 한 묶음에 몇 초가 걸려 시간 한도를 한참 넘기고서야 멈춘다.
 	do {
 		$GLOBALS['dhr_sales_stage'] = '주문 읽기 ' . count( $out ) . '건째';
-		$batch = wc_get_orders( array_merge( array(
+		$q = array_merge( array(
 			'limit'   => $size,
 			'page'    => $page,
 			'status'  => 'any',
 			'orderby' => 'date',
 			'order'   => 'ASC',
-		), $args ) );
-		$batch = is_array( $batch ) ? $batch : array();
-		foreach ( $batch as $o ) {
-			$r = row( $o );
-			if ( $r ) {
-				$out[] = $r;
+		), $args );
+		$before = count( $out );
+		try {
+			$batch = wc_get_orders( $q );
+			$batch = is_array( $batch ) ? $batch : array();
+			$n     = count( $batch );
+			foreach ( $batch as $o ) {
+				$r = row( $o );
+				if ( $r ) {
+					$out[] = $r;
+				}
 			}
+		} catch ( \Throwable $t ) {
+			// 주문 하나가 깨져 있어도 화면이 통째로 죽으면 안 된다 — 그 묶음을
+			// 하나씩 다시 읽어 깨진 주문만 건너뛰고 무엇이었는지 적어 둔다 (2026-10-01).
+			// 오류 전에 읽힌 줄은 버리고 다시 읽는다 — 안 그러면 두 번 센다.
+			$out = array_slice( $out, 0, $before );
+			$n   = salvage( $q, $out, $t );
 		}
 		$page++;
-		$full = count( $batch ) === $size;
+		$full = $n === $size;
 
 		// 시간이 넘으면 읽던 만큼으로 그린다. 통째로 죽는 것보다 낫다.
 		if ( null !== $deadline && microtime( true ) > $deadline && $full ) {
@@ -354,7 +417,8 @@ function data( bool $fresh = false ): array {
 	$today = current_time( 'Y-m-d' );
 	$from  = gmdate( 'Y-m-d', strtotime( $today . ' -' . scan_days() . ' days' ) );
 	$began = microtime( true );
-	$GLOBALS['dhr_sales_began'] = $began;
+	$GLOBALS['dhr_sales_began']   = $began;
+	$GLOBALS['dhr_sales_skipped'] = array();
 	if ( function_exists( 'set_time_limit' ) ) {
 		@set_time_limit( (int) budget() * 3 + 30 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- 호스팅이 막으면 그냥 지나간다.
 	}
@@ -375,6 +439,7 @@ function data( bool $fresh = false ): array {
 		'rows'    => $rows,
 		'open'    => $open,
 		'partial' => ( $po || $pr ),
+		'skipped' => (array) ( $GLOBALS['dhr_sales_skipped'] ?? array() ),
 		'took'    => round( microtime( true ) - $began, 1 ),
 		'built'   => (int) current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
 	);
@@ -680,7 +745,17 @@ function screen(): void {
 	}
 
 	$fresh = isset( $_GET['dhr_fresh'] ) && check_admin_referer( 'dhr-sales-fresh' ); // phpcs:ignore WordPress.Security.NonceVerification
-	$data  = data( $fresh );
+	try {
+		$data = data( $fresh );
+	} catch ( \Throwable $t ) {
+		// 워드프레스 오류 처리기가 메시지를 덮기 전에 **우리가 먼저** 적는다.
+		echo '<div class="notice notice-error"><p><b>매출 화면을 그리다 멈췄습니다.</b> '
+			. esc_html( get_class( $t ) . ': ' . $t->getMessage() ) . ' — '
+			. esc_html( basename( (string) $t->getFile() ) . ':' . (int) $t->getLine() )
+			. '<br>멈춘 자리: <b>' . esc_html( (string) ( $GLOBALS['dhr_sales_stage'] ?? '시작' ) ) . '</b></p></div></div>';
+		$GLOBALS['dhr_sales_rendering'] = false;
+		return;
+	}
 	$rows  = (array) $data['rows'];
 	$open  = (array) $data['open'];
 
@@ -694,6 +769,20 @@ function screen(): void {
 		printf(
 			'<div class="dhr-sl-warn">주문이 많아 <b>%d초 안에 읽은 만큼만</b> 그렸습니다. 아래 숫자는 실제보다 적을 수 있습니다. 기간을 짧게 잡으면 정확해집니다.</div>',
 			(int) budget()
+		);
+	}
+
+	if ( ! empty( $data['skipped'] ) && is_array( $data['skipped'] ) ) {
+		$sk   = $data['skipped'];
+		$list = array();
+		foreach ( array_slice( $sk, 0, 10 ) as $e ) {
+			$list[] = esc_html( ( ! empty( $e['id'] ) ? '#' . (int) $e['id'] . ' · ' : '' ) . (string) ( $e['msg'] ?? '' ) );
+		}
+		printf(
+			'<div class="dhr-sl-warn"><b>주문 %d건을 읽지 못해 건너뛰었습니다.</b> 그 주문 데이터가 깨져 있는 것으로 보입니다 — 아래 숫자에서 빠져 있습니다. 관리자 주문 화면에서 그 번호를 열어 보세요.<br><code>%s</code>%s</div>',
+			count( $sk ),
+			implode( '<br>', $list ), // 각 줄은 위에서 esc_html 했다.
+			count( $sk ) > 10 ? ' <small>외 ' . ( count( $sk ) - 10 ) . '건</small>' : ''
 		);
 	}
 

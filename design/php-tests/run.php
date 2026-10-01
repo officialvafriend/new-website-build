@@ -859,6 +859,25 @@ $part = false;
 $ok($part === false, '시간이 남으면 「일부」가 아니다');
 $GLOBALS['__orders'] = [];
 
+// 깨진 주문 하나가 묶음에 섞여 있어도 화면이 통째로 죽지 않는다 (2026-10-01, 1800건째에서 멈춤)
+if (!class_exists('DhrBrokenOrder')) {
+  class DhrBrokenOrder extends DhrSalesOrder { public function get_total(){ throw new TypeError('깨진 주문: 금액을 읽을 수 없음'); } }
+}
+$GLOBALS['dhr_sales_skipped'] = [];
+$GLOBALS['__orders'] = [
+  new DhrSalesOrder(301, '2026-09-02', 'delivered', 1000.0, 1),
+  new DhrBrokenOrder(302, '2026-09-02', 'delivered', 1000.0, 1),
+  new DhrSalesOrder(303, '2026-09-03', 'delivered', 2000.0, 1),
+];
+$part = false;
+$got3 = ($S.'fetch')([], null, $part);
+$ids3 = array_column($got3, 'id');
+$ok($ids3 === [301, 303], '깨진 주문만 건너뛰고 나머지 둘은 읽는다 (묶음을 하나씩 다시 읽음)');
+$sk3 = $GLOBALS['dhr_sales_skipped'] ?? [];
+$ok(count($sk3) === 1 && (int)$sk3[0]['id'] === 302 && str_contains((string)$sk3[0]['msg'], 'TypeError') && str_contains((string)$sk3[0]['msg'], '금액을 읽을 수 없음'), '건너뛴 주문의 번호와 오류 메시지를 남긴다 — 화면이 그것을 안내로 찍는다');
+$GLOBALS['__orders'] = [];
+$GLOBALS['dhr_sales_skipped'] = [];
+
 
 // ── 「19」 가림을 벽이 아니라 문으로 (구매 여정 목 1, 2026-09-10) ──────────
 $F = 'Duckhoo\\Redesign\\Front\\';
