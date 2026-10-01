@@ -2548,5 +2548,35 @@ $ok(str_contains($mbt3, '· 순이익 108,000원 (실입금의 53.7%)'), '사장
 $mc4 = ($Mo.'close')($mrows, $mit2, [11=>true], $mprev, '2026-09', 40, 25, '2026-10-02');
 $ok(str_contains(($Mo.'report')($mc4), '원가 모르는 매출 13,000원 (여기서 결제 도와드리겠습니다! 13,000)'), '모르는 매출은 이름과 함께 적는다');
 
+/* ── 노보 품절 국면 SEO (includes/novo-seo.php, 2026-10-01) ─────────────────── */
+require_once dirname(__DIR__, 2).'/includes/novo-seo.php';
+$NS = 'Duckhoo\\Redesign\\Novo\\Seo\\';
+if (!function_exists('wp_insert_post')) { function wp_insert_post($a){ $GLOBALS['__inserted'][] = $a; return count($GLOBALS['__inserted']) + 9000; } }
+$GLOBALS['__products'] = [
+  7101 => new WC_Product(7101, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000.0, true),
+  7102 => new WC_Product(7102, '[노보] 블랙멘솔 (9.8mg / 30ml)', 13000.0, true),
+  7103 => new WC_Product(7103, '[노보 블랙] 쿠바시가 (9.8mg / 30ml)', 13500.0, true),
+  7104 => new WC_Product(7104, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, false),   // 품절 — 빠져야 한다
+  7105 => new WC_Product(7105, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true),
+  7106 => new WC_Product(7106, '[펠릭스] 더블라임 (9.8mg / 30ml)', 20000.0, true),      // 노보 아님
+];
+$me  = $GLOBALS['__products'][7101];
+$sib = ($NS.'siblings')($me);
+$sid = array_map(fn($p) => $p->get_id(), $sib);
+$ok($sid === [7102, 7103, 7105], '형제: 자기 자신 · 품절 · 다른 브랜드는 빼고, 같은 라인 낱병 → 다른 라인 → 묶음 순');
+$ok(($NS.'flavor')($GLOBALS['__products'][7103]) === '쿠바시가' && ($NS.'flavor')($GLOBALS['__products'][7105]) === '10+1 묶음' && ($NS.'line_label')($GLOBALS['__products'][7103]) === '노보 블랙', '맛 이름은 규격 · 금액 꼬리를 떼고, 묶음엔 「묶음」을 붙인다');
+$fl = ($NS.'flavors_by_line')();
+$ok(($fl['노보'] ?? []) === ['블랙멘솔','타박멘솔'] && ($fl['노보 블랙'] ?? []) === ['쿠바시가'], '라인별 맛 목록은 재고 있는 낱병만 (품절 데저트 제외)');
+$faq = ($NS.'faq')();
+$faqtxt = implode(' ', array_map(fn($i) => $i['q'].' '.$i['a'], $faq));
+$ok(count($faq) >= 5 && str_contains($faqtxt, '품절') && str_contains($faqtxt, '어디서') && str_contains($faqtxt, '13,000원') && str_contains($faqtxt, '낱병 3종'), 'FAQ 는 손님이 치는 말(품절 · 어디서)을 질문에 두고 값 · 종수는 상품에서 읽는다');
+$ok(!preg_match('/건강|금연|순하다|해롭지/u', $faqtxt) && !preg_match('/노보마트|브이몬스터|겨울마을|다른 (곳|가게|사이트)/u', $faqtxt), 'FAQ 에 금지 낱말 · 다른 가게 얘기가 없다');
+$nt = ($NS.'notice_text')('2026-10');
+$ok(str_contains($nt['title'], '2026년 10월') && str_contains($nt['content'], '낱병 3종') && str_contains($nt['content'], '120,000원') && !preg_match('/건강|금연|순하다|해롭지/u', $nt['content']), '안내 글: 달이 제목에, 종수 · 값은 상품에서, 금지 낱말 없음');
+$GLOBALS['__inserted'] = []; unset($GLOBALS['__options']['duckhoo_novo_notice_post']);
+($NS.'ensure_notice')(); ($NS.'ensure_notice')();
+$ok(count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_status'] === 'draft' && $GLOBALS['__inserted'][0]['post_type'] === 'post', '안내 글은 초안(draft)으로 딱 한 번만 만든다 — 공개는 사장님이 누른다');
+$GLOBALS['__products'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

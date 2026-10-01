@@ -80,6 +80,7 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 			?>
 		</div>
 		<?php woocommerce_pagination(); ?>
+		<?php do_action( 'duckhoo_archive_after_grid' ); // 격자 **아래** — 상품 위에 글이 깔리면 안 된다. 지금은 노보 FAQ 가 쓴다. ?>
 	<?php else : ?>
 		<div class="dha-empty">
 			<span class="dha-empty__ic"><?php echo icon( 'search' ); // phpcs:ignore ?></span>
