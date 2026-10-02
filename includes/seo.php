@@ -89,7 +89,11 @@ function head(): void {
 	if ( is_brand_page() ) {
 		// AIOSEO 는 이 화면이 무엇인지 모른다 — 상품도 분류도 검색도 아니라서 canonical 만 찍고
 		// 설명 · og 는 아예 안 찍는다 (2026-09-10 스테이징에서 확인). 그래서 여기서만 우리가 찍는다.
-		$d = brand_intro( current_brand() );
+		$d = cap( brand_intro( current_brand() ) );
+		if ( thin_brand() ) {
+			// AIOSEO 가 이 화면에 robots 를 안 찍으므로 우리가 찍는다 (상품 하나짜리 브랜드 — 2026-10-02)
+			echo '<meta name="robots" content="noindex, follow">' . "\n";
+		}
 		echo '<meta name="description" content="' . esc_attr( $d ) . '">' . "\n";
 		echo '<meta property="og:type" content="website">' . "\n";
 		echo '<meta property="og:title" content="' . esc_attr( title( '' ) ) . '">' . "\n";
@@ -326,7 +330,8 @@ function cap( string $d ): string {
 	}
 	$head = mb_substr( $d, 0, $max );
 	// 문장 끝(마침표 · 물음표 · 느낌표)에서 자른다.
-	if ( preg_match( '/^(.*[.!?])[^.!?]*$/u', $head, $m ) && mb_strlen( $m[1] ) >= (int) ( $max * 0.5 ) ) {
+	// 숫자 사이의 점(9.8mg · 0.6옴)은 문장 끝이 아니다 (2026-10-02 — 노보 소개가 「9.」에서 잘렸다)
+	if ( preg_match( '/^(.*[.!?](?!\d))(?:[^.!?]|\.(?=\d))*$/u', $head, $m ) && mb_strlen( $m[1] ) >= (int) ( $max * 0.5 ) ) {
 		return trim( $m[1] );
 	}
 	// 문장 끝이 없으면 낱말 경계에서 자르고 말줄임표를 붙인다.
@@ -435,7 +440,7 @@ function description( $d ): string {
 		return cap( $d );   // 사장님이 쓴 글. 원문은 그대로, 검색 결과로 나갈 때만 줄인다
 	}
 	if ( is_brand_page() ) {
-		return brand_intro( current_brand() );
+		return cap( brand_intro( current_brand() ) );   // 화면에는 전문, 검색 결과에는 문장 끝에서 자른 것
 	}
 	if ( $p ) {
 		$hand = trim( hand_text( $p ) );
@@ -482,7 +487,7 @@ function title( $t ): string {
 	$note = (string) ( brand_notes()[ $b ]['title'] ?? '' );
 	// 2026-10-02 — 품절이 있어 note 가 「낱병 N종 …」이면 종수를 두 번 적지 않는다 (「노보 액상 15종 낱병 12종」 ✗)
 	$cnt = $n && ! str_starts_with( $note, '낱병' ) ? ' ' . $n . '종' : '';
-	return $b . ' 액상' . $cnt . ( '' !== $note ? ' ' . $note : '' ) . ' | ' . get_bloginfo( 'name' );
+	return $b . ' ' . brand_noun( $b ) . $cnt . ( '' !== $note ? ' ' . $note : '' ) . ' | ' . get_bloginfo( 'name' );
 }
 add_filter( 'aioseo_title', __NAMESPACE__ . '\\title', 20 );
 add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 20 );
@@ -721,7 +726,7 @@ function query_vars( $vars ): array {
  *
  * AIOSEO 사이트맵은 상품 · 분류 · 글만 안다 — 브랜드 페이지는 워드프레스 글이 아니라
  * 거기 안 실린다. 그래서 따로 낸다. 네이버 · 구글에 한 번 더 제출하면 된다.
- * 상품이 한 개라도 있는 브랜드만 싣는다 (빈 페이지는 404 다).
+ * 상품이 `brand_min_n()`(2)개 이상인 브랜드만 싣는다 — 하나짜리는 noindex 다 (2026-10-02).
  *
  * @return string
  */
@@ -729,8 +734,8 @@ function brand_sitemap_xml(): string {
 	$out = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
 		. '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 	foreach ( brands() as $b => $n ) {
-		if ( $n < 1 ) {
-			continue;
+		if ( $n < brand_min_n() ) {
+			continue;   // 상품 하나짜리는 noindex 라 사이트맵에도 안 싣는다 (2026-10-02)
 		}
 		$out .= "\t<url><loc>" . esc_url( brand_url( (string) $b ) ) . "</loc><changefreq>weekly</changefreq></url>\n";
 	}
@@ -954,29 +959,222 @@ function cat_note_text( $t ): string {
 	return (string) apply_filters( 'duckhoo_cat_note_text', $t );
 }
 
+/**
+ * 브랜드가 액상인가 기기(팟 · 코일)인가. 상품 전부가 「기기 / 팟 / 코일」 분류이거나
+ * 이름에 팟 · 코일 · 기기 가 들어가면 기기다 — 「긱베이프 액상 1종」은 틀린 말이었다 (2026-10-02 외부 점검).
+ *
+ * @param string $brand 브랜드.
+ * @return string 'device' | 'liquid'
+ */
+function brand_kind( string $brand ): string {
+	$items = brand_items( $brand );
+	if ( ! $items ) {
+		return 'liquid';
+	}
+	foreach ( $items as $p ) {
+		$dev = preg_match( '/팟|코일|기기|디바이스/u', $p->get_name() ) || in_array( true, array_map( fn( $c ) => (bool) preg_match( '/기기/u', $c ), cat_names( $p ) ), true );
+		if ( ! $dev ) {
+			return 'liquid';
+		}
+	}
+	return 'device';
+}
+
+/**
+ * 브랜드 뒤에 붙는 낱말 — 「액상」 또는 「기기 · 팟」.
+ *
+ * @param string $brand 브랜드.
+ * @return string
+ */
+function brand_noun( string $brand ): string {
+	return 'device' === brand_kind( $brand ) ? '기기 · 팟' : '액상';
+}
+
+/**
+ * 이 브랜드의 상품 (이름 앞 대괄호 · 별칭으로 고른다). 요청 안에서 한 번만 읽는다.
+ *
+ * @param string $brand 브랜드.
+ * @return \WC_Product[]
+ */
+function brand_items( string $brand ): array {
+	static $memo = array();
+	if ( isset( $memo[ $brand ] ) && empty( $GLOBALS['dhr_test'] ) ) {
+		return $memo[ $brand ];
+	}
+	$out = array();
+	foreach ( products( array( 's' => $brand, 'limit' => -1 ) ) as $p ) {
+		$b = split_name( $p )['brand'];
+		if ( $b === $brand || ( brand_aliases()[ $b ] ?? '' ) === $brand ) {
+			$out[] = $p;
+		}
+	}
+	return $memo[ $brand ] = $out;
+}
+
+/**
+ * 상품 이름에서 맛 이름만 — 「[화이트아웃] 크랜베리 애플 (NTSC SALT / 30ml)」 → 「크랜베리 애플」,
+ * 「[맥스쿨] 맥스쿨 소다 무니코틴 액상」 → 「소다」. 묶음 · 이벤트 이름은 빈 문자열.
+ *
+ * @param \WC_Product $p 상품.
+ * @param string      $brand 브랜드.
+ * @return string
+ */
+function flavor_name( \WC_Product $p, string $brand ): string {
+	$t = split_name( $p )['title'];
+	if ( preg_match( '/묶음|이벤트|EVENT|\d+\s*\+\s*\d+|\d+\s*병|증정|세트/iu', $t ) ) {
+		return '';
+	}
+	$t = preg_replace( '/\([^)]*\)|\[[^\]]*\]/u', ' ', $t );                       // 괄호 안 규격
+	$t = preg_replace( '/\d+(?:\.\d+)?\s*mg\s*\/\s*\d+\s*ml/iu', ' ', $t );            // 괄호 없는 규격 (3MG/60ML)
+	$t = preg_replace( '/^(?:' . preg_quote( $brand, '/' ) . ')\s*/u', '', trim( $t ) ); // 브랜드 되풀이
+	$t = preg_replace( '/무니코틴\s*액상|모드\s*액상|입호흡\s*액상|폐호흡\s*액상|기성액상|액상|시리즈|모드|[★!]/u', ' ', $t );
+	$t = preg_replace( '/\s+/u', ' ', $t );
+	return trim( $t, " ·-" );
+}
+
+/**
+ * 브랜드 소개에 쓸 사실 — 종수 · 분류 · 규격 · 맛 · 값. **전부 상품에서 읽는다.**
+ *
+ * @param string $brand 브랜드.
+ * @return array{n:int,noun:string,cats:string[],spec:string,flavors:string[],single_min:float,single_max:float,bundles:string[],bundle_per:float,items:string[]}
+ */
+function brand_facts( string $brand ): array {
+	$items   = brand_items( $brand );
+	$cats    = array();
+	$specs   = array();
+	$flavors = array();
+	$smin    = 0.0;
+	$smax    = 0.0;
+	$bundles = array();
+	$bper    = 0.0;
+	$names   = array();
+	foreach ( $items as $p ) {
+		foreach ( cat_names( $p ) as $c ) {
+			$cats[ $c ] = ( $cats[ $c ] ?? 0 ) + 1;
+		}
+		$price = (float) $p->get_price();
+		$pb    = per_bottle( $p );
+		$f     = flavor_name( $p, $brand );
+		if ( preg_match( '/\(([^)]*(?:mg|ml|SALT)[^)]*)\)/iu', $p->get_name(), $m ) || preg_match( '/(\d+(?:\.\d+)?\s*mg\s*\/\s*\d+\s*ml)/iu', $p->get_name(), $m ) ) {
+			$sp           = trim( preg_replace( '/\s*\/\s*/u', ' · ', $m[1] ) );
+			$sp           = preg_replace_callback( '/(?<=[\d\s])(MG|ML|Mg|Ml|mL)\b/u', fn( $x ) => strtolower( $x[1] ), $sp );   // 3MG · 60ML → 3mg · 60ml
+			$specs[ $sp ] = ( $specs[ $sp ] ?? 0 ) + 1;
+		}
+		if ( '' !== $f && $pb['qty'] <= 1 ) {
+			$flavors[] = $f;
+			if ( $price > 0 && $p->is_in_stock() ) {
+				$smin = $smin > 0 ? min( $smin, $price ) : $price;
+				$smax = max( $smax, $price );
+			}
+		} elseif ( $pb['qty'] > 1 ) {
+			// 이름이 「10+1」 「5+5」 로 부르면 그대로 — 손님이 아는 이름이다
+			$bundles[] = preg_match( '/(\d+)\s*\+\s*(\d+)/u', $p->get_name(), $bm ) ? $bm[1] . '+' . $bm[2] : $pb['qty'] . '병';
+			if ( $pb['per'] > 0 && $p->is_in_stock() ) {
+				$bper = $bper > 0 ? min( $bper, $pb['per'] ) : $pb['per'];
+			}
+		}
+		$names[] = trim( preg_replace( '/\s+/u', ' ', preg_replace( '/\([^)]*\)/u', '', split_name( $p )['title'] ) ) );
+	}
+	arsort( $cats );
+	arsort( $specs );
+	return array(
+		'n'          => count( $items ),
+		'noun'       => brand_noun( $brand ),
+		'cats'       => array_slice( array_keys( $cats ), 0, 3 ),
+		// 규격은 둘까지 — 입호흡 30ml 와 폐호흡 60ml 를 같이 파는 브랜드(펠릭스 · 리퀴드랩)가 있다
+		'spec'       => implode( ' / ', array_slice( array_keys( array_filter( $specs, fn( $c, $k ) => $c >= 2 || $k === array_key_first( $specs ), ARRAY_FILTER_USE_BOTH ) ), 0, 2 ) ),
+		'flavors'    => array_values( array_unique( $flavors ) ),
+		'single_min' => $smin,
+		'single_max' => $smax,
+		'bundles'    => array_values( array_unique( $bundles ) ),
+		'bundle_per' => $bper,
+		'items'      => $names,
+	);
+}
+
+/**
+ * 브랜드 소개 한 줄 — 화면(`.dhr-brandintro`) · 메타 설명 · og 에 같은 글.
+ *
+ * 2026-10-02 외부 점검: 30장 중 29장이 「N종을 한자리에 모았습니다 … 무료배송」 틀에 이름만 달랐다.
+ * 이제 브랜드마다 **그 브랜드의 사실**(종수 · 입호흡/폐호흡/무니코틴 · 규격 · 맛 이름 · 값 · 묶음)을
+ * 상품에서 읽어 엮는다 — 적어 두는 숫자가 없어 값 · 종수가 바뀌어도 거짓이 안 된다.
+ * 노보의 재고 첫 문장(`brand_notes`)은 그대로 앞에 선다.
+ *
+ * @param string $brand 브랜드.
+ * @return string
+ */
 function brand_intro( string $brand ): string {
 	if ( '' === $brand ) {
 		return '';
 	}
-	$n    = brands()[ $brand ] ?? 0;
-	$cats = array();
-	foreach ( products( array( 's' => $brand, 'limit' => -1 ) ) as $p ) {
-		if ( split_name( $p )['brand'] !== $brand && ( brand_aliases()[ split_name( $p )['brand'] ] ?? '' ) !== $brand ) {
-			continue;
-		}
-		foreach ( cat_names( $p ) as $c ) {
-			$cats[ $c ] = ( $cats[ $c ] ?? 0 ) + 1;
+	$f    = brand_facts( $brand );
+	$n    = brands()[ $brand ] ?? $f['n'];
+	$lead = (string) ( brand_notes()[ $brand ]['lead'] ?? '' );
+	$kind = $f['noun'];
+	$cw = array();
+	foreach ( $f['cats'] as $c ) {
+		if ( preg_match( '/입호흡|폐호흡|무니코틴/u', $c, $m ) ) {
+			$cw[] = $m[0];
 		}
 	}
-	arsort( $cats );
-	$cats = array_slice( array_keys( $cats ), 0, 3 );
-	$lead = (string) ( brand_notes()[ $brand ]['lead'] ?? '' );
-	$t    = ( '' !== $lead ? $lead . ' ' : '' )
-		. $brand . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . '을 한자리에 모았습니다.'
-		. ( $cats ? ' ' . implode( ' · ', $cats ) . '.' : '' )
-		. ' 묶음 할인과 병당 가격을 같이 보여 드려요. 가입 즉시 ' . number_format( signup_points() ) . '원 적립, '
-		. number_format( free_ship() ) . '원 이상 무료배송.';
+	$cat = implode( ' · ', array_unique( $cw ) );   // 「입호흡 · 폐호흡」 — 둘 다 파는 브랜드
+	$parts = array();
+	if ( 'device' === brand_kind( $brand ) ) {
+		// 기기 · 팟 — 상품 이름과 값을 그대로. 「액상」이라고 하지 않는다
+		$rows = array();
+		foreach ( brand_items( $brand ) as $p ) {
+			$nm = trim( preg_replace( '/\s+/u', ' ', preg_replace( '/\([^)]*\)|\[[^\]]*\]|[★!]|이벤트/u', ' ', split_name( $p )['title'] ) ) );
+			$nm = trim( preg_replace( '/^(?:' . preg_quote( $brand, '/' ) . ')\s*/u', '', $nm ) );
+			$pr = (float) $p->get_price();
+			$rows[] = $nm . ( $pr > 0 ? ' ' . number_format( $pr ) . '원' : '' );
+		}
+		$parts[] = $brand . ' 기기 · 팟 · 코일' . ( $n ? ' ' . $n . '종' : '' ) . ': ' . implode( ' · ', array_slice( $rows, 0, 4 ) ) . '.';
+	} else {
+		$head = $brand . ( '' !== $cat ? ' ' . $cat : '' ) . ' 액상' . ( $n ? ' ' . $n . '종' : '' );
+		$fl   = $f['flavors'];
+		if ( $fl ) {
+			$shown  = array_slice( $fl, 0, 5 );
+			$rest   = count( $fl ) - count( $shown );
+			$head  .= ' — ' . implode( ' · ', $shown ) . ( $rest > 0 ? ' 외 ' . $rest . '종' : '' );
+		}
+		$parts[] = $head . '.';
+		$spec = array();
+		if ( '' !== $f['spec'] ) {
+			$spec[] = $f['spec'];
+		}
+		if ( $f['single_min'] > 0 ) {
+			$spec[] = '낱병 ' . number_format( $f['single_min'] ) . '원' . ( $f['single_max'] > $f['single_min'] ? '~' . number_format( $f['single_max'] ) . '원' : '' );
+		}
+		if ( $spec ) {
+			$parts[] = implode( ' · ', $spec ) . '.';
+		}
+		if ( $f['bundles'] ) {
+			$parts[] = implode( ' · ', $f['bundles'] ) . ' 묶음' . ( $f['bundle_per'] > 0 ? ' 병당 ' . number_format( $f['bundle_per'] ) . '원부터' : '' ) . '.';
+		}
+	}
+	$parts[] = '가입 즉시 ' . number_format( signup_points() ) . '원 적립 · ' . number_format( free_ship() ) . '원 이상 무료배송.';
+	$t = ( '' !== $lead ? $lead . ' ' : '' ) . implode( ' ', $parts );
 	return (string) apply_filters( 'duckhoo_brand_intro', $t, $brand );
+}
+
+/**
+ * 상품이 이만큼 안 되는 브랜드 페이지는 검색에서 뺀다 (noindex · 사이트맵 제외).
+ * 상품 하나짜리 페이지는 그 상품 상세와 같은 내용이라 얇은 중복이다 (2026-10-02 외부 점검 — 30장 중 9장).
+ * 페이지 자체는 그대로 있다 — 카드 · 푸터의 브랜드 링크는 살아 있고, 상품이 늘면 저절로 다시 실린다.
+ *
+ * @return int
+ */
+function brand_min_n(): int {
+	return max( 1, (int) apply_filters( 'duckhoo_brand_min_n', 2 ) );
+}
+
+/**
+ * 지금 브랜드 페이지가 얇아 색인에서 빼야 하는가.
+ *
+ * @return bool
+ */
+function thin_brand(): bool {
+	return is_brand_page() && ( brands()[ current_brand() ] ?? 0 ) < brand_min_n();
 }
 
 /**
@@ -997,8 +1195,25 @@ function brand_intro_html(): string {
  * @return string
  */
 function brand_title(): string {
-	return is_brand_page() ? current_brand() . ' 액상' : '';
+	return is_brand_page() ? current_brand() . ' ' . brand_noun( current_brand() ) : '';
 }
+
+/**
+ * 워드프레스 robots — 얇은 브랜드 페이지에 noindex (AIOSEO 가 핵심 robots 를 끄지 않았을 때의 뒷받침).
+ *
+ * @param mixed $r 지금 값.
+ * @return array
+ */
+function robots_thin_brand( $r ) {
+	if ( ! thin_brand() ) {
+		return $r;
+	}
+	$r            = is_array( $r ) ? $r : array();
+	$r['noindex'] = true;
+	$r['follow']  = true;
+	return $r;
+}
+add_filter( 'wp_robots', __NAMESPACE__ . '\\robots_thin_brand', 21 );
 
 /**
  * 브랜드 페이지도 우리 목록 템플릿으로.
