@@ -61,7 +61,7 @@ new_hero=f'''<div class="rating-hero rv">
       </div>'''
 idx=idx.replace(hero.group(0),new_hero,1)
 idx=idx.replace('<p class="section-subtitle" style="margin-top:16px;">베이프렌드를 직접 경험한 고객분들의 진솔한 후기입니다.</p>',
-  f'<p class="section-subtitle" style="margin-top:16px;">네이버 플레이스에 영수증 · 결제내역으로 인증된 방문자 리뷰를 그대로 옮겼습니다. 글은 한 글자도 고치지 않았습니다 ({ASOF} 기준).</p>',1)
+  f'<p class="section-subtitle" style="margin-top:16px;">네이버 플레이스에 영수증 · 결제내역으로 인증된 방문자 리뷰를 그대로 옮겼습니다. 글은 한 글자도 고치지 않았습니다 ({ASOF} 기준).<br>일부는 매장 리뷰 이벤트에 참여한 뒤 작성된 글입니다.</p>',1)
 def home_card(r):
     tag=' · '+('영수증 인증' if r['origin']=='영수증' else '결제 인증' if r['origin']=='결제내역' else '방문자') 
     return (f'<div class="review-card"><div class="review-stars">{stars(r["rating"])}</div><p class="review-text">"{esc(r["body"])}"</p>'
@@ -95,7 +95,7 @@ soc=soc.replace(ov.group(0),new_ov,1)
 # 지점별 한 줄 (사실 · 링크) — 제목 아래
 store_row='<div class="rv d1" style="display:flex;flex-wrap:wrap;gap:8px 14px;margin:18px 0 34px;font-size:0.8rem;color:rgba(var(--text-rgb),0.55);line-height:1.6;">' + ''.join(
   f'<a href="{s["link"]}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(var(--text-rgb),0.18);">{s["name"]} {s["total"]:,} · {s["score"]:.2f}</a>' for s in sorted(stores,key=lambda s:-s['total'])) + \
-  f'<span style="flex-basis:100%;font-size:0.72rem;color:rgba(var(--text-rgb),0.4);">네이버 플레이스 방문자 리뷰 · {ASOF} 기준 · 지점 이름을 누르면 네이버에서 전체 리뷰를 볼 수 있습니다</span></div>\n\n      <div class="reviews-grid">'
+  f'<span style="flex-basis:100%;font-size:0.72rem;color:rgba(var(--text-rgb),0.4);">네이버 플레이스 방문자 리뷰 · {ASOF} 기준 · 지점 이름을 누르면 네이버에서 전체 리뷰를 볼 수 있습니다 · 일부는 매장 리뷰 이벤트에 참여한 뒤 작성된 글입니다</span></div>\n\n      <div class="reviews-grid">'
 soc=soc.replace('<div class="reviews-grid">',store_row,1)
 grid=re.search(r'<div class="reviews-grid">(.*?)\n      </div>\n\n      <div class="review-cta',soc,re.S); assert grid
 # 그리드 카드: 지점마다 가장 긴 글 하나씩 + 나머지는 길이순, 12장
