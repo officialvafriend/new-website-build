@@ -34,6 +34,10 @@ function spec( string $name ): array {
 	if ( preg_match( '/무니코틴|nico\s*0|0\s*mg/iu', $name ) ) {
 		$nic = '무니코틴';
 	}
+	// 2026-10-02 — 화이트아웃이 「(NTSC SALT / 30ml)」 로 바뀌었다 (사장님). mg 가 없으니 그 이름을 그대로 적는다
+	if ( '' === $nic && preg_match( '/NTSC\s*SALT/iu', $name ) ) {
+		$nic = 'NTSC SALT';
+	}
 	return array( 'nic' => $nic, 'ml' => $ml );
 }
 
