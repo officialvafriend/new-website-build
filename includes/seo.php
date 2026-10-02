@@ -480,7 +480,9 @@ function title( $t ): string {
 	$b    = current_brand();
 	$n    = brands()[ $b ] ?? 0;
 	$note = (string) ( brand_notes()[ $b ]['title'] ?? '' );
-	return $b . ' 액상' . ( $n ? ' ' . $n . '종' : '' ) . ( '' !== $note ? ' ' . $note : '' ) . ' | ' . get_bloginfo( 'name' );
+	// 2026-10-02 — 품절이 있어 note 가 「낱병 N종 …」이면 종수를 두 번 적지 않는다 (「노보 액상 15종 낱병 12종」 ✗)
+	$cnt = $n && ! str_starts_with( $note, '낱병' ) ? ' ' . $n . '종' : '';
+	return $b . ' 액상' . $cnt . ( '' !== $note ? ' ' . $note : '' ) . ' | ' . get_bloginfo( 'name' );
 }
 add_filter( 'aioseo_title', __NAMESPACE__ . '\\title', 20 );
 add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 20 );
