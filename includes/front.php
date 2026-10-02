@@ -1305,15 +1305,56 @@ function hours_short(): string {
  *
  * @return array<string,string>
  */
-function holiday(): array {
-	return (array) apply_filters( 'duckhoo_holiday', array(
-		'name'      => '추석 연휴',
-		'show_from' => '2026-09-22',
-		'ship_only' => '2026-09-23',
-		'from'      => '2026-09-24',
-		'to'        => '2026-09-27',
-		'backlog'   => '2026-09-28',
+function holidays(): array {
+	// 2026-10-02 사장님 포스터 「2026년 10월 택배 출고 휴무 안내」 — 개천절 3(토)~5(월) · 6(화)부터 순차 출고,
+	// 한글날 9(금)~11(일) · 12(월)부터 순차 출고. 휴무 중에도 주문은 받는다. 지나면 저절로 빠진다.
+	return (array) apply_filters( 'duckhoo_holidays', array(
+		array( 'name' => '개천절 연휴', 'show_from' => '2026-10-01', 'from' => '2026-10-03', 'to' => '2026-10-05', 'backlog' => '2026-10-06', 'resume' => true ),
+		array( 'name' => '한글날 연휴', 'show_from' => '2026-10-01', 'from' => '2026-10-09', 'to' => '2026-10-11', 'backlog' => '2026-10-12', 'resume' => true ),
 	) );
+}
+
+/**
+ * 지금 보일 연휴 하나 — 목록에서 아직 안 지난 첫 것. 필터 `duckhoo_holiday` 는 그대로 (하나만 못 박을 때).
+ *
+ * @return array<string,mixed>
+ */
+function holiday(): array {
+	$today = (string) current_time( 'Y-m-d' );
+	$pick  = array();
+	foreach ( holidays() as $h ) {
+		$h    = (array) $h;
+		$last = trim( (string) ( $h['backlog'] ?? '' ) ) ?: trim( (string) ( $h['to'] ?? '' ) );
+		if ( '' !== $last && $today <= $last ) {
+			$pick = $h;
+			break;
+		}
+	}
+	return (array) apply_filters( 'duckhoo_holiday', $pick );
+}
+
+/**
+ * 그다음 연휴 — 지금 것 바로 뒤에 있고 벌써 보여도 되는 것 (10월처럼 연휴가 두 번 붙어 있을 때 한 줄에 같이 적는다).
+ *
+ * @param array<string,mixed> $cur 지금 연휴.
+ * @return array<string,mixed>
+ */
+function holiday_next( array $cur ): array {
+	$today = (string) current_time( 'Y-m-d' );
+	$seen  = false;
+	foreach ( holidays() as $h ) {
+		$h = (array) $h;
+		if ( ! $seen ) {
+			$seen = ( $h['from'] ?? '' ) === ( $cur['from'] ?? '' );
+			continue;
+		}
+		$show = trim( (string) ( $h['show_from'] ?? '' ) );
+		if ( ( '' === $show || $today >= $show ) && '' !== trim( (string) ( $h['from'] ?? '' ) ) ) {
+			return $h;
+		}
+		break;
+	}
+	return array();
 }
 
 /**
@@ -1352,20 +1393,39 @@ function holiday_notice(): ?array {
 	if ( ( '' !== $show && $today < $show ) || $today > $last ) {
 		return null;
 	}
-	$same = substr( $from, 0, 7 ) === substr( $to, 0, 7 );
+	$same   = substr( $from, 0, 7 ) === substr( $to, 0, 7 );
+	$resume = ! empty( $h['resume'] );
+	$next   = holiday_next( $h );
+	$nfrom  = trim( (string) ( $next['from'] ?? '' ) );
+	$nto    = trim( (string) ( $next['to'] ?? '' ) );
+	$nback  = trim( (string) ( $next['backlog'] ?? '' ) );
+	$nrange = '' !== $nfrom && '' !== $nto ? kday( $nfrom, substr( $nfrom, 0, 7 ) !== substr( $to, 0, 7 ) ) . '–' . kday( $nto, substr( $nfrom, 0, 7 ) !== substr( $nto, 0, 7 ) ) : '';
 	if ( $today <= $to ) {
-		$k = kday( $from ) . '–' . kday( $to, ! $same ) . ' 택배 출고가 없습니다';
-		$s = array();
+		$range = kday( $from ) . '–' . kday( $to, ! $same ) . ( '' !== $nrange ? ' · ' . $nrange : '' );
+		$k     = $range . ' 택배 출고가 없습니다';
+		$s     = array();
 		if ( '' !== $only && $today <= $only ) {
 			$s[] = kday( $only, false ) . ' 출고분은 연휴 뒤에 도착합니다';
 		}
 		if ( '' !== $back ) {
-			$s[] = kday( $back, false ) . '은 밀린 물량으로 출고가 늦어질 수 있습니다';
+			$s[] = $resume
+				? kday( $back, false ) . ( '' !== $nback ? ' · ' . kday( $nback, false ) : '' ) . '부터 순차 출고합니다'
+				: kday( $back, false ) . '은 밀린 물량으로 출고가 늦어질 수 있습니다';
 		}
-		$short = $name . ' ' . kday( $from ) . '–' . kday( $to, ! $same ) . ' 택배 출고 없음';
+		if ( $resume ) {
+			$s[] = '휴무 중에도 주문은 됩니다';
+		}
+		if ( $next ) {
+			$name = $name . ' · ' . trim( (string) ( $next['name'] ?? '' ) );
+			$name = str_replace( ' 연휴 · ', ' · ', $name );
+		}
+		$short = $name . ' ' . $range . ' 택배 출고 없음';
 	} else {
 		$k     = '연휴 동안 밀린 물량으로 출고가 늦어질 수 있습니다';
 		$s     = array( '입금 확인 순서대로 보내 드립니다' );
+		if ( '' !== $nrange ) {
+			$s[] = $nrange . '도 택배 출고가 없습니다';
+		}
 		$short = '연휴 뒤 밀린 물량으로 출고가 늦어질 수 있습니다';
 	}
 	return array(
