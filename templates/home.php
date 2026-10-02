@@ -91,6 +91,12 @@ if ( $novo_cat && apply_filters( 'duckhoo_home_novo', true ) ) {
 	$novo_sub  = ( $n_single ? '낱병 ' . $n_single . '종' : '' ) . ( $n_single && $n_bundle ? ' · ' : '' ) . ( $n_bundle ? '10+1 묶음' : '' )
 		. ' — 평일 오후 4시 이전 입금 확인분 당일 출고';
 }
+// 2026-10-02 — 한 맛이 품절이면 「전 라인」이라고 하지 않는다 (그린펀치 품절)
+$novo_state = function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_state' ) ? \Duckhoo\Redesign\Novo\stock_state() : array( 'all' => true, 'out' => array() );
+$novo_title = ! empty( $novo_state['all'] ) ? '노보 전 라인 지금 바로 주문' : '노보 액상 지금 바로 주문';
+if ( empty( $novo_state['all'] ) && ! empty( $novo_state['out'] ) ) {
+	$novo_sub .= ' · 품절: ' . implode( ' · ', $novo_state['out'] );
+}
 
 $grid   = $rank_cat ? products( array( 'category' => array( $rank_cat->slug ), 'limit' => 12 ) ) : array();
 if ( count( $grid ) < 12 ) {
@@ -223,8 +229,8 @@ $month = (int) wp_date( 'n' );
 
 	<?php if ( $novo_row ) : // 2026-10-01 — 노보가 시장에서 끊기는 때. 첫 화면에 노보 전 라인을 통째로 세운다. ?>
 	<section class="sec sec--novo">
-		<?php section_head( '노보 액상 · 재고 있음', '노보 전 라인 지금 바로 주문', $novo_sub, $novo_cat ? get_term_link( $novo_cat ) : $shop_url ); ?>
-		<?php carousel( $novo_row, '노보 액상 전 라인' ); ?></section>
+		<?php section_head( '노보 액상 · 재고 있음', $novo_title, $novo_sub, $novo_cat ? get_term_link( $novo_cat ) : $shop_url ); ?>
+		<?php carousel( $novo_row, '노보 액상' ); ?></section>
 	<?php endif; ?>
 
 	<?php if ( $deals ) : ?>

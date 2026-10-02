@@ -827,11 +827,16 @@ add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
  *
  * @return array<string,array{title:string,lead:string}>
  */
+function novo_words(): string {
+	// 2026-10-02 — 한 맛이 품절이면 「전 라인」이라고 하지 않는다 (novo.php 의 stock_state 가 상품에서 읽는다)
+	return function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_phrase' ) ? \Duckhoo\Redesign\Novo\stock_phrase( 'noun' ) : '전 라인';
+}
+
 function brand_notes(): array {
 	return (array) apply_filters( 'duckhoo_brand_notes', array(
 		'노보' => array(
-			'title' => '전 라인 재고 보유 · 바로 주문',
-			'lead'  => '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 전 라인 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.',
+			'title' => novo_words() . ' 재고 보유 · 바로 주문',
+			'lead'  => '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 ' . novo_words() . ' 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.',
 		),
 	) );
 }
@@ -918,7 +923,7 @@ function cat_title( $t ): string {
 		return Broad\cat_title( $t );   // 입호흡 · 폐호흡 (broad-seo.php)
 	}
 	$c = cat_prices( $t );
-	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' 전 라인 재고 보유 · 바로 주문 | ' . get_bloginfo( 'name' );
+	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ( '전 라인' === novo_words() ? ' 전 라인' : '' ) . ' 재고 보유 · 바로 주문 | ' . get_bloginfo( 'name' );
 }
 
 /**
@@ -940,7 +945,7 @@ function cat_note_text( $t ): string {
 		$price[] = '10+1 묶음(' . (int) $c['bundle_n'] . '병) ' . number_format( $c['bundle'] ) . '원'
 			. ( $c['bundle_n'] > 0 ? ' (병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원)' : '' );
 	}
-	$t = '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 전 라인 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.'
+	$t = '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 ' . novo_words() . ' 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.'
 		. ( $price ? ' ' . implode( ' · ', $price ) . '.' : '' )
 		. ' 30ml · 니코틴 9.8mg · 입호흡(MTL). 평일 오후 4시 이전 입금 확인 시 당일 출고, '
 		. number_format( free_ship() ) . '원 이상 무료배송.';

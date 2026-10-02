@@ -1087,6 +1087,83 @@ add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\banner' );
  *
  * @return void
  */
+/**
+ * 노보 낱병의 재고 상태 (2026-10-02, 그린펀치 품절). 「전 라인 재고 있음」은 **낱병이 전부 재고 있을 때만** 말한다.
+ * 띠 · 제목 · 배너 · FAQ · 브랜드 소개가 전부 이것을 본다 — 한 맛이 품절이면 「낱병 N종 재고 있음」으로 내려가고
+ * 품절 맛 이름을 같이 적는다. 상품의 재고 깃발을 읽을 뿐 바꾸지 않는다.
+ *
+ * @return array{total:int,in:int,out:string[],bundles:int,all:bool}
+ */
+function stock_state(): array {
+	static $memo = null;
+	if ( null !== $memo && empty( $GLOBALS['dhr_test'] ) ) {
+		return $memo;
+	}
+	$s = array( 'total' => 0, 'in' => 0, 'out' => array(), 'bundles' => 0, 'all' => false );
+	foreach ( \Duckhoo\Redesign\Front\products( array( 'limit' => -1 ) ) as $p ) {
+		if ( ! is_novo( $p ) ) {
+			continue;
+		}
+		if ( bottles( $p ) > 1 ) {
+			if ( $p->is_in_stock() ) {
+				++$s['bundles'];
+			}
+			continue;
+		}
+		++$s['total'];
+		if ( $p->is_in_stock() ) {
+			++$s['in'];
+		} else {
+			$s['out'][] = short_name( $p );
+		}
+	}
+	$s['all'] = $s['total'] > 0 && empty( $s['out'] );
+	$memo     = $s;
+	return $s;
+}
+
+/**
+ * 「[노보 블랙] 그린펀치 (9.8mg / 30ml)」 → 「노보 블랙 그린펀치」.
+ *
+ * @param object $p 상품.
+ * @return string
+ */
+function short_name( $p ): string {
+	$n    = (string) $p->get_name();
+	$line = preg_match( '/^\s*\[([^\]]*)\]/u', $n, $m ) ? trim( (string) $m[1] ) : '';
+	$line = (string) preg_replace( '/\s*리퀴드$/u', '', $line );
+	$fl   = trim( (string) preg_replace( '/\s*\(.*?\)\s*$/u', '', (string) preg_replace( '/^\s*\[[^\]]*\]\s*/u', '', $n ) ) );
+	return trim( $line . ' ' . $fl );
+}
+
+/**
+ * 재고 말 한 토막. 전부 있으면 「전 라인」, 아니면 「낱병 N종」.
+ *
+ * @param string $style 'noun'(전 라인 · 낱병 N종) · 'short'(… 재고 있음) · 'hold'(… 재고 보유).
+ * @return string
+ */
+function stock_phrase( string $style = 'noun' ): string {
+	$s    = stock_state();
+	$noun = $s['all'] ? '전 라인' : '낱병 ' . (int) $s['in'] . '종';
+	if ( 'short' === $style ) {
+		return $noun . ' 재고 있음';
+	}
+	if ( 'hold' === $style ) {
+		return $noun . ' 재고 보유';
+	}
+	return $noun;
+}
+
+/**
+ * 품절 맛이 있으면 「지금 품절: 노보 그린펀치」, 없으면 빈 문자열.
+ *
+ * @return string
+ */
+function out_note(): string {
+	$s = stock_state();
+	return $s['out'] ? '지금 품절: ' . implode( ' · ', $s['out'] ) : '';
+}
+
 function stock_banner(): void {
 	$singles = 0;
 	$bundles = 0;
@@ -1103,13 +1180,20 @@ function stock_banner(): void {
 	$what = $singles > 0
 		? '낱병 ' . $singles . '종' . ( $bundles > 0 ? '과 10+1 묶음' : '' )
 		: '전 맛';
+	$ss    = stock_state();   // 2026-10-02 — 한 맛이라도 품절이면 「전 라인」이라고 하지 않는다
+	$notes = array( \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상 사시면 10+1 묶음이 병당 더 저렴합니다' );
+	if ( ! $ss['all'] && $ss['out'] ) {
+		array_unshift( $notes, out_note() . ' — 입고되면 다시 안내합니다' );
+	}
 	$b = (array) apply_filters(
 		'duckhoo_novo_stock_banner',
 		array(
 			'eb'         => '노보 액상',
-			'head'       => array( '노보 · 노보 블랙 ', '전 라인 재고 있습니다' ),
-			'lead'       => '노보 리퀴드 ' . $what . ' 모두 품절 없이 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
-			'notes'      => array( \Duckhoo\Redesign\Front\ship_rule_short(), '10병 이상 사시면 10+1 묶음이 병당 더 저렴합니다' ),
+			'head'       => array( '노보 · 노보 블랙 ', $ss['all'] ? '전 라인 재고 있습니다' : '낱병 ' . $singles . '종 재고 있습니다' ),
+			'lead'       => $ss['all']
+				? '노보 리퀴드 ' . $what . ' 모두 품절 없이 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.'
+				: '노보 리퀴드 ' . $what . '을 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
+			'notes'      => $notes,
 			'price_head' => '가격 인상 안내',
 			'price_lead' => '노보 액상 판매가가 올랐습니다. 지금 가격은 아래와 같습니다.',
 			'price'      => price_lines(),

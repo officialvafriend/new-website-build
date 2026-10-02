@@ -2560,6 +2560,26 @@ $GLOBALS['__products'] = [
   7105 => new WC_Product(7105, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true),
   7106 => new WC_Product(7106, '[펠릭스] 더블라임 (9.8mg / 30ml)', 20000.0, true),      // 노보 아님
 ];
+// 2026-10-02 — 그린펀치 품절. 낱병 한 맛이라도 없으면 「전 라인」이라고 하지 않는다 (7104 데저트가 품절)
+$GLOBALS['dhr_test'] = true;
+$N0 = 'Duckhoo\\Redesign\\Novo\\';
+$st = ($N0.'stock_state')();
+$ok($st['total'] === 4 && $st['in'] === 3 && $st['out'] === ['노보 블랙 데저트'] && $st['bundles'] === 1 && $st['all'] === false, '재고 상태: 낱병 4종 중 3종 · 품절 「노보 블랙 데저트」 · 묶음 1 · 전 라인 아님');
+$ok(($N0.'stock_phrase')('noun') === '낱병 3종' && ($N0.'stock_phrase')('short') === '낱병 3종 재고 있음' && ($N0.'stock_phrase')('hold') === '낱병 3종 재고 보유' && ($N0.'out_note')() === '지금 품절: 노보 블랙 데저트', '품절이 있으면 「낱병 N종」 + 품절 맛 이름');
+$fa = ($NS.'faq')();
+$ok(str_contains($fa[0]['a'], '낱병 3종을 재고로') && str_contains($fa[0]['a'], '지금 품절: 노보 블랙 데저트') && !str_contains($fa[0]['a'], '전 라인'), 'FAQ 첫 답이 「전 라인」 대신 낱병 수와 품절 맛을 말한다');
+$ok(\Duckhoo\Redesign\Seo\brand_notes()['노보']['title'] === '낱병 3종 재고 보유 · 바로 주문' && str_contains(\Duckhoo\Redesign\Seo\brand_notes()['노보']['lead'], '낱병 3종 재고를'), '브랜드 제목 · 소개도 같은 말');
+$ok(\Duckhoo\Redesign\Front\novo_announce() === '노보 액상 낱병 3종 · 10+1 묶음 재고 있음', '홈 띠 — 숫자를 상품에서 읽고 「전 라인」을 뺀다');
+$GLOBALS['__is_tax'] = true; $GLOBALS['__filters']['duckhoo_novo_stock_banner'] = [];
+ob_start(); ($N0.'banner')(); $bn2 = ob_get_clean();
+$ok(str_contains($bn2, '낱병 3종 재고 있습니다') && str_contains($bn2, '지금 품절: 노보 블랙 데저트') && !str_contains($bn2, '전 라인'), '분류 배너 — 「낱병 3종 재고 있습니다」 + 품절 줄');
+$GLOBALS['__products'][7104] = new WC_Product(7104, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, true);   // 입고
+$st = ($N0.'stock_state')();
+$ok($st['all'] === true && $st['out'] === [] && ($N0.'stock_phrase')('noun') === '전 라인' && \Duckhoo\Redesign\Front\novo_announce() === '노보 액상 전 라인 재고 있음 · 낱병 4종 · 10+1 묶음' && \Duckhoo\Redesign\Seo\brand_notes()['노보']['title'] === '전 라인 재고 보유 · 바로 주문', '다 들어오면 저절로 「전 라인」으로 돌아간다');
+ob_start(); ($N0.'banner')(); $bn2 = ob_get_clean();
+$ok(str_contains($bn2, '전 라인 재고 있습니다') && !str_contains($bn2, '지금 품절'), '배너도 「전 라인」으로');
+$GLOBALS['__products'][7104] = new WC_Product(7104, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, false);   // 도로 품절 (아래 테스트 전제)
+$GLOBALS['__is_tax'] = false;
 $me  = $GLOBALS['__products'][7101];
 $sib = ($NS.'siblings')($me);
 $sid = array_map(fn($p) => $p->get_id(), $sib);

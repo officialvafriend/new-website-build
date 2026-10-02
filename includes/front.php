@@ -1521,8 +1521,27 @@ function announce(): string {
 		$hol ? (string) $hol['short'] :
 		// 2026-09-21 — 다른 사이트에서 노보 품절. 노보를 찾아 온 사람에게 첫 줄에서 말한다.
 		// (9월 9일자 「자동 할인 조기 종료」 공지는 12일 지나 내렸다.)
-		'노보 액상 전 라인 재고 있음 · 낱병 13종 · 10+1 묶음'
+		novo_announce()
 	) );
+}
+
+/**
+ * 띠의 노보 문구 — 재고를 상품에서 읽는다 (2026-10-02, 그린펀치 품절). 낱병이 전부 있을 때만 「전 라인」.
+ *
+ * @return string
+ */
+function novo_announce(): string {
+	if ( ! function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_state' ) ) {
+		return '노보 액상 재고 있음 · 10+1 묶음';
+	}
+	$s = \Duckhoo\Redesign\Novo\stock_state();
+	if ( $s['in'] < 1 ) {
+		return '';   // 낱병이 하나도 없으면 재고 띠를 내린다
+	}
+	$b = $s['bundles'] > 0 ? ' · 10+1 묶음' : '';
+	return $s['all']
+		? '노보 액상 전 라인 재고 있음 · 낱병 ' . (int) $s['in'] . '종' . $b
+		: '노보 액상 낱병 ' . (int) $s['in'] . '종' . $b . ' 재고 있음';
 }
 
 /**

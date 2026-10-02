@@ -90,6 +90,11 @@ function count_all(): int {
 /**
  * 재고 있는 노보 상품이 있나 — 홈 제목의 「노보 재고 있음」은 그때만.
  */
+function novo_words(): string {
+	// 2026-10-02 — 한 맛이 품절이면 「전 라인」이라고 하지 않는다 (novo.php 의 stock_state 가 상품에서 읽는다)
+	return function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_phrase' ) ? \Duckhoo\Redesign\Novo\stock_phrase( 'noun' ) : '전 라인';
+}
+
 function novo_in_stock(): bool {
 	static $memo = null;   // 한 요청에서 제목 · 설명 · og 가 세 번 묻는다
 	if ( null !== $memo && empty( $GLOBALS['dhr_test'] ) ) {
@@ -201,7 +206,7 @@ function home_desc(): string {
 	$t  = '전자담배 액상(전담 액상) 전문 사이트 ' . site() . '. '
 		. ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '입호흡 · 폐호흡 액상' . ( $n > 0 ? ' ' . $n . '종' : '' )
 		. ( $pr['single'] > 0 ? ', 낱병 ' . won( $pr['single'] ) . '부터' : '' )
-		. ( novo_in_stock() ? ', 노보 전 라인 재고 있음' : '' ) . '. '
+		. ( novo_in_stock() ? ', 노보 ' . novo_words() . ' 재고 있음' : '' ) . '. '
 		. '평일 오후 4시 이전 입금 확인 시 당일 출고, ' . won( (float) free_ship() ) . ' 이상 무료배송, 가입 즉시 '
 		. won( (float) signup_points() ) . ' 적립. 19세 이상 본인확인 회원 전용.';
 	return (string) apply_filters( 'duckhoo_home_desc', $t );
@@ -383,7 +388,7 @@ function faq( string $ctx, $t = null ): array {
 		);
 		$items[] = array(
 			'q' => '어떤 브랜드 액상이 있나요?',
-			'a' => ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '브랜드별 낱병과 묶음을 판매합니다.' . ( novo_in_stock() ? ' 노보는 전 라인 재고가 있습니다.' : '' ),
+			'a' => ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '브랜드별 낱병과 묶음을 판매합니다.' . ( novo_in_stock() ? ' 노보는 ' . novo_words() . ' 재고가 있습니다.' : '' ),
 		);
 		$items[] = array(
 			'q' => '주문하면 언제 받을 수 있나요?',
