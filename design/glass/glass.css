@@ -378,3 +378,12 @@ html.static .tab,html.static .pbar{display:none}
 .ptg{font-size:11px;font-weight:800;padding:0 10px;min-height:32px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
 [data-accent="silver"] .pc .fig .n19,[data-accent="silver"] .li .th .n19,[data-accent="silver"] .gal .n19,[data-accent="silver"] .stage .n19{background:var(--metal);color:#161616;border:1px solid var(--metal-edge);box-shadow:inset 0 1px 0 var(--metal-hi)}
 [data-accent="silver"] .more,[data-accent="silver"] .bt a,[data-accent="silver"] .gate a,[data-accent="silver"] .links a{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px;text-decoration-color:var(--metal-edge)}
+
+/* ---- 포인트 「일렉트릭 블루」 (사장님 2026-10-06 「완전 쨍한 파란색」) ----
+ * 라이트 #1A5CFF(흰 바탕 5.3:1) · 다크 #4D8BFF(어두운 면 위, 글자는 #161616). 면 · 글자 둘 다 쓸 수 있는 유일한 후보라 규칙이 가장 단순하다. */
+:root[data-accent="blue"]{ --acc:#1A5CFF; --acc-ink:#FFFFFF; --acc-soft:#EAF0FF }
+:root[data-accent="blue"][data-theme="dark"]{ --acc:#4D8BFF; --acc-ink:#0F1012; --acc-soft:rgba(77,139,255,.16) }
+@media (prefers-color-scheme: dark){ :root[data-accent="blue"]:not([data-theme="light"]){ --acc:#4D8BFF; --acc-ink:#0F1012; --acc-soft:rgba(77,139,255,.16) } }
+[data-accent="blue"] .done .ring{box-shadow:0 12px 28px rgba(26,92,255,.32)}
+[data-accent="blue"] .stage::after{content:"";position:absolute;inset:auto -30% -40% auto;width:70%;aspect-ratio:1;border-radius:50%;background:var(--acc);filter:blur(70px);opacity:.22;pointer-events:none}
+[data-accent="blue"] .ptg{background:var(--acc);color:var(--acc-ink)}
