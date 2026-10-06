@@ -3542,3 +3542,7 @@ Figma 에 Pretendard 가 없어 Noto Sans KR 로 그렸다 (사이트는 Pretend
   순수 검정/흰색 없음(`#161616` / `#F6F6F7`) · 폰 가로 넘침 0(12장 전부 390px)
 - 사이트에 옮기는 순서(사장님 승인 뒤): ①토큰 · 다크 모드 · 헤더 · 탭바 · 푸터(shell.css · front.css) ②홈 ③목록 · 카드 ④상세 · 구매 카드 · 완료 막 ⑤장바구니 · 결제
   ⑥계정 · 로그인 · 가입. 폼 · 결제 · 성인인증 · 테마 파일은 그대로. 다크 모드는 테마의 인라인 `<style>` 과 싸워야 하므로 `html body.dhr.dhr-wrap.dhr-wrap` 특이도로 덮는다
+- **포인트 「프리즘」** (사장님 「주황 말고 프리즘 컬러」): `html[data-accent="prism"]` 변형, 헤더 「프리즘」 버튼(`localStorage['dhr-accent']`).
+  **무지개는 면에만** — 고른 테두리(gradient border: `padding-box` + `border-box` 두 겹 배경) · 진행 막대 · 완료 체크 원 · 19 배지 · 태그 · 분류 아이콘 ·
+  탭 활성 아이콘(SVG `stroke: url(#prismStroke)`) · 히어로 무대 뒤 번짐(`::after` blur 60px). **글자 포인트는 단색** 보라-파랑(라이트 `#5B4BE0` 4.6:1 ·
+  다크 `#B3A7FF`). 무지개 위 글자는 항상 `#161616`. 캡처 `DHR_ACCENT=prism`. 사장님이 주황 · 프리즘 중 고른다

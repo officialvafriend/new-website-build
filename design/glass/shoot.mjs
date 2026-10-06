@@ -1,17 +1,18 @@
-// 유리 시안 캡처: DHR_NODE_MODULES=<playwright 가 있는 node_modules> DHR_OUT=<폴더> node design/glass/shoot.mjs
+// 유리 시안 캡처: DHR_NODE_MODULES=<playwright 가 있는 node_modules> DHR_OUT=<폴더> [DHR_ACCENT=prism] [DHR_PAGES=index,shop] node design/glass/shoot.mjs
 // 유리 시안 스크린샷: 라이트/다크 × 390/1280, 홈 중간 스크롤, 시트 · 완료 막
 import { createRequire } from 'node:module';
 const require = createRequire(process.env.DHR_NODE_MODULES ? process.env.DHR_NODE_MODULES + '/x.js' : import.meta.url);
 const { chromium } = require('playwright');
-const out = process.env.DHR_OUT || '/tmp/glass-shots';
+const out = process.env.DHR_OUT || '/tmp/claude-0/-home-user-new-website-build/eaa69852-6737-54fa-a860-4a2fc73b9c20/scratchpad/glass';
 const base = 'file://' + new URL('.', import.meta.url).pathname;
 const br = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
-const pages = ['index','shop','product','cart','account','login'];
+const pages = (process.env.DHR_PAGES || 'index,shop,product,cart,account,login').split(',');
 const res = [];
 for (const theme of ['light','dark']) for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) {
   const ctx = await br.newContext({ viewport:{width:w,height:h}, deviceScaleFactor:1, colorScheme: theme, isMobile: w<880, hasTouch: w<880 });
   for (const p of pages) {
     const pg = await ctx.newPage();
+    if (process.env.DHR_ACCENT) await pg.addInitScript(a => { try { localStorage.setItem('dhr-accent', a); } catch (e) {} document.addEventListener('DOMContentLoaded', () => { document.documentElement.dataset.accent = a; }); }, process.env.DHR_ACCENT);
     await pg.goto(base + p + '.html'); await pg.waitForTimeout(500);
     // 전체 페이지: 등장 애니메이션이 스크롤 타임라인이라 full page 캡처에서는 아래가 투명할 수 있어, 먼저 끝까지 훑는다
     const H = await pg.evaluate(() => document.documentElement.scrollHeight);
