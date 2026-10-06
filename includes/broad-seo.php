@@ -637,7 +637,7 @@ function intro( string $ctx, $t = null ): string {
 	$txt = $site . '의 ' . $ko . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . '입니다. ' . $ko . '은 ' . $how
 		. ( $b ? ' ' . implode( ' · ', $b ) . ' 등 ' : ' ' ) . $ko . '을 브랜드별 낱병과 묶음으로 판매하며'
 		. ( $c['single'] > 0 ? ' 낱병은 ' . won( $c['single'] ) . '부터' : '' )
-		. ( $c['bundle'] > 0 && $c['bundle_n'] > 0 ? ', 묶음은 병당 약 ' . won( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '입니다.' : '.' )
+		. ( $c['bundle'] > 0 && $c['bundle_n'] > 0 ? ', 묶음은 병당 약 ' . won( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '입니다.' : ( $c['single'] > 0 ? '입니다.' : '.' ) )
 		. ' 니코틴 농도와 용량은 상품 이름에 적혀 있고, 전 상품 가격표에서 ' . $ko . ' 값을 한 번에 비교할 수 있습니다. 19세 이상 본인확인 회원만 구매할 수 있습니다.';
 	return (string) apply_filters( 'duckhoo_broad_intro', $txt, $ctx, $t );
 }
