@@ -3669,3 +3669,8 @@ taste-skill(anti-slop) · emil-design-eng 로 홈을 한 번 훑었다. 레이�
   자간 0 · keep-all 은 그대로
 
 검증: `php design/php-tests/run.php` · `scratchpad/home-render.php`(hero 1 · stage 1 · nums 1 · rows 1) · 배포 뒤 390/1280 라이트/다크 스크린샷 · smoke.
+
+**2026-10-06 밤, 여기서 멈춤 (사장님 「오늘은 여기까지 · 오류 점검은 내일 이어서」).** 홈 시안 A + taste 점검이 프로덕션에 올라가 있고
+smoke 20 · 390/1280 라이트/다크 넘침 0 · 우리 JS 오류 0 으로 확인했다. **내일 첫 일은 오류 점검** — 홈 · 목록 · 상세 · 장바구니 · 로그인 · 가입 3장을
+390/1280 × 라이트/다크로 다시 찍고(`scratchpad/live/preview.mjs` · `taste-shot.mjs`), 콘솔 오류 · 넘침 · 끊긴 HTML · 다크에서 안 보이는 글자를 본다.
+그 다음이 ③ 상품 목록 · 카드.
