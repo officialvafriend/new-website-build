@@ -1131,7 +1131,9 @@ function brand_intro( string $brand ): string {
 		$parts[] = $brand . ' 기기 · 팟 · 코일' . ( $n ? ' ' . $n . '종' : '' ) . ': ' . implode( ' · ', array_slice( $rows, 0, 4 ) ) . '.';
 	} else {
 		$head = $brand . ( '' !== $cat ? ' ' . $cat : '' ) . ' 액상' . ( $n ? ' ' . $n . '종' : '' );
-		$fl   = $f['flavors'];
+		// 2026-10-06 — 노보는 맛 이름을 나열하지 않는다: 브랜드 페이지가 「노보 코코넛커피 · 쿠바시가」에서 상품 페이지 자리를 먹었다.
+		// 맛 검색은 그 맛의 상품 페이지 한 장이 받아야 한다. 다른 브랜드(상품 페이지가 그 말로 안 뜨는 곳)는 그대로.
+		$fl   = in_array( $brand, (array) apply_filters( 'duckhoo_brand_intro_no_flavors', array( '노보' ) ), true ) ? array() : $f['flavors'];
 		if ( $fl ) {
 			$shown  = array_slice( $fl, 0, 5 );
 			$rest   = count( $fl ) - count( $shown );

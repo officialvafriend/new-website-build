@@ -90,21 +90,27 @@ function flavor_links( $product = null ): void {
 	if ( ! $p instanceof \WC_Product || ! is_novo( $p ) || ! apply_filters( 'duckhoo_novo_flavor_links', true ) ) {
 		return;
 	}
-	$sib = siblings( $p );
-	if ( ! $sib ) {
+	// 2026-10-06 — 맛 이름 14개를 글자로 늘어놓자 타박멘솔 · 아메리카노 상품이 네이버에서 15위 밖으로 떨어졌다
+	// (상품끼리 서로 잡아먹음 — 「노보 타박멘솔」에 블랙멘솔 페이지가 올라옴). 이름은 빼고 노보 전체 보기 링크 하나만 남긴다.
+	// 맛 이름 목록을 도로 그리려면 duckhoo_novo_flavor_names 를 true 로.
+	$names = (bool) apply_filters( 'duckhoo_novo_flavor_names', false );
+	$sib   = $names ? siblings( $p ) : array();
+	$cat   = function_exists( '\\Duckhoo\\Redesign\\Front\\cat_by_name' ) ? cat_by_name( '노보' ) : null;
+	$more  = $cat && function_exists( 'get_term_link' ) ? get_term_link( $cat ) : '';
+	if ( ! $sib && ( ! is_string( $more ) || '' === $more ) ) {
 		return;
 	}
-	$cat  = function_exists( '\\Duckhoo\\Redesign\\Front\\cat_by_name' ) ? cat_by_name( '노보' ) : null;
-	$more = $cat && function_exists( 'get_term_link' ) ? get_term_link( $cat ) : '';
 	echo '<nav class="dhp-flav" aria-label="노보 다른 맛">';
-	echo '<p class="dhp-flav__t">노보 다른 맛 보기 <small>' . esc_html( stock_state()['all'] ? '전 라인 재고 있음' : '재고 있는 맛' ) . '</small></p><ul class="dhp-flav__list">';
-	foreach ( $sib as $s ) {
-		$label = line_label( $s ) . ' ' . flavor( $s );
-		echo '<li><a href="' . esc_url( get_permalink( $s->get_id() ) ) . '">' . esc_html( $label ) . '</a></li>';
+	if ( $sib ) {
+		echo '<p class="dhp-flav__t">노보 다른 맛 보기 <small>' . esc_html( stock_state()['all'] ? '전 라인 재고 있음' : '재고 있는 맛' ) . '</small></p><ul class="dhp-flav__list">';
+		foreach ( $sib as $s ) {
+			$label = line_label( $s ) . ' ' . flavor( $s );
+			echo '<li><a href="' . esc_url( get_permalink( $s->get_id() ) ) . '">' . esc_html( $label ) . '</a></li>';
+		}
+		echo '</ul>';
 	}
-	echo '</ul>';
 	if ( is_string( $more ) && '' !== $more ) {
-		echo '<a class="dhp-flav__more" href="' . esc_url( $more ) . '">노보 전체 보기 →</a>';
+		echo '<a class="dhp-flav__more" href="' . esc_url( $more ) . '">노보 다른 맛 · 전체 보기 →</a>';
 	}
 	echo '</nav>';
 }
