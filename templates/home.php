@@ -180,7 +180,7 @@ $month = (int) wp_date( 'n' );
 						?>
 						<h3 class="hcard-t"><?php echo esc_html( $ht ); ?></h3>
 						<p class="hprice"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s><?php endif; ?>
-							<b><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</b></p>
+							<b data-count="<?php echo (int) $hs; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</b></p>
 						<p><?php echo esc_html( $hn['brand'] ? $hn['brand'] . ' · ' : '' ); ?><?php echo $hp['qty'] > 1 ? esc_html( $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' ) : '단품'; ?></p>
 						<span class="btn btn-d">상품 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></span></div>
 					<div class="hart"><span class="box"><?php echo $hp_item->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span></div>
@@ -276,11 +276,12 @@ $month = (int) wp_date( 'n' );
 			if ( ! $bp ) { continue; }
 			$bcount = brands()[ $b ] ?? count( $bp );
 			$burl = brand_url( $b ); ?>
-			<article class="bcard"><div class="bhead"><span class="blogo"><?php echo esc_html( mb_substr( $b, 0, 1 ) ); ?></span>
+			<?php // .stk — 폰에서 카드가 겹쳐 쌓이는 스택(유리 시안 A). 데스크톱은 그냥 격자 칸이다 ?>
+			<div class="stk"><article class="bcard"><div class="bhead"><span class="blogo"><?php echo esc_html( mb_substr( $b, 0, 1 ) ); ?></span>
 				<div><b><?php echo esc_html( $b ); ?></b>
-					<span class="bsub"><?php echo (int) $bcount; ?>종</span></div>
+					<span class="bsub" data-count="<?php echo (int) $bcount; ?>" data-suffix="종"><?php echo (int) $bcount; ?>종</span></div>
 				<a class="lk" href="<?php echo esc_url( $burl ); ?>">보기 <?php echo icon( 'chev' ); // phpcs:ignore ?></a></div>
-				<div class="bthumbs"><?php foreach ( $bp as $p ) : ?><a href="<?php echo esc_url( get_permalink( $p->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $p->get_name() ); ?>"><?php echo $p->get_image( 'woocommerce_thumbnail' ); // phpcs:ignore ?></a><?php endforeach; ?></div></article>
+				<div class="bthumbs"><?php foreach ( $bp as $p ) : ?><a href="<?php echo esc_url( get_permalink( $p->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $p->get_name() ); ?>"><?php echo $p->get_image( 'woocommerce_thumbnail' ); // phpcs:ignore ?></a><?php endforeach; ?></div></article></div>
 		<?php endforeach; ?></div></section>
 	<?php endif; ?>
 

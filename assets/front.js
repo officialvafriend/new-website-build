@@ -2,8 +2,11 @@
 (function(){
   var end=(window.DHR&&window.DHR.saleEnd)||0, el=document.getElementById('dhr-left');
   function pad(n){return String(n).padStart(2,'0')}
+  var ssEl=null, lastS=-1;
   function tick(){ if(!el||!end)return; var ms=Math.max(0,end-Date.now()), d=Math.floor(ms/864e5), h=Math.floor(ms/36e5)%24, m=Math.floor(ms/6e4)%60, s=Math.floor(ms/1e3)%60;
-    el.textContent=d+'일 '+pad(h)+':'+pad(m)+':'+pad(s); }
+    if(!ssEl){ el.textContent=''; el.appendChild(document.createTextNode('')); ssEl=document.createElement('span'); ssEl.className='ss'; el.appendChild(ssEl); }
+    el.firstChild.nodeValue=d+'일 '+pad(h)+':'+pad(m)+':';
+    if(s!==lastS){ lastS=s; ssEl.textContent=pad(s); ssEl.classList.remove('is-tick'); void ssEl.offsetWidth; ssEl.classList.add('is-tick'); } }
   tick(); setInterval(tick,1000);
 
   document.addEventListener('change',function(e){ var s=e.target.closest('[data-go]'); if(s&&s.value){ location.href=s.value; } });
@@ -283,10 +286,11 @@
   if(!window.Swiper) return;
   document.querySelectorAll('.dhs-wrap').forEach(function(w){
     var el = w.querySelector('.dhs'); if(!el) return;
-    new Swiper(el, { slidesPerView: 'auto', spaceBetween: 14, speed: 750, grabCursor: true,
+    /* 대칭 카루셀 — 카드 폭 = (칸 폭 − 틈) ÷ 보이는 수. 양 끝 여백이 같고 가장자리에서 snap 이 맞는다 (유리 시안 A) */
+    new Swiper(el, { slidesPerView: 1.3, spaceBetween: 12, speed: 650, grabCursor: true,
       keyboard: { enabled: true, onlyInViewport: true },
       navigation: { nextEl: w.querySelector('.dhs-next'), prevEl: w.querySelector('.dhs-prev') },
-      breakpoints: { 880: { spaceBetween: 18 } } });
+      breakpoints: { 600: { slidesPerView: 2.4, spaceBetween: 14 }, 880: { slidesPerView: 4, spaceBetween: 18 } } });
     w.classList.add('is-ready');
   });
 })();
@@ -297,12 +301,12 @@
   if(!window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
   gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', function(){
-    var targets = gsap.utils.toArray('.dhr .grid > .card, .dhr .dhs .card, .dhr .sh, .dhr .bcard, .dhr .qcats a, .dhr .deals-h, .dhr .banner > div');
+    var targets = gsap.utils.toArray('.dhr .grid > .card, .dhr .dhs .card, .dhr .sh, .dhr .stk, .dhr .qcats a, .dhr .deals-h, .dhr .banner > div, .dhr .dhr-about__c, .dhr .dhr-about__t');
     if(!targets.length) return;
-    gsap.set(targets, { y: 36, opacity: 0 });
+    gsap.set(targets, { y: 28, opacity: 0, filter: 'blur(8px)' });
     ScrollTrigger.batch(targets, { start: 'top 92%', once: true, batchMax: 8,
-      onEnter: function(b){ gsap.to(b, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out', stagger: .07, overwrite: true,
-        onComplete: function(){ gsap.set(b, { clearProps: 'transform,opacity' }); } }); } });
+      onEnter: function(b){ gsap.to(b, { y: 0, opacity: 1, filter: 'blur(0px)', duration: .95, ease: 'expo.out', stagger: .06, overwrite: true,
+        onComplete: function(){ gsap.set(b, { clearProps: 'transform,opacity,filter' }); } }); } });
     /* 화면에 이미 들어와 있는 것은 바로 */
     ScrollTrigger.refresh();
   });
@@ -2030,5 +2034,66 @@
       b.setAttribute('aria-disabled', 'true'); b.dataset.dhrTxt = b.textContent; b.textContent = '가입 처리 중…';
       setTimeout(function(){ b.removeAttribute('aria-disabled'); if (b.dataset.dhrTxt) b.textContent = b.dataset.dhrTxt; }, 20000);
     }, 0);
+  });
+})();
+
+
+/* ===== 2026-10-06 토스식 모션 (홈 · 껍데기) =====
+   누름 · 숫자 굴림 · 첫 화면 등장 · 히어로 축소 · 폰 브랜드 스택 · 탭바 알약 · 사진 떠오름. transform · opacity · filter 만. */
+(function(){
+  var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* 누르면 줄고 떼면 돌아온다 — 90ms 로 내려가고 420ms 스프링으로 올라온다 (CSS) */
+  var PRESS = '.dhr .btn, .dhr .card, .dhr .hcard, .dhr .qcats a, .dhr .tabs a, .dhr .bnav a, .dhr .bcard, .dhr .fbank__copy, .dhr .dhsearch__cats a';
+  var pressed = null;
+  function unpress(){ if(pressed){ pressed.classList.remove('is-press'); pressed = null; } }
+  document.addEventListener('pointerdown', function(e){ if(rm || e.button) return; var t = e.target.closest(PRESS); if(!t) return; unpress(); pressed = t; t.classList.add('is-press'); }, {passive:true, capture:true});
+  ['pointerup','pointercancel'].forEach(function(n){ document.addEventListener(n, unpress, {passive:true, capture:true}); });
+  document.addEventListener('pointerleave', unpress, true); window.addEventListener('scroll', unpress, {passive:true});
+
+  /* 사진 — 받아진 뒤에 떠오른다. 이미 받아진 것(캐시)은 바로 */
+  if(!rm && document.body.classList.contains('dhr') && !document.body.classList.contains('dhr-wrap')){
+    document.body.classList.add('dhr-imgfx');
+    function ld(img){ img.classList.add('is-ld'); }
+    document.querySelectorAll('.card .fig img, .bthumbs img, .hart img').forEach(function(img){ if(img.complete && img.naturalWidth) ld(img); else { img.addEventListener('load', function(){ ld(img); }, {once:true}); img.addEventListener('error', function(){ ld(img); }, {once:true}); } });
+    setTimeout(function(){ document.querySelectorAll('body.dhr-imgfx img:not(.is-ld)').forEach(ld); }, 2500); /* 어떤 이유로든 2.5초 뒤엔 다 보인다 */
+  }
+
+  /* 탭바 — 활성 알약. 누르면 먼저 미끄러지고 그 다음 화면이 바뀐다 */
+  var tabs = document.querySelector('.dhr .tabs');
+  if(tabs){
+    var ind = document.createElement('i'); ind.className = 'ind'; ind.setAttribute('aria-hidden','true'); tabs.insertBefore(ind, tabs.firstChild);
+    function place(a){ if(!a) return; var r = tabs.getBoundingClientRect(), b = a.getBoundingClientRect(); ind.style.left = (b.left - r.left) + 'px'; ind.style.width = b.width + 'px'; }
+    var on = tabs.querySelector('a.on'); if(on){ ind.style.transition = 'none'; place(on); requestAnimationFrame(function(){ ind.style.transition = ''; }); } else ind.style.opacity = '0';
+    window.addEventListener('resize', function(){ place(tabs.querySelector('a.on')); });
+    tabs.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ ind.style.opacity = ''; place(a); } });
+  }
+
+  if(!window.gsap || rm) return;
+  var home = document.body.classList.contains('dhr') && !document.body.classList.contains('dhr-wrap');
+
+  /* 숫자 — 화면에 들어오면 0 에서 굴러 올라온다 (히어로 값 · 브랜드 종수) */
+  var nums = document.querySelectorAll('[data-count]');
+  if(nums.length && 'IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(en){ en.forEach(function(x){ if(!x.isIntersecting) return; io.unobserve(x.target);
+      var el = x.target, to = parseFloat(el.getAttribute('data-count')) || 0, suf = el.getAttribute('data-suffix') || '', o = { v: Math.max(0, to - Math.min(to, 900)) };
+      gsap.to(o, { v: to, duration: 1.1, ease: 'expo.out', onUpdate: function(){ el.textContent = Math.round(o.v).toLocaleString('ko-KR') + suf; } }); }); }, { threshold: .4 });
+    nums.forEach(function(n){ io.observe(n); });
+  }
+
+  if(!home) return;
+  /* 첫 화면 — 헤더 · 히어로가 차례로 떠오른다 (한 번, 0.8초) */
+  var intro = [].slice.call(document.querySelectorAll('.dhr .gnb, .dhr .msearch, .dhr .hero2 > *, .dhr .qcats a'));
+  if(intro.length){ gsap.set(intro, { y: 14, opacity: 0 }); gsap.to(intro, { y: 0, opacity: 1, duration: .8, ease: 'expo.out', stagger: .05, clearProps: 'transform,opacity' }); }
+
+  if(!window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+  /* 히어로 — 내려가면 살짝 줄며 흐려진다 (스크럽) */
+  var hero = document.querySelector('.dhr .hero2');
+  if(hero){ gsap.to(hero, { scale: .965, opacity: .55, transformOrigin: '50% 0%', ease: 'none', scrollTrigger: { trigger: hero, start: 'top 80px', end: 'bottom top', scrub: .4 } }); }
+  /* 폰 — 브랜드 카드 스택: 다음 카드가 올라오면 앞 카드가 줄며 흐려진다 */
+  gsap.matchMedia().add('(max-width: 879px)', function(){
+    var stks = [].slice.call(document.querySelectorAll('.dhr .stk'));
+    stks.forEach(function(w, i){ var next = stks[i + 1], card = w.querySelector('.bcard'); if(!next || !card) return;
+      gsap.to(card, { scale: .92, opacity: .45, filter: 'blur(2px)', ease: 'none', scrollTrigger: { trigger: next, start: 'top 85%', end: 'top 30%', scrub: .3 } }); });
   });
 })();

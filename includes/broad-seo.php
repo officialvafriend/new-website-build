@@ -583,13 +583,23 @@ function about_home_html(): string {
 	if ( ! $items ) {
 		return '';
 	}
-	$h = '<section class="dhr-about" aria-labelledby="dhr-about-h"><h2 id="dhr-about-h" class="dhr-about__t">' . esc_html( (string) $items[0]['h'] ) . '</h2><div class="dhr-about__g">';
+	// 벤토: 첫 칸은 넓고 반전색(잉크 면), 셋째 칸은 파랑 soft, 나머지는 보조 면. 글은 첫 문장만 보이고
+	// 나머지는 <details> 「더 읽기」 안 — 검색엔진은 그대로 읽고 손님은 긴 글에 안 눌린다 (사장님 2026-10-06 「저따구」).
+	$kind = array( 'lead', '', 'soft', '' );
+	$h    = '<section class="dhr-about" aria-labelledby="dhr-about-h"><h2 id="dhr-about-h" class="dhr-about__t">' . esc_html( (string) $items[0]['h'] ) . '</h2><div class="dhr-about__g">';
 	foreach ( $items as $i => $it ) {
-		$h .= '<div class="dhr-about__c">';
+		$k     = $kind[ $i ] ?? '';
+		$parts = preg_split( '/(?<=다\.)\s+/u', trim( (string) $it['p'] ), 2 );
+		$lead  = (string) ( $parts[0] ?? '' );
+		$rest  = (string) ( $parts[1] ?? '' );
+		$h    .= '<div class="dhr-about__c' . ( $k ? ' dhr-about__c--' . $k : '' ) . '">';
 		if ( $i > 0 ) {
 			$h .= '<h3>' . esc_html( (string) $it['h'] ) . '</h3>';
 		}
-		$h .= '<p>' . esc_html( (string) $it['p'] ) . '</p>';
+		$h .= '<p>' . esc_html( $lead ) . '</p>';
+		if ( '' !== $rest ) {
+			$h .= '<details class="dhr-about__more"><summary>더 읽기</summary><p>' . esc_html( $rest ) . '</p></details>';
+		}
 		if ( ! empty( $it['links'] ) ) {
 			$h .= '<p class="dhr-about__l">';
 			$sep = '';

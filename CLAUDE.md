@@ -3591,3 +3591,20 @@ Figma 에 Pretendard 가 없어 Noto Sans KR 로 그렸다 (사이트는 Pretend
 - 확인(미리보기): 넘침 0 · 헤더/탭바 blur 걸림 · promo 띠 다크에서 흰 띠 · 푸터 양 모드 · 노보 배너 가격 상자 파랑 soft
 
 검증: `php design/php-tests/run.php` 모두 통과 · smoke 20(배포 전) · 배포 뒤 실제 토글로 다크 스크린샷 + smoke.
+
+### 2단계 — 홈 · 토스식 모션 (2026-10-06 밤, 사장님 「토스의 UI/UX 처럼 부드러운 애니메이션」)
+
+움직이는 것은 `transform · opacity · filter` 뿐이고 전부 `prefers-reduced-motion` 이면 꺼진다. GSAP · ScrollTrigger 는 이미 실려 있다.
+- **누름**: `pointerdown` 에 `.is-press`(scale .96 · 90ms) → 떼면 CSS 420ms 스프링으로 돌아온다. 버튼 · 카드 · 타일 · 탭 · 칩. 스크롤이 시작되면 푼다
+- **숫자 굴림** `[data-count][data-suffix]` — 화면에 들어오면 (IO 40%) 900 아래에서 1.1초 expo.out 으로 올라온다. 히어로 값 · 브랜드 종수.
+  **서버가 찍은 글자를 JS 가 다시 쓰므로 `data-count` 값과 글자가 같아야 한다** (틀리면 굴러온 뒤 다른 숫자가 된다)
+- **등장**은 흐림이 걷히며 (`filter: blur(8px) → 0`, y 28, .95초). `.bcard` 대신 `.stk` 를 대상에 둔다 — **`overwrite:true` 는 속성이 달라도 같은
+  요소의 트윈을 다 죽인다**. 카드에 스택 스크럽을 걸면서 등장까지 걸면 스크럽이 죽는다
+- **히어로**: 80px 내려가면 .965 로 줄며 .55 로 흐려진다 (scrub .4). **폰 브랜드 스택**: `.stk{height:min(460px,66dvh)}` 안에 `.bcard{position:sticky;top:118px}`,
+  다음 `.stk` 가 올라오면 앞 카드가 .92 · .45 · blur 2px (scrub). 데스크톱은 격자 그대로 (`matchMedia 879px`)
+- **탭바 활성 알약** `.tabs .ind` — JS 가 만들어 `a.on` 자리에 두고, 누르면 먼저 미끄러진 뒤 화면이 바뀐다
+- **카루셀 대칭**: Swiper `slidesPerView 1.3 / 2.4(600) / 4(880)` — 카드 폭이 (칸 − 틈) ÷ 수 라 양 끝 여백이 같다. `'auto'` + 고정 폭을 버렸다
+- **마감 카운트다운** 초 자리(`.ends .ss`)만 바뀔 때 흐림 → 또렷 .36초. 전체를 굴리면 매초 깜빡여 어지럽다
+- **사진 떠오름** — JS 가 `body.dhr-imgfx` 를 붙인 뒤에만 `img` 를 0 에서 올린다 (JS 없으면 그냥 보인다). 2.5초 뒤엔 무조건 다 보인다
+- **안내 벤토** `about_home_html()` — 첫 칸 넓고 잉크 면 · 셋째 칸 파랑 soft, 글은 첫 문장만 보이고 나머지는 `<details class="dhr-about__more">더 읽기`.
+  검색엔진은 details 안도 읽는다 (사장님 「저따구」 블록을 이 꼴로)

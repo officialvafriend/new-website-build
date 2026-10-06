@@ -911,3 +911,50 @@ body.dhr .dh-leave__box h3{ font-weight:900 !important; }
 html body.dhr .eb2,html body.dhr .fbank__t b{letter-spacing:.01em !important}
 html body.dhr .sh-eb,html body.dhr .nvs__eb{letter-spacing:.02em !important}
 html body.dhr .fbank .n{letter-spacing:.03em !important}
+
+/* ===== 2026-10-06 사이트 적용 2단계 — 홈 · 토스식 모션 =====
+ * 누르면 줄고(빠르게) 떼면 천천히 돌아온다 · 숫자는 굴러 올라온다 · 등장은 흐림이 걷히며 ·
+ * 폰 브랜드 카드는 겹쳐 쌓인다 · 탭바 활성 알약이 미끄러진다. transform · opacity · filter 외에는 안 움직인다. */
+.dhr .is-press{transform:scale(.96) !important;transition:transform .09s ease !important}
+.dhr .card.is-press,.dhr .hcard.is-press{transform:scale(.975) !important}
+.dhr .btn,.dhr .card .buy,.dhr .qcats a,.dhr .tabs a,.dhr .lk,.dhr .bnav a,.dhr .fbank__copy{transition:transform .42s cubic-bezier(.22,1,.36,1),background-color .2s,color .2s,box-shadow .42s cubic-bezier(.22,1,.36,1)}
+/* 탭바 — 활성 알약 */
+.dhr .tabs .ind{position:absolute;top:6px;bottom:6px;left:8px;width:0;border-radius:999px;background:var(--dh-accent-soft);transition:left .36s cubic-bezier(.22,1,.36,1),width .36s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:0}
+.dhr .tabs a{position:relative;z-index:1}
+/* 마감 카운트다운 — 초가 바뀔 때 흐려졌다 또렷해진다 */
+.dhr .ends .ss{display:inline-block;min-width:2ch;text-align:left}
+.dhr .ends .ss.is-tick{animation:dhr-roll .36s cubic-bezier(.22,1,.36,1)}
+@keyframes dhr-roll{0%{filter:blur(3px);transform:translateY(-5px);opacity:.3}100%{filter:blur(0);transform:none;opacity:1}}
+/* 사진은 다 받아진 뒤에 떠오른다 (JS 가 body 에 .dhr-imgfx 를 붙인 뒤에만) */
+body.dhr-imgfx .card .fig img,body.dhr-imgfx .bthumbs img,body.dhr-imgfx .hart img{opacity:0;transform:scale(1.03);transition:opacity .55s ease,transform .9s cubic-bezier(.22,1,.36,1)}
+body.dhr-imgfx img.is-ld{opacity:1;transform:none}
+/* 브랜드 카드 스택 (폰) — 카드가 sticky 로 서고 다음 카드가 올라오면 앞 카드가 줄며 흐려진다 (GSAP scrub) */
+@media(max-width:879px){
+  .dhr .bgrid{gap:14px}
+  .dhr .stk{height:min(460px,66dvh)}
+  .dhr .stk:last-child{height:auto}
+  .dhr .stk .bcard{position:sticky;top:calc(118px + env(safe-area-inset-top));transform-origin:50% 0}
+}
+/* 안내 벤토 — 첫 칸 넓고 반전, 셋째 칸 파랑 soft */
+.dhr .dhr-about{background:none;border:0;padding:0;margin-top:2.6rem}
+.dhr .dhr-about__t{margin-bottom:1.1rem}
+.dhr .dhr-about__g{gap:12px}
+.dhr .dhr-about__c{background:var(--dh-surface);border:1px solid var(--dh-line);border-radius:var(--dh-radius-lg);padding:1.25rem 1.3rem;display:flex;flex-direction:column;gap:.5rem;min-width:0}
+.dhr .dhr-about__c h3{margin:0}
+.dhr .dhr-about__c--lead{background:var(--dh-ink);color:var(--dh-surface);border-color:transparent}
+.dhr .dhr-about__c--lead p,.dhr .dhr-about__c--lead summary{color:var(--dh-surface)}
+.dhr .dhr-about__c--lead .dhr-about__l a{color:var(--dh-surface)}
+.dhr .dhr-about__c--soft{background:var(--dh-accent-soft);border-color:transparent}
+.dhr .dhr-about__more{font-size:14.5px;color:var(--dh-ink-2)}
+.dhr .dhr-about__more summary{cursor:pointer;font-weight:800;color:var(--dh-ink);list-style:none;display:inline-flex;align-items:center;gap:.3rem;min-height:36px}
+.dhr .dhr-about__more summary::-webkit-details-marker{display:none}
+.dhr .dhr-about__more summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.dhr .dhr-about__more[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
+.dhr .dhr-about__more[open] summary{margin-bottom:.3rem}
+.dhr .dhr-about__more p{margin:0;line-height:1.7}
+.dhr .dhr-about__l{margin-top:auto !important}
+@media(min-width:880px){
+  .dhr .dhr-about__g{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dhr .dhr-about__c--lead{grid-column:span 2}
+}
+@media(prefers-reduced-motion:reduce){.dhr .ends .ss.is-tick{animation:none} body.dhr-imgfx img{opacity:1;transform:none}}
