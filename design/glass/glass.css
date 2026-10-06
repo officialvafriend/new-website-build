@@ -5,7 +5,7 @@
   --font: Pretendard, -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
   --bg:#F6F6F7; --surface:#FFFFFF; --surface-2:#EFF0F2; --line:#E4E6EA; --line-2:#D5D8DE;
   --ink:#161616; --text:#26282C; --mute:#5C6370;
-  --acc:#C2410C; --acc-ink:#FFFFFF; --acc-soft:#FBEFE8;
+  --acc:#1A5CFF; --acc-ink:#FFFFFF; --acc-soft:#EAF0FF;
   --inv:#161616; --inv-ink:#FFFFFF; --inv-mute:rgba(255,255,255,.68);
   --glass:rgba(255,255,255,.74); --glass-hi:rgba(255,255,255,.9); --glass-line:rgba(22,22,22,.08);
   --veil:rgba(246,246,247,.55);
@@ -21,7 +21,7 @@
 :root[data-theme="dark"]{ color-scheme: dark;
   --bg:#0F1012; --surface:#17191D; --surface-2:#1F2227; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
   --ink:#F3F4F6; --text:#D9DBE0; --mute:#9AA1AB;
-  --acc:#F0773F; --acc-ink:#161616; --acc-soft:rgba(240,119,63,.14);
+  --acc:#4D8BFF; --acc-ink:#0F1012; --acc-soft:rgba(77,139,255,.16);
   --inv:#F3F4F6; --inv-ink:#161616; --inv-mute:rgba(22,22,22,.62);
   --glass:rgba(23,25,29,.72); --glass-hi:rgba(255,255,255,.08); --glass-line:rgba(255,255,255,.09);
   --veil:rgba(15,16,18,.6);
@@ -32,7 +32,7 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme: dark;
   --bg:#0F1012; --surface:#17191D; --surface-2:#1F2227; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
   --ink:#F3F4F6; --text:#D9DBE0; --mute:#9AA1AB;
-  --acc:#F0773F; --acc-ink:#161616; --acc-soft:rgba(240,119,63,.14);
+  --acc:#4D8BFF; --acc-ink:#0F1012; --acc-soft:rgba(77,139,255,.16);
   --inv:#F3F4F6; --inv-ink:#161616; --inv-mute:rgba(22,22,22,.62);
   --glass:rgba(23,25,29,.72); --glass-hi:rgba(255,255,255,.08); --glass-line:rgba(255,255,255,.09);
   --veil:rgba(15,16,18,.6);

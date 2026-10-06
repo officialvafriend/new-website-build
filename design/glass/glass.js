@@ -21,7 +21,7 @@
     <nav class="nav" aria-label="분류">${nav.map((n,i)=>`<a href="${n[0]}"${i===0?' class="on"':''}>${n[1]}</a>`).join('')}</nav>
     <a class="search" href="shop.html">${I.search}<span>상품, 브랜드 검색</span></a>
     <div class="right">
-      <button class="ptg" type="button">주황</button><button class="icbtn tgl" type="button" aria-label="밝기 바꾸기">${I.sun}${I.moon}</button>
+      <button class="ptg" type="button">파랑</button><button class="icbtn tgl" type="button" aria-label="밝기 바꾸기">${I.sun}${I.moon}</button>
       <a class="icbtn cartb" href="cart.html" aria-label="장바구니 2개">${I.bag}<span class="badge">2</span></a>
       <a class="icbtn" href="account.html" aria-label="내 계정">${I.user}</a>
     </div></div></header>
@@ -43,9 +43,9 @@
     document.body.insertAdjacentHTML('beforeend', ftr + tab);
   }
   // 포인트 색: 실버 스위치
-  try { const a = localStorage.getItem('dhr-accent'); if (a) document.documentElement.dataset.accent = a; } catch (e) {}
+  try { const a = localStorage.getItem('dhr-accent'); if (a === 'silver') document.documentElement.dataset.accent = a; } catch (e) {}
   { const n = { silver: '실버', blue: '파랑' }[document.documentElement.dataset.accent]; if (n) { const b = document.querySelector('.ptg'); if (b) b.textContent = n; } }
-  document.addEventListener('click', e => { const b = e.target.closest('.ptg'); if (!b) return; const r = document.documentElement; const order = ['', 'silver', 'blue'], names = { '': '주황', silver: '실버', blue: '파랑' }; const next = order[(order.indexOf(r.dataset.accent || '') + 1) % order.length]; if (next) r.dataset.accent = next; else delete r.dataset.accent; b.textContent = names[next]; try { localStorage.setItem('dhr-accent', r.dataset.accent || ''); } catch (e) {} });
+  document.addEventListener('click', e => { const b = e.target.closest('.ptg'); if (!b) return; const r = document.documentElement; const order = ['', 'silver'], names = { '': '파랑', silver: '실버' }; const next = order[(order.indexOf(r.dataset.accent || '') + 1) % order.length]; if (next) r.dataset.accent = next; else delete r.dataset.accent; b.textContent = names[next]; try { localStorage.setItem('dhr-accent', r.dataset.accent || ''); } catch (e) {} });
   document.body.insertAdjacentHTML('beforeend','<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="metalStroke" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F5F7"/><stop offset=".45" stop-color="#9CA4AE"/><stop offset="1" stop-color="#E6E9ED"/></linearGradient></defs></svg>');
   // 테마: 저장값 > 시스템
   const root = document.documentElement;
