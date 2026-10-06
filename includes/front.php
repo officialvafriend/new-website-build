@@ -474,8 +474,12 @@ function carousel( array $items, string $label ): void {
  * @return void
  */
 function section_head( string $eyebrow, string $title, string $sub = '', string $url = '' ): void {
+	// 2026-10-06 taste 점검: 섹션마다 눈썹(작은 라벨)이 붙으면 틀로 찍은 티가 난다. 눈썹은 그리지 않고,
+	// 부제가 없을 때만 그 글을 부제 자리에 쓴다. 제목 하나가 충분하다
+	if ( '' === $sub && '' !== $eyebrow ) {
+		$sub = $eyebrow;
+	}
 	echo '<div class="sh"><div>'
-		. ( $eyebrow ? '<p class="sh-eb"><i></i>' . esc_html( $eyebrow ) . '</p>' : '' )
 		. '<h2>' . esc_html( $title ) . '</h2>'
 		. ( $sub ? '<p class="sh-sub">' . esc_html( $sub ) . '</p>' : '' ) . '</div>'
 		. ( $url ? '<a class="lk" href="' . esc_url( $url ) . '">더 보기 ' . icon( 'chev' ) . '</a>' : '' ) // phpcs:ignore

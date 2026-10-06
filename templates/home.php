@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note, chuseok_html, chuseok, chuseok_on};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note, chuseok_html, chuseok, chuseok_on, novo_announce};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -89,7 +89,7 @@ if ( $novo_cat && apply_filters( 'duckhoo_home_novo', true ) ) {
 	$n_single  = count( array_filter( $novo_all, fn( $p ) => ! $is_bundle( $p ) ) );
 	$n_bundle  = count( $novo_all ) - $n_single;
 	$novo_sub  = ( $n_single ? '낱병 ' . $n_single . '종' : '' ) . ( $n_single && $n_bundle ? ' · ' : '' ) . ( $n_bundle ? '10+1 묶음' : '' )
-		. ' — 평일 오후 4시 이전 입금 확인분 당일 출고';
+		. '. 평일 오후 4시 이전 입금 확인분은 당일 출고합니다';
 }
 // 2026-10-02 — 한 맛이 품절이면 「전 라인」이라고 하지 않는다 (그린펀치 품절)
 $novo_state = function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_state' ) ? \Duckhoo\Redesign\Novo\stock_state() : array( 'all' => true, 'out' => array() );
@@ -175,8 +175,7 @@ $month = (int) wp_date( 'n' );
 		if ( '' === $heb || false === mb_strpos( $ht, '노보' ) ) {
 			$heb = $h0->is_on_sale() ? '묶음 특가 · 지금 주문하면 오늘 출고' : '추천 묶음';
 		}
-		$hsub = ( $hn['brand'] ? $hn['brand'] . ' · ' : '' ) . ( $hp['qty'] > 1 ? $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' : '단품' )
-			. '. 평일 오후 4시 이전 입금 확인분은 당일 출고합니다.';
+		$hsub = ( $hp['qty'] > 1 ? $hp['qty'] . '병에 병당 ' . number_format_i18n( $hp['per'] ) . '원. ' : '' ) . '평일 오후 4시 이전 입금 확인분은 당일 출고합니다.';
 	?>
 	<section class="hero">
 		<div class="hero__tx">
@@ -237,7 +236,7 @@ $month = (int) wp_date( 'n' );
 	<?php endif; ?>
 
 	<?php if ( $deals ) : ?>
-	<section class="deals"><div class="deals-h"><div><p class="sh-eb"><i></i><?php echo (int) $month; ?>월 특가</p><h2>오늘의 특가</h2></div>
+	<section class="deals"><div class="deals-h"><div><h2><?php echo (int) $month; ?>월 특가</h2><p class="sh-sub">묶음으로 담을수록 병당 가격이 내려갑니다</p></div>
 		<span class="ends">마감까지 <b id="dhr-left" class="n">—</b></span></div>
 		<?php carousel( $deals, '오늘의 특가' ); ?></section>
 	<?php endif; ?>
@@ -259,16 +258,18 @@ $month = (int) wp_date( 'n' );
 	</section>
 	<?php endif; ?>
 
-	<?php if ( $newest ) : ?>
+	<?php if ( $newest ) : // 신제품 — 카드 카루셀이 넷이나 이어져 글자 줄로 바꿨다 (썸네일 · 이름 · 규격 · 값 · 구매). 다른 꼴이 하나 들어가야 리듬이 생긴다 ?>
 	<section class="sec">
-		<?php section_head( '새로 들어온', '신제품', '방금 들어온 맛부터 먼저', add_query_arg( 'orderby', 'date', $shop_url ) ); ?>
-		<?php carousel( $newest, '신제품' ); ?></section>
-	<?php endif; ?>
-
-	<?php if ( $picks ) : ?>
-	<section class="sec">
-		<?php section_head( '주력 브랜드', implode( ' · ', array_slice( $featured, 0, 3 ) ), '이 가게가 가장 오래 팔아 온 라인', $shop_url ); ?>
-		<?php carousel( $picks, '주력 브랜드' ); ?></section>
+		<?php section_head( '', '신제품', '방금 들어온 맛부터 먼저', add_query_arg( 'orderby', 'date', $shop_url ) ); ?>
+		<div class="rows"><?php foreach ( array_slice( $newest, 0, 6 ) as $np ) :
+			$nn = split_name( $np ); $nb = per_bottle( $np ); $nr = (float) $np->get_regular_price(); $ns = (float) $np->get_price(); ?>
+			<a class="row" href="<?php echo esc_url( get_permalink( $np->get_id() ) ); ?>">
+				<span class="row__th"><?php echo $np->get_image( 'woocommerce_thumbnail', array( 'loading' => 'lazy' ) ); // phpcs:ignore ?></span>
+				<span class="row__tx"><b class="row__nm"><?php echo esc_html( $nn['title'] ); ?></b><span class="row__sp"><?php echo esc_html( $nn['brand'] ? $nn['brand'] : '' ); ?><?php echo $nb['qty'] > 1 ? esc_html( ( $nn['brand'] ? ' · ' : '' ) . $nb['qty'] . '병' ) : ''; ?></span></span>
+				<span class="row__pr n"><?php if ( $nr > $ns ) : ?><s><?php echo esc_html( number_format_i18n( $nr ) ); ?>원</s><?php endif; ?><b><?php echo esc_html( number_format_i18n( $ns ) ); ?>원</b></span>
+				<span class="row__go" aria-hidden="true"><?php echo icon( 'chev' ); // phpcs:ignore ?></span>
+			</a>
+		<?php endforeach; ?></div></section>
 	<?php endif; ?>
 
 	<?php if ( $brand_list ) : ?>
@@ -303,7 +304,7 @@ $month = (int) wp_date( 'n' );
 	<?php endif; ?>
 
 	<section class="banner"><div><h2><?php echo (int) $month; ?>월엔 병당 가격으로 고르세요</h2>
-		<p>한 병만 사도 되고, 묶으면 병당 가격이 내려갑니다. 입금자명만 주문자명과 같게 넣어주세요 — 그러면 자동으로 입금확인됩니다.</p>
+		<p>한 병만 사도 되고, 묶으면 병당 가격이 내려갑니다. 입금자명을 주문자명과 같게 넣으면 자동으로 입금확인됩니다.</p>
 		<a class="btn btn-w2" href="<?php echo esc_url( $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>">특가 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a></div></section>
 
 	<?php

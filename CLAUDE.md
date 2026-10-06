@@ -3638,3 +3638,34 @@ Figma 에 Pretendard 가 없어 Noto Sans KR 로 그렸다 (사이트는 Pretend
 - **숫자 셋** `.nums` — 전체 · 입호흡 · 폐호흡 종수(`Broad\count_all` · `cat_facts`) + 「16시 평일 출고 마감」. 가림 안내 바로 아래. 폰 2열 · 600px↑ 4열
 - **브랜드 카드**: 사진 2×2(비로그인에겐 19 넷) → **큰 카드**(오른쪽 위 글자 원 · 눈썹 「입호흡 15종」 · 큰 이름 · 한 줄 · 버튼). 첫 장 잉크 반전 · 셋째 장 파랑 soft.
   글은 `Seo\brand_facts` 의 맛 셋 + 낱병 값인데 **노보만 맛 이름을 안 적는다**(`Novo\stock_phrase('short')`) — 맛 검색어는 그 상품 한 장만. 폰 스택 그대로
+
+### 홈이 20분 동안 반 토막이었다 — 템플릿의 `use function` 목록에 새 함수를 안 넣었다 (2026-10-06)
+
+시안 A 커밋(fbf372a)이 배포되자 홈이 검색창 아래에서 **끊겼다** (헤더 · h1 · 검색 알약까지만 그려지고 200 응답).
+`templates/home.php` 는 네임스페이스가 아니라 `use function Duckhoo\Redesign\Front\{…}` 목록으로 함수를 들여오는데,
+히어로에 새로 쓴 `novo_announce()` 를 그 목록에 안 넣었다 → `Call to undefined function novo_announce()`. `php -l` 은 통과하고
+(문법은 맞다) PHP 테스트도 템플릿을 안 돌리니 잡히지 않았다. 워드프레스닷컴은 치명 오류 화면 대신 **끊긴 HTML 을 200 으로** 낸다 —
+`curl` 로 `class="stage"` 가 0 이라 「배포가 늦다」고만 생각했다.
+
+- **`scratchpad/home-render.php`** — 스텁 + 프로덕션 카탈로그(`prods.json`)로 홈 템플릿을 **통째로 include** 해 어디서 죽는지 찍는다
+  (없는 함수는 `__fn` 표에 한 줄씩). 이것이 `novo_announce` 를 한 번에 잡았다. **템플릿 · front.php 를 고친 뒤 push 전에 한 번 돈다**
+  (`php scratchpad/home-render.php` → `OK N bytes` 와 hero · stage · nums · bcard · rows 수)
+- 홈 HTML 이 짧아졌는지(바이트 수 · `</footer>` 0)를 smoke 가 본다 — 「200 인데 반 토막」을 배포 1분 안에 잡게
+- 교훈: **템플릿에 Front 함수를 새로 쓰면 11행의 `use function` 목록에 넣는다.** 네임스페이스 파일(front.php 안)에서는 그냥 되지만 템플릿에서는 안 된다
+
+### 홈 taste 점검 — 눈썹 · 점 · 대시를 걷고 신제품을 글자 줄로 (2026-10-06, 사장님 「폰트 · 간격에서 잘 만들어졌구나 느끼게 · 스킬을 써서」)
+
+taste-skill(anti-slop) · emil-design-eng 로 홈을 한 번 훑었다. 레이아웃은 그대로, **글자 · 간격 · 되풀이**만 손봤다.
+
+- **섹션 눈썹(`.sh-eb`)을 전부 뺐다** — 「오늘의 특가」 위 「9월 특가」, 「신제품」 위 「새로 들어온」처럼 제목과 같은 말이 작은 글자로 한 번 더 있었다.
+  `section_head()` 는 눈썹이 오고 부제가 비어 있으면 눈썹을 부제로 내린다. 눈썹은 히어로 한 곳(`.hero__eb`)만 남겼다 — 3섹션에 하나 규칙
+- **장식 점을 뺐다**: 안내 띠 칩 앞 6px 점(front.css · shell.css 둘 다) · 눈썹 앞 점. 남은 점은 히어로 눈썹의 깜빡이는 점 하나(살아 있다는 뜻)
+- **본문의 em-dash 를 문장으로**: 「… 같게 넣어주세요 — 그러면」 → 「같게 넣으면」, 노보 부제 「— 평일 오후 4시」 → 「. 평일 오후 4시 … 합니다」.
+  주석 · 숨은 h1 · 카운트다운 placeholder 의 대시는 그대로
+- **「오늘의 특가」 → 「N월 특가」 + 부제 「묶음으로 담을수록 병당 가격이 내려갑니다」** — 특가의 이유를 제목 밑 한 줄로
+- **신제품은 카드가 아니라 줄(`.rows` · `a.row`)** — 카드 카루셀이 넷 연속이라 리듬이 없었다. 썸네일 64/72px · 이름 · 브랜드 + 병 수 · 정가/판매가 ·
+  꺾쇠. 데스크톱 2열. 「주력 브랜드」 카루셀은 뺐다 (바로 위 브랜드 카드 셋과 같은 내용)
+- **섹션 리듬**: `.sec` 위 여백 `clamp(2.2rem, 1.6rem + 2.4vw, 3.6rem)`, h2 `clamp(1.45rem, 1.15rem + 1.3vw, 1.95rem)` 800 · `text-wrap: balance`.
+  자간 0 · keep-all 은 그대로
+
+검증: `php design/php-tests/run.php` · `scratchpad/home-render.php`(hero 1 · stage 1 · nums 1 · rows 1) · 배포 뒤 390/1280 라이트/다크 스크린샷 · smoke.

@@ -75,7 +75,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .tabs a.on svg{stroke-width:2.3}
 
 /* 공통 */
-.dhr .sec{padding:clamp(1.6rem,3vw,2.6rem) 0 0}
+.dhr .sec{padding:clamp(2.2rem,1.6rem + 2.4vw,3.6rem) 0 0}
 .dhr .sec-h{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:.9rem}
 .dhr .sec-h h2{font-size:clamp(1.35rem,1.15rem + 1vw,1.75rem)}
 .dhr .sec-h .sub{font-size:14px;color:var(--dh-ink-3);font-weight:500}
@@ -376,14 +376,11 @@ body.dhc-open{overflow:hidden}
 .dhr .card .buy.is-out{background:var(--dh-surface-2);color:var(--dh-ink-3);cursor:default}
 
 /* ── 섹션 머리 ── */
-.dhr .sh{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:1.1rem}
-.dhr .sh-eb{display:inline-flex;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:var(--dh-accent-deep);letter-spacing:.02em;margin:0 0 .45rem}
-.dhr .sh-eb i{width:6px;height:6px;border-radius:50%;background:currentColor}
-.dhr .sh h2{font-size:clamp(1.5rem,1.1rem + 1.6vw,2.1rem);letter-spacing:0;line-height:1.15}
-.dhr .sh-sub{font-size:15px;font-weight:500;color:var(--dh-ink-3);margin-top:.45rem}
+.dhr .sh{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:1.15rem}
+.dhr .sh h2{font-size:clamp(1.45rem,1.15rem + 1.3vw,1.95rem);font-weight:800;letter-spacing:0;line-height:1.2;text-wrap:balance}
+.dhr .sh-sub{font-size:15px;font-weight:500;color:var(--dh-ink-3);margin-top:.35rem;line-height:1.5}
 .dhr .sh .lk{flex:0 0 auto;white-space:nowrap}
 .dhr .deals-h > div h2{font-size:clamp(1.4rem,1.1rem + 1.2vw,1.8rem)}
-.dhr .deals-h .sh-eb{margin-bottom:.3rem}
 .dhr .deals{padding-bottom:.2rem}
 
 /* ── 카루셀 (Swiper 11) — 오른쪽 끝은 화면 끝까지 흘러 다음 카드가 살짝 보인다 ── */
@@ -852,8 +849,6 @@ body.dhr .dh-leave__box h3{ font-weight:900 !important; }
 .dhr .dhn__list::-webkit-scrollbar{display:none}
 .dhr .dhn__list>li{border:0;flex:0 0 auto;max-width:84%;min-width:0}
 .dhr .dhn__row{display:inline-flex;align-items:center;gap:.45rem;max-width:100%;min-height:42px;padding:0 1rem 0 .85rem;border-radius:999px;background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.05));color:var(--dh-ink);text-decoration:none;font-size:13.5px;line-height:1.3;white-space:nowrap;transition:transform .42s cubic-bezier(.22,1,.36,1),box-shadow .42s cubic-bezier(.22,1,.36,1)}
-.dhr .dhn__row::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--dh-accent);flex:0 0 auto}
-.dhr .dhn__row--holiday::before{background:var(--dh-accent)}
 .dhr .dhn__eb{font-weight:800;color:var(--dh-ink);white-space:nowrap}
 .dhr .dhn__row--holiday .dhn__eb{color:var(--dh-accent-deep)}
 .dhr .dhn__tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dh-ink-2)}
@@ -909,7 +904,7 @@ body.dhr .dh-leave__box h3{ font-weight:900 !important; }
 
 /* 양수 자간 되살리기 — 위 전역 자간 0 규칙과 같은 특이도(0,2,1) · 뒤에 있어 이긴다. 대문자 눈썹 글자 · 계좌 번호만 */
 html body.dhr .eb2,html body.dhr .fbank__t b{letter-spacing:.01em !important}
-html body.dhr .sh-eb,html body.dhr .nvs__eb{letter-spacing:.02em !important}
+html body.dhr .nvs__eb{letter-spacing:.02em !important}
 html body.dhr .fbank .n{letter-spacing:.03em !important}
 
 /* ===== 2026-10-06 사이트 적용 2단계 — 홈 · 토스식 모션 =====
@@ -1009,3 +1004,20 @@ body.dhr-imgfx img.is-ld{opacity:1;transform:none}
 .dhr .bcard--acc{background:var(--dh-accent-soft)}
 .dhr .bcard--acc .bcard__pic{background:rgba(26,92,255,.14)}
 @media(min-width:880px){.dhr .stk .bcard,.dhr .bcard{min-height:340px}}
+
+/* 신제품 글자 줄 (2026-10-06) — 썸네일 · 이름/규격 · 값 · 꺾쇠. 카드가 아니라 줄이라 한 화면에 여섯이 들어간다 */
+.dhr .rows{display:grid;gap:0;background:var(--dh-surface);border-radius:var(--dh-radius-lg);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));padding:.25rem .9rem;overflow:hidden}
+.dhr .row{display:grid;grid-template-columns:64px minmax(0,1fr) auto 20px;gap:.8rem;align-items:center;padding:.7rem 0;border-top:1px solid var(--dh-line);color:var(--dh-ink);text-decoration:none;min-height:80px;transition:transform .42s cubic-bezier(.22,1,.36,1)}
+.dhr .row:first-child{border-top:0}
+.dhr .row__th{width:64px;height:64px;border-radius:14px;overflow:hidden;background:var(--dh-surface-2);display:flex;align-items:center;justify-content:center}
+.dhr .row__th img{width:100%;height:100%;object-fit:cover}
+.dhr .row__tx{min-width:0;display:flex;flex-direction:column;gap:.15rem}
+.dhr .row__nm{font-size:15.5px;font-weight:700;line-height:1.35;color:var(--dh-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dhr .row__sp{font-size:13px;color:var(--dh-ink-3)}
+.dhr .row__pr{display:flex;flex-direction:column;align-items:flex-end;gap:.1rem;white-space:nowrap}
+.dhr .row__pr s{font-size:12.5px;color:var(--dh-ink-3)}
+.dhr .row__pr b{font-size:16.5px;font-weight:800;color:var(--dh-ink)}
+.dhr .row__go{color:var(--dh-ink-3);display:flex}
+.dhr .row__go svg{width:18px;height:18px}
+@media(min-width:880px){.dhr .rows{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:2.4rem;padding:.4rem 1.4rem}.dhr .row{grid-template-columns:72px minmax(0,1fr) auto 20px}.dhr .row__th{width:72px;height:72px}.dhr .row:nth-child(2){border-top:0}}
+@media(hover:hover) and (pointer:fine){.dhr .row:hover .row__nm{color:var(--dh-accent-deep)}}
