@@ -39,7 +39,10 @@ const fatal = (t) => /critical error|치명적인 오류|Fatal error|There has b
 const pages = [['/', '홈'], ['/shop/', '전체 상품'], ['/register/', '가입 1'], ['/agree/', '가입 2'], ['/join-form/', '가입 3'], ['/login/', '로그인'], ['/cart/', '장바구니'], ['/price/', '가격표']];
 let productUrl = '';
 for (const [p, label] of pages) {
-  try { const r = await get(p); const t = await r.text(); ok(`${label} ${p}`, r.status === 200 && !fatal(t), `HTTP ${r.status}`);
+  try { const r = await get(p); const t = await r.text();
+    // 워드프레스닷컴은 치명 오류를 200 + 끊긴 HTML 로 내기도 한다 (2026-10-06 홈이 그랬다) — 끝까지 그려졌는지(</footer>)도 본다
+    const whole = /<\/footer>|<\/body>/i.test(t);
+    ok(`${label} ${p}`, r.status === 200 && !fatal(t) && whole, `HTTP ${r.status}${whole ? '' : ' · HTML 이 끝까지 안 그려짐 (' + t.length + 'B)'}`);
     if (p === '/' && !productUrl) { const m = t.match(/href="(https?:\/\/[^"]+\/product\/[^"]+)"/); if (m) productUrl = m[1].replace(SITE, ''); }
   } catch (e) { ok(`${label} ${p}`, false, e.message); }
 }
