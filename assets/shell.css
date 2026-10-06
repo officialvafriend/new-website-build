@@ -59,7 +59,7 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ display
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li{ border: 0 !important; }
 /* `ul.page-numbers` 자신도 클래스가 page-numbers 다. 아래 규칙을 목록에까지 주면
    페이지 번호 뒤로 흰 알약이 화면 폭만큼 길게 깔린다. 칸(li 안의 링크)에만 준다. */
-html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line); font-weight:700; padding: 0 .6rem; }
+html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line); color: var(--dh-ink); font-weight:700; padding: 0 .6rem; }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers.current{ background: var(--dh-ink); border-color: var(--dh-ink); color: var(--dh-surface); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ background: none !important; border-radius: 0 !important; min-width: 0 !important; height: auto !important; padding: 0 !important; }
 
@@ -95,6 +95,7 @@ html body.dhr.dhr-wrap.dhr-wrap footer.foot .fcol b, html body.dhr.dhr-wrap.dhr-
 html body.dhr.dhr-wrap.dhr-wrap footer.foot a, html body.dhr.dhr-wrap.dhr-wrap footer.foot p, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fmuted, html body.dhr.dhr-wrap.dhr-wrap footer.foot .flegal{ color: var(--dh-ink-2) !important; }
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .fkakao{ background: var(--dh-surface-2) !important; }
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .fkakao span, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fmuted{ color: var(--dh-ink-3) !important; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot a.btn-p{ color: var(--dh-accent-ink) !important; } /* 파랑 알약 위 글자 — 위 a 규칙(ink-2)이 덮어 1.4:1 이었다 (2026-10-06 점검) */
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .lg-w .g{ background: var(--dh-ink) !important; }
 /* 계좌 상자는 반전(잉크 면) — 테마가 p 색을 덮어 안내 글이 사라졌다. 굵은 글자와 같은 색으로 못 박는다 */
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank p, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank .n, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__note, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__note b, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__t b{ color: var(--dh-surface) !important; }
@@ -1530,6 +1531,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-gal{ box-shadow: 0 0 0 1px rgba(17,17,17,.0
 html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge__hl,
 html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge b,
 html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge strong{ color: var(--dh-accent-warm) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge__text{ color: var(--dh-ink) !important; } /* 테마 #333 — 다크에서 1.4:1 (2026-10-06 점검) */
 html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge__bar > *,
 html body.dhr.dhr-wrap.dhr-wrap .wd-free-shipping-gauge__fill{ background: var(--dh-ink) !important; }
 /* 서랍 안에서는 게이지를 접는다 — 좁은 폭에서 옵션보다 먼저 눈에 들어올 이유가 없다 */
