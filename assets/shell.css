@@ -2661,6 +2661,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-flav__list li{ margin: 0 !important; paddin
 html body.dhr.dhr-wrap.dhr-wrap .dhp-flav__list a{ display: inline-flex; align-items: center; min-height: 36px; padding: 0 .8rem; border: 1px solid var(--dh-line, #E1E5E8); border-radius: 999px; background: #fff; color: var(--dh-ink, #111); font-size: 13.5px; font-weight: 700; text-decoration: none !important; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-flav__list a:hover{ border-color: var(--dh-ink, #111); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-flav__more{ display: inline-block; margin-top: .6rem; font-size: 13.5px; font-weight: 800; color: var(--dh-accent-warm, #C2410C); text-decoration: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-intro{ margin: 2rem 0 0; padding: clamp(1rem, .8rem + 1.2vw, 1.6rem); background: #fff; border: 1px solid #E2E4E8; border-radius: 20px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-intro__t{ margin: 0 0 .5rem !important; font-size: clamp(18px, 16px + .8vw, 22px); font-weight: 900; color: var(--dh-ink, #111); letter-spacing: 0; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-intro p{ margin: 0 !important; font-size: 15px; line-height: 1.7; color: var(--dh-ink-2, #4E565F); word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq{ margin: 2rem 0 1rem; padding: clamp(1rem, .8rem + 1.2vw, 1.6rem); background: #fff; border: 1px solid #E2E4E8; border-radius: 20px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq h2{ margin: 0 0 .6rem !important; font-size: clamp(18px, 16px + .8vw, 22px); font-weight: 900; color: var(--dh-ink, #111); letter-spacing: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i{ border-top: 1px solid var(--dh-line, #E1E5E8); padding: .55rem 0; }

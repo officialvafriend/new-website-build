@@ -184,6 +184,14 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 @media(min-width:880px){.dhr .banner{padding:3.6rem 2rem}}
 .dhr .banner h2{font-size:clamp(1.7rem,1.3rem + 2vw,2.6rem);font-weight:900;letter-spacing:0;color:#fff}
 .dhr .banner p{color:#C7CBD1;font-size:15.5px;max-width:34rem;margin:.8rem auto 1.3rem;line-height:1.65}
+.dhr .dhr-about{margin-top:2.6rem;background:#fff;border:1px solid #E2E4E8;border-radius:24px;padding:clamp(1.3rem,1rem + 1.5vw,2.2rem)}
+.dhr .dhr-about__t{font-size:clamp(1.25rem,1.05rem + 1vw,1.7rem);font-weight:900;color:#111;margin:0 0 1rem;letter-spacing:0;word-break:keep-all}
+.dhr .dhr-about__g{display:grid;gap:1.3rem}
+@media(min-width:880px){.dhr .dhr-about__g{grid-template-columns:1fr 1fr;gap:1.6rem 2.4rem}}
+.dhr .dhr-about__c h3{font-size:16.5px;font-weight:800;color:#111;margin:0 0 .4rem;letter-spacing:0;word-break:keep-all}
+.dhr .dhr-about__c p{font-size:15px;line-height:1.7;color:#4E565F;margin:0;word-break:keep-all}
+.dhr .dhr-about__l{margin-top:.5rem !important;font-size:14.5px}
+.dhr .dhr-about__l a{color:#C2410C;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .dhr .foot{background:#111;color:#C7CBD1;margin-top:2.4rem;padding:2.6rem 0 2rem}
 .dhr .fgrid{display:grid;gap:1.8rem;grid-template-columns:1fr}
 @media(min-width:760px){.dhr .fgrid{grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:2rem}}

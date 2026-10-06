@@ -288,6 +288,14 @@ $month = (int) wp_date( 'n' );
 		<p>한 병만 사도 되고, 묶으면 병당 가격이 내려갑니다. 입금자명만 주문자명과 같게 넣어주세요 — 그러면 자동으로 입금확인됩니다.</p>
 		<a class="btn btn-w2" href="<?php echo esc_url( $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>">특가 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a></div></section>
 
+	<?php
+	// 2026-10-06 — 홈 맨 아래 소개 글. 「전담 액상 · 전자담배 액상」 상위 몰은 홈에 글이 1,000자 넘게 있고 우리는 카드뿐이었다.
+	// 상품 위에 글을 깔지 않는다는 규칙대로 **맨 아래**. 숫자는 상품에서 읽는다 (Broad\about_home). 끄기: duckhoo_home_about → array()
+	if ( function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\about_home_html' ) ) {
+		echo \Duckhoo\Redesign\Seo\Broad\about_home_html(); // phpcs:ignore WordPress.Security.EscapeOutput — 안에서 escape 한다
+	}
+	?>
+
 </div>
 </main>
 <?php footer_html(); ?>

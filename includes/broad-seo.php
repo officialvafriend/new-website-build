@@ -490,3 +490,169 @@ function faq_jsonld(): void {
 	echo '<script type="application/ld+json">' . wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
 }
 add_action( 'wp_head', __NAMESPACE__ . '\\faq_jsonld', 5 );
+
+/* ───────────────────────────── 소개 글 (2026-10-06) ───────────────────────────── */
+/*
+ * 「전담 액상 · 전자담배 액상 · 입호흡 액상」 네이버 웹문서 상위 15개는 전부 홈에 한글 1,000~7,000자를 깔아 둔 몰이다.
+ * 우리 홈은 상품 카드뿐이라 읽을 글이 없었다. 홈 **맨 아래**(상품 격자 뒤 — 상품 위에 글을 깔지 않는다는 9/4 규칙)에
+ * 가게 소개 · 고르는 법 · 출고 · 19세 안내를 글로 둔다. 종수 · 값 · 브랜드는 상품에서 그때그때 읽는다 (적어 두면 거짓이 된다).
+ * 분류(전체 · 입호흡 · 폐호흡) 격자 아래에도 그 분류 말로 한 단락. 노보 분류는 novo-seo.php 몫이라 여기 안 걸린다.
+ */
+
+/**
+ * 분류 하나의 종수 · 값 — 이름으로 찾는다 (슬러그는 퍼센트 인코딩).
+ *
+ * @param string $needle 분류 이름 조각.
+ * @return array{n:int,single:float,bundle:float,bundle_n:int,url:string}
+ */
+function cat_facts( string $needle ): array {
+	$out = array( 'n' => 0, 'single' => 0.0, 'bundle' => 0.0, 'bundle_n' => 0, 'url' => '' );
+	$t   = function_exists( '\\Duckhoo\\Redesign\\Front\\cat_by_name' ) ? cat_by_name( $needle ) : null;
+	if ( ! $t || ! is_object( $t ) || empty( $t->slug ) ) {
+		return $out;
+	}
+	$c = cat_prices( $t );
+	$u = function_exists( 'get_term_link' ) ? get_term_link( $t ) : '';
+	return array_merge( $out, $c, array( 'url' => is_string( $u ) ? $u : '' ) );
+}
+
+/**
+ * 홈 소개 글 — 제목 + 단락 묶음. 글자는 전부 사실이고 숫자는 상품에서.
+ *
+ * @return array<int,array{h:string,p:string,links?:array<string,string>}>
+ */
+function about_home(): array {
+	$site = site();
+	$n    = count_all();
+	$b    = lead_brands();
+	$pr   = all_prices();
+	$mtl  = cat_facts( '입호흡' );
+	$dl   = cat_facts( '폐호흡' );
+	$rule = function_exists( '\\Duckhoo\\Redesign\\Front\\ship_rule_short' ) ? ship_rule_short() : '금요일 16시 이후 · 주말 주문은 월요일 16시 출고';
+	$ship = won( (float) free_ship() );
+	$pts  = won( (float) signup_points() );
+
+	$p1 = $site . '는 전자담배 액상(전담 액상)을 파는 온라인 액상 사이트입니다. '
+		. '입호흡(MTL) 액상' . ( $mtl['n'] ? ' ' . $mtl['n'] . '종' : '' ) . '과 폐호흡(DL) 액상' . ( $dl['n'] ? ' ' . $dl['n'] . '종' : '' )
+		. ( $n ? ', 모두 ' . $n . '종' : '' ) . '을 낱병과 묶음으로 판매하고'
+		. ( $b ? ', ' . implode( ' · ', $b ) . ' 등 브랜드별로 골라 담을 수 있습니다. ' : ' 브랜드별로 골라 담을 수 있습니다. ' )
+		. ( $pr['single'] > 0 ? '낱병은 ' . won( $pr['single'] ) . '부터' : '낱병과 묶음' )
+		. ( $pr['per'] > 0 ? ', 10병 묶음은 병당 약 ' . won( floor( $pr['per'] / 100 ) * 100 ) . '까지 내려갑니다. ' : '. ' )
+		. '전 상품의 판매가와 병당 가격은 가격표 한 장에서 비교할 수 있습니다.'
+		. ( novo_in_stock() ? ' 노보(NOVO) 액상은 ' . novo_words() . ' 재고가 있어 지금 바로 주문하실 수 있습니다.' : '' );
+
+	$p2 = '팟 · 소형 기기처럼 저출력으로 입에 머금었다 들이마시는 기기라면 입호흡 액상을 고르면 됩니다. 니코틴 농도가 높은 편(9.8mg 안팎)이고 30ml 가 기본입니다. '
+		. '코일 저항이 낮은 고출력 기기 · 탱크라면 폐호흡 액상입니다. 농도는 낮은 편(3mg 안팎)이고 60ml 같은 큰 용량이 많습니다. '
+		. '기기에 맞지 않는 쪽을 넣으면 맛과 연무가 제대로 나지 않습니다. 처음이라면 쓰시는 기기 이름을 알려 주시면 맞는 액상을 안내해 드립니다.';
+
+	$p3 = '평일 오후 4시 이전에 입금이 확인된 주문은 당일 출고하고 보통 다음 날 받으십니다. ' . $rule . '. ' . $ship . ' 이상은 무료배송입니다. '
+		. '결제는 무통장입금으로만 받으며, 입금자명을 주문자명과 똑같이 넣어 주시면 입금이 자동으로 확인됩니다. 가입 즉시 ' . $pts . '이 적립되어 첫 주문부터 쓸 수 있습니다.';
+
+	$p4 = '전자담배 액상은 19세 미만에게 판매하지 않습니다. 휴대폰 본인확인을 마친 회원만 구매할 수 있고, 로그인 전에는 상품 사진이 가려져 보입니다. '
+		. '본인확인은 1분이면 끝나고 한 번만 하면 됩니다.';
+
+	$items = array(
+		array(
+			'h'     => '전자담배 액상 · 전담 액상 사이트 ' . $site,
+			'p'     => $p1,
+			'links' => array_filter( array(
+				'전 상품 가격표'   => guide_url( 'price' ),
+				'입호흡 액상 전체' => $mtl['url'],
+				'폐호흡 액상 전체' => $dl['url'],
+			) ),
+		),
+		array(
+			'h'     => '입호흡 액상과 폐호흡 액상, 어느 쪽을 고를까',
+			'p'     => $p2,
+			'links' => array(
+				'전자담배 액상 고르는 법'          => guide_url( 'liquid-guide' ),
+				'입호흡 액상과 폐호흡 액상의 차이' => guide_url( 'mtl-vs-dl' ),
+			),
+		),
+		array( 'h' => '주문 · 출고 · 결제', 'p' => $p3, 'links' => array( '배송 · 교환 · 환불 안내' => home_url( '/shipping/' ) ) ),
+		array( 'h' => '19세 이상 본인확인 회원 전용', 'p' => $p4, 'links' => array( '회원가입' => home_url( '/register/' ) ) ),
+	);
+	return (array) apply_filters( 'duckhoo_home_about', $items );
+}
+
+/**
+ * 홈 소개 글 HTML — 템플릿이 상품 격자 뒤 · 검은 배너 뒤에 찍는다. 끄기: duckhoo_home_about → array().
+ */
+function about_home_html(): string {
+	$items = about_home();
+	if ( ! $items ) {
+		return '';
+	}
+	$h = '<section class="dhr-about" aria-labelledby="dhr-about-h"><h2 id="dhr-about-h" class="dhr-about__t">' . esc_html( (string) $items[0]['h'] ) . '</h2><div class="dhr-about__g">';
+	foreach ( $items as $i => $it ) {
+		$h .= '<div class="dhr-about__c">';
+		if ( $i > 0 ) {
+			$h .= '<h3>' . esc_html( (string) $it['h'] ) . '</h3>';
+		}
+		$h .= '<p>' . esc_html( (string) $it['p'] ) . '</p>';
+		if ( ! empty( $it['links'] ) ) {
+			$h .= '<p class="dhr-about__l">';
+			$sep = '';
+			foreach ( (array) $it['links'] as $label => $url ) {
+				$h  .= $sep . '<a href="' . esc_url( (string) $url ) . '">' . esc_html( (string) $label ) . '</a>';
+				$sep = ' · ';
+			}
+			$h .= '</p>';
+		}
+		$h .= '</div>';
+	}
+	return $h . '</div></section>';
+}
+
+/**
+ * 분류 격자 아래 소개 단락 — 전체 상품 · 입호흡 · 폐호흡. FAQ 앞에 선다.
+ *
+ * @param string $ctx 'shop' | 'mtl' | 'dl'.
+ * @param mixed  $t   분류.
+ */
+function intro( string $ctx, $t = null ): string {
+	$site = site();
+	if ( 'shop' === $ctx ) {
+		$n  = count_all();
+		$b  = lead_brands();
+		$pr = all_prices();
+		$txt = $site . ' 전자담배 액상 전체 상품' . ( $n ? ' ' . $n . '종' : '' ) . '입니다. 입호흡(MTL) · 폐호흡(DL) 전담 액상을 '
+			. ( $b ? implode( ' · ', $b ) . ' 등 ' : '' ) . '브랜드별 낱병과 묶음으로 판매합니다.'
+			. ( $pr['single'] > 0 ? ' 낱병 ' . won( $pr['single'] ) . '부터' : '' )
+			. ( $pr['per'] > 0 ? ', 10병 묶음은 병당 약 ' . won( floor( $pr['per'] / 100 ) * 100 ) . '까지 내려갑니다.' : '.' )
+			. ( novo_in_stock() ? ' 노보(NOVO) 액상은 ' . novo_words() . ' 재고가 있습니다.' : '' )
+			. ' 쓰시는 기기가 팟 · 소형 기기면 입호흡 액상, 고출력 기기 · 탱크면 폐호흡 액상을 고르시면 됩니다. 19세 이상 본인확인 회원만 구매할 수 있습니다.';
+		return (string) apply_filters( 'duckhoo_broad_intro', $txt, $ctx, $t );
+	}
+	if ( ! in_array( $ctx, array( 'mtl', 'dl' ), true ) || ! is_object( $t ) ) {
+		return '';
+	}
+	$l  = label( $ctx );
+	$c  = cat_prices( $t );
+	$b  = top_brands( $t, 5 );
+	$ko = $l['ko'] . ' 액상';
+	$how = 'dl' === $ctx
+		? '코일 저항이 낮은 고출력 기기 · 탱크에서 연기를 바로 들이마시는 폐호흡(DL) 방식에 맞춘 액상으로, 니코틴 농도가 낮은 편(3mg 안팎)이고 60ml 같은 큰 용량이 많습니다.'
+		: '팟 · 소형 기기처럼 저출력으로 입에 머금었다 들이마시는 입호흡(MTL) 방식에 맞춘 액상으로, 니코틴 농도가 높은 편(9.8mg 안팎)이고 30ml 가 기본입니다.';
+	$txt = $site . '의 ' . $ko . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . '입니다. ' . $ko . '은 ' . $how
+		. ( $b ? ' ' . implode( ' · ', $b ) . ' 등 ' : ' ' ) . $ko . '을 브랜드별 낱병과 묶음으로 판매하며'
+		. ( $c['single'] > 0 ? ' 낱병은 ' . won( $c['single'] ) . '부터' : '' )
+		. ( $c['bundle'] > 0 && $c['bundle_n'] > 0 ? ', 묶음은 병당 약 ' . won( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '입니다.' : '.' )
+		. ' 니코틴 농도와 용량은 상품 이름에 적혀 있고, 전 상품 가격표에서 ' . $ko . ' 값을 한 번에 비교할 수 있습니다. 19세 이상 본인확인 회원만 구매할 수 있습니다.';
+	return (string) apply_filters( 'duckhoo_broad_intro', $txt, $ctx, $t );
+}
+
+function intro_html(): void {
+	$ctx = ctx();
+	if ( '' === $ctx ) {
+		return;
+	}
+	$t   = 'shop' === $ctx ? null : \Duckhoo\Redesign\Seo\noted_cat();
+	$txt = intro( $ctx, $t );
+	if ( '' === $txt ) {
+		return;
+	}
+	echo '<section class="dha-intro"><h2 class="dha-intro__t">' . esc_html( 'shop' === $ctx ? '전자담배 액상 · 전담 액상 사이트 ' . site() : label( $ctx )['ko'] . ' 액상 안내' ) . '</h2>'
+		. '<p>' . esc_html( $txt ) . '</p></section>';
+}
+add_action( 'duckhoo_archive_after_grid', __NAMESPACE__ . '\\intro_html', 5 );
