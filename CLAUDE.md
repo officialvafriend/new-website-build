@@ -3515,3 +3515,30 @@ Figma 에 Pretendard 가 없어 Noto Sans KR 로 그렸다 (사이트는 Pretend
   서비스 낱병 필수 여부 · 상품 하나(구성 select)인지 셋인지 · 코드 찾기 `BUNDLE_RATIO` · `맛 선택을 총` 캡처
 - 스킬 호출: `Skill(taste-skill)` · `Skill(glassmorphism)` · `Skill(emil-design-eng)` — 디자인 읽기 한 줄과 다이얼(VARIANCE 5 · MOTION 5 · DENSITY 4)을
   먼저 적고 시작한다. 구현 때는 `animate` · `review-animations` 스킬로 모션을 검수한다
+
+### 유리 리디자인 v2 — 흰 바탕 · 다크 모드 · HTML 시안 (2026-10-06 저녁, 사장님 「색이 마음에 안 든다 · 모든 페이지 · 카루셀 대칭 · 스크롤 재미 · 다크 모드」)
+
+살구색 그라데이션 판은 버렸다. **`design/glass/`** (배포 안 됨) 에 실제로 움직이는 HTML 시안 여섯 장: `index`(홈) · `shop`(목록) ·
+`product`(상세 + 대량 구매 시트 + 담기/주문 완료 막) · `cart` · `account` · `login`. `glass.css` 의 토큰과 규칙이 그대로 사이트 껍데기가 된다.
+캡처: `DHR_NODE_MODULES=scratchpad/live/node_modules DHR_OUT=<폴더> node design/glass/shoot.mjs` — 라이트/다크 × 390/1280, 홈 중간 스크롤 두 장, 시트 · 완료 막.
+
+- **색**: 바탕 `#F6F6F7` · 카드 흰색 · 글 `#161616` · 보조 `#5C6370` · 포인트 번트 오렌지 하나. 다크는 바탕 `#0F1012` · 면 `#17191D` · 글 `#F3F4F6` ·
+  포인트 `#F0773F`(어두운 면 위 대비 때문에 밝게). `color-scheme` + `prefers-color-scheme` 을 따르고 헤더의 해/달 버튼으로 바꾼다 (`localStorage['dhr-theme']`).
+  검정 알약 버튼은 다크에서 흰 알약이 된다 (`--ink`/`--bg` 가 뒤집힌다) — 포인트 색 버튼(`btn-acc`)만 양쪽에서 같다
+- **유리는 다섯 곳만**: 헤더 · 탭바 · 구매 시트 · 완료 막 · 히어로 캡션. `backdrop-filter: blur(16px) saturate(140%)`, 흰 테두리 + 안쪽 1px 하이라이트.
+  `prefers-reduced-transparency` 면 불투명. **상품 카드는 불투명**(9월 스크롤 교훈 그대로)
+- **카루셀 대칭** (`.car .trk`): 카드 폭 = `(100% − (n−1)·gap) / n` 이라 양 끝 여백이 같고 가장자리에서 snap 이 맞는다. 폰 1.25장 · 600px↑ 2.5장 · 880px↑ 4장.
+  화살표는 양쪽 같은 크기(데스크톱만), 점은 IO 로 보이는 카드를 센다
+- **홈의 스크롤 재미**는 전부 CSS 스크롤 타임라인(JS 스크롤 리스너 없음): 히어로 무대가 70vh 동안 0.94 로 줄며 흐려짐(`animation-timeline: scroll(root)`) ·
+  카드 · 타일 등장은 `view()` + `--i` 로 순서(stagger) · **브랜드 카드 셋이 겹쳐 쌓임**(`.stk` 래퍼의 `view-timeline` + `timeline-scope`, 카드는 sticky,
+  다음 카드가 올라오면 앞 카드가 0.92 로 줄며 흐려짐) · 숫자 올라감(IO, 한 번). 타임라인을 모르는 브라우저는 IO 로 `.in` 만 붙인다.
+  `prefers-reduced-motion` 이면 전부 끈다
+- **전체 페이지 캡처는 스크롤 타임라인과 안 맞는다** — 뷰포트를 통째로 늘려 찍으므로 아래 요소가 「아직 안 나타난」 상태로 빈칸이 된다.
+  `html.static` 이 애니메이션 · sticky · 탭바를 끄는 캡처 모드다. **sticky 를 `static` 으로 풀면 안의 absolute 가 밖으로 샌다** → `relative`
+  (브랜드 카드의 둥근 글자가 페이지 밖으로 나가 폰 폭이 421px 로 늘었다)
+- **Emil 모션 값**(glass.css 에 그대로): 시트 320ms `cubic-bezier(.32,.72,0,1)` / 닫힘 220ms · 완료 카드 scale .95 → 1 240ms + 체크 선 그리기 360ms(120ms 뒤) ·
+  담기 완료 0.8초 뒤 자동 닫힘, 주문 완료는 머묾 · 누르는 것 전부 `:active scale(.97)` 160ms · 스테퍼 숫자 blur 2px 크로스페이드 · hover 는 `(hover:hover)` 에서만
+- **taste-skill 로 검사한 것**: em-dash 0 · 가운뎃점 한 줄에 하나 · 모서리 20/28/999 · 히어로 눈썹 + 제목 2줄 + 20자 안팎 부제 + 버튼 둘 · 안내 벤토는 첫 칸 넓고 반전색 ·
+  순수 검정/흰색 없음(`#161616` / `#F6F6F7`) · 폰 가로 넘침 0(12장 전부 390px)
+- 사이트에 옮기는 순서(사장님 승인 뒤): ①토큰 · 다크 모드 · 헤더 · 탭바 · 푸터(shell.css · front.css) ②홈 ③목록 · 카드 ④상세 · 구매 카드 · 완료 막 ⑤장바구니 · 결제
+  ⑥계정 · 로그인 · 가입. 폼 · 결제 · 성인인증 · 테마 파일은 그대로. 다크 모드는 테마의 인라인 `<style>` 과 싸워야 하므로 `html body.dhr.dhr-wrap.dhr-wrap` 특이도로 덮는다
