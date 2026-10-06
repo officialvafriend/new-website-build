@@ -18,24 +18,12 @@
   --dh-font: Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont,
              "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
-  /* 면 — 바탕은 옅은 회색, 카드는 흰색 (데모와 같다) */
-  --dh-bg: var(--dh-surface-2);
-  --dh-surface: var(--dh-surface);
+  /* 면 · 글자 · 포인트는 tokens.css 가 정한다 — 여기서는 옛 이름만 그쪽으로 잇는다.
+     (2026-10-06 사고: hex→var 매핑 스크립트가 이 블록을 `--dh-surface: var(--dh-surface)` 꼴로 만들어
+     순환 참조가 됐고, 테마 화면 전체에서 토큰이 무효가 됐다. 자기 이름을 다시 쓰지 않는다) */
+  --dh-bg: var(--dh-ground);
   --dh-bg-2: var(--dh-surface-2);
-  --dh-line: var(--dh-line);
-  --dh-line-2: #CFD3D8;
-
-  /* 글자 — 흰 카드와 var(--dh-surface-2) 양쪽에서 WCAG AA 통과 */
-  --dh-ink: var(--dh-ink);      /* 18.88:1 */
-  --dh-ink-2: var(--dh-ink-2);    /*  7.45:1 */
-  --dh-ink-3: var(--dh-ink-3);    /*  5.64:1 */
-
-  /* 포인트 — 밝은 색을 채우고 그 위에 검정을 얹는다.
-     흰 글자를 쓰려고 색을 어둡게 낮추면 화면이 칙칙해진다. */
-  --dh-accent: var(--dh-accent);       /* 채움 — 버튼, 배지, 선택 상태 */
-  --dh-accent-ink: var(--dh-ink);   /* 그 채움 위 글자. 흰색 아님 (8.81:1) */
-  --dh-accent-deep: var(--dh-accent-deep);  /* 흰 배경 위 색 글자 · 포커스 링 (5.75:1) */
-  --dh-accent-soft: var(--dh-accent-soft);
+  --dh-line-2: var(--dh-line-strong);
 
   /* 카드 아이브로 (신상 · 9월 특가 · 재구매 1위 · 품절) — 흰 카드 위 4.5:1 이상 */
   --dh-eb-new:  var(--dh-accent-deep);
@@ -44,11 +32,11 @@
   --dh-eb-out:  var(--dh-ink-3);
 
   /* 주문 상태 — 색은 보조 신호다. 항상 한글 라벨과 함께 쓴다 */
-  --dh-st-pending:  #8A5A12;  /* 입금전 */
-  --dh-st-check:    #B42318;  /* 확인필요 */
-  --dh-st-paid:     #1F5F46;  /* 입금확인 */
-  --dh-st-shipping: #5B21B6;  /* 배송중 */
-  --dh-st-done:     var(--dh-ink-3);  /* 배송완료 */
+  --dh-st-pending:  var(--dh-status-pending);  /* 입금전 */
+  --dh-st-check:    var(--dh-status-check);  /* 확인필요 */
+  --dh-st-paid:     var(--dh-status-paid);  /* 입금확인 */
+  --dh-st-shipping: var(--dh-status-shipping);  /* 배송중 */
+  --dh-st-done:     var(--dh-status-done);  /* 배송완료 */
 
   --dh-r: 16px;
   --dh-r-lg: 22px;
