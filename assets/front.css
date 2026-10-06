@@ -992,7 +992,7 @@ body.dhr-imgfx img.is-ld{opacity:1;transform:none}
 /* 브랜드 큰 카드 */
 .dhr .bgrid{grid-template-columns:1fr}
 @media(min-width:880px){.dhr .bgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
-.dhr .stk .bcard,.dhr .bcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:.55rem;min-height:300px;padding:1.4rem;border-radius:var(--dh-radius-xl,28px);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));overflow:hidden;transform:none}
+.dhr .bcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:.55rem;min-height:300px;padding:1.4rem;border-radius:var(--dh-radius-xl,28px);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));overflow:hidden;transform:none}
 .dhr .bcard__pic{position:absolute;right:-22px;top:-22px;width:46%;max-width:190px;aspect-ratio:1/1;border-radius:50%;background:var(--dh-surface-2);display:flex;align-items:center;justify-content:center;font-size:clamp(3rem,2rem + 5vw,5.5rem);font-weight:900;color:var(--dh-ink);opacity:.9;pointer-events:none}
 .dhr .bcard__eb{position:relative}
 .dhr .bcard__t{margin:0;font-size:clamp(1.7rem,1.3rem + 2vw,2.5rem);font-weight:900;line-height:1.1;color:var(--dh-ink);letter-spacing:0}
