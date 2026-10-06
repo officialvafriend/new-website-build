@@ -961,3 +961,51 @@ body.dhr-imgfx img.is-ld{opacity:1;transform:none}
   .dhr .dhr-about__c--lead p:first-of-type{font-size:17px;line-height:1.6;max-width:42ch}
 }
 @media(prefers-reduced-motion:reduce){.dhr .ends .ss.is-tick{animation:none} body.dhr-imgfx img{opacity:1;transform:none}}
+
+/* ===== 홈 레이아웃 — 유리 시안 A (2026-10-06) =====
+ * 히어로: 왼쪽 글 · 오른쪽 무대(사진 + 할인 알약 + 유리 캡션). 숫자 셋. 브랜드는 큰 카드(글자 원 · 눈썹 · 이름 · 한 줄 · 버튼). */
+.dhr .hero{display:grid;gap:1.2rem;padding:1.1rem 0 .4rem;align-items:center}
+.dhr .hero__tx{display:flex;flex-direction:column;align-items:flex-start;gap:.75rem;min-width:0}
+.dhr .hero__eb{display:inline-flex;align-items:center;gap:.45rem}
+.dhr .hero__eb i{width:8px;height:8px;border-radius:50%;background:var(--dh-accent);animation:dhr-blink 1.6s ease-in-out infinite}
+@keyframes dhr-blink{0%,100%{opacity:1}50%{opacity:.35}}
+.dhr .hero__t{margin:0;font-size:clamp(2rem,1.3rem + 3.4vw,3.9rem);font-weight:900;line-height:1.08;letter-spacing:0;color:var(--dh-ink);text-wrap:balance}
+.dhr .hero__sub{font-size:16px;line-height:1.6;color:var(--dh-ink-2);max-width:36ch}
+.dhr .hero__cta{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.3rem}
+.dhr .stage{position:relative;display:block;aspect-ratio:1/1;border-radius:var(--dh-radius-xl,28px);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));overflow:hidden;transform-origin:50% 0;color:var(--dh-ink);text-decoration:none}
+.dhr .stage__img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--dh-surface-2)}
+.dhr .stage__img img{width:100%;height:100%;object-fit:cover;transition:transform .9s cubic-bezier(.22,1,.36,1)}
+@media(hover:hover) and (pointer:fine){.dhr .stage:hover .stage__img img{transform:scale(1.03)}}
+.dhr .stage__pill{position:absolute;left:16px;top:16px;z-index:2;padding:.35rem .75rem;border-radius:999px;background:var(--dh-ink);color:var(--dh-surface);font-size:13px;font-weight:800;line-height:1.2}
+.dhr .stage__cap{position:absolute;left:14px;right:14px;bottom:14px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.75rem 1rem;border-radius:999px;background:var(--dh-glass);border:1px solid var(--dh-glass-line);box-shadow:inset 0 1px 0 var(--dh-glass-hi),var(--dh-shadow);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
+@media(prefers-reduced-transparency:reduce){.dhr .stage__cap{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.dhr .stage__cap b{font-size:15px;font-weight:800;color:var(--dh-ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dhr .stage__cap .n{flex:0 0 auto;display:flex;align-items:baseline;gap:.35rem;font-variant-numeric:tabular-nums}
+.dhr .stage__cap s{font-size:12.5px;color:var(--dh-ink-3)}
+.dhr .stage__cap em{font-style:normal;font-size:17px;font-weight:900;color:var(--dh-ink)}
+@media(min-width:880px){
+  .dhr .hero{grid-template-columns:1.1fr 1fr;gap:3rem;padding:2.4rem 0 1rem;min-height:min(560px,calc(100dvh - 240px))}
+  .dhr .stage{aspect-ratio:4/3}
+  .dhr .hero__sub{font-size:17px}
+}
+/* 숫자 셋 */
+.dhr .nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:1.2rem 0 .2rem}
+@media(min-width:600px){.dhr .nums{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.dhr .num{padding:1rem .9rem;border-radius:var(--dh-radius-lg);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));text-align:center;min-width:0}
+.dhr .num b{display:block;font-size:clamp(1.6rem,1.2rem + 1.8vw,2.6rem);font-weight:900;line-height:1.1;color:var(--dh-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dhr .num span{display:block;margin-top:.25rem;font-size:13px;color:var(--dh-ink-3);font-weight:600}
+/* 브랜드 큰 카드 */
+.dhr .bgrid{grid-template-columns:1fr}
+@media(min-width:880px){.dhr .bgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
+.dhr .stk .bcard,.dhr .bcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:.55rem;min-height:300px;padding:1.4rem;border-radius:var(--dh-radius-xl,28px);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));overflow:hidden;transform:none}
+.dhr .bcard__pic{position:absolute;right:-22px;top:-22px;width:46%;max-width:190px;aspect-ratio:1/1;border-radius:50%;background:var(--dh-surface-2);display:flex;align-items:center;justify-content:center;font-size:clamp(3rem,2rem + 5vw,5.5rem);font-weight:900;color:var(--dh-ink);opacity:.9;pointer-events:none}
+.dhr .bcard__eb{position:relative}
+.dhr .bcard__t{margin:0;font-size:clamp(1.7rem,1.3rem + 2vw,2.5rem);font-weight:900;line-height:1.1;color:var(--dh-ink);letter-spacing:0}
+.dhr .bcard__p{margin:0;font-size:15px;line-height:1.6;color:var(--dh-ink-2);max-width:38ch}
+.dhr .bcard__cta{margin-top:.4rem}
+.dhr .bcard--inv{background:var(--dh-ink);color:var(--dh-surface)}
+.dhr .bcard--inv .bcard__t{color:var(--dh-surface)}.dhr .bcard--inv .bcard__p{color:var(--dh-surface);opacity:.78}.dhr .bcard--inv .bcard__eb{color:var(--dh-accent)}
+.dhr .bcard--inv .bcard__pic{background:rgba(127,127,127,.22);color:var(--dh-surface)}
+.dhr .bcard--acc{background:var(--dh-accent-soft)}
+.dhr .bcard--acc .bcard__pic{background:rgba(26,92,255,.14)}
+@media(min-width:880px){.dhr .stk .bcard,.dhr .bcard{min-height:340px}}

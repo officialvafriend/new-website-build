@@ -157,56 +157,45 @@ $month = (int) wp_date( 'n' );
 	echo chuseok_html(); // phpcs:ignore WordPress.Security.EscapeOutput — 안에서 escape 한다
 	?>
 
-	<section class="hero2">
-		<?php if ( $heroes ) : ?>
-		<div class="hslide" data-hero aria-roledescription="캐러셀" aria-label="추천 묶음 상품">
-			<div class="hviewport"><div class="hslide-track">
-			<?php foreach ( $heroes as $i => $hp_item ) :
-				$hn = split_name( $hp_item );
-				$hp = per_bottle( $hp_item );
-				$hr = (float) $hp_item->get_regular_price();
-				$hs = (float) $hp_item->get_price(); ?>
-				<a class="hcard hcard-a hslide-item" href="<?php echo esc_url( get_permalink( $hp_item->get_id() ) ); ?>"
-					role="group" aria-roledescription="슬라이드" aria-label="<?php echo esc_attr( ( $i + 1 ) . ' / ' . count( $heroes ) ); ?>"
-					<?php echo $i ? 'aria-hidden="true" tabindex="-1"' : ''; ?>>
-					<div class="htxt"><span class="eb2"><?php echo esc_html( $hp_item->is_on_sale() ? '묶음 특가' : '추천 묶음' ); ?></span>
-						<?php
-						// 「[노보 리퀴드] 10+1 | 금액 120,000원」 → 「노보 리퀴드 10+1」. 브랜드를 떼면 노보 슬라이드는
-						// 「10+1 | 금액 120,000원」이 되어 무슨 상품인지 모른다. 금액 꼬리는 아래 가격 줄이 이미 말한다.
-						$ht = trim( (string) preg_replace( '/\s*\|\s*금액\s*[\d,]+\s*원\s*$/u', '', $hn['title'] ) );
-						if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && (bool) preg_match( '/^\s*\d/u', $ht ) ) {
-							$ht = $hn['brand'] . ' ' . $ht;
-						}
-						?>
-						<h3 class="hcard-t"><?php echo esc_html( $ht ); ?></h3>
-						<p class="hprice"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s><?php endif; ?>
-							<b data-count="<?php echo (int) $hs; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</b></p>
-						<p><?php echo esc_html( $hn['brand'] ? $hn['brand'] . ' · ' : '' ); ?><?php echo $hp['qty'] > 1 ? esc_html( $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' ) : '단품'; ?></p>
-						<span class="btn btn-d">상품 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></span></div>
-					<div class="hart"><span class="box"><?php echo $hp_item->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span></div>
-				</a>
-			<?php endforeach; ?>
-			</div></div>
-			<?php if ( count( $heroes ) > 1 ) : ?>
-			<div class="hctl">
-				<button type="button" class="hnav hprev" aria-label="이전 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
-				<div class="hdots" role="tablist" aria-label="상품 선택">
-					<?php foreach ( $heroes as $i => $unused ) : ?>
-					<button type="button" role="tab" class="hdot<?php echo $i ? '' : ' on'; ?>" aria-label="<?php echo esc_attr( ( $i + 1 ) . '번째 상품' ); ?>" aria-selected="<?php echo $i ? 'false' : 'true'; ?>"></button>
-					<?php endforeach; ?>
-				</div>
-				<button type="button" class="hnav hnext" aria-label="다음 상품"><?php echo icon( 'chev' ); // phpcs:ignore ?></button>
-				<button type="button" class="hplay" aria-label="자동 넘김 멈춤" data-playing="1"></button>
+	<?php
+	// 히어로 — 유리 시안 A (2026-10-06 사장님 「레이아웃도 바꾸는 거 아니었음?」). 왼쪽 글(눈썹 · 제목 · 한 줄 · 버튼 둘),
+	// 오른쪽 무대(사진 + 할인 알약 + 유리 캡션). 슬라이드 다섯 장은 뺐다 — 5초마다 넘어가 놓치던 것을 첫 상품 하나로 못 박는다.
+	$h0 = $heroes[0] ?? null;
+	if ( $h0 ) :
+		$hn  = split_name( $h0 );
+		$hp  = per_bottle( $h0 );
+		$hr  = (float) $h0->get_regular_price();
+		$hs  = (float) $h0->get_price();
+		$off = ( $hr > $hs && $hr > 0 ) ? (int) round( ( 1 - $hs / $hr ) * 100 ) : 0;
+		$ht  = trim( (string) preg_replace( '/\s*\|\s*금액\s*[\d,]+\s*원\s*$/u', '', $hn['title'] ) );
+		if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && (bool) preg_match( '/^\s*\d/u', $ht ) ) {
+			$ht = $hn['brand'] . ' ' . $ht;
+		}
+		$heb = novo_announce();
+		if ( '' === $heb || false === mb_strpos( $ht, '노보' ) ) {
+			$heb = $h0->is_on_sale() ? '묶음 특가 · 지금 주문하면 오늘 출고' : '추천 묶음';
+		}
+		$hsub = ( $hn['brand'] ? $hn['brand'] . ' · ' : '' ) . ( $hp['qty'] > 1 ? $hp['qty'] . '병 · 병당 ' . number_format_i18n( $hp['per'] ) . '원' : '단품' )
+			. '. 평일 오후 4시 이전 입금 확인분은 당일 출고합니다.';
+	?>
+	<section class="hero">
+		<div class="hero__tx">
+			<span class="eb2 hero__eb"><i></i><?php echo esc_html( $heb ); ?></span>
+			<h2 class="hero__t"><?php echo esc_html( $ht ); ?></h2>
+			<p class="hero__sub"><?php echo esc_html( $hsub ); ?></p>
+			<div class="hero__cta">
+				<a class="btn btn-d" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>">바로 구매 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a>
+				<a class="btn btn-o" href="<?php echo esc_url( $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>"><?php echo (int) $month; ?>월 특가<?php echo $best_off ? ' 최대 ' . (int) $best_off . '%' : ''; ?></a>
 			</div>
-			<?php endif; ?>
 		</div>
-		<?php endif; ?>
-		<a class="hcard hcard-b" href="<?php echo esc_url( $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>">
-			<div class="htxt"><h2><?php echo (int) $month; ?>월 특가<br><?php echo $best_off ? '최대 <em>' . (int) $best_off . '%</em>' : '<em>묶음 할인</em>'; ?></h2>
-				<p><?php echo (int) $month; ?>월 말까지. 묶음으로 담을수록 병당 가격이 내려갑니다.</p>
-				<span class="btn btn-w2">특가 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></span></div>
+		<a class="stage" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $ht . ' ' . number_format_i18n( $hs ) . '원' ); ?>">
+			<?php if ( $off > 0 ) : ?><span class="stage__pill">-<?php echo (int) $off; ?>%</span><?php endif; ?>
+			<span class="stage__img"><?php echo $h0->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span>
+			<span class="stage__cap"><b><?php echo esc_html( $ht ); ?></b>
+				<span class="n"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s> <?php endif; ?><em data-count="<?php echo (int) $hs; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</em></span></span>
 		</a>
 	</section>
+	<?php endif; ?>
 
 	<?php
 	// 둘러보기 — 분류로 바로 가는 둥근 타일. 분류 사진이 있으면 쓰고 없으면 첫 글자.
@@ -226,6 +215,20 @@ $month = (int) wp_date( 'n' );
 	<?php endif; ?>
 
 	<?php echo gate_note(); // phpcs:ignore — 비로그인: 사진이 왜 안 보이는지 ?>
+
+	<?php
+	// 숫자 셋 — 상품에서 읽는다 (적어 두지 않는다). 화면에 들어오면 굴러 올라온다 (data-count).
+	$n_all = function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\count_all' ) ? (int) \Duckhoo\Redesign\Seo\Broad\count_all() : 0;
+	$n_mtl = function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\cat_facts' ) ? (int) ( \Duckhoo\Redesign\Seo\Broad\cat_facts( '입호흡' )['n'] ?? 0 ) : 0;
+	$n_dl  = function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\cat_facts' ) ? (int) ( \Duckhoo\Redesign\Seo\Broad\cat_facts( '폐호흡' )['n'] ?? 0 ) : 0;
+	if ( $n_all > 0 ) : ?>
+	<div class="nums" aria-label="가게 숫자">
+		<div class="num"><b data-count="<?php echo (int) $n_all; ?>" data-suffix="종"><?php echo (int) $n_all; ?>종</b><span>전체 상품</span></div>
+		<?php if ( $n_mtl ) : ?><div class="num"><b data-count="<?php echo (int) $n_mtl; ?>" data-suffix="종"><?php echo (int) $n_mtl; ?>종</b><span>입호흡 액상</span></div><?php endif; ?>
+		<?php if ( $n_dl ) : ?><div class="num"><b data-count="<?php echo (int) $n_dl; ?>" data-suffix="종"><?php echo (int) $n_dl; ?>종</b><span>폐호흡 액상</span></div><?php endif; ?>
+		<div class="num"><b>16시</b><span>평일 출고 마감</span></div>
+	</div>
+	<?php endif; ?>
 
 	<?php if ( $novo_row ) : // 2026-10-01 — 노보가 시장에서 끊기는 때. 첫 화면에 노보 전 라인을 통째로 세운다. ?>
 	<section class="sec sec--novo">
@@ -271,17 +274,31 @@ $month = (int) wp_date( 'n' );
 	<?php if ( $brand_list ) : ?>
 	<section class="sec">
 		<?php section_head( '많이 찾는 라인', '브랜드로 둘러보기', '', '' ); ?>
-		<div class="bgrid"><?php foreach ( $brand_list as $b ) :
-			$bp = brand_products( $b, 4 );
-			if ( ! $bp ) { continue; }
-			$bcount = brands()[ $b ] ?? count( $bp );
-			$burl = brand_url( $b ); ?>
-			<?php // .stk — 폰에서 카드가 겹쳐 쌓이는 스택(유리 시안 A). 데스크톱은 그냥 격자 칸이다 ?>
-			<div class="stk"><article class="bcard"><div class="bhead"><span class="blogo"><?php echo esc_html( mb_substr( $b, 0, 1 ) ); ?></span>
-				<div><b><?php echo esc_html( $b ); ?></b>
-					<span class="bsub" data-count="<?php echo (int) $bcount; ?>" data-suffix="종"><?php echo (int) $bcount; ?>종</span></div>
-				<a class="lk" href="<?php echo esc_url( $burl ); ?>">보기 <?php echo icon( 'chev' ); // phpcs:ignore ?></a></div>
-				<div class="bthumbs"><?php foreach ( $bp as $p ) : ?><a href="<?php echo esc_url( get_permalink( $p->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $p->get_name() ); ?>"><?php echo $p->get_image( 'woocommerce_thumbnail' ); // phpcs:ignore ?></a><?php endforeach; ?></div></article></div>
+		<div class="bgrid"><?php foreach ( $brand_list as $bi => $b ) :
+			$bcount = brands()[ $b ] ?? 0;
+			if ( $bcount < 1 ) { continue; }
+			$burl  = brand_url( $b );
+			$bf    = function_exists( '\\Duckhoo\\Redesign\\Seo\\brand_facts' ) ? \Duckhoo\Redesign\Seo\brand_facts( $b ) : array();
+			$bcat  = '';
+			foreach ( (array) ( $bf['cats'] ?? array() ) as $c ) { if ( preg_match( '/입호흡|폐호흡|무니코틴/u', (string) $c, $m ) ) { $bcat = $m[0]; break; } }
+			$beb   = trim( ( '' !== $bcat ? $bcat . ' ' : '' ) . $bcount . '종' );
+			// 글 한 줄 — 노보는 맛 이름을 적지 않는다 (맛 검색어는 그 상품 페이지 한 장만, 2026-10-06). 다른 브랜드는 맛 셋 + 낱병 값
+			if ( false !== mb_strpos( $b, '노보' ) && function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_phrase' ) ) {
+				$bp = '낱병과 10+1 묶음, ' . \Duckhoo\Redesign\Novo\stock_phrase( 'short' ) . ' 지금 바로 주문됩니다.';
+			} else {
+				$fl = array_slice( (array) ( $bf['flavors'] ?? array() ), 0, 3 );
+				$bp = ( $fl ? implode( ' · ', $fl ) . ( count( (array) ( $bf['flavors'] ?? array() ) ) > 3 ? ' 외' : '' ) . '. ' : '' )
+					. ( ! empty( $bf['single_min'] ) ? '낱병 ' . number_format_i18n( (float) $bf['single_min'] ) . '원' . ( ! empty( $bf['bundle_per'] ) ? ', 묶음은 병당 ' . number_format_i18n( (float) $bf['bundle_per'] ) . '원부터' : '' ) . '.' : '' );
+			}
+			$bk = 0 === $bi ? ' bcard--inv' : ( 2 === $bi ? ' bcard--acc' : '' ); ?>
+			<?php // .stk — 폰에서 카드가 겹쳐 쌓이는 스택(유리 시안 A). 데스크톱은 격자 칸 ?>
+			<div class="stk"><article class="bcard<?php echo esc_attr( $bk ); ?>">
+				<span class="bcard__pic" aria-hidden="true"><?php echo esc_html( mb_substr( $b, 0, 1 ) ); ?></span>
+				<span class="eb2 bcard__eb"><?php echo esc_html( $beb ); ?></span>
+				<h3 class="bcard__t"><?php echo esc_html( $b ); ?></h3>
+				<?php if ( '' !== trim( $bp ) ) : ?><p class="bcard__p"><?php echo esc_html( $bp ); ?></p><?php endif; ?>
+				<div class="bcard__cta"><a class="btn <?php echo 0 === $bi ? 'btn-p' : 'btn-d'; ?>" href="<?php echo esc_url( $burl ); ?>"><?php echo esc_html( $b ); ?> 보기 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a></div>
+			</article></div>
 		<?php endforeach; ?></div></section>
 	<?php endif; ?>
 
