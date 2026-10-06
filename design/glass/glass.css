@@ -343,34 +343,38 @@ html.static .hero{min-height:0}
 html.static .stk{height:auto} html.static .bcard{position:relative;top:auto}
 html.static .tab,html.static .pbar{display:none}
 
-/* ---- 포인트 「프리즘」 (사장님 2026-10-06) ----
- * 글자 포인트(--acc)는 프리즘에서 뽑은 단색 하나(보라-파랑) — 흰 바탕 위 AA.
- * 무지개(--prism)는 면에만: 고른 테두리 · 진행 막대 · 완료 원 · 배지 · 탭 활성 · 포인트 버튼. 글자에는 절대 깔지 않는다. */
-:root[data-accent="prism"]{
-  --acc:#5B4BE0; --acc-ink:#161616; --acc-soft:#F1EFFC;
-  --prism:linear-gradient(135deg,#FF8FB1 0%,#FFC46B 22%,#F6F27A 40%,#7EF5B5 58%,#6CD5FF 76%,#9D8BFF 100%);
-  --prism-soft:linear-gradient(135deg,#FFE3EC,#FFF0D6,#FDFBDC,#E2FCEF,#E0F5FF,#ECE8FF);
+/* ---- 포인트 「메탈릭 실버」 (사장님 2026-10-06) ----
+ * 은은 흰 바탕에서 묻히므로 금속 느낌으로 세운다: 비스듬한 밝음-어둠 그라데이션 + 위쪽 1px 하이라이트 + 어두운 1px 테두리.
+ * 글자 포인트(--acc)는 강철색 단색 — 흰 바탕 위 AA. 은 위의 글자는 항상 #161616. */
+:root[data-accent="silver"]{
+  --acc:#3F4B59; --acc-ink:#161616; --acc-soft:#EDF0F3;
+  --metal:linear-gradient(135deg,#FAFBFC 0%,#D5D9DE 28%,#F4F5F7 46%,#B9BFC7 68%,#E9EBEE 88%,#C7CCD2 100%);
+  --metal-edge:#9CA4AE; --metal-hi:rgba(255,255,255,.9);
+  --metal-soft:linear-gradient(135deg,#F6F7F9,#E9ECF0 50%,#F3F4F6);
 }
-:root[data-accent="prism"][data-theme="dark"],
-:root[data-accent="prism"]:not([data-theme="light"]) { }
-@media (prefers-color-scheme: dark){ :root[data-accent="prism"]:not([data-theme="light"]){ --acc:#B3A7FF; --acc-ink:#161616; --acc-soft:rgba(157,139,255,.16);
-  --prism:linear-gradient(135deg,#FF6FA3 0%,#FFB056 22%,#F3EE5C 40%,#5EF0A4 58%,#4FC8FF 76%,#8C78FF 100%);
-  --prism-soft:linear-gradient(135deg,rgba(255,111,163,.18),rgba(255,176,86,.18),rgba(94,240,164,.18),rgba(79,200,255,.18),rgba(140,120,255,.18)) } }
-:root[data-accent="prism"][data-theme="dark"]{ --acc:#B3A7FF; --acc-ink:#161616; --acc-soft:rgba(157,139,255,.16);
-  --prism:linear-gradient(135deg,#FF6FA3 0%,#FFB056 22%,#F3EE5C 40%,#5EF0A4 58%,#4FC8FF 76%,#8C78FF 100%);
-  --prism-soft:linear-gradient(135deg,rgba(255,111,163,.18),rgba(255,176,86,.18),rgba(94,240,164,.18),rgba(79,200,255,.18),rgba(140,120,255,.18)) }
-[data-accent="prism"] .btn-acc{background:var(--prism);color:#161616}
-[data-accent="prism"] .n19,[data-accent="prism"] .stage .n19,[data-accent="prism"] .gal .n19,[data-accent="prism"] .pc .fig .n19,[data-accent="prism"] .li .th .n19{background:var(--prism);color:#161616}
-[data-accent="prism"] .prog i,[data-accent="prism"] .gauge i{background:var(--prism)}
-[data-accent="prism"] .done .ring{background:var(--prism);box-shadow:0 12px 28px rgba(120,100,255,.28)} [data-accent="prism"] .done .ring svg{stroke:#161616}
-[data-accent="prism"] .bc.on,[data-accent="prism"] .fl.on{border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--prism) border-box}
-[data-accent="prism"] .bt.soft,[data-accent="prism"] .bcard.acc,[data-accent="prism"] .wall{background:var(--prism-soft)}
-[data-accent="prism"] .bt.inv .ic,[data-accent="prism"] .cat i{background:var(--prism);color:#161616}
-[data-accent="prism"] .hero .eb i{background:var(--prism);width:10px;height:10px}
-[data-accent="prism"] .tab a.on .ico{stroke:url(#prismStroke)}
-[data-accent="prism"] .pc .tag,[data-accent="prism"] .stage .pill,[data-accent="prism"] .gal .pill{background:var(--prism);color:#161616}
-[data-accent="prism"] .st.w{background:var(--prism-soft);color:var(--ink)}
-[data-accent="prism"] .stage{box-shadow:var(--shadow),0 0 0 1px var(--line)} [data-accent="prism"] .stage::after{content:"";position:absolute;inset:-40% -40% auto auto;width:70%;aspect-ratio:1;border-radius:50%;background:var(--prism);filter:blur(60px);opacity:.35;pointer-events:none}
-[data-accent="prism"] .dots i.on{background:var(--prism)}
-[data-accent="prism"] .ptg{background:var(--prism);color:#161616}
+:root[data-accent="silver"][data-theme="dark"]{ --acc:#C9CFD8; --acc-ink:#161616; --acc-soft:rgba(201,207,216,.12);
+  --metal:linear-gradient(135deg,#F2F4F6 0%,#B7BEC7 26%,#E6E9ED 46%,#8F97A2 70%,#D3D8DE 90%,#A6ADB6 100%);
+  --metal-edge:#6B737E; --metal-hi:rgba(255,255,255,.85);
+  --metal-soft:linear-gradient(135deg,rgba(201,207,216,.16),rgba(201,207,216,.06) 60%,rgba(201,207,216,.14)) }
+@media (prefers-color-scheme: dark){ :root[data-accent="silver"]:not([data-theme="light"]){ --acc:#C9CFD8; --acc-ink:#161616; --acc-soft:rgba(201,207,216,.12);
+  --metal:linear-gradient(135deg,#F2F4F6 0%,#B7BEC7 26%,#E6E9ED 46%,#8F97A2 70%,#D3D8DE 90%,#A6ADB6 100%);
+  --metal-edge:#6B737E; --metal-hi:rgba(255,255,255,.85);
+  --metal-soft:linear-gradient(135deg,rgba(201,207,216,.16),rgba(201,207,216,.06) 60%,rgba(201,207,216,.14)) } }
+[data-accent="silver"] .metal,[data-accent="silver"] .btn-acc,[data-accent="silver"] .n19,[data-accent="silver"] .done .ring,[data-accent="silver"] .pc .tag,[data-accent="silver"] .stage .pill,[data-accent="silver"] .gal .pill,[data-accent="silver"] .bt.inv .ic,[data-accent="silver"] .cat i,[data-accent="silver"] .badge{
+  background:var(--metal);color:#161616;border:1px solid var(--metal-edge);box-shadow:inset 0 1px 0 var(--metal-hi),inset 0 -1px 0 rgba(0,0,0,.08)}
+[data-accent="silver"] .done .ring{box-shadow:inset 0 1px 0 var(--metal-hi),inset 0 -1px 0 rgba(0,0,0,.08),0 12px 28px rgba(40,48,58,.25);position:relative;overflow:hidden}
+[data-accent="silver"] .done .ring svg{stroke:#161616}
+[data-accent="silver"] .done .ring::after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.75) 50%,transparent 60%);transform:translateX(-120%);pointer-events:none}
+[data-accent="silver"] .done.on .ring::after{transition:transform 700ms var(--ease-out) 260ms;transform:translateX(120%)}
+[data-accent="silver"] .prog i,[data-accent="silver"] .gauge i{background:var(--metal);border-top:1px solid var(--metal-hi);border-bottom:1px solid var(--metal-edge)}
+[data-accent="silver"] .bc.on,[data-accent="silver"] .fl.on{border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--metal) border-box;box-shadow:0 0 0 1px var(--metal-edge)}
+[data-accent="silver"] .bt.soft,[data-accent="silver"] .bcard.acc,[data-accent="silver"] .wall,[data-accent="silver"] .st.w{background:var(--metal-soft);color:var(--ink)}
+[data-accent="silver"] .hero .eb i{background:var(--metal);border:1px solid var(--metal-edge);width:10px;height:10px}
+[data-accent="silver"] .dots i.on{background:var(--metal);border:1px solid var(--metal-edge)}
+[data-accent="silver"] .tab a.on{color:var(--ink)} [data-accent="silver"] .tab a.on .ico{stroke:url(#metalStroke)}
+[data-accent="silver"] .stage::after{content:"";position:absolute;inset:auto -30% -40% auto;width:70%;aspect-ratio:1;border-radius:50%;background:var(--metal);filter:blur(50px);opacity:.5;pointer-events:none}
+[data-accent="silver"] .ptg{background:var(--metal);color:#161616;border:1px solid var(--metal-edge)}
+@media (prefers-reduced-motion: reduce){ [data-accent="silver"] .done .ring::after{display:none} }
 .ptg{font-size:11px;font-weight:800;padding:0 10px;min-height:32px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+[data-accent="silver"] .pc .fig .n19,[data-accent="silver"] .li .th .n19,[data-accent="silver"] .gal .n19,[data-accent="silver"] .stage .n19{background:var(--metal);color:#161616;border:1px solid var(--metal-edge);box-shadow:inset 0 1px 0 var(--metal-hi)}
+[data-accent="silver"] .more,[data-accent="silver"] .bt a,[data-accent="silver"] .gate a,[data-accent="silver"] .links a{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px;text-decoration-color:var(--metal-edge)}
