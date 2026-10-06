@@ -531,7 +531,9 @@ function product_title( \WC_Product $p ): string {
 	if ( $pb['qty'] > 1 ) {
 		$parts = array( $line . ' 액상 ' . $flavor . ( false === mb_strpos( $flavor, '묶음' ) ? ' 묶음' : '' ) . ' ' . $pb['qty'] . '병', $won, '입호흡' );
 	} else {
-		$parts = array( $line . ' ' . $flavor . ' 입호흡 액상', $spec, $won );
+		// 2026-10-06 — 「타박멘솔 액상 · 데저트액상 · 쿠바시가액상」처럼 손님은 맛 이름에 「액상」을 바로 붙여 친다 (네이버 연관 검색어).
+		// 그 말이 사는 자리는 그 맛의 상품 페이지 **한 장**이다 — 제목에서 「노보 타박멘솔 액상」으로 붙여 쓴다.
+		$parts = array( $line . ' ' . $flavor . ' 액상 입호흡', $spec, $won );
 	}
 	// 2026-10-01 — 노보를 찾아 돌아다니는 사람에게 제목에서 바로 답한다. 상품에서 읽은 값이라 품절이면 저절로 빠진다.
 	if ( $p->is_in_stock() ) {

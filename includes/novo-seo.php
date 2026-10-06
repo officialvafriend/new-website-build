@@ -153,9 +153,9 @@ function faq(): array {
 	foreach ( price_lines() as $r ) {
 		$prices[] = $r['label'] . ' ' . number_format_i18n( (float) $r['price'] ) . '원';
 	}
-	$line_txt = array();
+	$line_cnt = array();
 	foreach ( $lines as $k => $v ) {
-		$line_txt[] = $k . ' ' . implode( ' · ', $v );
+		$line_cnt[] = $k . ' ' . count( $v ) . '종';
 	}
 	$items = array(
 		array(
@@ -174,8 +174,10 @@ function faq(): array {
 				. '10병 이상 사실 계획이면 10+1 묶음(11병)이 병당 더 저렴하고, 맛은 묶음 안에서 골라 담으실 수 있습니다.',
 		),
 		array(
-			'q' => '노보 맛은 무엇이 있나요? 노보와 노보 블랙은 어떻게 다른가요?',
-			'a' => ( $line_txt ? implode( ' / ', $line_txt ) . '. ' : '' )
+			// 2026-10-06 — 「노보 액상 종류」는 손님이 치는 말 그대로. 맛 이름은 여기 늘어놓지 않는다 — 각 맛은 그 상품 페이지
+			// 한 장이 말하고(위 격자의 상품 이름이 곧 목록이다), 같은 낱말을 여러 페이지에 깔면 네이버에서는 나뉜다 (10/6 교훈).
+			'q' => '노보 액상 종류는 몇 가지인가요? 노보와 노보 블랙은 어떻게 다른가요?',
+			'a' => ( $line_cnt ? '노보 액상 종류는 ' . implode( ' · ', $line_cnt ) . ' — 낱병 ' . $n . '종과 10+1 묶음입니다. 맛별 상품은 위 목록에서 고르시면 됩니다. ' : '' )
 				. '두 라인 모두 30ml · 니코틴 9.8mg · 입호흡(MTL) 기기용이며, 노보 블랙은 같은 맛 이름이라도 타격감과 풍미가 더 진한 쪽입니다.',
 		),
 		array(
