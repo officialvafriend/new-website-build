@@ -8,6 +8,12 @@
 
   document.addEventListener('change',function(e){ var s=e.target.closest('[data-go]'); if(s&&s.value){ location.href=s.value; } });
 
+  // 다크 모드 — 헤더의 해/달 버튼. html[data-theme] 과 localStorage 둘 다 (front.php theme_boot 가 첫 그리기 전에 읽는다)
+  document.addEventListener('click',function(e){ var b=e.target.closest('[data-theme-toggle]'); if(!b)return;
+    var r=document.documentElement, dark=r.getAttribute('data-theme')!=='dark';
+    if(dark) r.setAttribute('data-theme','dark'); else r.removeAttribute('data-theme');
+    try{ localStorage.setItem('dhr-theme', dark?'dark':'light'); }catch(err){} });
+
 })();
 
 /* 가로 스크롤러 — 데스크톱은 휠이 세로로만 가니 화살표와 드래그를 붙인다 */

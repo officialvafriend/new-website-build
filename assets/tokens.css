@@ -46,7 +46,8 @@
 
   --dh-radius-sm: 4px;
   --dh-radius-md: 8px;
-  --dh-radius-lg: 14px;
+  --dh-radius-lg: 20px;
+  --dh-radius-xl: 28px;
 
   /* 테마 설정값 그대로 (content 1280 / wide 1600) */
   --dh-container: 1280px;
@@ -87,12 +88,20 @@
    *   --dh-accent-soft  아주 옅은 면. 이 위의 글자는 ink 또는 accent-deep
    *
    * 포커스 링에 --dh-accent 를 쓰지 않는다. 흰 배경에서 2.14:1 이라 안 보인다. */
-  --dh-accent: #38BDF8;
-  --dh-accent-ink: #111111;   /* accent 채움 위 8.81:1 */
-  --dh-accent-deep: #1565C0;  /* 흰 배경 5.75:1 · accent-soft 위 5.18:1 */
-  /* 값을 깎는 것(할인율 · 특가 · 마감)에만 쓰는 따뜻한 강조. 흰 배경 5.9:1 · 바탕 5.6:1 */
-  --dh-accent-warm: #C2410C;
-  --dh-accent-soft: #E8F5FE;
+  /* 2026-10-06 사장님 결정: 포인트는 일렉트릭 블루 하나. 주황은 없앴다 (warm 도 같은 파랑).
+   * 흰 배경 5.3:1 · 바탕 #F4F6F7 4.9:1 — 글자로도 면으로도 쓴다. 파랑 면 위 글자는 흰색. */
+  --dh-accent: #1A5CFF;
+  --dh-accent-ink: #FFFFFF;
+  --dh-accent-deep: #1A5CFF;
+  --dh-accent-warm: #1A5CFF;
+  --dh-accent-soft: #EAF0FF;
+
+  /* --- 유리 (헤더 · 탭바 · 시트 · 완료 막에만) ------------------------------ */
+  --dh-glass: rgba(255,255,255,.74);
+  --dh-glass-hi: rgba(255,255,255,.65);
+  --dh-glass-line: rgba(17,17,17,.08);
+  --dh-veil: rgba(17,17,17,.42);
+  --dh-shadow: 0 1px 2px rgba(17,17,17,.06), 0 12px 32px rgba(17,17,17,.10);
 
   /* --- 주문 상태 --------------------------------------------------------------
    * 무통장입금 전용이라 주문 상태가 곧 결제 상태다.
@@ -104,4 +113,40 @@
   --dh-status-shipping: #5B21B6;  /* 배송중 — 바이올렛.
                                      포인트가 블루가 되면서 기존 파랑과 겹쳐 옮겼다 */
   --dh-status-done: #616870;      /* 배송완료 */
+}
+
+
+/* ---------------------------------------------------------------------------
+ * 다크 모드 — 헤더의 달 버튼으로만 켠다 (`html[data-theme="dark"]`).
+ * 시스템 설정은 따르지 않는다: 키플이 그리는 화면(장바구니 · 결제 · 계정)은 아직
+ * 밝은 옷뿐이라 저절로 어두워지면 화면마다 갈린다. 그 화면에서는 버튼도 안 그린다.
+ * 검정 알약(--dh-ink 면)은 여기서 흰 알약이 된다 — ink/surface 가 뒤집힌다.
+ * ------------------------------------------------------------------------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --dh-ground: #0F1012;
+  --dh-surface: #17191D;
+  --dh-surface-2: #1F2227;
+  --dh-line: rgba(255,255,255,.08);
+  --dh-line-strong: rgba(255,255,255,.16);
+  --dh-ink: #F3F4F6;
+  --dh-ink-2: #D9DBE0;
+  --dh-ink-3: #9AA1AB;
+  --dh-primary: #F3F4F6;
+  --dh-primary-ink: #161616;
+  --dh-accent: #4D8BFF;
+  --dh-accent-ink: #0F1012;
+  --dh-accent-deep: #7FA8FF;
+  --dh-accent-warm: #7FA8FF;
+  --dh-accent-soft: rgba(77,139,255,.16);
+  --dh-glass: rgba(23,25,29,.74);
+  --dh-glass-hi: rgba(255,255,255,.08);
+  --dh-glass-line: rgba(255,255,255,.09);
+  --dh-veil: rgba(15,16,18,.6);
+  --dh-shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.45);
+  --dh-status-pending: #E3B45A;
+  --dh-status-check: #F08A80;
+  --dh-status-paid: #5CCB8C;
+  --dh-status-shipping: #B59CFF;
+  --dh-status-done: #9AA1AB;
 }

@@ -3567,3 +3567,27 @@ Figma 에 Pretendard 가 없어 Noto Sans KR 로 그렸다 (사이트는 Pretend
 - **썸네일 52px 은 너무 작다** (사장님 2026-10-06 「썸네일이 너무 작게 나오는데」) → 폰 84px · 데스크톱 104px, 둥근 16/18px. 안에 병 실루엣 SVG(`.bot`, 로그인하면 실제
   사진이 들어갈 자리) + 19 배지는 오른쪽 아래 작은 원. 줄 높이 폰 104 · 데스크톱 128px. 글자 한 줄이 주인공인 것은 그대로다
 - 확인: 390/1280 × 라이트/다크 넘침 0. 사장님이 홈 A(카드) / 홈 B(가격판) 중 고른다 — 고르면 목록 · 상세도 같은 결로 변형한다
+
+## 사이트 적용 1단계 — 파랑 토큰 · 다크 모드 · 유리 헤더/탭바 · 밝은 푸터 (2026-10-06 밤, 사장님 「너 믿고 A 안으로」)
+
+유리 시안 A(카드 홈)로 가기로 했다. 순서 ①토큰 · 다크 · 헤더 · 탭바 · 푸터 → ②홈 → ③목록 · 카드 → ④상세 · 구매 카드 · 완료 막 → ⑤장바구니 · 결제 → ⑥계정. 이 절은 ①이다.
+
+- **색은 전부 토큰이다.** front.css · shell.css · duckhoo-theme.css 의 하드코딩 hex 1,0xx 개를 스크립트로 `var(--dh-*)` 로 바꿨다
+  (`#111`→ink · `#fff`→surface · `#4E565F`→ink-2 · `#616870`→ink-3 · `#E1E5E8`→line · `#C9CFD4`→line-strong · `#EDF0F2`→surface-2 ·
+  `#C2410C` · `#1565C0`→accent-deep · `#38BDF8`→accent · 하늘/복숭아 soft→accent-soft, 갈색→ink-2). 남은 hex 는 상태색(#B42318 등) · 노보 브랜드색 · 스니펫 대응뿐.
+  **잉크 면(검정 알약 · 계좌 상자 · promo 띠)은 다크에서 흰 면이 된다** — ink/surface 가 뒤집히므로 그 위 글자도 저절로 맞는다.
+  파랑 면 위 글자는 `--dh-accent-ink`(흰색) — 매핑 뒤 `background:var(--dh-accent)` 블록의 `color:var(--dh-ink)` 를 accent-ink 로 고쳤다
+- **포인트 파랑** `--dh-accent #1A5CFF`(흰 5.3:1 · 바탕 4.9:1) · deep · warm 전부 같은 파랑, soft `#EAF0FF`. 주황 0 (사장님 「주황은 없애라」)
+- **다크 모드는 버튼으로만** (`html[data-theme="dark"]`, `localStorage['dhr-theme']`). 시스템 설정을 따르지 않는다 — 키플 화면(장바구니 · 결제 · 계정 · 가입)은
+  아직 밝은 옷뿐이라 저절로 어두워지면 화면마다 갈린다. `Front\theme_toggle_on()` 이 우리 템플릿 화면(홈 · 상품 · 목록 · 브랜드)에서만 버튼(`.gi.tgl`, 해/달)과
+  `theme_boot()` 첫 그리기 전 스크립트(`wp_head` 0)를 찍는다. 키플 화면에서는 둘 다 없으니 저장값이 있어도 밝다. 필터 `duckhoo_theme_toggle`. ⑤⑥ 때 넓힌다
+- **유리는 헤더(`.gnb`) · 탭바(`.tabs`) 둘뿐** — `--dh-glass` + `backdrop-filter: blur(16px) saturate(140%)`, `prefers-reduced-transparency` 면 불투명.
+  탭바는 좌우 12px 띄운 알약(높이 56 · 바닥 12 + safe-area)이라 body 아래 여백 62 → 84px (front.css · shell.css 둘 다)
+- **푸터는 검정에서 흰 면으로** (`.foot{background:var(--dh-surface);border-top}`). 계좌 상자(`.fbank`)만 잉크 면으로 남겨 반전 — 테마 화면에서는
+  테마가 `p` 색을 덮어 안내 글이 사라져 shell.css 가 `.fbank` 안 글자를 surface 로 못 박는다. shell.css 의 푸터 pin(검정 배경 !important)도 surface 로
+- **배포 전 미리보기** `scratchpad/live/preview.mjs` — 프로덕션 HTML 을 받되 `/wp-content/plugins/new-website-build/assets/*.css|js` 요청만 로컬 작업본으로
+  바꿔 끼운다 (Playwright route). 라이트/다크 × 390/1280 × 홈 · 노보 · 상품 · 장바구니 · 로그인. **다크는 `addInitScript` 에서 `document.documentElement` 가
+  아직 null 일 수 있어 `readystatechange` 에서 다시 건다** (처음엔 null 이라 다크가 안 걸린 채 「다 됐다」고 볼 뻔했다). `PROBE=1` 이면 computed 색을 찍는다
+- 확인(미리보기): 넘침 0 · 헤더/탭바 blur 걸림 · promo 띠 다크에서 흰 띠 · 푸터 양 모드 · 노보 배너 가격 상자 파랑 soft
+
+검증: `php design/php-tests/run.php` 모두 통과 · smoke 20(배포 전) · 배포 뒤 실제 토글로 다크 스크린샷 + smoke.

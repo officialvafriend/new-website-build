@@ -19,36 +19,36 @@
              "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
   /* 면 — 바탕은 옅은 회색, 카드는 흰색 (데모와 같다) */
-  --dh-bg: #F5F5F7;
-  --dh-surface: #FFFFFF;
-  --dh-bg-2: #ECEDF0;
-  --dh-line: #E2E4E8;
+  --dh-bg: var(--dh-surface-2);
+  --dh-surface: var(--dh-surface);
+  --dh-bg-2: var(--dh-surface-2);
+  --dh-line: var(--dh-line);
   --dh-line-2: #CFD3D8;
 
-  /* 글자 — 흰 카드와 #F5F5F7 양쪽에서 WCAG AA 통과 */
-  --dh-ink: #111111;      /* 18.88:1 */
-  --dh-ink-2: #4E565F;    /*  7.45:1 */
-  --dh-ink-3: #616870;    /*  5.64:1 */
+  /* 글자 — 흰 카드와 var(--dh-surface-2) 양쪽에서 WCAG AA 통과 */
+  --dh-ink: var(--dh-ink);      /* 18.88:1 */
+  --dh-ink-2: var(--dh-ink-2);    /*  7.45:1 */
+  --dh-ink-3: var(--dh-ink-3);    /*  5.64:1 */
 
   /* 포인트 — 밝은 색을 채우고 그 위에 검정을 얹는다.
      흰 글자를 쓰려고 색을 어둡게 낮추면 화면이 칙칙해진다. */
-  --dh-accent: #38BDF8;       /* 채움 — 버튼, 배지, 선택 상태 */
-  --dh-accent-ink: #111111;   /* 그 채움 위 글자. 흰색 아님 (8.81:1) */
-  --dh-accent-deep: #1565C0;  /* 흰 배경 위 색 글자 · 포커스 링 (5.75:1) */
-  --dh-accent-soft: #E8F5FE;
+  --dh-accent: var(--dh-accent);       /* 채움 — 버튼, 배지, 선택 상태 */
+  --dh-accent-ink: var(--dh-ink);   /* 그 채움 위 글자. 흰색 아님 (8.81:1) */
+  --dh-accent-deep: var(--dh-accent-deep);  /* 흰 배경 위 색 글자 · 포커스 링 (5.75:1) */
+  --dh-accent-soft: var(--dh-accent-soft);
 
   /* 카드 아이브로 (신상 · 9월 특가 · 재구매 1위 · 품절) — 흰 카드 위 4.5:1 이상 */
-  --dh-eb-new:  #1565C0;
+  --dh-eb-new:  var(--dh-accent-deep);
   --dh-eb-sale: #B45309;
   --dh-eb-best: #9F1239;
-  --dh-eb-out:  #616870;
+  --dh-eb-out:  var(--dh-ink-3);
 
   /* 주문 상태 — 색은 보조 신호다. 항상 한글 라벨과 함께 쓴다 */
   --dh-st-pending:  #8A5A12;  /* 입금전 */
   --dh-st-check:    #B42318;  /* 확인필요 */
   --dh-st-paid:     #1F5F46;  /* 입금확인 */
   --dh-st-shipping: #5B21B6;  /* 배송중 */
-  --dh-st-done:     #616870;  /* 배송완료 */
+  --dh-st-done:     var(--dh-ink-3);  /* 배송완료 */
 
   --dh-r: 16px;
   --dh-r-lg: 22px;
@@ -140,7 +140,7 @@ body{
   border: 1px solid var(--dh-line-2) !important;
   border-radius: 10px !important;
   padding: 11px 13px !important;
-  background: #fff !important;
+  background: var(--dh-surface) !important;
   transition: border-color 160ms var(--dh-ez), box-shadow 160ms var(--dh-ez);
 }
 .woocommerce form .form-row input.input-text:focus,
@@ -272,7 +272,7 @@ body{
   font-weight:700; font-size: 15px; color: var(--dh-ink); text-decoration: none;
   border: 1.5px solid transparent;
 }
-.woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-ink); color: #fff; }
+.woocommerce-MyAccount-navigation li.is-active a{ background: var(--dh-ink); color: var(--dh-surface); }
 .woocommerce-MyAccount-navigation a:hover{ border-color: var(--dh-line-2); }
 
 /* 주문 목록 — 표를 카드 줄로 */
@@ -321,5 +321,5 @@ tr.woocommerce-orders-table__row--status-cancelled .woocommerce-orders-table__ce
 /* 장바구니 자동할인 안내 — 인라인 style 로 12px 핑크(#E91E63, 흰 배경 4.02:1 로 AA 미달)가
    박혀 있다. 인라인은 !important 로만 이긴다. 크기는 13px 바닥, 색은 우리 강조색으로. */
 #coupon-auto-notice div{ font-size: 13px !important; }
-#coupon-auto-notice div:first-child{ color: var(--dh-accent-deep, #1565C0) !important; letter-spacing: 0 !important; }
-#coupon-auto-notice div + div{ font-size: 14px !important; color: var(--dh-ink-2, #4E565F) !important; }
+#coupon-auto-notice div:first-child{ color: var(--dh-accent-deep) !important; letter-spacing: 0 !important; }
+#coupon-auto-notice div + div{ font-size: 14px !important; color: var(--dh-ink-2) !important; }

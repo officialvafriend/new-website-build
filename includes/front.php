@@ -340,6 +340,8 @@ function icon( string $name ): string {
 			'receipt' => '<path d="M5.5 3h13v18l-2.6-1.6L13.3 21l-2.6-1.6L8.1 21l-2.6-1.6z"/><path d="M9 8.5h6M9 12.5h6"/>',
 			'user'    => '<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>',
 			'search'  => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+			'sun'     => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+			'moon'    => '<path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/>',
 			'close'   => '<path d="M6 6 18 18M18 6 6 18"/>',
 			'clock'   => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
 			'chev'    => '<path d="m9 5 7 7-7 7"/>',
@@ -485,6 +487,34 @@ function section_head( string $eyebrow, string $title, string $sub = '', string 
  *
  * @return void
  */
+/**
+ * 다크 모드 버튼을 그리는 화면인가. 홈 · 상품 상세 · 목록처럼 우리 템플릿이 그리는 화면과
+ * 우리 껍데기가 입혀진 테마 화면 중 **키플이 본문을 그리는 곳(장바구니 · 결제 · 계정 · 가입)** 은 뺀다 —
+ * 그쪽은 테마 인라인 CSS 가 밝은 색을 못 박고 있어 반만 어두워진다. 필터 `duckhoo_theme_toggle`.
+ *
+ * @return bool
+ */
+function theme_toggle_on(): bool {
+	$ours = is_front_page() || ( function_exists( 'is_product' ) && is_product() ) || ( function_exists( 'is_shop' ) && is_shop() )
+		|| ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() ) || ( is_search() && 'product' === get_query_var( 'post_type' ) )
+		|| (bool) apply_filters( 'duckhoo_is_archive_page', false );
+	return (bool) apply_filters( 'duckhoo_theme_toggle', $ours );
+}
+
+/**
+ * 저장해 둔 다크 모드를 첫 그리기 전에 건다 — 늦게 걸면 밝은 화면이 한 번 번쩍인다.
+ * 시스템 설정(prefers-color-scheme)은 따르지 않는다: 버튼으로 고른 사람만 어둡다.
+ *
+ * @return void
+ */
+function theme_boot(): void {
+	if ( ! theme_toggle_on() ) {
+		return;
+	}
+	echo '<script>try{if(localStorage.getItem("dhr-theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>' . "\n";
+}
+add_action( 'wp_head', __NAMESPACE__ . '\\theme_boot', 0 );
+
 function header_html(): void {
 	$cart_n  = ( function_exists( 'WC' ) && WC()->cart ) ? (int) WC()->cart->get_cart_contents_count() : 0;
 	$cart    = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );
@@ -531,6 +561,9 @@ function header_html(): void {
 			<?php // 폰에는 헤더 검색창이 안 들어간다. 이 버튼이 검색창을 연다.
 			// JS 가 죽어도 목록으로는 가도록 진짜 링크로 둔다 (예전에는 없는 앵커 #dhr-search 로 가서 아무 일도 안 났다). ?>
 			<a class="gi msearch-btn" href="<?php echo esc_url( $shop ); ?>" data-search-open aria-label="상품 검색" aria-haspopup="dialog" aria-expanded="false" aria-controls="dhr-search"><?php echo icon( 'search' ); // phpcs:ignore ?></a>
+			<?php if ( theme_toggle_on() ) : // 다크 모드 — 우리가 그리는 화면에서만. 키플 화면은 아직 밝은 옷뿐이다 ?>
+			<button type="button" class="gi tgl" data-theme-toggle aria-label="어둡게 · 밝게"><span class="sun"><?php echo icon( 'sun' ); // phpcs:ignore ?></span><span class="moon"><?php echo icon( 'moon' ); // phpcs:ignore ?></span></button>
+			<?php endif; ?>
 			<a class="gi wide" href="<?php echo esc_url( $cart ); ?>" aria-label="장바구니"><?php echo icon( 'bag' ); // phpcs:ignore ?><span class="lbl"><?php echo $cart_n ? esc_html( $cart_n . '개' ) : '장바구니'; ?></span><span class="b n" <?php echo $cart_n ? '' : 'style="display:none"'; ?>><?php echo (int) $cart_n; ?></span></a>
 			<a class="who <?php echo $initial ? 'in' : ''; ?>" href="<?php echo esc_url( $account ); ?>" aria-label="<?php echo $initial ? '마이페이지' : '로그인'; ?>"><?php echo $initial ? esc_html( $initial ) : icon( 'user' ); // phpcs:ignore ?></a>
 		</div>
