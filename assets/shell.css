@@ -388,8 +388,8 @@ html body.dhr.dhr-wrap.dhr-wrap.woocommerce-cart .wd-page__header{ display: none
    AA 미달이라, 색으로만 소리치는 대신 카드로 세우고 글자는 읽히는 색으로 바꾼다. */
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice{
   background: var(--dh-surface-2) !important;
-  border-left: 4px solid var(--dh-status-check, #B42318) !important;
-  border-radius: 12px !important; padding: .9rem 1rem !important;
+  border-left: 0 !important;
+  border-radius: 16px !important; padding: .9rem 1rem !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p{ color: var(--dh-ink-2) !important; font-size: 15px !important; line-height: 1.6 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .wd-checkout-bacs-notice p:first-child{ color: var(--dh-status-check, #B42318) !important; font-weight:800 !important; }
@@ -1701,8 +1701,8 @@ html body.dhr.dhr-wrap.dhr-wrap .wd-cpg__count{
 /* 자동 할인 안내 두 개 — 인라인 style 로 분홍 그라데이션이 박혀 있어 !important 가 필요하다 */
 html body.dhr.dhr-wrap.dhr-wrap #coupon-auto-notice,
 html body.dhr.dhr-wrap.dhr-wrap #coupon-applied-notice{
-  background: var(--dh-surface) !important; border: 1px solid var(--dh-line) !important;
-  border-left: 4px solid var(--dh-accent-warm) !important; border-radius: 14px !important;
+  background: var(--dh-accent-soft) !important; border: 0 !important;
+  border-left: 0 !important; border-radius: 16px !important;
   padding: .95rem 1.15rem !important; margin: 0 0 1rem !important; gap: .2rem !important; color: var(--dh-ink) !important;
   display: flex !important; flex-direction: column !important; align-items: flex-start !important;
   box-shadow: 0 0 0 1px rgba(17,17,17,.03), 0 6px 16px -12px rgba(17,17,17,.3) !important;
@@ -2085,7 +2085,7 @@ html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title .dhp-title__b{
    칸 이름이 바뀐다. 반투명은 쓰지 않는다 — 불투명 면에 왼쪽 굵은 선 하나. */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo{
   margin: .9rem 0 0; padding: .8rem .9rem .75rem 1rem; background: var(--dh-ground);
-  border-radius: 12px; border-left: 4px solid var(--dh-accent-warm);
+  border-radius: 16px; border-left: 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t{ display: block; font-size: 15px; font-weight:800; color: var(--dh-ink); letter-spacing: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__t span{ color: var(--dh-accent-warm); font-variant-numeric: tabular-nums; }
@@ -2106,7 +2106,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-novo__row b{ color: var(--dh-ink); font-wei
    둘 다 보일 뿐 읽는 데는 지장이 없다. */
 html body.dhr.dhr-wrap.dhr-wrap ul.woocommerce-error{
   display: block !important; list-style: none !important; background: #FFF4F2 !important;
-  border: 1px solid #F2C6C0 !important; border-left: 4px solid #B42318 !important;
+  border: 0 !important; border-left: 0 !important;
   border-radius: 12px !important; color: #7A1C12 !important; padding: .85rem 1rem !important;
   margin: 1rem 0 0 !important; font-size: 14px !important; line-height: 1.6 !important; word-break: keep-all;
 }
@@ -2603,11 +2603,12 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-rev .star-rating span::before{
 /* 안내 띠 (.dhn) — 테마 화면에서 테마의 a · button 규칙(!important)을 이긴다. 모양은 front.css 가 그린다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhn ul{list-style:none!important;margin:0!important}
 html body.dhr.dhr-wrap.dhr-wrap .dhn li{margin:0!important;padding:0!important}
-html body.dhr.dhr-wrap.dhr-wrap a.dhn__row,html body.dhr.dhr-wrap.dhr-wrap a.dhn__row:hover{color:var(--dh-ink)!important;text-decoration:none!important;background:none!important}
+html body.dhr.dhr-wrap.dhr-wrap a.dhn__row,html body.dhr.dhr-wrap.dhr-wrap a.dhn__row:hover{color:var(--dh-ink)!important;text-decoration:none!important;background:var(--dh-surface)!important;border:0!important;box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.05))!important;border-radius:999px!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__row::before{content:""!important;display:block!important;width:6px!important;height:6px!important;border-radius:50%!important;background:var(--dh-accent)!important;flex:0 0 auto}
 html body.dhr.dhr-wrap.dhr-wrap .dhn__eb,html body.dhr.dhr-wrap.dhr-wrap .dhn__tx,html body.dhr.dhr-wrap.dhr-wrap .dhn__tx strong{margin:0!important;padding:0!important;letter-spacing:0!important;text-transform:none!important;font-family:inherit!important}
 html body.dhr.dhr-wrap.dhr-wrap .dhn__tx{color:var(--dh-ink-2)!important}
 html body.dhr.dhr-wrap.dhr-wrap .dhn__tx strong{color:var(--dh-ink)!important}
-html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:var(--dh-ground)!important;border:0!important;box-shadow:none!important;color:var(--dh-ink-3)!important;width:30px!important;height:30px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
+html body.dhr.dhr-wrap.dhr-wrap .dhn__x{background:var(--dh-surface)!important;border:0!important;box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.05))!important;color:var(--dh-ink-3)!important;width:34px!important;height:34px!important;border-radius:999px!important;min-width:0!important;padding:0!important;margin:0!important;border-radius:999px!important;line-height:1!important}
 
 
 
@@ -2632,7 +2633,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhn__row--holiday .dhn__eb{ color: var(--dh-acc
 
 /* ── /price/ 전 상품 가격표 (2026-09-28) — 값을 묻는 검색에 답하는 표. 흰 표 · 검정 · 숫자는 오른쪽 · 폰은 옆으로 민다 ── */
 html body.dhr.dhr-wrap.dhr-wrap .dhr-pl{ max-width: 980px; margin: 0 auto; padding: 0 16px 2.5rem; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap .dhr-pl__lead{ font-size: 16px; line-height: 1.6; color: var(--dh-ink-2); background: var(--dh-surface); border: 1px solid var(--dh-line); border-left: 4px solid var(--dh-accent-deep); border-radius: 14px; padding: .9rem 1rem; margin: 0 0 1rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pl__lead{ font-size: 16px; line-height: 1.6; color: var(--dh-ink-2); background: var(--dh-surface-2); border: 0; border-radius: 16px; padding: .9rem 1rem; margin: 0 0 1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-pl__lead b{ color: var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-pl__nav{ display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-pl__nav a{ display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0 1rem; border-radius: 999px; background: var(--dh-ink); color: var(--dh-surface); font-weight: 600; font-size: 15px; text-decoration: none; }
