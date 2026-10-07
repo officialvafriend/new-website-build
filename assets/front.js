@@ -346,7 +346,8 @@
     onSheet = false;
     card.classList.remove('is-sheet');
     document.body.classList.remove('dhp-sheet-on');
-    if(dim) dim.hidden = true;
+    if(dim){ dim.hidden = true; dim.style.animation = ''; dim.style.transition = ''; dim.style.opacity = ''; }
+    card.style.animation = ''; card.style.transition = ''; card.style.transform = ''; card.style.willChange = '';
     wrap.style.minHeight = '';
     return true;
   }
@@ -358,6 +359,80 @@
   card.addEventListener('click', function(e){
     if(e.target.closest('.single_add_to_cart_button, .wd-direct-checkout-btn')) setTimeout(closeSheet, 60);
   });
+
+  /* 시트 손잡이 끌어 내리기 (2026-10-07, 사장님 「드래그하면 창이 내려가야 하는데 안 되네」).
+     머리(손잡이 · 제목 줄)를 잡으면 시트가 손가락을 1:1 로 따라오고, 놓으면 속도를 앞으로
+     투영해(iOS 감속식) 닫을지 되돌릴지 정한다. 위로 끌면 고무줄처럼 조금만 따라온다.
+     움직이는 것은 transform 뿐 — 폼 · DOM 에는 손대지 않는다. 되돌리는 중에 다시 잡으면
+     지금 보이는 자리에서 이어진다 (CSS transition 이라 중간에 다시 겨눌 수 있다). */
+  (function(){
+    var head = card.querySelector('.dhp-dock__head');
+    if(!head || !window.PointerEvent) return;
+    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var drag = null, hist = [], pend = null; /* pend: 닫히는 중(놓은 뒤) — 다시 잡으면 취소하고 그 자리에서 잇는다 */
+    function curY(){ /* 지금 화면에 보이는 translateY — 되돌리는 중이면 중간값 */
+      var t = getComputedStyle(card).transform; if(!t || t === 'none') return 0;
+      var m = t.match(/matrix\(([^)]+)\)/); if(!m) return 0;
+      var v = m[1].split(','); return parseFloat(v[5]) || 0;
+    }
+    function band(d){ /* 위로 끌 때 고무줄 — 끌수록 덜 따라온다 */
+      var k = .55, h = card.offsetHeight || 1; return -(Math.abs(d) * h * k) / (h + k * Math.abs(d));
+    }
+    function setY(y){ card.style.transform = y ? 'translate3d(0,' + y + 'px,0)' : ''; if(dim) dim.style.opacity = y > 0 ? String(Math.max(0, 1 - y / (card.offsetHeight || 1))) : ''; }
+    function settle(){ card.style.transition = ''; card.style.transform = ''; card.style.willChange = ''; if(dim){ dim.style.transition = ''; dim.style.opacity = ''; } card.classList.remove('is-dragging'); }
+    head.addEventListener('pointerdown', function(e){
+      if(!onSheet || drag || e.button !== 0) return;
+      if(e.target.closest('button, a, input, select, [data-dock-close]')) return;
+      if(pend){ pend(); pend = null; }
+      var y0 = curY();
+      drag = { id: e.pointerId, start: e.clientY - y0, y: y0 };
+      hist = [{ t: e.timeStamp, y: y0 }];
+      try{ head.setPointerCapture(e.pointerId); }catch(_){}
+      card.style.animation = 'none'; card.style.transition = 'none'; card.style.willChange = 'transform';
+      if(dim){ dim.style.animation = 'none'; dim.style.transition = 'none'; }
+      card.classList.add('is-dragging');
+      setY(y0);
+    });
+    head.addEventListener('pointermove', function(e){
+      if(!drag || e.pointerId !== drag.id) return;
+      var d = e.clientY - drag.start;
+      var y = d >= 0 ? d : band(d);
+      drag.y = y; setY(y);
+      hist.push({ t: e.timeStamp, y: y }); while(hist.length > 6) hist.shift();
+    });
+    function release(e){
+      if(!drag || e.pointerId !== drag.id) return;
+      var y = drag.y, h = card.offsetHeight || 1; drag = null;
+      try{ head.releasePointerCapture(e.pointerId); }catch(_){}
+      /* 놓는 순간의 속도 (px/s) — 마지막 100ms 안의 표본으로 */
+      var last = hist[hist.length - 1], first = last, i;
+      for(i = hist.length - 1; i >= 0; i--){ if(last.t - hist[i].t > 100) break; first = hist[i]; }
+      var dt = Math.max(1, last.t - first.t), v = (last.y - first.y) / dt * 1000;
+      /* 투영: 손을 뗀 뒤 저절로 미끄러져 멈출 자리 (감속 .998, iOS 와 같다) */
+      var proj = y + (v / 1000) * .998 / (1 - .998);
+      var close = e.type !== 'pointercancel' && (proj > h * .35 || v > 900);
+      card.classList.remove('is-dragging');
+      if(still.matches){ settle(); if(close) closeSheet(); return; }
+      if(close){
+        var ms = Math.max(140, Math.min(260, (h - y) / Math.max(900, v) * 1000));
+        card.style.transition = 'transform ' + ms + 'ms cubic-bezier(.32,.72,0,1)';
+        if(dim) dim.style.transition = 'opacity ' + ms + 'ms ease-out';
+        setY(h); if(dim) dim.style.opacity = '0';
+        var done = false, tm, fin = function(){ if(done) return; done = true; clearTimeout(tm); card.removeEventListener('transitionend', fin); pend = null; closeSheet(); settle(); };
+        pend = function(){ done = true; clearTimeout(tm); card.removeEventListener('transitionend', fin); };
+        card.addEventListener('transitionend', fin); tm = setTimeout(fin, ms + 60);
+      }else{
+        /* 되돌림 — 던진 손이 있었으니 살짝 넘쳤다 돌아온다 (damping ≈ .8 · response .3) */
+        card.style.transition = 'transform 360ms cubic-bezier(.22,1.18,.36,1)';
+        if(dim) dim.style.transition = 'opacity 360ms ease-out';
+        setY(0);
+        var back = function(ev){ if(ev && ev.target !== card) return; card.removeEventListener('transitionend', back); if(!drag) settle(); };
+        card.addEventListener('transitionend', back); setTimeout(function(){ if(!drag) settle(); }, 420);
+      }
+    }
+    head.addEventListener('pointerup', release);
+    head.addEventListener('pointercancel', release);
+  })();
 
   function undock(){
     if(!docked) return; docked = false;

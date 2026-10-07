@@ -1959,6 +1959,10 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head::before
   content: ""; position: absolute; left: 50%; top: .4rem; width: 38px; height: 4px; margin-left: -19px;
   border-radius: 999px; background: var(--dh-line-2);
 }
+/* 손잡이는 끌 수 있다 — 브라우저 스크롤 · 당겨서 새로고침에 뺏기지 않게 (front.js 가 pointer 로 잡는다) */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head{ touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet.is-dragging .dhp-dock__head{ cursor: grabbing; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet.is-dragging{ animation: none !important; }
 /* 무료배송 게이지는 시트에서 뺀다 — 데스크톱 서랍과 같다. 시트는 고르고 사는 자리라
    화면의 5분의 1을 안내가 차지하면 정작 옵션이 밀린다 (상세 본문에는 그대로 있다) */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .wd-free-shipping-gauge{ display: none !important; }
