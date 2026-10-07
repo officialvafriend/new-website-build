@@ -2082,13 +2082,13 @@
 
   if(!home) return;
   /* 첫 화면 — 헤더 · 히어로가 차례로 떠오른다 (한 번, 0.8초) */
-  var intro = [].slice.call(document.querySelectorAll('.dhr .gnb, .dhr .msearch, .dhr .hero > *, .dhr .nums .num, .dhr .qcats a'));
+  var intro = [].slice.call(document.querySelectorAll('.dhr .gnb, .dhr .msearch, .dhr .hhero > *, .dhr .nums .num, .dhr .qcats a'));
   if(intro.length){ gsap.set(intro, { y: 14, opacity: 0 }); gsap.to(intro, { y: 0, opacity: 1, duration: .8, ease: 'expo.out', stagger: .05, clearProps: 'transform,opacity' }); }
 
   if(!window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
   /* 히어로 — 내려가면 살짝 줄며 흐려진다 (스크럽) */
-  var hero = document.querySelector('.dhr .hero');
+  var hero = document.querySelector('.dhr .hhero');
   if(hero){ gsap.to(hero, { scale: .965, opacity: .55, transformOrigin: '50% 0%', ease: 'none', scrollTrigger: { trigger: hero, start: 'top 80px', end: 'bottom top', scrub: .4 } }); }
   /* 폰 — 브랜드 카드 스택: 다음 카드가 올라오면 앞 카드가 줄며 흐려진다 */
   gsap.matchMedia().add('(max-width: 879px)', function(){

@@ -177,7 +177,7 @@ $month = (int) wp_date( 'n' );
 		}
 		$hsub = ( $hp['qty'] > 1 ? $hp['qty'] . '병에 병당 ' . number_format_i18n( $hp['per'] ) . '원. ' : '' ) . '평일 오후 4시 이전 입금 확인분은 당일 출고합니다.';
 	?>
-	<section class="hero">
+	<section class="hero hhero">
 		<div class="hero__tx">
 			<span class="eb2 hero__eb"><i></i><?php echo esc_html( $heb ); ?></span>
 			<h2 class="hero__t"><?php echo esc_html( $ht ); ?></h2>

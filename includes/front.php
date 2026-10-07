@@ -1205,9 +1205,11 @@ function js_config( array $extra = array() ): string {
 		// 자동 할인에서 빠지는 것이 있으면 안내 문구에 괄호로 붙는다 (노보 이벤트가 쓴다).
 		'discountEx' => (string) apply_filters( 'duckhoo_auto_discount_except', '' ),
 
-		// 사장님 홈 팝업(#pop6)에서 남길 탭 하나. 나머지 칩은 감춘다.
-		// 끄려면 빈 문자열: add_filter( 'duckhoo_popup_tab', '__return_empty_string' );
-		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '고객 안내' ),
+		// 사장님 홈 팝업(#pop6)에서 탭 하나만 남기고 싶을 때 그 탭의 글자. 비어 있으면(기본)
+		// 관리자 「메인 팝업」에 걸린 장들이 그대로 넘어간다 — 2026-10-07 사장님이 세 장
+		// (10월 배송안내 · 노보 입호흡 액상 · 고객안내)을 걸어 두어 기본을 비웠다.
+		// 한 장만: add_filter( 'duckhoo_popup_tab', fn() => '고객안내' );
+		'popupTab' => (string) apply_filters( 'duckhoo_popup_tab', '' ),
 
 		// 사장님 스니펫이 홈 맨 위에 그리는 검은 공지 띠(#wd-top-announce).
 		// 그 스니펫은 건드리지 않고 **글자만** 우리가 정한다 — 이벤트가 끝났는데
