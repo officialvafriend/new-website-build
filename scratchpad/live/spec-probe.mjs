@@ -1,0 +1,8 @@
+import { createRequire } from 'node:module'; const require = createRequire(import.meta.url); const { chromium } = require('playwright');
+const S='https://duck-hoo.com', UA='Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1';
+const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium',args:['--no-sandbox']}); const ctx=await b.newContext({viewport:{width:390,height:844},userAgent:UA}); const page=await ctx.newPage();
+await page.addInitScript(()=>{ try{ localStorage.setItem('dhr-theme','dark'); }catch(e){} });
+await page.route('**/*', async route=>{ const u=route.request().url(); if(!/^https?:/.test(u)) return route.abort(); try{ const r=await fetch(u,{headers:{'user-agent':UA},redirect:'manual'}); const h={}; r.headers.forEach((v,k)=>{ if(!/^(content-encoding|transfer-encoding|content-length|set-cookie)$/i.test(k)) h[k]=v; }); route.fulfill({status:r.status,headers:h,body:Buffer.from(await r.arrayBuffer())}); }catch(e){ route.abort(); } });
+await page.goto(S+'/product/%eb%85%b8%eb%b3%b4-%eb%a6%ac%ed%80%b4%eb%93%9c-101-%ea%b8%88%ec%95%a1-120000%ec%9b%90/?nocache='+Date.now(),{waitUntil:'load',timeout:90000}); await page.waitForTimeout(2000);
+const r=await page.evaluate(()=>{ const all=[...document.querySelectorAll('main *')].filter(e=>e.children.length===0 && /^구분$/.test((e.textContent||'').trim())); return all.map(e=>{ let a=e, arr=[]; for(let i=0;i<7&&a;i++){ const c=getComputedStyle(a); arr.push(a.tagName.toLowerCase()+'.'+(a.className||'').toString().slice(0,40)+' bg='+c.backgroundColor+' color='+c.color+' style='+(a.getAttribute('style')||'').slice(0,60)); a=a.parentElement; } return arr; }); });
+console.log(JSON.stringify(r,null,1)); await b.close();

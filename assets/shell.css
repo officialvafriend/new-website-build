@@ -1455,6 +1455,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-d, html body.dhr.dhr-wrap.dhr-wrap .dh
 html body.dhr.dhr-wrap.dhr-wrap .dhc .btn-o{ color: var(--dh-ink) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off, html body.dhr.dhr-wrap.dhr-wrap .dhc .btn.is-off svg{ color: var(--dh-ink-3) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar__buy{ color: var(--dh-surface) !important; }
+/* 「옵션을 골라 주세요」 — 위 줄이 surface 를 !important 로 못 박아 다크에서 잿빛 위 잿빛(1.2:1)이 됐다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-off .dhp-bar__buy{ color: var(--dh-ink-3) !important; }
 
 /* ══ 구매 영역 — 카드 세 장 ══════════════════════════════════════════════════
    한 상자에 제목 · 가격 · 옵션 · 버튼 · 안내를 다 담았더니, 테마 스크립트가 그 상자
@@ -1609,6 +1611,19 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsel__tick{ flex: 0 0 18px; width: 18px; heigh
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt.on .dhsel__tick{ opacity: 1; }
 /* 첫 줄은 "고르지 않음" 자리다 — 값이 아니라 안내다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhsel__opt:first-child .dhsel__nm{ color: var(--dh-ink-3); }
+
+/* 옛 옵션 UI 에 못 박힌 흰색 — 다크에서 흰 면 위 흰 글자가 됐다 (사장님 캡처 2026-10-07).
+   option-ui.css 가 `#fff` 를 직접 쓰는 자리를 전부 토큰으로 덮는다. 플러그인 파일은 안 건드린다. */
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card__no{ color: var(--dh-surface) !important; }                 /* 번호 배지: 잉크 면 위 글자 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle.is-on{ background: var(--dh-accent-soft) !important; border-color: var(--dh-accent) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-bundle__mark,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-chip{ background: var(--dh-surface) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx-below.woocommerce-tabs{ background: var(--dh-surface) !important; border-color: var(--dh-line) !important; }
+/* 테마의 「0 / 11」 알약 — 복숭아색 인라인 (#FFF1EC 위 #FF5C35). 우리 포인트로 */
+html body.dhr.dhr-wrap.dhr-wrap .vf-summary-count{ background: var(--dh-accent-soft) !important; color: var(--dh-accent-deep) !important; }
+/* PPOM 의 원본 select — 접혀 있지만 단품에서는 그대로 보인다 */
+html body.dhr.dhr-wrap.dhr-wrap form.cart select.ppom-input{ background-color: var(--dh-surface) !important; color: var(--dh-ink) !important; border-color: var(--dh-line-strong) !important; }
 
 /* 구매 버튼의 호버 — 테마 쪽 색 그림자가 분홍으로 번졌다. 우리 것으로 못 박는다. */
 html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button,
