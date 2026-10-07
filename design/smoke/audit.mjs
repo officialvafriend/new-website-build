@@ -1,5 +1,5 @@
 // 화면 점검 — 아홉 화면 × 390/1280 × 라이트/다크: HTTP · 가로 넘침 · 끊긴 HTML(푸터 없음) · JS 오류 · 글자 대비(2.2:1 아래) · 전체 스크린샷.
-// 쓰는 법: NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/smoke/audit.mjs   (LOCAL=1 이면 assets/*.css|js 를 작업본으로 바꿔 끼운다 · ONLY=home,shop 로 좁힌다 · OUT=폴더)
+// 쓰는 법: NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node design/smoke/audit.mjs   (LOCAL=1 이면 assets/*.css|js 를 작업본으로 바꿔 끼운다 · ONLY=home,shop 로 좁힌다 · OUT=폴더) · **루프 변수를 path 로 두면 node:path 가 가려져 LOCAL 이 조용히 꺼진다** (2026-10-07 에 잡음)
 import { createRequire } from 'node:module'; import fs from 'node:fs'; import path from 'node:path';
 const NM = process.env.DHR_NODE_MODULES || '/tmp/claude-0/-home-user-new-website-build/eaa69852-6737-54fa-a860-4a2fc73b9c20/scratchpad/live/node_modules';
 const require = createRequire(path.join(NM, 'x.js')); const { chromium } = require('playwright');
@@ -10,7 +10,7 @@ const pages0=[['home','/'],['shop','/shop/'],['novo','/product-category/novo-liq
 const pages=ONLY?pages0.filter(p=>ONLY.includes(p[0])):pages0;
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const out=[];
-for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['light','dark']) for (const [k,path] of pages) {
+for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['light','dark']) for (const [k,pth] of pages) {
   const ctx = await b.newContext({ viewport:{width:w,height:h}, userAgent: UA, isMobile: w<880, deviceScaleFactor:1 });
   const page = await ctx.newPage();
   if (theme==='dark') await page.addInitScript(()=>{ try{ localStorage.setItem('dhr-theme','dark'); }catch(e){} });
@@ -20,7 +20,7 @@ for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['li
     try { const r = await fetch(url, { method: req.method(), headers: { 'user-agent': UA, accept: '*/*' }, body: req.postData() ?? undefined, redirect: 'manual' });
       const headers = {}; r.headers.forEach((v,kk)=>{ if(!/^(content-encoding|transfer-encoding|content-length|set-cookie)$/i.test(kk)) headers[kk]=v; });
       route.fulfill({ status: r.status, headers, body: Buffer.from(await r.arrayBuffer()) }); } catch (e) { route.abort(); } });
-  let status=0; try { const r=await page.goto(S+path+(path.includes('?')?'&':'?')+'nocache='+Date.now(), { waitUntil:'load', timeout:90000 }); status=r?.status()||0; } catch(e){ errs.push('goto '+e.message.slice(0,80)); }
+  let status=0; try { const r=await page.goto(S+pth+(pth.includes('?')?'&':'?')+'nocache='+Date.now(), { waitUntil:'load', timeout:90000 }); status=r?.status()||0; } catch(e){ errs.push('goto '+e.message.slice(0,80)); }
   await page.evaluate(() => { document.querySelectorAll('#pop-dim,#pop6,#dh-agegate2').forEach(e=>e.remove()); document.documentElement.classList.remove('dh-ag2-lock'); document.body.classList.remove('dh-ag2-lock'); });
   await page.waitForTimeout(1200);
   const H = await page.evaluate(()=>document.body.scrollHeight);

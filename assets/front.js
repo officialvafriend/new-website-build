@@ -388,7 +388,7 @@
   if(!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var MAX = 3.2;
-  document.querySelectorAll('.dhr .card, .dhr .bcard, .dhr .qcats a, .dhr .hcard-b').forEach(function(el){
+  document.querySelectorAll('.dhr .bcard, .dhr .qcats a, .dhr .hcard-b').forEach(function(el){ /* 상품 카드(.card)는 ③ 목록 · 카드(2026-10-07)에서 뺐다 — 2px 만 뜬다 */
     var raf = null, rx = 0, ry = 0;
     el.addEventListener('pointermove', function(e){
       var r = el.getBoundingClientRect();
