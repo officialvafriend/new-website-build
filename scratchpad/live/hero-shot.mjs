@@ -20,7 +20,7 @@ for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) {
   await page.click('.hdot:nth-child(3)'); await page.waitForTimeout(700);
   const m1 = await page.evaluate(()=>{ const sl=[...document.querySelectorAll('.hslide')]; return { on: sl.map(e=>e.classList.contains('on')), vis: sl.map(e=>getComputedStyle(e).visibility), op: sl.map(e=>getComputedStyle(e).opacity) }; });
   await page.screenshot({ path:`${OUT}/hero3-${tag}.png`, clip:{x:0,y:0,width:w,height:Math.min(h, m0.hero[0]+m0.hero[1]+40)} });
-  console.log(tag, JSON.stringify(m0), JSON.stringify(m1), 'errs', errs.filter(e=>!/CERT/.test(e)).length);
+  console.log(tag, JSON.stringify(m0), JSON.stringify(m1), 'errs', JSON.stringify(errs.filter(e=>!/CERT/.test(e)).map(e=>e.slice(0,160))));
   await ctx.close();
 }
 await b.close();
