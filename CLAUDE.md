@@ -3822,3 +3822,14 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 - 설명 아래 「구분 · 용량 · 함량」 규격 표는 **사장님 상품 설명 이미지**다 (DOM 에 글자가 없다) — 다크로 못 바꾼다
 - 교훈: 플러그인 CSS 를 토큰으로 잇는 일은 **변수 정의(`--dhx-*`)만으로 끝나지 않는다.** `grep -nE '#fff|#FFF|white' option-ui.css` 로
   직접 박힌 색을 전부 세어 덮어야 한다 (이번엔 14곳)
+
+### 「아직 안 됐는데」 — 단품 수량 상자 · iOS 사파리의 전화번호 자동 링크 (2026-10-07, 세 번째 캡처)
+
+- **단품(테마 옵션 빌더) 시트의 「수량 − 1 +」 상자**는 테마가 `#FAFAFA` 위 `#18181B` 를 못 박고 스니펫이 `:disabled{color:#d4d4d8}` 을 건다 →
+  다크에서 흰 상자. shell.css 가 `.quantity` · `.vf-qty-label` · `.vf-qty-btn` · `input.qty` 를 surface-2 · ink 로 덮는다 (라이트는 회색 상자로 바뀐 것뿐)
+- **푸터 계좌 번호가 iPhone 에서만 연한 회색이었다.** 크로미움 · 우리 CSS 어디에도 그런 규칙이 없어 한참 헤맸다 — **iOS 사파리가 11자리 숫자를
+  전화번호로 보고 `<a href="tel:">` 로 저절로 감싼다.** 그러면 `footer.foot a{color:ink-2}` 가 걸려 다크의 밝은 상자 위에 `#D9DBE0` 가 됐다.
+  `Front\no_tel_detect()` 가 `<meta name="format-detection" content="telephone=no">` 를 찍고, `.fbank .n a{color:inherit}` 도 둔다.
+  고객센터 번호는 우리가 `tel:` 링크로 그리므로 그대로 눌린다
+- **교훈: 폰에서만 다르면 사파리의 자동 변환(전화 · 주소 · 날짜 링크)을 먼저 의심한다.** 크로미움 프로브로는 영영 안 보인다 —
+  `grep -c format-detection` 이 0 이면 그 사이트는 숫자 열이 전부 링크가 될 수 있다
