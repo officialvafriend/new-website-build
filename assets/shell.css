@@ -99,7 +99,7 @@ html body.dhr.dhr-wrap.dhr-wrap footer.foot a.btn-p{ color: var(--dh-accent-ink)
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .lg-w .g{ background: var(--dh-ink) !important; }
 /* 계좌 상자는 반전(잉크 면) — 테마가 p 색을 덮어 안내 글이 사라졌다. 굵은 글자와 같은 색으로 못 박는다 */
 html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank p, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank .n, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__note, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__note b, html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__t b{ color: var(--dh-surface) !important; }
-html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__meta{ color: var(--dh-surface) !important; opacity: .72; }
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank__meta{ color: var(--dh-surface) !important; opacity: .8; font-weight: 600; }
 /* 헤더도 같은 이유로 */
 html body.dhr.dhr-wrap.dhr-wrap header.gnb{ background: var(--dh-glass) !important; }
 html body.dhr.dhr-wrap.dhr-wrap nav.tabs{ background: var(--dh-glass) !important; }

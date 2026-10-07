@@ -3782,3 +3782,6 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 - **홈 템플릿의 미리보기**: `scratchpad/live/home-local-shot.mjs` — `php scratchpad/home-render.php` 가 남긴 `home-render.html`(스텁 · wp_head 없음)에 charset · 토큰 · front.css ·
   GSAP · front.js 를 끼워 열고 `.dhr-about` 을 390/1280 × 라이트/다크로 찍는다. **스텁에는 분류 · 노보 줄이 없어** 타일 간격은 배포 뒤 프로덕션에서 잰다
 - `dock-probe.mjs` · `dock-dark-shot.mjs`(상세 서랍 다크/라이트 캡처 + computed 색) · `btn-probe.mjs`(버튼에 걸린 규칙 전부) · `picker-test.mjs` 는 `OUT=` 으로 폴더를 준다
+- **푸터 계좌의 은행 · 예금주 줄이 안 보였다** (사장님 2026-10-07, 라이트 · 다크 둘 다): front.css 의 `html body.dhr.dhr.dhr .fbank__meta` 가 `--dh-ink-3` 를 못 박아 잉크 면 위
+  2.3:1(다크 2.4:1)이었다. shell.css(테마 화면)는 surface .72 였는데 홈 쪽만 달랐다. 둘 다 **면과 같은 색 .8 + 600** 으로 → 라이트 12:1 · 다크 8.8:1 (`scratchpad/live/fbank-probe.mjs` 가
+  홈 · 테마 화면 × 두 모드의 불투명도 반영 대비를 잰다). **잉크 면 위 캡션에 ink-3 를 쓰지 않는다** — 그 토큰은 밝은 면용이다
