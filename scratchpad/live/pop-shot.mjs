@@ -4,7 +4,7 @@ const require = createRequire(path.join(process.cwd(),'scratchpad/live/node_modu
 const UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36';
 const OUT=process.env.OUT||'scratchpad/pop'; fs.mkdirSync(OUT,{recursive:true}); const S='https://duck-hoo.com'; const LOCAL=process.env.LOCAL==='1';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
-for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of (process.env.THEMES||'light,dark').split(',')) {
+for (const [w,h,tag] of (process.env.VPS||'390x844xm,1280x900xd').split(',').map(v=>{const a=v.split('x');return [+a[0],+a[1],a[2]];})) for (const theme of (process.env.THEMES||'light,dark').split(',')) {
   const ctx = await b.newContext({ viewport:{width:w,height:h}, userAgent: UA, isMobile: w<880, deviceScaleFactor:1 });
   const page = await ctx.newPage();
   if (theme==='dark') await page.addInitScript(()=>{ try{ localStorage.setItem('dhr-theme','dark'); }catch(e){} });
