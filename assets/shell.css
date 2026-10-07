@@ -1624,6 +1624,15 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx-below.woocommerce-tabs{ background: var(--d
 html body.dhr.dhr-wrap.dhr-wrap .vf-summary-count{ background: var(--dh-accent-soft) !important; color: var(--dh-accent-deep) !important; }
 /* PPOM 의 원본 select — 접혀 있지만 단품에서는 그대로 보인다 */
 html body.dhr.dhr-wrap.dhr-wrap form.cart select.ppom-input{ background-color: var(--dh-surface) !important; color: var(--dh-ink) !important; border-color: var(--dh-line-strong) !important; }
+/* 단품의 테마 수량 상자(.quantity · vf-qty) — 테마가 #FAFAFA 위 #18181B 를 못 박아 다크에서 흰 상자. 스니펫의 `:disabled{color:#d4d4d8}` (0,2,0) 도 덮는다 */
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity{ background: var(--dh-surface-2) !important; border-color: var(--dh-line) !important; color: var(--dh-ink) !important; }
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity .vf-qty-label{ color: var(--dh-ink) !important; }
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity .vf-qty-btn{ color: var(--dh-ink) !important; background: transparent !important; }
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity .vf-qty-btn:disabled,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity .vf-qty-btn[disabled]{ color: var(--dh-ink-3) !important; }
+html body.dhr.dhr-wrap.dhr-wrap form.cart .quantity input.qty{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; }
+/* iOS 사파리가 계좌 번호를 tel: 링크로 감싸면 푸터 링크 색이 걸린다 — 어느 쪽이든 숫자는 상자 글자색 */
+html body.dhr.dhr-wrap.dhr-wrap footer.foot .fbank .n a{ color: inherit !important; text-decoration: none !important; }
 
 /* 구매 버튼의 호버 — 테마 쪽 색 그림자가 분홍으로 번졌다. 우리 것으로 못 박는다. */
 html body.dhr.dhr-wrap.dhr-wrap .vf-drawer-actions button,

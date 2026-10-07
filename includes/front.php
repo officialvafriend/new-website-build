@@ -519,6 +519,18 @@ function theme_boot(): void {
 }
 add_action( 'wp_head', __NAMESPACE__ . '\\theme_boot', 0 );
 
+/**
+ * iOS 사파리는 11자리 숫자를 전화번호로 보고 저절로 <a href="tel:"> 로 감싼다 — 푸터 계좌 번호가
+ * 링크 색(다크에서 ink-2, 밝은 상자 위 연한 회색)이 돼 안 읽혔다 (사장님 캡처 2026-10-07).
+ * 자동 감지를 끈다. 고객센터 번호는 이미 우리가 tel: 링크로 그리므로 그대로 눌린다.
+ *
+ * @return void
+ */
+function no_tel_detect(): void {
+	echo '<meta name="format-detection" content="telephone=no">' . "\n";
+}
+add_action( 'wp_head', __NAMESPACE__ . '\\no_tel_detect', 0 );
+
 function header_html(): void {
 	$cart_n  = ( function_exists( 'WC' ) && WC()->cart ) ? (int) WC()->cart->get_cart_contents_count() : 0;
 	$cart    = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );
