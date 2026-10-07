@@ -56,6 +56,8 @@
       var cur = k === i;
       el.classList.toggle('on', cur);
       el.setAttribute('aria-hidden', cur ? 'false' : 'true');
+      /* 값은 굴러 올라오는 중이든 아니든 보이는 순간 제값이어야 한다 (74,995원이 찍힌 적이 있다) */
+      if(cur) [].forEach.call(el.querySelectorAll('[data-count]'), function(c){ var to = parseFloat(c.getAttribute('data-count')) || 0; c.textContent = Math.round(to).toLocaleString('ko-KR') + (c.getAttribute('data-suffix') || ''); });
       [].forEach.call(el.querySelectorAll('a,button'), function(f){ if(cur) f.removeAttribute('tabindex'); else f.setAttribute('tabindex','-1'); });
     });
     dots.forEach(function(d, k){ d.classList.toggle('on', k === i); d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
