@@ -294,7 +294,7 @@
 /* 홈 안내 벤토 — 데스크톱에서는 첫 칸(넓은 잉크 면)의 「더 읽기」를 펼쳐 둔다. 옆 칸이 높아 첫 칸 절반이 비었다 (2026-10-07).
    글은 DOM 에 한 번만 있다 (details 를 열 뿐) */
 (function(){
-  var d = document.querySelector('.dhr .dhr-about__c--lead .dhr-about__more'); if(!d) return;
+  var d = document.querySelector('.dhr .dhr-about__lead .dhr-about__more'); if(!d) return;
   function sync(){ d.open = window.matchMedia('(min-width: 880px)').matches; }
   sync(); window.matchMedia('(min-width: 880px)').addEventListener('change', sync);
 })();

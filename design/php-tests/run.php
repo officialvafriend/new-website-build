@@ -2691,7 +2691,7 @@ $ab = ($BR.'about_home')(); $abt = implode(' ', array_map(fn($i) => $i['h'].' '.
 $ok(count($ab) === 4 && mb_strlen($abt) >= 800 && str_contains($abt, '전담 액상') && str_contains($abt, '전자담배 액상') && str_contains($abt, '입호흡 액상') && str_contains($abt, '폐호흡 액상') && str_contains($abt, '낱병은 8,000원부터') && str_contains($abt, '노보(NOVO) 액상은 전 라인 재고') && str_contains($abt, '19세'), '홈 소개 글: 네 단락 · 800자↑ · 손님이 치는 말 넷 · 값은 상품에서 · 노보 재고 · 19세');
 $ok(!preg_match('/건강|금연|순하다|해롭지|무니코틴|노보마트|브이몬스터|겨울마을|다른 (곳|가게|사이트)/u', $abt), '홈 소개 글에 광고 제한 낱말 · 무니코틴 · 다른 가게 없음');
 $abh = ($BR.'about_home_html')();
-$ok(substr_count($abh, '<h3>') === 3 && str_contains($abh, 'class="dhr-about"') && str_contains($abh, '/liquid-guide/') && str_contains($abh, '/mtl-vs-dl/') && str_contains($abh, '/price/') && str_contains($abh, '/register/'), '홈 소개 글 HTML: h2 하나 · h3 셋 · 안내 글 · 가격표 · 가입 링크');
+$ok(substr_count($abh, '<h3>') === 3 && str_contains($abh, 'class="dhr-about ') && str_contains($abh, '/liquid-guide/') && str_contains($abh, '/mtl-vs-dl/') && str_contains($abh, '/price/') && str_contains($abh, '/register/'), '홈 소개 글 HTML: h2 하나 · h3 셋 · 안내 글 · 가격표 · 가입 링크');
 add_filter('duckhoo_home_about', fn($v = null) => []);
 $ok(($BR.'about_home_html')() === '', 'duckhoo_home_about 을 비우면 소개 글을 안 그린다');
 $GLOBALS['__filters']['duckhoo_home_about'] = [];
