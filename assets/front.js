@@ -38,43 +38,37 @@
   });
 })();
 
-/* 히어로 슬라이드 — 묶음 상품을 넘겨 본다.
+/* 히어로 슬라이드 — 묶음 상품을 넘겨 본다 (2026-10-07, 겹쳐 두고 크로스페이드).
    스스로 넘어가는 것에는 멈춤이 따라와야 한다: 마우스·포커스가 들어오면 서고,
-   멈춤 버튼이 있고, 동작 줄이기를 켠 사람에게는 아예 자동으로 넘기지 않는다. */
+   점을 누르면 자동 넘김은 끝나고, 동작 줄이기를 켠 사람에게는 아예 자동으로 넘기지 않는다. */
 (function(){
-  var root = document.querySelector('[data-hero]');
+  var root = document.querySelector('[data-hslides]');
   if(!root) return;
-  var items = [].slice.call(root.querySelectorAll('.hslide-item'));
+  var items = [].slice.call(root.querySelectorAll('.hslide'));
   if(items.length < 2) return;
-  var track = root.querySelector('.hslide-track');
   var dots  = [].slice.call(root.querySelectorAll('.hdot'));
-  var play  = root.querySelector('.hplay');
   var calm  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var i = 0, timer = null, on = !calm;
 
   function show(n){
     i = (n + items.length) % items.length;
-    track.style.transform = 'translateX(' + (-i * 100) + '%)';
     items.forEach(function(el, k){
       var cur = k === i;
+      el.classList.toggle('on', cur);
       el.setAttribute('aria-hidden', cur ? 'false' : 'true');
-      if(cur) el.removeAttribute('tabindex'); else el.setAttribute('tabindex','-1');
+      [].forEach.call(el.querySelectorAll('a,button'), function(f){ if(cur) f.removeAttribute('tabindex'); else f.setAttribute('tabindex','-1'); });
     });
-    dots.forEach(function(d, k){ d.classList.toggle('on', k === i); d.setAttribute('aria-selected', k === i); });
+    dots.forEach(function(d, k){ d.classList.toggle('on', k === i); d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
   }
   function stop(){ if(timer){ clearInterval(timer); timer = null; } }
-  function start(){ stop(); if(on) timer = setInterval(function(){ show(i + 1); }, 5000); }
-  function setPlay(v){ on = v; if(play){ play.dataset.playing = v ? '1' : '0'; play.setAttribute('aria-label', v ? '자동 넘김 멈춤' : '자동 넘김 시작'); } v ? start() : stop(); }
+  function start(){ stop(); if(on) timer = setInterval(function(){ show(i + 1); }, 6000); }
 
-  root.querySelector('.hprev').addEventListener('click', function(){ setPlay(false); show(i - 1); });
-  root.querySelector('.hnext').addEventListener('click', function(){ setPlay(false); show(i + 1); });
-  dots.forEach(function(d, k){ d.addEventListener('click', function(){ setPlay(false); show(k); }); });
-  if(play) play.addEventListener('click', function(){ setPlay(!on); });
-
+  dots.forEach(function(d, k){ d.addEventListener('click', function(){ on = false; stop(); show(k); }); });
   root.addEventListener('mouseenter', stop);
   root.addEventListener('mouseleave', function(){ if(on) start(); });
   root.addEventListener('focusin', stop);
   root.addEventListener('focusout', function(){ if(on) start(); });
+  document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : (on && start()); });
 
   /* 손가락으로 넘기기 — 세로 스크롤은 방해하지 않는다 */
   var x0 = null, y0 = null;
@@ -82,12 +76,12 @@
   root.addEventListener('touchend', function(e){
     if(x0 === null) return;
     var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)){ setPlay(false); show(i + (dx < 0 ? 1 : -1)); }
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)){ on = false; stop(); show(i + (dx < 0 ? 1 : -1)); }
     x0 = y0 = null;
   }, {passive:true});
 
   show(0);
-  setPlay(!calm);
+  start();
 })();
 
 /* 상품 상세 — 추천 상품이 구매 상자 안에 들어가 있다.

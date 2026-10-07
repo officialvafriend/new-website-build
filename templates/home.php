@@ -41,21 +41,34 @@ $brand_names = featured_brands( 12 );
 $heroes    = array();
 // 맨 위 추석 이벤트로 이미 세운 상품은 히어로에서도 뺀다.
 $seen_ids  = $chu_id ? array( $chu_id => true ) : array();
-$hero_pick = function ( array $list ) use ( &$heroes, &$seen_ids ) {
+// 브랜드마다 한 장 (2026-10-07 사장님 「노보만 나오게 하지 않고 디오리퀴드 10병 · 화이트아웃 10병도」).
+// 행사 이름표(「10병 묶음 할인 이벤트」)가 브랜드 자리에 온 상품은 제목 첫 낱말로 가른다.
+$seen_brands = array();
+$hero_key    = function ( $p ) {
+	$hn = split_name( $p );
+	$b  = preg_match( '/이벤트|특가|할인/u', $hn['brand'] ) ? $hn['title'] : $hn['brand'];
+	return (string) preg_replace( '/[\s\d+].*$/u', '', trim( $b ) ); // 「노보 블랙 리퀴드」 → 노보, 「덕후 액상 10병」 → 덕후
+};
+$hero_pick = function ( array $list, int $max = 5 ) use ( &$heroes, &$seen_ids, &$seen_brands, $hero_key ) {
 	foreach ( $list as $p ) {
-		if ( count( $heroes ) >= 5 ) {
+		if ( count( $heroes ) >= $max ) {
 			return;
 		}
 		$id = $p->get_id();
 		if ( isset( $seen_ids[ $id ] ) || ! $p->get_image_id() || ! $p->is_in_stock() ) {
 			continue;
 		}
-		// 결제용·부속 상품은 히어로가 아니다
-		if ( preg_match( '/결제|드립팁|첨가제|코일|팟\b/u', $p->get_name() ) ) {
+		// 결제용·부속 상품은 히어로가 아니다. 무니코틴 묶음도 뺀다 — 첫 화면은 니코틴 재고를 파는 자리다 (사장님 2026-09-24)
+		if ( preg_match( '/결제|드립팁|첨가제|코일|팟\b|무니코틴/u', $p->get_name() ) ) {
 			continue;
 		}
-		$seen_ids[ $id ] = true;
-		$heroes[]        = $p;
+		$k = $hero_key( $p );
+		if ( '' !== $k && isset( $seen_brands[ $k ] ) ) {
+			continue;
+		}
+		$seen_brands[ $k ] = true;
+		$seen_ids[ $id ]   = true;
+		$heroes[]          = $p;
 	}
 };
 // 0순위 (2026-09-21): 노보 10+1 묶음 — 다른 사이트에서 노보 품절, 첫 화면에서 노보가 먼저 보여야 한다.
@@ -158,17 +171,18 @@ $month = (int) wp_date( 'n' );
 	?>
 
 	<?php
-	// 히어로 — 유리 시안 A (2026-10-06 사장님 「레이아웃도 바꾸는 거 아니었음?」). 왼쪽 글(눈썹 · 제목 · 한 줄 · 버튼 둘),
-	// 오른쪽 무대(사진 + 할인 알약 + 유리 캡션). 슬라이드 다섯 장은 뺐다 — 5초마다 넘어가 놓치던 것을 첫 상품 하나로 못 박는다.
-	$h0 = $heroes[0] ?? null;
-	if ( $h0 ) :
+	// 히어로 — 유리 시안 A (2026-10-06). 왼쪽 글(눈썹 · 제목 · 한 줄 · 버튼 둘), 오른쪽 무대(사진 + 할인 알약 + 유리 캡션).
+	// 2026-10-07 사장님 「노보만 나오게 하지 않고 다른 액상 이벤트도」 — 묶음 다섯 장을 다시 넘겨 본다. 겹쳐 두고 크로스페이드,
+	// 점으로 고르고, 마우스 · 포커스가 오면 서고, 동작 줄이기를 켠 사람에게는 자동으로 안 넘긴다 (front.js).
+	$hero_slide = function ( $h0 ) {
 		$hn  = split_name( $h0 );
 		$hp  = per_bottle( $h0 );
 		$hr  = (float) $h0->get_regular_price();
 		$hs  = (float) $h0->get_price();
 		$off = ( $hr > $hs && $hr > 0 ) ? (int) round( ( 1 - $hs / $hr ) * 100 ) : 0;
 		$ht  = trim( (string) preg_replace( '/\s*\|\s*금액\s*[\d,]+\s*원\s*$/u', '', $hn['title'] ) );
-		if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && (bool) preg_match( '/^\s*\d/u', $ht ) ) {
+		$ht  = trim( (string) preg_replace( array( '/★[^★]*★/u', '/\s*(묶음\s*이벤트|할인\s*!?|이벤트\s*!?|EVENT\s*!?)\s*$/iu' ), '', $ht ) );
+		if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && ! preg_match( '/이벤트|특가|할인/u', $hn['brand'] ) ) {
 			$ht = $hn['brand'] . ' ' . $ht;
 		}
 		$heb = novo_announce();
@@ -176,23 +190,38 @@ $month = (int) wp_date( 'n' );
 			$heb = $h0->is_on_sale() ? '묶음 특가 · 지금 주문하면 오늘 출고' : '추천 묶음';
 		}
 		$hsub = ( $hp['qty'] > 1 ? $hp['qty'] . '병에 병당 ' . number_format_i18n( $hp['per'] ) . '원. ' : '' ) . '평일 오후 4시 이전 입금 확인분은 당일 출고합니다.';
+		return compact( 'hr', 'hs', 'off', 'ht', 'heb', 'hsub' );
+	};
+	if ( $heroes ) :
+		$hmany = count( $heroes ) > 1;
 	?>
-	<section class="hero hhero">
+	<section class="hero hhero"<?php echo $hmany ? ' data-hslides aria-roledescription="carousel" aria-label="묶음 이벤트"' : ''; ?>>
+		<?php foreach ( $heroes as $hi => $h0 ) : $v = $hero_slide( $h0 ); ?>
+		<div class="hslide<?php echo 0 === $hi ? ' on' : ''; ?>"<?php echo $hmany ? ' role="group" aria-roledescription="slide" aria-label="' . esc_attr( ( $hi + 1 ) . ' / ' . count( $heroes ) ) . '"' . ( 0 === $hi ? '' : ' aria-hidden="true"' ) : ''; ?>>
 		<div class="hero__tx">
-			<span class="eb2 hero__eb"><i></i><?php echo esc_html( $heb ); ?></span>
-			<h2 class="hero__t"><?php echo esc_html( $ht ); ?></h2>
-			<p class="hero__sub"><?php echo esc_html( $hsub ); ?></p>
+			<span class="eb2 hero__eb"><i></i><?php echo esc_html( $v['heb'] ); ?></span>
+			<?php if ( 0 === $hi ) : ?><h2 class="hero__t"><?php echo esc_html( $v['ht'] ); ?></h2><?php else : ?><p class="hero__t"><?php echo esc_html( $v['ht'] ); ?></p><?php endif; ?>
+			<p class="hero__sub"><?php echo esc_html( $v['hsub'] ); ?></p>
 			<div class="hero__cta">
 				<a class="btn btn-d" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>">바로 구매 <?php echo icon( 'arrow' ); // phpcs:ignore ?></a>
 				<a class="btn btn-o" href="<?php echo esc_url( $sale_cat ? get_term_link( $sale_cat ) : $shop_url ); ?>"><?php echo (int) $month; ?>월 특가<?php echo $best_off ? ' 최대 ' . (int) $best_off . '%' : ''; ?></a>
 			</div>
 		</div>
-		<a class="stage" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $ht . ' ' . number_format_i18n( $hs ) . '원' ); ?>">
-			<?php if ( $off > 0 ) : ?><span class="stage__pill">-<?php echo (int) $off; ?>%</span><?php endif; ?>
+		<a class="stage" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $v['ht'] . ' ' . number_format_i18n( $v['hs'] ) . '원' ); ?>">
+			<?php if ( $v['off'] > 0 ) : ?><span class="stage__pill">-<?php echo (int) $v['off']; ?>%</span><?php endif; ?>
 			<span class="stage__img"><?php echo $h0->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span>
-			<span class="stage__cap"><b><?php echo esc_html( $ht ); ?></b>
-				<span class="n"><?php if ( $hr > $hs ) : ?><s><?php echo esc_html( number_format_i18n( $hr ) ); ?>원</s> <?php endif; ?><em data-count="<?php echo (int) $hs; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $hs ) ); ?>원</em></span></span>
+			<span class="stage__cap"><b><?php echo esc_html( $v['ht'] ); ?></b>
+				<span class="n"><?php if ( $v['hr'] > $v['hs'] ) : ?><s><?php echo esc_html( number_format_i18n( $v['hr'] ) ); ?>원</s> <?php endif; ?><em data-count="<?php echo (int) $v['hs']; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $v['hs'] ) ); ?>원</em></span></span>
 		</a>
+		</div>
+		<?php endforeach; ?>
+		<?php if ( $hmany ) : ?>
+		<div class="hero__dots" role="tablist" aria-label="묶음 고르기">
+			<?php foreach ( $heroes as $hi => $h0 ) : ?>
+			<button type="button" class="hdot<?php echo 0 === $hi ? ' on' : ''; ?>" role="tab" aria-selected="<?php echo 0 === $hi ? 'true' : 'false'; ?>" aria-label="<?php echo esc_attr( $hero_slide( $h0 )['ht'] ); ?>"><i></i></button>
+			<?php endforeach; ?>
+		</div>
+		<?php endif; ?>
 	</section>
 	<?php endif; ?>
 

@@ -964,7 +964,18 @@ body.dhr-imgfx img.is-ld{opacity:1;transform:none}
 
 /* ===== 홈 레이아웃 — 유리 시안 A (2026-10-06) =====
  * 히어로: 왼쪽 글 · 오른쪽 무대(사진 + 할인 알약 + 유리 캡션). 숫자 셋. 브랜드는 큰 카드(글자 원 · 눈썹 · 이름 · 한 줄 · 버튼). */
-.dhr .hhero{display:grid;gap:1.2rem;padding:1.1rem 0 .4rem;align-items:center}
+/* 슬라이드는 같은 칸(1/1)에 겹쳐 두고 .on 만 보인다 — 크로스페이드(흐림 4px → 0, 8px 올라옴). 높이는 가장 긴 장 */
+.dhr .hhero{display:grid;grid-template-columns:minmax(0,1fr)}
+.dhr .hslide{grid-area:1/1;display:grid;gap:1.2rem;padding:1.1rem 0 .4rem;align-items:center;min-width:0;
+  transition:opacity .42s cubic-bezier(.23,1,.32,1),filter .42s cubic-bezier(.23,1,.32,1),transform .42s cubic-bezier(.23,1,.32,1)}
+.dhr .hslide:not(.on){opacity:0;filter:blur(4px);transform:translateY(8px);pointer-events:none;visibility:hidden;
+  transition:opacity .22s ease-out,filter .22s ease-out,transform .22s ease-out,visibility 0s .22s}
+.dhr .hero__dots{grid-area:2/1;display:flex;gap:.1rem;margin:0 0 .2rem -.4rem}
+.dhr .hero__dots .hdot{width:30px;height:44px;padding:0;border:0;background:none;display:grid;place-items:center;cursor:pointer;border-radius:999px}
+.dhr .hero__dots .hdot i{display:block;width:8px;height:8px;border-radius:999px;background:var(--dh-line-strong);transition:width .32s cubic-bezier(.23,1,.32,1),background .2s}
+.dhr .hero__dots .hdot.on i{width:22px;background:var(--dh-ink)}
+.dhr .hero__dots .hdot:focus-visible{outline:2px solid var(--dh-accent);outline-offset:-2px}
+@media(prefers-reduced-motion:reduce){.dhr .hslide,.dhr .hslide:not(.on){transition:opacity .2s;filter:none;transform:none}}
 .dhr .hero__tx{display:flex;flex-direction:column;align-items:flex-start;gap:.75rem;min-width:0}
 .dhr .hero__eb{display:inline-flex;align-items:center;gap:.45rem}
 .dhr .hero__eb i{width:8px;height:8px;border-radius:50%;background:var(--dh-accent);animation:dhr-blink 1.6s ease-in-out infinite}
@@ -984,7 +995,7 @@ body.dhr-imgfx img.is-ld{opacity:1;transform:none}
 .dhr .stage__cap s{font-size:12.5px;color:var(--dh-ink-3)}
 .dhr .stage__cap em{font-style:normal;font-size:17px;font-weight:900;color:var(--dh-ink)}
 @media(min-width:880px){
-  .dhr .hhero{grid-template-columns:1.1fr 1fr;gap:3rem;padding:2.4rem 0 1rem;min-height:min(560px,calc(100dvh - 240px))}
+  .dhr .hslide{grid-template-columns:1.1fr 1fr;gap:3rem;padding:2.4rem 0 1rem;min-height:min(560px,calc(100dvh - 240px))}
   .dhr .stage{aspect-ratio:4/3}
   .dhr .hero__sub{font-size:17px}
 }
