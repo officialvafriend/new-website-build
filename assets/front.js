@@ -2111,10 +2111,13 @@
   function chipBtn(c, d){ var bs = c.querySelectorAll('.dhx-qty button'); return d > 0 ? bs[bs.length - 1] : bs[0]; }
   function gateBtn(){ return form.querySelector('.single_add_to_cart_button'); }
   /* 필요한 병 수 — 게이트 버튼이 「N병 더 담아주세요」라고 말한다. 다 채우면 글자가 바뀌므로 그때는 고른 수가 곧 필요 수 */
+  /* 「다 골랐다」는 글자가 아니라 버튼이 열렸는지로 본다 — 글자는 게이트가 한 박자 뒤에 바꾼다.
+     아직 하나도 안 골라 「맛을 선택해주세요」일 때는 필요 수를 모른다(known=false) — 첫 병을 담으면 「N병 더」가 뜬다 */
   function need(card){
     var b = gateBtn(), t = b ? b.textContent : '', m = t.match(/(\d+)\s*병\s*더/);
     var have = chips(card).reduce(function(s, c){ return s + chipN(c); }, 0);
-    return { have: have, need: m ? have + parseInt(m[1], 10) : have, done: !m && have > 0 };
+    var done = !!b && !b.disabled && !m;
+    return { have: have, need: m ? have + parseInt(m[1], 10) : have, done: done, known: !!m || done };
   }
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
   function btnDiv(cls, label, text){ var d = el('div', cls, text); d.setAttribute('role', 'button'); d.setAttribute('tabindex', '0'); d.setAttribute('aria-label', label); return d; }
@@ -2161,7 +2164,7 @@
       retry = retry || 0;
       if(!unlock()){ if(retry < 10) setTimeout(function(){ add(c, k, retry + 1); }, 120); else flash('먼저 위에서 구성을 골라 주세요'); return; }
       var s = need(card); if(s.done){ flash('다 골랐어요'); return; }
-      var room = Math.max(0, s.need - s.have); if(room <= 0) return;
+      var room = s.known ? Math.max(0, s.need - s.have) : Infinity; if(room <= 0) return;
       press(c, +1, Math.min(k || 1, room)); paint();
     }
     function sub(c, k){ if(chipN(c) <= 0) return; press(c, -1, Math.min(k || 1, chipN(c))); paint(); }
@@ -2175,14 +2178,14 @@
         if(ne.textContent !== String(n)){ ne.textContent = String(n); ne.classList.remove('is-tick'); void ne.offsetWidth; ne.classList.add('is-tick'); }
         t.classList.toggle('is-on', n > 0);
         t.querySelector('.dhpk__b--m').classList.toggle('is-off', n <= 0);
-        t.querySelector('.dhpk__b--p').classList.toggle('is-off', s.done || (s.need > 0 && s.have >= s.need));
+        t.querySelector('.dhpk__b--p').classList.toggle('is-off', s.done || (s.known && s.have >= s.need));
       });
       root.classList.toggle('is-locked', lk);
       root.classList.toggle('is-done', s.done);
-      cnt.textContent = s.done ? s.have + '병 · 다 골랐어요' : (s.need ? s.have + ' / ' + s.need + '병' : s.have + '병');
-      bar.firstChild.style.width = s.need ? Math.min(100, Math.round(s.have / s.need * 100)) + '%' : (s.done ? '100%' : '0%');
+      cnt.textContent = s.done ? s.have + '병 · 다 골랐어요' : (s.known ? s.have + ' / ' + s.need + '병' : s.have + '병');
+      bar.firstChild.style.width = s.done ? '100%' : (s.known && s.need ? Math.min(100, Math.round(s.have / s.need * 100)) + '%' : '0%');
       if(hint.classList.contains('is-flash')) return;
-      hint.textContent = lk ? '위에서 구성을 고르면 맛을 담을 수 있어요' : s.done ? '아래 담기를 누르면 됩니다' : (s.need - s.have) + '병 더 고르면 담을 수 있어요';
+      hint.textContent = lk ? '위에서 구성을 고르면 맛을 담을 수 있어요' : s.done ? '아래 담기를 누르면 됩니다' : s.known ? (s.need - s.have) + '병 더 고르면 담을 수 있어요' : '맛을 눌러 담아 보세요';
       even.classList.toggle('is-off', s.done);
       clear.classList.toggle('is-off', s.have <= 0);
     }
@@ -2215,7 +2218,10 @@
         if(even.classList.contains('is-off')) return;
         var spread = function(retry){
           if(!unlock()){ if(retry < 10) setTimeout(function(){ spread(retry + 1); }, 120); return; }
-          var s = need(card), r = s.need - s.have; if(r <= 0) return;
+          var s = need(card);
+          /* 필요 수를 아직 모르면 첫 맛을 한 병 담아 게이트가 「N병 더」를 말하게 한 뒤 다시 온다 */
+          if(!s.known){ if(retry >= 10) return; if(s.have === 0) press(list[0], +1, 1); setTimeout(function(){ spread(retry + 1); }, 180); return; }
+          var r = s.need - s.have; if(r <= 0) return;
           var base = Math.floor(r / list.length), extra = r % list.length;
           list.forEach(function(c, i){ var k = base + (i < extra ? 1 : 0); if(k) press(c, +1, k); });
           paint();
@@ -2231,9 +2237,12 @@
     paint();
   }
 
+  /* .dhx 가 load 뒤에 생길 때도 있다(폰에서 한 번 놓쳤다) — 6초까지 300ms 마다 본다 */
+  var tries = 0;
   function init(){
-    var cards = [].slice.call(form.querySelectorAll('.dhx-card'));
-    cards.forEach(function(c){ if(c.querySelector('.dhx-chips')) build(c); });
+    var cards = [].slice.call(form.querySelectorAll('.dhx-card')), hit = false;
+    cards.forEach(function(c){ if(c.querySelector('.dhx-chips')){ build(c); hit = true; } });
+    if(!hit && tries++ < 20) setTimeout(init, 300);
   }
   if(document.readyState === 'complete') init(); else addEventListener('load', init);
 })();
