@@ -3763,3 +3763,22 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 - 도구: `scratchpad/live/crop.mjs <in> <out> <높이> [y]`(긴 캡처 잘라 보기) · `css-probe.mjs`(작업본 CSS 가 끼워졌는지 + 카드 computed) · `img-probe.mjs`(사진 opacity)
 
 검증: LOCAL 미리보기 390/1280 × 라이트/다크 (목록 · 노보 · 홈 · 상세) 넘침 0 · 대비 OK · smoke 20(배포 전) → 배포 뒤 audit · smoke 다시.
+
+### 상세 다크 · 맛 타일 정렬 · 홈 안내 벤토 · 타일 간격 (2026-10-07, 사장님 캡처 넷)
+
+**앞으로 사장님이 시키는 일은 전부 스킬(taste-skill · emil-design-eng · frontend-design)을 먼저 불러 읽고 한다** (사장님 2026-10-07 「앞으로 지시하는 일은 모두 skills 를 사용해서」).
+설계 읽기 한 줄 · 다이얼을 적고 시작하며, 점검표(대비 · 모서리 잠금 · 되풀이 · 간격 리듬)를 끝에 돈다.
+
+- **상세 다크에서 옛 옵션 UI(`.dhx`)가 흰 면 위 흰 글자였다.** `--dhx-bg`(#FFF) · `--dhx-warn`(#C2410C 주황)을 토큰으로 안 잇고 있었다 → `--dh-surface` · `--dh-accent-deep`.
+  수량 스테퍼(`.dhx-qty button` · `.dhx-qty__n`)는 플러그인 CSS 에 `#fff` 가 못 박혀 있어 shell.css 가 !important 로 덮는다.
+  **잠긴 담기 · 결제 버튼**은 사장님 인라인 스니펫 `.woocommerce div.product form.cart .single_add_to_cart_button:disabled`(0,5,2)가 `#E4E4E7 위 #A1A1AA`(1.9:1) 를 걸고
+  뒤에 오므로 `html body… form.cart .vf-drawer-actions …[disabled]`(0,7,3) 으로 이긴다 — **특이도가 같으면 뒤에 오는 스니펫이 이긴다**, 한 단계 더 올려야 한다
+- **맛 타일 정렬**: 여섯 칸이 전부 「노보 …」로 시작해 두 줄로 꺾이는 칸과 한 줄 칸이 섞여 스테퍼 높이가 들쭉날쭉했다. `front.js` 가 **모든 맛이 같은 첫 낱말로 시작하면 보이는
+  이름에서만 뗀다**(`data-name` · aria-label 은 원래 이름) + 스테퍼 `margin-top:auto` 로 칸 바닥에. 같은 줄은 grid 가 높이를 맞춘다
+- **홈 안내 벤토(`.dhr-about`)를 다시 지었다** (사장님 「대충 글만 적어서 완성도가 낮아 보인다」). 글 · `details` 는 그대로(검색엔진이 읽는 것 불변), **칸마다 내용에서 나온 시각 요소**
+  하나씩: 1 브랜드 칩(`featured_brands`) · 2 입호흡/폐호흡 두 칸 비교(`.dhr-about__vs`) · 3 출고 3단계(`.dhr-about__steps`, 번호는 CSS counter) · 4 「19」 배지. 링크는 밑줄 글자 → 알약
+  버튼(넷째 칸 회원가입만 파랑). 데스크톱에선 첫 칸 `details` 를 JS 가 `open` 해 둔다 — 옆 칸이 높아 절반이 비었다 (글은 DOM 에 한 번). 장식 아이콘은 `Front\icon()` 것만
+- **타일 → 가림 안내 → 숫자 간격**: 10 · 12 · 40px 로 제각각 → 16px 한 리듬 (`.qcats + .dhr-gate{margin:1rem 0}`, `.nums` 위 1rem, 히어로 점 아래 타일 `.6rem`)
+- **홈 템플릿의 미리보기**: `scratchpad/live/home-local-shot.mjs` — `php scratchpad/home-render.php` 가 남긴 `home-render.html`(스텁 · wp_head 없음)에 charset · 토큰 · front.css ·
+  GSAP · front.js 를 끼워 열고 `.dhr-about` 을 390/1280 × 라이트/다크로 찍는다. **스텁에는 분류 · 노보 줄이 없어** 타일 간격은 배포 뒤 프로덕션에서 잰다
+- `dock-probe.mjs` · `dock-dark-shot.mjs`(상세 서랍 다크/라이트 캡처 + computed 색) · `btn-probe.mjs`(버튼에 걸린 규칙 전부) · `picker-test.mjs` 는 `OUT=` 으로 폴더를 준다
