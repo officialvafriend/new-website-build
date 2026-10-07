@@ -219,6 +219,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx{
   --dhx-brand: var(--dh-primary);
   --dhx-accent: var(--dh-accent-deep);
   --dhx-accent-soft: var(--dh-accent-soft, #E6F6FE);
+  --dhx-bg: var(--dh-surface);     /* 카드 · 합계 상자 면 — 안 이으면 다크에서 흰 면 위 흰 글자 (2026-10-07) */
+  --dhx-warn: var(--dh-accent-deep); /* 덜 고른 상태의 게이지 · 숫자 — 주황을 쓰지 않는다 */
   --dhx-r: 14px;
 }
 /* 11–13px 은 쓰지 않는다 — 캡션 최소 13px, 본문 15px */
@@ -2719,7 +2721,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile{ position: relative; display: flex; 
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile.is-on{ box-shadow: 0 0 0 2px var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile:active{ transform: scale(.97); transition-duration: .09s; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__name{ font-size: 14px; font-weight: 700; color: var(--dh-ink); line-height: 1.3; word-break: keep-all; }
-html body.dhr.dhr-wrap.dhr-wrap .dhpk__q{ display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; height: 40px; border-radius: 999px; background: var(--dh-surface-2); overflow: hidden; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__q{ margin-top: auto; display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; height: 40px; border-radius: 999px; background: var(--dh-surface-2); overflow: hidden; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__b{ display: grid; place-items: center; height: 40px; font-size: 20px; font-weight: 700; color: var(--dh-ink); cursor: pointer; touch-action: none; transition: opacity .15s; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__b.is-off{ opacity: .25; cursor: default; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__b:focus-visible{ outline: 2px solid var(--dh-accent); outline-offset: -2px; border-radius: 999px; }
@@ -2741,3 +2743,22 @@ html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-locked .dhpk__grid{ opacity: .55; }
 /* ③ 목록 · 카드(2026-10-07) — 상세 추천(`li.product > .card`)에서만 「19」 축소가 졌다: 테마 style.css 와 사장님 추가 CSS 가
    `ul.products li.product img` 에 width:100% · height:100% · aspect-ratio 를 !important 로 건다. 같은 세기로 되돌린다 */
 html body.dhr.dhr-wrap.dhr-wrap ul.products li.product .card.is-gated .fig img{ width: 46% !important; height: 46% !important; aspect-ratio: auto !important; object-fit: contain !important; padding: 0 !important; margin: auto !important; background: none !important; }
+
+/* 잠긴 구매 버튼(아직 다 안 고름) — 테마가 #E4E4E7 위 #A1A1AA(1.9:1) · 결제하기는 불투명도 .42 로 둔다.
+   라이트 · 다크 모두 토큰 면 위 캡션색으로 (라이트 4.9:1 · 다크 5.2:1). 글자 · 동작은 그대로 (2026-10-07).
+   사장님 스니펫 인라인 `.woocommerce div.product form.cart .single_add_to_cart_button:disabled`(0,5,2) 가 뒤에 오므로 `form.cart .vf-drawer-actions` 를 더해 (0,7,3) 으로 이긴다 */
+html body.dhr.dhr-wrap.dhr-wrap form.cart .vf-drawer-actions .single_add_to_cart_button[disabled],
+html body.dhr.dhr-wrap.dhr-wrap form.cart .vf-drawer-actions .single_add_to_cart_button.vf-btn-disabled,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .single_add_to_cart_button[disabled],
+html body.dhr.dhr-wrap.dhr-wrap form.cart .vf-drawer-actions .wd-direct-checkout-btn[disabled],
+html body.dhr.dhr-wrap.dhr-wrap form.cart .vf-drawer-actions .wd-direct-checkout-btn.vf-btn-disabled,
+html body.dhr.dhr-wrap.dhr-wrap form.cart .wd-direct-checkout-btn[disabled]{
+  background: var(--dh-surface-2) !important; color: var(--dh-ink-3) !important; opacity: 1 !important; border-color: transparent !important; box-shadow: none !important; filter: none !important;
+}
+/* 옛 옵션 UI 의 수량 스테퍼 — 버튼 · 숫자 칸에 #fff 가 못 박혀 다크에서 흰 네모 위 흰 숫자였다 (2026-10-07).
+   면은 토큰, 숫자는 ink. 값 · 버튼 동작은 그대로 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; border-color: var(--dh-line-strong) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button:hover{ background: var(--dh-surface-2) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty__n{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; border-color: var(--dh-line-strong) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini button,
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini .dhx-qty__n{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; }

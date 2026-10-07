@@ -585,16 +585,47 @@ function about_home_html(): string {
 	}
 	// 벤토: 첫 칸은 넓고 반전색(잉크 면), 셋째 칸은 파랑 soft, 나머지는 보조 면. 글은 첫 문장만 보이고
 	// 나머지는 <details> 「더 읽기」 안 — 검색엔진은 그대로 읽고 손님은 긴 글에 안 눌린다 (사장님 2026-10-06 「저따구」).
+	// 2026-10-07 (사장님 「대충 글만 적어서 완성도가 낮아 보인다」): 칸마다 **내용에서 나온** 시각 요소를 하나씩 —
+	// 1 브랜드 칩(파는 브랜드) · 2 입호흡/폐호흡 두 칸 비교 · 3 출고 3단계 · 4 「19」 배지. 장식이 아니라 글의 요약이다.
+	// 링크는 밑줄 글자 대신 알약 버튼. 글(p · details)은 그대로라 검색엔진이 읽는 것은 안 바뀐다.
 	$kind = array( 'lead', '', 'soft', '' );
-	$h    = '<section class="dhr-about" aria-labelledby="dhr-about-h"><h2 id="dhr-about-h" class="dhr-about__t">' . esc_html( (string) $items[0]['h'] ) . '</h2><div class="dhr-about__g">';
+	$ico  = function( string $n ): string {
+		return function_exists( '\\Duckhoo\\Redesign\\Front\\icon' ) ? (string) \Duckhoo\Redesign\Front\icon( $n ) : '';
+	};
+	$h = '<section class="dhr-about" aria-labelledby="dhr-about-h"><h2 id="dhr-about-h" class="dhr-about__t">' . esc_html( (string) $items[0]['h'] ) . '</h2><div class="dhr-about__g">';
 	foreach ( $items as $i => $it ) {
 		$k     = $kind[ $i ] ?? '';
 		$parts = preg_split( '/(?<=다\.)\s+/u', trim( (string) $it['p'] ), 2 );
 		$lead  = (string) ( $parts[0] ?? '' );
 		$rest  = (string) ( $parts[1] ?? '' );
-		$h    .= '<div class="dhr-about__c' . ( $k ? ' dhr-about__c--' . $k : '' ) . '">';
+		$h    .= '<div class="dhr-about__c' . ( $k ? ' dhr-about__c--' . $k : '' ) . ' dhr-about__c--' . ( $i + 1 ) . '">';
 		if ( $i > 0 ) {
 			$h .= '<h3>' . esc_html( (string) $it['h'] ) . '</h3>';
+		}
+		// 칸마다 하나씩 — 글에서 나온 것만 그린다
+		if ( 0 === $i ) {
+			$brands = function_exists( '\\Duckhoo\\Redesign\\Front\\featured_brands' ) ? (array) \Duckhoo\Redesign\Front\featured_brands( 4 ) : array();
+			if ( $brands ) {
+				$h .= '<ul class="dhr-about__chips" aria-label="취급 브랜드">';
+				foreach ( $brands as $bn ) {
+					$u  = function_exists( '\\Duckhoo\\Redesign\\Front\\brand_url' ) ? (string) \Duckhoo\Redesign\Front\brand_url( (string) $bn ) : '';
+					$h .= '<li>' . ( $u ? '<a href="' . esc_url( $u ) . '">' . esc_html( (string) $bn ) . '</a>' : esc_html( (string) $bn ) ) . '</li>';
+				}
+				$h .= '</ul>';
+			}
+		} elseif ( 1 === $i ) {
+			$h .= '<div class="dhr-about__vs" aria-hidden="true">'
+				. '<div class="dhr-about__vs-c">' . $ico( 'drop' ) . '<b>입호흡 <small>MTL</small></b><span>팟 · 소형 기기<br>9.8mg 안팎 · 30ml</span></div>'
+				. '<div class="dhr-about__vs-c">' . $ico( 'cloud' ) . '<b>폐호흡 <small>DL</small></b><span>고출력 기기 · 탱크<br>3mg 안팎 · 60ml</span></div>'
+				. '</div>';
+		} elseif ( 2 === $i ) {
+			$h .= '<ol class="dhr-about__steps" aria-hidden="true">'
+				. '<li>' . $ico( 'bank' ) . '<span>무통장입금<br>주문자명으로</span></li>'
+				. '<li>' . $ico( 'check' ) . '<span>평일 16시 전<br>입금 확인</span></li>'
+				. '<li>' . $ico( 'truck' ) . '<span>당일 출고<br>보통 다음 날 도착</span></li>'
+				. '</ol>';
+		} elseif ( 3 === $i ) {
+			$h .= '<span class="dhr-about__age" aria-hidden="true">19</span>';
 		}
 		$h .= '<p>' . esc_html( $lead ) . '</p>';
 		if ( '' !== $rest ) {
@@ -602,10 +633,8 @@ function about_home_html(): string {
 		}
 		if ( ! empty( $it['links'] ) ) {
 			$h .= '<p class="dhr-about__l">';
-			$sep = '';
 			foreach ( (array) $it['links'] as $label => $url ) {
-				$h  .= $sep . '<a href="' . esc_url( (string) $url ) . '">' . esc_html( (string) $label ) . '</a>';
-				$sep = ' · ';
+				$h .= '<a href="' . esc_url( (string) $url ) . '">' . esc_html( (string) $label ) . $ico( 'chev' ) . '</a>';
 			}
 			$h .= '</p>';
 		}

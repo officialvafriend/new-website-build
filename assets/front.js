@@ -291,6 +291,14 @@
   });
 })();
 
+/* 홈 안내 벤토 — 데스크톱에서는 첫 칸(넓은 잉크 면)의 「더 읽기」를 펼쳐 둔다. 옆 칸이 높아 첫 칸 절반이 비었다 (2026-10-07).
+   글은 DOM 에 한 번만 있다 (details 를 열 뿐) */
+(function(){
+  var d = document.querySelector('.dhr .dhr-about__c--lead .dhr-about__more'); if(!d) return;
+  function sync(){ d.open = window.matchMedia('(min-width: 880px)').matches; }
+  sync(); window.matchMedia('(min-width: 880px)').addEventListener('change', sync);
+})();
+
 /* 등장 — 스크롤에 맞춰 카드 · 섹션 머리가 아래에서 위로. 한 번만, 동작 줄이기면 안 한다.
    CSS 는 아무것도 감추지 않는다: 스크립트가 없으면 그냥 다 보인다. */
 (function(){
@@ -2131,9 +2139,14 @@
     var cnt = el('div', 'dhpk__cnt'); head.appendChild(ttl); head.appendChild(cnt);
     var bar = el('div', 'dhpk__bar'); bar.appendChild(el('i'));
     var grid = el('div', 'dhpk__grid');
+    /* 타일에 보이는 이름 — 모든 맛이 같은 낱말로 시작하면(「노보 블랙멘솔」 「노보 데저트」…) 그 낱말은 뺀다.
+       여섯 칸에 같은 브랜드가 여섯 번 찍히면 정작 맛 이름이 두 줄로 꺾인다. data-name · aria-label 은 원래 이름 그대로 */
+    var names = list.map(chipName), first = names.map(function(n){ return (n.split(/\s+/)[0] || ''); });
+    var dropFirst = names.length > 1 && first[0] && first.every(function(f){ return f === first[0]; }) && names.every(function(n){ return n.replace(/^\S+\s+/, '').length > 0; });
+    function shown(n){ return dropFirst ? n.replace(/^\S+\s+/, '') : n; }
     var tiles = list.map(function(c){
       var t = el('div', 'dhpk__tile'); t.dataset.name = chipName(c);
-      t.appendChild(el('span', 'dhpk__name', chipName(c)));
+      t.appendChild(el('span', 'dhpk__name', shown(chipName(c))));
       var q = el('div', 'dhpk__q');
       q.appendChild(btnDiv('dhpk__b dhpk__b--m', chipName(c) + ' 한 병 빼기', '−'));
       q.appendChild(el('span', 'dhpk__n', '0'));

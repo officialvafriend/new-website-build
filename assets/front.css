@@ -269,14 +269,14 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 @media(min-width:880px){.dhr .bnav{display:none}}
 /* 분류 타일 — 홈 */
 /* 폰에서는 두 줄로 — 한 줄에 일곱 개를 밀어 넣으면 타일이 아이콘보다 좁아진다 */
-.dhr .qcats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem .2rem;margin:1.1rem 0 .2rem;text-align:center}
+.dhr .qcats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem .2rem;margin:.6rem 0 1rem;text-align:center}
 .dhr .qcats a{display:flex;flex-direction:column;align-items:center;gap:.4rem;font-size:13px;font-weight:700;color:var(--dh-ink);min-width:0}
 .dhr .qcats__ic{width:54px;height:54px;border-radius:999px;background:var(--dh-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 0 var(--dh-line);transition:transform 160ms}
 .dhr .qcats a:hover .qcats__ic{transform:translateY(-2px)}
 .dhr .qcats__ic img{width:100%;height:100%;object-fit:cover}
 .dhr .qcats__ic svg{width:26px;height:26px;color:var(--dh-ink);stroke-width:1.9}
 .dhr .qcats a span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-@media(min-width:640px){.dhr .qcats{grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:.6rem;margin-top:1.4rem}.dhr .qcats__ic{width:72px;height:72px}.dhr .qcats a{font-size:14px}}
+@media(min-width:640px){.dhr .qcats{grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:.6rem;margin-top:.8rem}.dhr .qcats__ic{width:72px;height:72px}.dhr .qcats a{font-size:14px}}
 @media(min-width:640px){.dhr .qcats__ic svg{width:30px;height:30px}}
 @media(min-width:880px){.dhr .qcats{display:flex;justify-content:center;gap:2.2rem}.dhr .qcats__ic{width:84px;height:84px}.dhr .qcats__ic svg{width:34px;height:34px}}
 /* 푸터 — 입금 계좌 */
@@ -935,26 +935,66 @@ body.dhr-imgfx .card .fig img.is-ld,body.dhr-imgfx .bthumbs img.is-ld,body.dhr-i
 .dhr .dhr-about{background:none;border:0;padding:0;margin-top:2.6rem}
 .dhr .dhr-about__t{margin-bottom:1.1rem}
 .dhr .dhr-about__g{gap:12px}
-.dhr .dhr-about__c{background:var(--dh-surface);border:1px solid var(--dh-line);border-radius:var(--dh-radius-lg);padding:1.25rem 1.3rem;display:flex;flex-direction:column;gap:.5rem;min-width:0}
-.dhr .dhr-about__c h3{margin:0}
+.dhr .dhr-about__c{position:relative;background:var(--dh-surface);border:1px solid var(--dh-line);border-radius:var(--dh-radius-lg);padding:1.35rem 1.4rem 1.3rem;display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.dhr .dhr-about__c h3{margin:0;font-size:17px}
+.dhr .dhr-about__c p{font-size:15px;line-height:1.65}
 .dhr .dhr-about__c--lead{background:var(--dh-ink);color:var(--dh-surface);border-color:transparent}
 .dhr .dhr-about__c--lead p,.dhr .dhr-about__c--lead .dhr-about__more,.dhr .dhr-about__c--lead .dhr-about__more summary{color:var(--dh-surface)}
-.dhr .dhr-about__c--lead .dhr-about__l a{color:var(--dh-surface)}
+.dhr .dhr-about__c--lead p:first-of-type{font-size:clamp(18px,15px + 1vw,26px);line-height:1.45;font-weight:800;max-width:24ch;word-break:keep-all}
+.dhr .dhr-about__c--lead{gap:1rem}
+.dhr .dhr-about__c--lead .dhr-about__chips li a,.dhr .dhr-about__c--lead .dhr-about__chips li{min-height:36px;padding:0 14px;font-size:14px}
 .dhr .dhr-about__c--soft{background:var(--dh-accent-soft);border-color:transparent}
+/* 1 — 브랜드 칩: 파는 브랜드를 글자 알약으로 (장식이 아니라 글의 요약) */
+.dhr .dhr-about__chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.dhr .dhr-about__chips li a,.dhr .dhr-about__chips li{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;font-size:13.5px;font-weight:700;color:var(--dh-surface);background:rgba(255,255,255,.12);text-decoration:none}
+.dhr .dhr-about__chips li:has(a){padding:0;background:none}
+.dhr .dhr-about__chips li a:hover{background:rgba(255,255,255,.2)}
+html[data-theme="dark"] .dhr .dhr-about__chips li a,html[data-theme="dark"] .dhr .dhr-about__chips li{background:rgba(0,0,0,.12)}
+html[data-theme="dark"] .dhr .dhr-about__chips li a:hover{background:rgba(0,0,0,.2)}
+/* 2 — 입호흡 / 폐호흡 두 칸 */
+.dhr .dhr-about__vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dhr .dhr-about__vs-c{display:flex;flex-direction:column;gap:6px;padding:12px 12px 11px;border-radius:14px;background:var(--dh-surface-2);min-width:0}
+.dhr .dhr-about__vs-c svg{width:22px;height:22px;color:var(--dh-ink);stroke-width:1.9}
+.dhr .dhr-about__vs-c b{font-size:15px;font-weight:800;color:var(--dh-ink);line-height:1.2}
+.dhr .dhr-about__vs-c b small{font-size:11.5px;font-weight:800;color:var(--dh-ink-3);margin-left:2px;letter-spacing:.04em !important}
+.dhr .dhr-about__vs-c span{font-size:13px;line-height:1.45;color:var(--dh-ink-2);word-break:keep-all}
+/* 3 — 출고 3단계 */
+.dhr .dhr-about__steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0;padding:0;list-style:none;counter-reset:dhr-step}
+.dhr .dhr-about__steps li{position:relative;display:flex;flex-direction:column;gap:6px;padding:12px 10px 11px;border-radius:14px;background:var(--dh-surface);min-width:0}
+.dhr .dhr-about__steps li::before{counter-increment:dhr-step;content:counter(dhr-step);position:absolute;top:8px;right:10px;font-size:12px;font-weight:800;color:var(--dh-ink-3);font-variant-numeric:tabular-nums}
+.dhr .dhr-about__steps svg{width:22px;height:22px;color:var(--dh-accent-deep);stroke-width:1.9}
+.dhr .dhr-about__steps span{font-size:13px;line-height:1.4;font-weight:700;color:var(--dh-ink);word-break:keep-all}
+/* 4 — 19 배지 */
+.dhr .dhr-about__age{display:inline-grid;place-items:center;width:56px;height:56px;border-radius:999px;background:var(--dh-ink);color:var(--dh-surface);font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+/* 더 읽기 · 링크 알약 */
 .dhr .dhr-about__more{font-size:14.5px;color:var(--dh-ink-2)}
 .dhr .dhr-about__c .dhr-about__more summary{cursor:pointer;font-weight:800;list-style:none;display:inline-flex;align-items:center;gap:.3rem;min-height:36px}
 .dhr .dhr-about__c:not(.dhr-about__c--lead) .dhr-about__more summary{color:var(--dh-ink)}
 .dhr .dhr-about__more summary::-webkit-details-marker{display:none}
-.dhr .dhr-about__more summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.dhr .dhr-about__more summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s}
 .dhr .dhr-about__more[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
 .dhr .dhr-about__more[open] summary{margin-bottom:.3rem}
 .dhr .dhr-about__more p{margin:0;line-height:1.7}
-.dhr .dhr-about__l{margin-top:auto !important}
+.dhr .dhr-about__l{margin-top:auto !important;display:flex;flex-wrap:wrap;gap:8px;padding-top:.35rem;font-size:14px}
+.dhr .dhr-about__l a{display:inline-flex;align-items:center;gap:.2rem;min-height:40px;padding:0 .95rem 0 1.05rem;border-radius:999px;background:var(--dh-surface);color:var(--dh-ink);font-weight:800;text-decoration:none;box-shadow:inset 0 0 0 1.5px var(--dh-line-strong);transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s}
+.dhr .dhr-about__l a svg{width:16px;height:16px;stroke-width:2.2}
+.dhr .dhr-about__l a:hover{background:var(--dh-surface-2)}
+.dhr .dhr-about__l a:active{transform:scale(.97)}
+.dhr .dhr-about__c--lead .dhr-about__l a{background:var(--dh-surface);color:var(--dh-ink);box-shadow:none}
+.dhr .dhr-about__c--lead .dhr-about__l a:hover{background:var(--dh-surface-2)}
+.dhr .dhr-about__c--4 .dhr-about__l a{background:var(--dh-accent);color:var(--dh-accent-ink);box-shadow:none}
+.dhr .dhr-about__c--4 .dhr-about__l a:hover{background:var(--dh-accent-deep)}
 @media(min-width:880px){
   .dhr .dhr-about__g{grid-template-columns:repeat(3,minmax(0,1fr))}
   .dhr .dhr-about__c--lead{grid-column:span 2}
-  .dhr .dhr-about__c:last-child{grid-column:span 2}
-  .dhr .dhr-about__c--lead p:first-of-type{font-size:17px;line-height:1.6;max-width:42ch}
+  .dhr .dhr-about__c:last-child{grid-column:span 2;flex-direction:row;flex-wrap:wrap;align-items:center;align-content:flex-start}
+  .dhr .dhr-about__c--lead .dhr-about__more[open] summary{display:none}
+  .dhr .dhr-about__c--lead .dhr-about__more[open] p{font-size:15.5px;line-height:1.7;max-width:60ch;opacity:.9}
+  .dhr .dhr-about__c:last-child h3{flex:1 1 60%;order:2}
+  .dhr .dhr-about__c:last-child .dhr-about__age{order:1;margin-right:.2rem}
+  .dhr .dhr-about__c:last-child p,.dhr .dhr-about__c:last-child details{flex:1 1 100%;order:3}
+  .dhr .dhr-about__c:last-child .dhr-about__l{order:4;flex:1 1 100%}
+}
 }
 @media(prefers-reduced-motion:reduce){.dhr .ends .ss.is-tick{animation:none} body.dhr-imgfx img{opacity:1;transform:none}}
 
@@ -996,7 +1036,7 @@ body.dhr-imgfx .card .fig img.is-ld,body.dhr-imgfx .bthumbs img.is-ld,body.dhr-i
   .dhr .hero__sub{font-size:17px}
 }
 /* 숫자 셋 */
-.dhr .nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:1.2rem 0 .2rem}
+.dhr .nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:1rem 0 .2rem}
 @media(min-width:600px){.dhr .nums{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .dhr .num{padding:1rem .9rem;border-radius:var(--dh-radius-lg);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));text-align:center;min-width:0}
 .dhr .num b{display:block;font-size:clamp(1.6rem,1.2rem + 1.8vw,2.6rem);font-weight:900;line-height:1.1;color:var(--dh-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -1073,3 +1113,6 @@ html[data-theme="dark"] .dhr .card.is-gated .fig img{mix-blend-mode:normal;borde
 /* 폰(두 칸): 파는 값 한 줄, 그 아래 정가 + 할인율 한 줄 — 셋을 한 줄에 두면 세 줄로 꺾인다 */
 @media(max-width:639px){.dhr .pr b{font-size:16px;flex-basis:100%}.dhr .pr .off{font-size:12px}.dhr .card .buy{align-self:stretch}}
 @media(prefers-reduced-motion:reduce){.dhr .card,.dhr .card .buy{transition:none}}
+
+/* 홈 — 타일 바로 아래 가림 안내: 위아래 16px 한 리듬 (2026-10-07, 사장님 「간격이 문제」) */
+.dhr .qcats + .dhr-gate{margin:1rem 0 1rem}
