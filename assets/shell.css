@@ -2701,3 +2701,39 @@ html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content
   html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content th,
   html body.dhr.dhr-wrap.dhr-wrap.page:not(.woocommerce-account) .wd-page__content td{ padding: 8px 8px; }
 }
+
+/* ══ 맛 고르기 타일 (.dhpk) — 묶음 상품 구매 폼 안, 옛 옵션 UI 의 맛 칩 카드를 대신 보인다 (2026-10-07) ══
+   폼 안이라 테마 규칙이 세다 — 한 단계 올린 선택자 + !important. 흰 카드 · 검정 · 파랑 포인트, 세로 선 없음, 모서리 16/999 */
+html body.dhr.dhr-wrap.dhr-wrap .dhx-card.dhpk-src{ display: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk{ margin: 10px 0 14px; padding: 14px; border-radius: 16px; background: var(--dh-surface); box-shadow: 0 0 0 1px var(--dh-line); font-family: inherit; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__head{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__t{ display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__no{ display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: var(--dh-ink); color: var(--dh-surface); font-size: 12.5px; font-weight: 800; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__cnt{ font-size: 14px; font-weight: 800; color: var(--dh-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-done .dhpk__cnt{ color: var(--dh-accent); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__bar{ height: 6px; margin: 10px 0 12px; border-radius: 999px; background: var(--dh-surface-2); overflow: hidden; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__bar i{ display: block; height: 100%; width: 0; border-radius: 999px; background: var(--dh-accent); transition: width .32s cubic-bezier(.23,1,.32,1); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__grid{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 600px){ html body.dhr.dhr-wrap.dhr-wrap .dhpk__grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile{ position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 10px 10px 8px; border-radius: 14px; background: var(--dh-surface); box-shadow: 0 0 0 1.5px var(--dh-line); cursor: pointer; user-select: none; -webkit-user-select: none; transition: box-shadow .2s, background .2s, transform .42s cubic-bezier(.23,1,.32,1); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile.is-on{ box-shadow: 0 0 0 2px var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile:active{ transform: scale(.97); transition-duration: .09s; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__name{ font-size: 14px; font-weight: 700; color: var(--dh-ink); line-height: 1.3; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__q{ display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; height: 40px; border-radius: 999px; background: var(--dh-surface-2); overflow: hidden; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__b{ display: grid; place-items: center; height: 40px; font-size: 20px; font-weight: 700; color: var(--dh-ink); cursor: pointer; touch-action: none; transition: opacity .15s; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__b.is-off{ opacity: .25; cursor: default; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__b:focus-visible{ outline: 2px solid var(--dh-accent); outline-offset: -2px; border-radius: 999px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__n{ text-align: center; font-size: 16px; font-weight: 800; color: var(--dh-ink); font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile.is-on .dhpk__n{ color: var(--dh-accent); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__n.is-tick{ animation: dhpk-tick .36s cubic-bezier(.23,1,.32,1); }
+@keyframes dhpk-tick{ 0%{ filter: blur(2px); opacity: .4; transform: translateY(3px); } 100%{ filter: blur(0); opacity: 1; transform: none; } }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__quick{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip{ display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--dh-ink); color: var(--dh-surface); font-size: 13.5px; font-weight: 800; cursor: pointer; user-select: none; transition: opacity .15s, transform .42s cubic-bezier(.23,1,.32,1); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip--ghost{ background: var(--dh-surface); color: var(--dh-ink-2); box-shadow: 0 0 0 1.5px var(--dh-line); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip.is-off{ opacity: .35; cursor: default; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip:active{ transform: scale(.97); transition-duration: .09s; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__hint{ margin-top: 10px; font-size: 13.5px; color: var(--dh-ink-3); font-weight: 600; transition: color .2s; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-done .dhpk__hint{ color: var(--dh-accent); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__hint.is-flash{ color: var(--dh-ink); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-locked .dhpk__grid{ opacity: .55; }
+@media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhpk__n.is-tick{ animation: none; } html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile, html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip{ transition: none; } }
