@@ -4,3 +4,11 @@ __pycache__/
 *.pyc
 # 스텁 테스트가 만드는 임시 파일
 .dhr-main-test.php
+# 작업 임시물 — 스크립트(.mjs · .php)만 남기고 받은 HTML · 스크린샷 · 결과 폴더는 뺀다
+scratchpad/**/*.png
+scratchpad/**/*.html
+scratchpad/**/*.json
+scratchpad/**/*.jpg
+scratchpad/audit*/
+scratchpad/pop/
+scratchpad/live/package-lock.json
