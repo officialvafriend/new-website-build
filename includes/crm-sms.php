@@ -415,6 +415,8 @@ function sms_saved_notice(): void {
 		echo '<div class="notice notice-success"><p>동의를 읽을 회원 메타 키를 저장했습니다.</p></div>';
 	} elseif ( 'cleared' === $s ) {
 		echo '<div class="notice notice-success"><p>붙여 넣은 명단을 지웠습니다.</p></div>';
+	} elseif ( 'excl' === $s ) {
+		echo '<div class="notice notice-success"><p>제외 명단을 저장했습니다.</p></div>';
 	} elseif ( 'sentdel' === $s ) {
 		echo '<div class="notice notice-success"><p>보낸 기록 한 묶음을 지웠습니다.</p></div>';
 	} elseif ( 'reward' === $s ) {
@@ -463,6 +465,7 @@ function xls(): void {
 	$mode = isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ? 'all' : 'yes';
 	$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
 	[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
+	[ $rows ] = apply_exclude( $rows, $seg ); // 제외 명단
 	$grp  = isset( $_GET['grp'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['grp'] ) ) : '';
 	if ( 'all' === $seg ) {
 		$grp = ''; // 줄마다 주 명단이 그룹명

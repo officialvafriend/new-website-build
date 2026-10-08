@@ -319,3 +319,108 @@ function sent_box( string $back, int $skipped ): void {
 	}
 	echo '</tbody></table></details>';
 }
+
+/* ── 제외 명단 — 쿠폰 · 적립금을 보내지 않을 사람 (사장님 2026-10-08 「쿠폰 제외 대상은 왕한빈, 진선영, 유지민」) ──
+ * 이름 또는 전화번호 한 줄에 하나. 마케팅 명단(담고 나간 · 노보·디오 · RFM · 한 사람에 한 통)에서 뺀다.
+ * **미입금 안내는 빼지 않는다** — 그건 광고가 아니라 그 사람의 주문 이야기다. 이름은 똑같을 때만(빈칸 무시) · 번호는 정규화해 견준다.
+ * 동명이인이 걸릴 수 있어 화면에 「빠진 사람」을 그대로 적는다 — 틀리면 번호로 바꿔 적으면 그 사람만 빠진다. */
+
+const EXCL_OPT = 'duckhoo_crm_exclude';
+
+/** 기본 제외 명단 — 옵션이 비어 있을 때. 필터 `duckhoo_crm_exclude_default`. */
+function exclude_default(): array {
+	return (array) apply_filters( 'duckhoo_crm_exclude_default', array( '왕한빈', '진선영', '유지민' ) );
+}
+
+/** 글(한 줄에 하나)을 항목으로. 번호는 숫자만 남기고, 이름은 빈칸을 뺀다. 순수. @return string[] */
+function parse_exclude( string $text ): array {
+	$out = array();
+	foreach ( preg_split( '/\r\n|\r|\n|,/', $text ) ?: array() as $l ) {
+		$l = trim( preg_replace( '/^[\s\x{3000}]+|[\s\x{3000}]+$/u', '', $l ) );
+		if ( '' === $l || str_starts_with( $l, '#' ) ) {
+			continue;
+		}
+		$p = phone_norm( $l );
+		$v = ( '' !== $p && preg_match( '/^[\d\s\-+().]+$/', $l ) ) ? $p : preg_replace( '/\s+/u', '', $l );
+		if ( '' !== $v && ! in_array( $v, $out, true ) ) {
+			$out[] = $v;
+		}
+	}
+	return $out;
+}
+
+/** 지금 제외 명단 (옵션 → 기본). 저장된 것이 있으면 그것만 — 비워 저장하면 기본도 안 쓴다(`-` 한 줄). */
+function exclude_list(): array {
+	$v = get_option( EXCL_OPT, null );
+	if ( null === $v ) {
+		return exclude_default();
+	}
+	return is_array( $v ) ? array_values( array_filter( array_map( 'strval', $v ), fn( $s ) => '' !== $s && '-' !== $s ) ) : array();
+}
+
+/**
+ * 제외 명단에 든 사람을 뺀다. 미입금(`unpaid`) 줄은 건너뛴다. 순수.
+ *
+ * @return array{0:array<int,array<string,mixed>>,1:array<int,string>} 남은 줄 · 뺀 사람(이름 · 번호 끝 네 자리)
+ */
+function without_excluded( array $rows, array $list, string $seg = '' ): array {
+	if ( ! $list ) {
+		return array( $rows, array() );
+	}
+	$names  = array();
+	$phones = array();
+	foreach ( $list as $e ) {
+		if ( preg_match( '/^\d{8,}$/', $e ) ) {
+			$phones[ $e ] = true;
+		} else {
+			$names[ preg_replace( '/\s+/u', '', $e ) ] = true;
+		}
+	}
+	$keep = array();
+	$gone = array();
+	foreach ( $rows as $r ) {
+		$rs = (string) ( $r['seg'] ?? $seg );
+		$p  = phone_norm( (string) ( $r['phone'] ?? '' ) );
+		$n  = preg_replace( '/\s+/u', '', (string) ( $r['name'] ?? '' ) );
+		if ( 'unpaid' !== $rs && ( ( '' !== $p && isset( $phones[ $p ] ) ) || ( '' !== $n && isset( $names[ $n ] ) ) ) ) {
+			$gone[] = (string) ( $r['name'] ?? '' ) . ( '' !== $p ? ' (…' . substr( $p, -4 ) . ')' : '' );
+			continue;
+		}
+		$keep[] = $r;
+	}
+	return array( $keep, $gone );
+}
+
+/** 화면 · CSV · xls 공용. @return array{0:array,1:array<int,string>} */
+function apply_exclude( array $rows, string $seg ): array {
+	if ( 'unpaid' === $seg ) {
+		return array( $rows, array() );
+	}
+	return without_excluded( $rows, exclude_list(), $seg );
+}
+
+function save_exclude(): void {
+	if ( ! may() ) {
+		wp_die( '권한이 없습니다.' );
+	}
+	check_admin_referer( 'dhr-crm-excl' );
+	$t = isset( $_POST['excl'] ) ? (string) wp_unslash( $_POST['excl'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$l = parse_exclude( sanitize_textarea_field( $t ) );
+	update_option( EXCL_OPT, $l ? $l : array( '-' ), false ); // 비워 저장 = 기본도 끄기
+	$back = isset( $_POST['back'] ) ? esc_url_raw( wp_unslash( (string) $_POST['back'] ) ) : admin_url( 'admin.php?page=' . SLUG );
+	wp_safe_redirect( add_query_arg( 'dhr_sms_saved', 'excl', $back ) );
+	exit;
+}
+add_action( 'admin_post_dhr_crm_exclude', __NAMESPACE__ . '\\save_exclude' );
+
+/** 제외 명단 상자 — 칸 + 이번 명단에서 빠진 사람. */
+function exclude_box( string $back, array $gone, string $seg ): void {
+	$l = exclude_list();
+	echo '<details class="dhr-crm-adv" style="margin:0 0 14px"><summary style="cursor:pointer;font-weight:700">제외 명단 ' . esc_html( number_format_i18n( count( $l ) ) ) . '명 — 쿠폰 · 적립금 문자를 보내지 않을 사람'
+		. ( 'unpaid' === $seg ? ' (미입금 안내에는 적용하지 않습니다)' : ' (이번 명단에서 ' . esc_html( number_format_i18n( count( $gone ) ) ) . '명 빠짐' . ( $gone ? ': ' . esc_html( implode( ' · ', array_slice( $gone, 0, 12 ) ) ) . ( count( $gone ) > 12 ? ' …' : '' ) : '' ) . ')' ) . '</summary>';
+	echo '<p style="margin:10px 0 6px">한 줄에 한 사람 — 이름 또는 전화번호. 이름은 똑같은 이름이 전부 빠지니(동명이인) 특정 사람만 빼려면 전화번호로 적어 주세요. 미입금 안내는 광고가 아니라 여기 적어도 빠지지 않습니다.</p>';
+	echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">';
+	echo '<input type="hidden" name="action" value="dhr_crm_exclude"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-excl' ) ) . '"><input type="hidden" name="back" value="' . esc_attr( $back ) . '">';
+	echo '<textarea name="excl" rows="4" style="width:260px" placeholder="왕한빈&#10;010-1234-5678">' . esc_textarea( implode( "\n", $l ) ) . '</textarea>';
+	echo '<button class="button">제외 명단 저장</button></form></details>';
+}

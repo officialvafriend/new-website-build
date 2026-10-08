@@ -699,6 +699,7 @@ function screen(): void {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
 	[ $rows, $skipped ] = apply_skip( $rows ); // 최근 21일 안에 양식으로 내려받은(= 문자 받은) 사람은 뺀다
+	[ $rows, $gone ]    = apply_exclude( $rows, $seg ); // 제외 명단 (미입금은 안 뺀다)
 	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
 	$dt   = fn( $ts ) => $ts ? wp_date( 'Y.m.d', (int) $ts ) : '—';
 	$name = fn( string $k ) => segs()[ $k ] ?? $k;
@@ -748,6 +749,7 @@ function screen(): void {
 	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) . ( skip_on() ? '' : '&skip=0' ) );
 	sms_saved_notice();
 	sent_box( $back, $skipped );
+	exclude_box( $back, $gone, $seg );
 	if ( 'all' === $seg ) {
 		plan_box( $back, $inc );
 	}
@@ -816,6 +818,7 @@ function csv(): void {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
 	[ $rows ] = apply_skip( $rows );
+	[ $rows ] = apply_exclude( $rows, $seg );
 	$smsw = array( 'yes' => '동의', 'no' => '거부', '' => '기록 없음' );
 	nocache_headers();
 	header( 'Content-Type: text/csv; charset=utf-8' );
