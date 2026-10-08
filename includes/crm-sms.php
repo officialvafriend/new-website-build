@@ -415,6 +415,8 @@ function sms_saved_notice(): void {
 		echo '<div class="notice notice-success"><p>동의를 읽을 회원 메타 키를 저장했습니다.</p></div>';
 	} elseif ( 'cleared' === $s ) {
 		echo '<div class="notice notice-success"><p>붙여 넣은 명단을 지웠습니다.</p></div>';
+	} elseif ( 'reward' === $s ) {
+		echo '<div class="notice notice-success"><p>보상 라벨을 저장했습니다 — 그룹명 뒤에 붙습니다.</p></div>';
 	}
 }
 
@@ -433,16 +435,17 @@ function export_rows( string $seg, array $opt, array $inc = array(), bool $fresh
 			}
 		}
 		unset( $r );
-		return with_sms( $rows );
+		return with_sms( with_reward( $rows, rewards() ) );
 	}
 	$d    = data( $seg, $opt, $fresh );
 	$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
 	$g    = $name( $seg ) . ( 'rfm' === $seg && '' !== $opt['only'] ? ' ' . $opt['only'] : '' );
 	foreach ( $rows as &$r ) {
 		$r['group'] = $g;
+		$r['part']  = reward_key( $seg, (string) $opt['only'] );
 	}
 	unset( $r );
-	return with_sms( $rows );
+	return with_sms( with_reward( $rows, rewards() ) );
 }
 
 /** `.xls` 내보내기 — 동의한 사람만 (`sms=all` 이면 전원 · 거부는 그래도 뺀다). 그룹명은 `grp` 로 덮을 수 있다. */

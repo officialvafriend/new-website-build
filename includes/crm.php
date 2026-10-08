@@ -647,7 +647,7 @@ function combined( array $inc, bool $fresh = false ): array {
 	foreach ( array( 'unpaid', 'abandon', 'brand' ) as $k ) {
 		if ( in_array( $k, $inc, true ) ) {
 			$d = data( $k, opts( $k ), $fresh );
-			$lists[ $k ] = dedupe( $d['rows'] );
+			$lists[ $k ] = array_map( fn( $r ) => $r + array( 'part' => $k ), dedupe( $d['rows'] ) );
 			$at = max( $at, (int) $d['at'] );
 		}
 	}
@@ -656,7 +656,7 @@ function combined( array $inc, bool $fresh = false ): array {
 		$d    = data( 'rfm', opts( 'rfm' ), $fresh );
 		$rows = array();
 		foreach ( $labels as $l ) {
-			$rows = array_merge( $rows, filter_only( $d['rows'], $l ) );
+			$rows = array_merge( $rows, array_map( fn( $r ) => $r + array( 'part' => 'rfm:' . $l ), filter_only( $d['rows'], $l ) ) );
 		}
 		$lists['rfm'] = dedupe( $rows );
 		$at = max( $at, (int) $d['at'] );
@@ -746,6 +746,9 @@ function screen(): void {
 
 	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) );
 	sms_saved_notice();
+	if ( 'all' === $seg ) {
+		plan_box( $back, $inc );
+	}
 	sms_box( $back );
 	echo '<div class="dhr-crm-adv">SMS 수신 동의: <b>동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</b> · 거부 ' . esc_html( $w( $smsc['no'] ) ) . '명 · 기록 없음 ' . esc_html( $w( $smsc['unknown'] ) ) . '명 (명단 ' . esc_html( $w( $all_n ) ) . '명). '
 		. ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' )
@@ -770,9 +773,14 @@ function screen(): void {
 		$overlap = count( array_filter( $rows, fn( $r ) => ! empty( $r['also'] ) ) );
 		$byseg   = array();
 		foreach ( $rows as $r ) { $byseg[ $r['seg'] ] = ( $byseg[ $r['seg'] ] ?? 0 ) + 1; }
-		echo '<div class="dhr-crm-adv">명단을 따로 보내면 ' . esc_html( $w( array_sum( $d['n'] ) ) ) . '통, 합치면 <b>' . esc_html( $w( count( $rows ) ) ) . '통</b> — 겹친 사람 ' . esc_html( $w( $overlap ) ) . '명. 보낼 안내: ';
+		echo '<div class="dhr-crm-adv">명단을 따로 보내면 ' . esc_html( $w( array_sum( $d['n'] ) ) ) . '통, 합치면 <b>' . esc_html( $w( count( $rows ) ) ) . '통</b> — 겹친 사람 ' . esc_html( $w( $overlap ) ) . '명 (한 사람에 한 보상). 보낼 안내: ';
+		$rs = reward_summary( $rows );
 		foreach ( priority() as $k ) {
-			if ( isset( $byseg[ $k ] ) ) { echo '<b>' . esc_html( $name( $k ) ) . '</b> ' . esc_html( $w( $byseg[ $k ] ) ) . '명 · '; }
+			foreach ( $rs as $pk => $v ) {
+				if ( $pk === $k || str_starts_with( $pk, $k . ':' ) ) {
+					echo '<b>' . esc_html( str_starts_with( $pk, 'rfm:' ) ? 'RFM ' . substr( $pk, 4 ) : $name( $k ) ) . '</b> ' . esc_html( $w( $v['n'] ) ) . '명' . ( '' !== $v['reward'] ? ' → ' . esc_html( $v['reward'] ) : ' <span class="dhr-sl-note" style="margin:0">(보상 라벨 없음)</span>' ) . ' · ';
+				}
+			}
 		}
 		echo '</div>';
 	}
@@ -781,10 +789,10 @@ function screen(): void {
 	\Duckhoo\Redesign\Sales\card( '명단', $w( count( $rows ) ) . '명', '연락처 있음 ' . $w( count( array_filter( $rows, fn( $r ) => '' !== $r['phone'] ) ) ) . '명' );
 	\Duckhoo\Redesign\Sales\card( 'abandon' === $seg ? '담긴 금액 합계' : ( 'unpaid' === $seg ? '미입금 합계' : '누적 금액 합계' ), $w( $sum ) . '원', '1인 평균 ' . $w( $sum / max( 1, count( $rows ) ) ) . '원' );
 	echo '</div>';
-	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>이름</th><th>연락처</th><th>SMS</th><th>기준</th><th>금액</th><th>날짜</th><th>메모</th></tr></thead><tbody>';
+	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>이름</th><th>연락처</th><th>SMS</th><th>그룹명 · 보상</th><th>기준</th><th>금액</th><th>날짜</th><th>메모</th></tr></thead><tbody>';
 	$smsw = array( 'yes' => '✓ 동의', 'no' => '✗ 거부', '' => '? 기록 없음' );
 	foreach ( array_slice( $rows, 0, 400 ) as $r ) {
-		echo '<tr><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( $r['phone'] ?: '—' ) . '</td><td>' . esc_html( $smsw[ $r['sms'] ] ?? '?' ) . '</td><td>' . esc_html( $r['why'] ) . '</td><td class="dhr-sl-num">' . esc_html( $w( $r['amount'] ) ) . '</td><td>' . esc_html( $dt( $r['when'] ) ) . '</td><td>' . esc_html( $r['note'] ) . '</td></tr>';
+		echo '<tr><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( $r['phone'] ?: '—' ) . '</td><td>' . esc_html( $smsw[ $r['sms'] ] ?? '?' ) . '</td><td>' . esc_html( (string) ( $r['group'] ?? '' ) ) . '</td><td>' . esc_html( $r['why'] ) . '</td><td class="dhr-sl-num">' . esc_html( $w( $r['amount'] ) ) . '</td><td>' . esc_html( $dt( $r['when'] ) ) . '</td><td>' . esc_html( $r['note'] ) . '</td></tr>';
 	}
 	echo '</tbody></table></div>';
 	if ( count( $rows ) > 400 ) {

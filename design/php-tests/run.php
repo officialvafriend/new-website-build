@@ -2821,5 +2821,28 @@ $na=$AG.'needs_agree';
 $ok($na(true,false,'GET',false,false)===true && $na(true,false,'get',false,false)===true, '3단계 문: 비로그인 GET · 쿠키 없음 · 처음이면 2단계로');
 $ok($na(true,false,'POST',false,false)===false && $na(true,true,'GET',false,false)===false && $na(true,false,'GET',true,false)===false && $na(true,false,'GET',false,true)===false && $na(false,false,'GET',false,false)===false, '3단계 문: POST(가입 제출) · 로그인 · 약관 쿠키 있음 · 이미 한 번 보냄 · 필터로 끔 이면 안 보낸다');
 
+/* ── 주차 플랜 · 보상 라벨 · 한 사람에 한 보상 (includes/crm-plan.php) ─────────────── */
+require_once dirname(__DIR__, 2).'/includes/crm-plan.php';
+$rk=$CR.'reward_key';
+$ok($rk('abandon')==='abandon' && $rk('rfm','챔피언')==='rfm:챔피언' && $rk('rfm')==='rfm' && $rk('brand','x')==='brand', '보상 열쇠: 명단 그대로, RFM 은 갈래를 붙인다');
+$wr=$CR.'with_reward'; $RW=['abandon'=>'적립금 3,000원 · 7일','brand'=>'쿠폰 2,000원 · 7일','rfm:챔피언'=>'적립금 5,000원 · 2주','rfm'=>'RFM 공통'];
+$rows=$wr([
+ ['phone'=>'01011112222','seg'=>'abandon','part'=>'abandon','group'=>'장바구니 담고 나간 손님','also'=>['brand']],
+ ['phone'=>'01033334444','seg'=>'brand','part'=>'brand','group'=>'노보 · 디오리퀴드 구매 손님','also'=>[]],
+ ['phone'=>'01055556666','seg'=>'rfm','part'=>'rfm:챔피언','group'=>'RFM 챔피언','also'=>[]],
+ ['phone'=>'01077778888','seg'=>'rfm','part'=>'rfm:충성','group'=>'RFM 충성','also'=>[]],
+ ['phone'=>'01099990000','seg'=>'unpaid','part'=>'unpaid','group'=>'미입금 고객','also'=>[]],
+], $RW);
+$ok($rows[0]['reward']==='적립금 3,000원 · 7일' && $rows[0]['group']==='장바구니 담고 나간 손님 · 적립금 3,000원 · 7일' && $rows[1]['group']==='노보 · 디오리퀴드 구매 손님 · 쿠폰 2,000원 · 7일', '보상 붙이기: 겹친 사람(담고 나간 + 노보)은 주 명단(담고 나간)의 적립금 하나 · 그룹명 뒤에 보상');
+$ok($rows[2]['group']==='RFM 챔피언 · 적립금 5,000원 · 2주' && $rows[3]['group']==='RFM 충성 · RFM 공통' && $rows[3]['reward']==='RFM 공통', '보상 붙이기: RFM 갈래 라벨이 먼저, 없으면 rfm 공통 라벨');
+$ok($rows[4]['reward']==='' && $rows[4]['group']==='미입금 고객', '보상 붙이기: 라벨 없는 명단은 그룹명 그대로 (미입금은 보상이 아니라 안내)');
+$again=$wr($rows,$RW);
+$ok($again[0]['group']===$rows[0]['group'], '보상 붙이기: 두 번 돌려도 보상이 두 번 붙지 않는다');
+$rs=($CR.'reward_summary')($rows);
+$ok($rs['abandon']===['n'=>1,'reward'=>'적립금 3,000원 · 7일'] && $rs['rfm:챔피언']['n']===1 && $rs['unpaid']['reward']==='' && count($rs)===5, '조각별 요약: 사람 수 · 보상');
+$wk=($CR.'weeks')();
+$ok(isset($wk['w13'],$wk['w2'],$wk['hw']) && $wk['w13']['parts']===['abandon','brand'] && $wk['w2']['parts']===['rfm:챔피언','rfm:충성','rfm:신규'] && !in_array('unpaid',$wk['hw']['parts'],true) && !in_array('rfm:휴면',$wk['hw']['parts'],true), '주차 플랜: 1·3주차 = 담고 나간 + 노보·디오, 2주차 = 챔피언·충성·신규, 할로윈에 미입금 · 휴면은 없다');
+foreach ($wk as $w) { foreach ($w['parts'] as $pp) { $ok(isset(($CR.'parts')()[$pp]), '주차 플랜의 조각이 실제 조각 목록에 있다: '.$pp); } }
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
