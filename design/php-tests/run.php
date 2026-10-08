@@ -2716,6 +2716,7 @@ $GLOBALS['__products'] = [];
 
 /* ── 고객 세그먼트 (includes/crm.php) — 순수 계산 ───────────────────────────────────── */
 require_once dirname(__DIR__, 2).'/includes/crm.php';
+require_once dirname(__DIR__, 2).'/includes/crm-sms.php';
 $CR = 'Duckhoo\\Redesign\\Crm\\';
 $ok(($CR.'phone_norm')('+82 10-1234-5678') === '01012345678' && ($CR.'phone_norm')('010.9876.5432') === '01098765432' && ($CR.'phone_norm')('abc') === '' && ($CR.'phone_norm')('1234') === '', '연락처 정규화: +82 · 점 · 못 읽음');
 $sc = ($CR.'score5')([1=>10, 2=>20, 3=>30, 4=>40, 5=>50]);
@@ -2783,6 +2784,32 @@ $ok($cb3[0]['seg'] === 'brand' && $cb3[0]['also'] === ['unpaid'], '합치기: �
 $cb4 = ($CR.'combine')(['extra' => [['name'=>'x','phone'=>'01099998888']], 'unpaid' => [['name'=>'y','phone'=>'01099998888']]]);
 $ok($cb4[0]['seg'] === 'unpaid' && $cb4[0]['also'] === ['extra'], '합치기: 우선순위에 없는 명단은 맨 뒤로');
 $ok(($CR.'default_parts')() === ['unpaid','abandon','brand','rfm:이탈 위험','rfm:관심 필요'] && isset(($CR.'parts')()['rfm:휴면']) && count(($CR.'parts')()) === 10 && isset(($CR.'segs')()['all']), '합치기 조각: 기본 다섯 · RFM 갈래 일곱 + 명단 셋 = 열 · 탭 all');
+// SMS 수신 동의 · 문자 사이트 양식 (includes/crm-sms.php)
+$cw=$CR.'consent_word';
+$ok($cw('Y')==='yes' && $cw(' 동의 ')==='yes' && $cw('1')==='yes' && $cw('TRUE')==='yes' && $cw('N')==='no' && $cw('수신거부')==='no' && $cw('0')==='no' && $cw('')==='' && $cw('모름')==='' && $cw('2026-09-01')==='', '동의 낱말: Y·동의·1·TRUE 는 yes, N·수신거부·0 은 no, 빈 값·모르는 글자는 기록 없음');
+$pd=$CR.'phone_dash';
+$rp=$CR.'roster_parse_consent';
+$r=$rp("이름\t휴대폰\tSMS수신동의\t이메일\n홍길동\t010-1111-2222\tY\ta@b.c\n김영희\t010-3333-4444\tN\t\n박철수\t+82 10-5555-6666\t동의\t\n이모름\t010-7777-8888\t\t\n빈줄\t\tY\t");
+$ok(isset($r['yes']['01011112222']) && isset($r['yes']['01055556666']) && isset($r['no']['01033334444']) && !isset($r['yes']['01077778888']) && !isset($r['no']['01077778888']) && $r['rows']===4 && $r['cols']['phone']==='휴대폰' && $r['cols']['sms']==='SMS수신동의', '명단 읽기(탭·머리줄): 번호 칸·동의 칸을 이름으로 찾아 Y/N/동의, 빈 값은 기록 없음, 번호 없는 줄 안 셈 '.json_encode($r['cols']));
+$r=$rp("name,phone,marketing_opt_in\n가,01012345678,true\n나,01087654321,false\n");
+$ok(isset($r['yes']['01012345678']) && isset($r['no']['01087654321']) && $r['rows']===2, '명단 읽기(쉼표 · 영문 머리줄 · true/false)');
+$r=$rp("010-1111-2222 동의\n010-3333-4444 수신거부\n010-5555-6666\n");
+$ok(isset($r['yes']['01011112222']) && isset($r['no']['01033334444']) && !isset($r['yes']['01055556666']) && $r['rows']===3 && $r['cols']['phone']==='', '명단 읽기(머리줄 없음): 줄마다 번호 + 동의/거부 낱말, 낱말 없으면 기록 없음');
+$ok($rp('')['rows']===0 && $rp("\n\n")['rows']===0, '명단 읽기: 빈 글은 0줄');
+$co=$CR.'consent_of'; $ro=['yes'=>['01011112222'=>true],'no'=>['01033334444'=>true]];
+$ok($co('01011112222','no',$ro)==='no' && $co('01033334444','yes',$ro)==='yes' && $co('01011112222','',$ro)==='yes' && $co('01033334444','',$ro)==='no' && $co('01099999999','',$ro)==='' && $co('','',$ro)==='', '동의 판정: 회원 메타가 먼저, 없으면 명단, 둘 다 없으면 기록 없음 · 번호 없으면 기록 없음');
+$rows=[['u'=>1,'name'=>'가','phone'=>'01011112222'],['u'=>2,'name'=>'나','phone'=>'01033334444'],['u'=>0,'name'=>'비회원','phone'=>'01011112222'],['u'=>3,'name'=>'다','phone'=>'01077777777'],['u'=>4,'name'=>'라','phone'=>'']];
+$at=($CR.'attach_sms')($rows, [1=>'no', 3=>'yes', 4=>'yes'], $ro);
+$ok(array_column($at,'sms')===['no','no','yes','yes','yes'], '줄에 sms 붙이기: 1은 메타 거부가 명단 동의를 이김 · 2는 명단 거부 · 비회원은 명단으로 동의 · 3·4는 메타 동의 '.json_encode(array_column($at,'sms')));
+$ok(($CR.'sms_counts')($at)===['yes'=>3,'no'=>2,'unknown'=>0] && ($CR.'sms_counts')([['sms'=>'']])===['yes'=>0,'no'=>0,'unknown'=>1], '동의·거부·기록 없음 수');
+$x=($CR.'xls_html')([['name'=>'홍길동','phone'=>'01011112222','why'=>'입금전 3일째 · 주문 #5','note'=>'','group'=>'미입금'],['name'=>'번호없음','phone'=>'','why'=>'x','note'=>''],['name'=>'김영희','phone'=>'+82 10-3333-4444','why'=>'노보 2번 · 11병','note'=>'자주 산 것: 타박멘솔','group'=>'노보']], '미입금 고객');
+$u=iconv('CP949','UTF-8',$x);
+$ok(str_starts_with($x,'<meta http-equiv="Content-Type" content="application/vnd.ms-excel; charset=euc-kr">') && str_contains($u,'<td><b>NO</b></td><td><b>그룹명</b></td><td><b>이름</b></td><td><b>전화번호</b></td><td><b>메모</b></td>'), 'xls 양식: tothemoon 머리줄 그대로(NO · 그룹명 · 이름 · 전화번호 · 메모) · EUC-KR 메타');
+$ok(str_contains($u,'<td>1</td><td>미입금 고객</td><td>홍길동</td><td>010-1111-2222</td><td>입금전 3일째 · 주문 #5</td>') && str_contains($u,'<td>2</td><td>미입금 고객</td><td>김영희</td><td>010-3333-4444</td><td>노보 2번 · 11병 / 자주 산 것: 타박멘솔</td>') && !str_contains($u,'번호없음') && substr_count($u,'<tr>')===3, 'xls 양식: 번호 없는 줄은 빼고 NO 를 다시 매김 · 그룹명 인자가 줄의 group 을 덮음 · 메모 = 기준 / 메모 · 하이픈 번호');
+$x2=($CR.'xls_html')([['name'=>'가','phone'=>'01011112222','why'=>'a','note'=>'','group'=>'미입금 고객'],['name'=>'나','phone'=>'01033334444','why'=>'b','note'=>'','group'=>'RFM 이탈 위험']], '');
+$u2=iconv('CP949','UTF-8',$x2);
+$ok(str_contains($u2,'<td>미입금 고객</td><td>가</td>') && str_contains($u2,'<td>RFM 이탈 위험</td><td>나</td>'), 'xls 양식: 그룹명을 비우면 줄마다 자기 주 명단 (한 사람에 한 통 탭)');
+$ok(mb_check_encoding($x,'UTF-8')===false && iconv('CP949','UTF-8',$x)!==false, 'xls 양식: 본문이 실제로 CP949 바이트다 (UTF-8 이 아니다)');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

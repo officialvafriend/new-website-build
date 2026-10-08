@@ -108,6 +108,7 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/sales.php';
 	require_once plugin_dir_path( __FILE__ ) . 'includes/anatomy.php';   // 매출 → 주문 해부 (읽기 전용)
 	require_once plugin_dir_path( __FILE__ ) . 'includes/crm.php';       // 마케팅 → 고객 세그먼트 (읽기 전용 · CSV)
+	require_once plugin_dir_path( __FILE__ ) . 'includes/crm-sms.php';   // 고객 세그먼트 — SMS 수신 동의 · 문자 사이트 양식(.xls)
 	// 도구 → 코드 찾기 — 화면 문구가 테마 · 스니펫 어디서 나오는지 (읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/finder.php';
 	// 마케팅 → 쿠폰 한 번에 만들기 — 손님마다 다른 금액의 쿠폰을 한 번에 만들고 문자 목록을 뽑는다.

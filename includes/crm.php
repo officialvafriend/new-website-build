@@ -677,7 +677,7 @@ function screen(): void {
 	}
 	echo '<style>.dhr-crm-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 16px}.dhr-crm-tabs a{display:inline-block;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #dcdcde;color:#1d2327;text-decoration:none;font-weight:600}.dhr-crm-tabs a.on{background:#1d2327;color:#fff;border-color:#1d2327}.dhr-crm-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}.dhr-crm-bar form{display:inline-flex;gap:6px;align-items:center}.dhr-crm-bar input[type=number]{width:70px}.dhr-crm-segs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}.dhr-crm-segs a{padding:6px 12px;border-radius:999px;border:1px solid #dcdcde;background:#fff;text-decoration:none;color:#1d2327}.dhr-crm-segs a.on{background:#1a5cff;border-color:#1a5cff;color:#fff}.dhr-crm-adv{margin:0 0 12px;padding:10px 14px;background:#f6f7f7;border-radius:10px;font-size:13px;line-height:1.6}</style>';
 	echo '<h1 class="dhr-sl-h1">고객 세그먼트</h1>';
-	echo '<p class="dhr-sl-note">문자 · 쿠폰을 보낼 명단을 실제 주문 · 장바구니에서 뽑습니다. 읽기만 합니다 — 보내는 것은 따로. CSV 는 이름 · 연락처 · 기준 · 금액 · 날짜 · 메모 여섯 칸이고 같은 연락처는 한 줄만 남습니다. 같은 사람이 여러 명단에 들면 「한 사람에 한 통」 탭으로 합쳐 보내세요. 10분 캐시.</p>';
+	echo '<p class="dhr-sl-note">문자 · 쿠폰을 보낼 명단을 실제 주문 · 장바구니에서 뽑습니다. 읽기만 합니다 — 보내는 것은 따로. CSV 는 이름 · 연락처 · 기준 · 금액 · 날짜 · 메모 여섯 칸이고 같은 연락처는 한 줄만 남습니다. 같은 사람이 여러 명단에 들면 「한 사람에 한 통」 탭으로 합쳐 보내세요. <b>SMS 수신에 동의한 사람만</b> 기본으로 보이고 문자 사이트 양식(.xls)에도 그 사람들만 들어갑니다. 10분 캐시.</p>';
 	echo '<div class="dhr-crm-tabs">';
 	foreach ( segs() as $k => $label ) {
 		echo '<a class="' . ( $k === $seg ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $k ) ) . '">' . esc_html( $label ) . '</a>';
@@ -691,7 +691,13 @@ function screen(): void {
 		echo '<div class="notice notice-error"><p>읽다 멈췄습니다: ' . esc_html( $e->getMessage() ) . ' (' . esc_html( basename( $e->getFile() ) . ':' . $e->getLine() ) . ')</p></div></div>';
 		return;
 	}
-	$rows = 'all' === $seg ? $d['rows'] : dedupe( filter_only( $d['rows'], $opt['only'] ) );
+	$rows    = export_rows( $seg, $opt, $inc, false ); // 캐시는 바로 위 data()/combined() 가 채웠다
+	$smsmode = isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ? 'all' : 'yes'; // phpcs:ignore WordPress.Security.NonceVerification
+	$smsc    = sms_counts( $rows );
+	$all_n   = count( $rows );
+	if ( 'yes' === $smsmode ) {
+		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
+	}
 	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
 	$dt   = fn( $ts ) => $ts ? wp_date( 'Y.m.d', (int) $ts ) : '—';
 	$name = fn( string $k ) => segs()[ $k ] ?? $k;
@@ -715,7 +721,7 @@ function screen(): void {
 	}
 	echo '</form>';
 	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . $incq . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
-	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) . $incq ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
+	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
 	echo '<span class="dhr-sl-note" style="margin:0">읽은 시각 ' . esc_html( wp_date( 'm.d H:i', (int) $d['at'] ) ) . '</span></div>';
 	echo '<p class="dhr-sl-note">' . wp_kses( sprintf( $explain[ $seg ], (int) $opt['days'] ), array( 'b' => array() ) ) . '</p>';
 
@@ -738,8 +744,26 @@ function screen(): void {
 		}
 	}
 
+	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) );
+	sms_saved_notice();
+	sms_box( $back );
+	echo '<div class="dhr-crm-adv">SMS 수신 동의: <b>동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</b> · 거부 ' . esc_html( $w( $smsc['no'] ) ) . '명 · 기록 없음 ' . esc_html( $w( $smsc['unknown'] ) ) . '명 (명단 ' . esc_html( $w( $all_n ) ) . '명). '
+		. ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' )
+		. ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
+	echo '<form method="get" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="dhr-crm-bar" style="margin:0 0 14px">';
+	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">';
+	foreach ( $inc as $k ) {
+		echo '<input type="hidden" name="inc[]" value="' . esc_attr( $k ) . '">';
+	}
+	if ( 'all' !== $seg ) {
+		echo '<label>그룹명 <input type="text" name="grp" value="' . esc_attr( $rows ? (string) $rows[0]['group'] : ( segs()[ $seg ] . ( 'rfm' === $seg && $opt['only'] ? ' ' . $opt['only'] : '' ) ) ) . '" style="width:220px"></label>';
+	} else {
+		echo '<span class="dhr-sl-note">그룹명 = 그 사람의 주 명단 (한 파일에 여러 그룹)</span>';
+	}
+	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — 동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</button>';
+	echo '<span class="dhr-sl-note" style="margin:0">NO · 그룹명 · 이름 · 전화번호 · 메모 다섯 칸, 올려 주신 tothemoon 양식 그대로 (EUC-KR)</span></form>';
 	if ( ! $rows ) {
-		echo '<p class="dhr-sl-empty">해당하는 사람이 없습니다.</p></div>';
+		echo '<p class="dhr-sl-empty">' . ( 'yes' === $smsmode && $all_n ? 'SMS 수신에 동의한 사람이 없습니다 (명단 ' . esc_html( $w( $all_n ) ) . '명).' : '해당하는 사람이 없습니다.' ) . '</p></div>';
 		return;
 	}
 	if ( 'all' === $seg ) {
@@ -751,20 +775,16 @@ function screen(): void {
 			if ( isset( $byseg[ $k ] ) ) { echo '<b>' . esc_html( $name( $k ) ) . '</b> ' . esc_html( $w( $byseg[ $k ] ) ) . '명 · '; }
 		}
 		echo '</div>';
-		foreach ( $rows as &$r ) {
-			$r['why']  = $name( $r['seg'] ) . ' — ' . $r['why'];
-			if ( $r['also'] ) { $r['note'] = trim( ( $r['note'] ? $r['note'] . ' / ' : '' ) . '다른 명단: ' . implode( ' · ', array_map( $name, $r['also'] ) ) ); }
-		}
-		unset( $r );
 	}
 	$sum = array_sum( array_column( $rows, 'amount' ) );
 	echo '<div class="dhr-sl-cards">';
 	\Duckhoo\Redesign\Sales\card( '명단', $w( count( $rows ) ) . '명', '연락처 있음 ' . $w( count( array_filter( $rows, fn( $r ) => '' !== $r['phone'] ) ) ) . '명' );
 	\Duckhoo\Redesign\Sales\card( 'abandon' === $seg ? '담긴 금액 합계' : ( 'unpaid' === $seg ? '미입금 합계' : '누적 금액 합계' ), $w( $sum ) . '원', '1인 평균 ' . $w( $sum / max( 1, count( $rows ) ) ) . '원' );
 	echo '</div>';
-	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>이름</th><th>연락처</th><th>기준</th><th>금액</th><th>날짜</th><th>메모</th></tr></thead><tbody>';
+	echo '<div class="dhr-sl-scroll"><table class="widefat striped"><thead><tr><th>이름</th><th>연락처</th><th>SMS</th><th>기준</th><th>금액</th><th>날짜</th><th>메모</th></tr></thead><tbody>';
+	$smsw = array( 'yes' => '✓ 동의', 'no' => '✗ 거부', '' => '? 기록 없음' );
 	foreach ( array_slice( $rows, 0, 400 ) as $r ) {
-		echo '<tr><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( $r['phone'] ?: '—' ) . '</td><td>' . esc_html( $r['why'] ) . '</td><td class="dhr-sl-num">' . esc_html( $w( $r['amount'] ) ) . '</td><td>' . esc_html( $dt( $r['when'] ) ) . '</td><td>' . esc_html( $r['note'] ) . '</td></tr>';
+		echo '<tr><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( $r['phone'] ?: '—' ) . '</td><td>' . esc_html( $smsw[ $r['sms'] ] ?? '?' ) . '</td><td>' . esc_html( $r['why'] ) . '</td><td class="dhr-sl-num">' . esc_html( $w( $r['amount'] ) ) . '</td><td>' . esc_html( $dt( $r['when'] ) ) . '</td><td>' . esc_html( $r['note'] ) . '</td></tr>';
 	}
 	echo '</tbody></table></div>';
 	if ( count( $rows ) > 400 ) {
@@ -778,28 +798,21 @@ function csv(): void {
 	if ( ! may() || ! check_admin_referer( 'dhr-crm-csv' ) ) {
 		wp_die( '권한이 없습니다.' );
 	}
-	$seg = isset( $_GET['seg'] ) && isset( segs()[ $_GET['seg'] ] ) ? (string) $_GET['seg'] : 'abandon';
-	$opt = opts( $seg );
-	if ( 'all' === $seg ) {
-		$rows = combined( chosen_parts() )['rows'];
-		$name = fn( string $k ) => segs()[ $k ] ?? $k;
-		foreach ( $rows as &$r ) {
-			$r['why'] = $name( $r['seg'] ) . ' — ' . $r['why'];
-			if ( $r['also'] ) { $r['note'] = trim( ( $r['note'] ? $r['note'] . ' / ' : '' ) . '다른 명단: ' . implode( ' · ', array_map( $name, $r['also'] ) ) ); }
-		}
-		unset( $r );
-	} else {
-		$d    = data( $seg, $opt );
-		$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
+	$seg  = isset( $_GET['seg'] ) && isset( segs()[ $_GET['seg'] ] ) ? (string) $_GET['seg'] : 'abandon';
+	$opt  = opts( $seg );
+	$rows = export_rows( $seg, $opt, 'all' === $seg ? chosen_parts() : array() );
+	if ( ! ( isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ) ) {
+		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
+	$smsw = array( 'yes' => '동의', 'no' => '거부', '' => '기록 없음' );
 	nocache_headers();
 	header( 'Content-Type: text/csv; charset=utf-8' );
 	header( 'Content-Disposition: attachment; filename="duckhoo-' . $seg . ( $opt['only'] ? '-' . rawurlencode( $opt['only'] ) : '' ) . '-' . wp_date( 'Ymd' ) . '.csv"' );
 	echo "\xEF\xBB\xBF";
 	$o = fopen( 'php://output', 'w' );
-	fputcsv( $o, array( '이름', '연락처', '기준', '금액', '날짜', '메모' ) );
+	fputcsv( $o, array( '이름', '연락처', 'SMS동의', '그룹명', '기준', '금액', '날짜', '메모' ) );
 	foreach ( $rows as $r ) {
-		fputcsv( $o, array( $r['name'], $r['phone'], $r['why'], (int) round( (float) $r['amount'] ), $r['when'] ? wp_date( 'Y-m-d', (int) $r['when'] ) : '', $r['note'] ) );
+		fputcsv( $o, array( $r['name'], $r['phone'], $smsw[ $r['sms'] ] ?? '', $r['group'] ?? '', $r['why'], (int) round( (float) $r['amount'] ), $r['when'] ? wp_date( 'Y-m-d', (int) $r['when'] ) : '', $r['note'] ) );
 	}
 	fclose( $o );
 	exit;
