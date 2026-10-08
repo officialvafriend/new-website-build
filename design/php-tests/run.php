@@ -2714,5 +2714,55 @@ $ok(!preg_match('/\d+종/u', $gc) && str_contains($gc, '9.8mg') && str_contains(
 $ok(str_contains(($SP.'page_desc')('liquid-guide', '전자담배 액상 고르는 법'), '전담 액상 사이트') && str_contains(($SP.'page_desc')('mtl-vs-dl', 'x'), '입호흡(MTL) 액상과 폐호흡(DL) 액상의 차이'), '안내 글 두 장의 메타 설명');
 $GLOBALS['__products'] = [];
 
+/* ── 고객 세그먼트 (includes/crm.php) — 순수 계산 ───────────────────────────────────── */
+require_once dirname(__DIR__, 2).'/includes/crm.php';
+$CR = 'Duckhoo\\Redesign\\Crm\\';
+$ok(($CR.'phone_norm')('+82 10-1234-5678') === '01012345678' && ($CR.'phone_norm')('010.9876.5432') === '01098765432' && ($CR.'phone_norm')('abc') === '' && ($CR.'phone_norm')('1234') === '', '연락처 정규화: +82 · 점 · 못 읽음');
+$sc = ($CR.'score5')([1=>10, 2=>20, 3=>30, 4=>40, 5=>50]);
+$ok($sc === [1=>1,2=>2,3=>3,4=>4,5=>5], '5분위: 오름차순 1~5 '.json_encode($sc));
+$sc = ($CR.'score5')([1=>10, 2=>20, 3=>30, 4=>40, 5=>50], false);
+$ok($sc === [1=>5,2=>4,3=>3,4=>2,5=>1], '5분위: 작은 값이 좋은 쪽(R)은 뒤집힌다');
+$sc = ($CR.'score5')([1=>10, 2=>10, 3=>30, 4=>40, 5=>50, 6=>60]);
+$ok($sc[1] === $sc[2] && $sc[6] === 5, '5분위: 같은 값은 같은 점수');
+$ok(($CR.'score5')([1=>5, 2=>9]) === [1=>3, 2=>3] && ($CR.'score5')([]) === [], '5분위: 5명 미만은 전부 3점 · 빈 것');
+$ok(($CR.'rfm_label')(5,5,5) === '챔피언' && ($CR.'rfm_label')(3,4,2) === '충성' && ($CR.'rfm_label')(5,2,1) === '잠재 충성' && ($CR.'rfm_label')(5,1,1) === '신규'
+  && ($CR.'rfm_label')(3,2,2) === '관심 필요' && ($CR.'rfm_label')(1,4,3) === '이탈 위험' && ($CR.'rfm_label')(1,1,1) === '휴면', 'RFM 갈래 일곱');
+$ok(count(($CR.'rfm_advice')()) === 7, 'RFM 갈래마다 안내 한 줄');
+$D = 86400; $now = mktime(12,0,0,10,8,2026);
+$mk = fn(int $id, int $ago, string $s, float $t, int $u) => ['id'=>$id,'ts'=>$now-$ago*$D,'s'=>$s,'t'=>$t,'u'=>$u,'city'=>'','state'=>''];
+$orders = [
+  $mk(1, 2,  'on-hold',   30000, 1),   // 손님1 그제 입금전 — 살아 있는 주문 → 담고 나간 명단에서 빠진다 · 미입금 명단에 든다
+  $mk(2, 30, 'delivered', 45000, 2),   // 손님2 한 달 전 디오리퀴드
+  $mk(3, 1,  'cancelled', 20000, 3),   // 손님3 어제 취소 — 죽은 주문은 안 센다
+  $mk(4, 400,'delivered', 26000, 2),   // 손님2 옛 노보 (창 밖)
+  $mk(5, 10, 'delivered', 13000, 4),   // 손님4 열흘 전 노보 낱병
+  $mk(6, 0,  'on-hold',   50000, 0),   // 비회원 오늘 입금전 (1일 미만)
+  $mk(7, 3,  'pending',   9000,  5),   // 손님5 사흘 전 pending
+  $mk(8, 200,'delivered', 100000, 6), $mk(9, 150,'delivered', 100000, 6), $mk(10, 120,'delivered', 100000, 6),  // 손님6 세 번 · 오래됨
+];
+$items = [
+  2=>[['pid'=>21,'name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>3,'total'=>45000]],
+  4=>[['pid'=>11,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>2,'total'=>26000]],
+  5=>[['pid'=>11,'name'=>'[노보] 타박멘솔 (9.8mg / 30ml)','qty'=>1,'total'=>13000]],
+  8=>[['pid'=>31,'name'=>'[펠릭스] 더블라임','qty'=>5,'total'=>100000]],
+];
+$carts = [1=>['n'=>1,'qty'=>2,'total'=>26000,'names'=>['노보 타박멘솔']], 3=>['n'=>2,'qty'=>3,'total'=>40000,'names'=>['a','b']], 7=>['n'=>1,'qty'=>1,'total'=>13000,'names'=>['c']]];
+$ab = ($CR.'seg_abandon')($carts, $orders, $now, 7);
+$ok(array_column($ab,'u') === [3,7], '담고 나간 손님: 최근 살아 있는 주문이 있는 1은 빠지고, 취소뿐인 3 · 주문 없는 7 — 금액 큰 순 '.json_encode(array_column($ab,'u')));
+$ok($ab[0]['paid_n'] === 0 && $ab[0]['last'] === 0 && $ab[0]['names'] === ['a','b'], '담고 나간 손님: 산 적 없음 · 담은 상품 이름');
+$br = ($CR.'seg_brand')($orders, $items, ['노보','디오리퀴드'], $now, 180);
+$ok(array_column($br,'u') === [4,2], '브랜드 손님: 최근 순 (4 노보 열흘 전 · 2 디오 한 달 전), 창 밖 옛 노보 · 펠릭스는 안 센다 '.json_encode(array_column($br,'u')));
+$ok($br[1]['brands'] === ['디오리퀴드'] && $br[1]['bottles'] === 3 && str_contains($br[1]['fav'], '디오리퀴드') && $br[1]['n'] === 1, '브랜드 손님: 브랜드 · 병 수 · 자주 산 것');
+$rf = ($CR.'rfm')($orders, $now);
+$ok(count($rf['rows']) === 3 && array_sum($rf['counts']) === 3, 'RFM: 돈 들어온 회원 셋(2 · 4 · 6)만, 비회원 · 입금전 · 취소 제외');
+$r6 = array_values(array_filter($rf['rows'], fn($r)=>$r['u']===6))[0];
+$ok($r6['f'] === 3 && $r6['m'] == 300000.0 && $r6['r_days'] === 120 && $r6['r'] === 3 && $r6['fs'] === 3, 'RFM: 셋뿐이라 5분위 대신 3점 · F3 · M30만 · 120일');
+$un = ($CR.'seg_unpaid')($orders, $now, 1);
+$ok(array_column($un,'id') === [1,7], '미입금: 그제 on-hold · 사흘 전 pending, 오늘 것은 1일 미만이라 빠짐 '.json_encode(array_column($un,'id')));
+$ok(($CR.'seg_unpaid')($orders, $now, 0)[0]['id'] === 6 && ($CR.'seg_unpaid')($orders, $now, 0)[0]['u'] === 0, '미입금: 0일 기준이면 오늘 비회원 주문도 든다');
+$dd = ($CR.'dedupe')([['name'=>'a','phone'=>'010-1111-2222'],['name'=>'b','phone'=>'01011112222'],['name'=>'c','phone'=>''],['name'=>'d','phone'=>'']]);
+$ok(count($dd) === 3 && $dd[0]['phone'] === '01011112222' && $dd[0]['name'] === 'a', '같은 연락처는 앞 줄만 · 번호는 숫자만 · 연락처 없는 줄은 그대로');
+$ok(($CR.'filter_only')([['why'=>'챔피언 (R5 F5 M5)'],['why'=>'신규 (R5 F1 M1)']], '신규')[0]['why'] === '신규 (R5 F1 M1)' && count(($CR.'filter_only')([['why'=>'x']], '')) === 1, 'RFM 갈래 하나만 남기기');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
