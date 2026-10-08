@@ -2844,5 +2844,16 @@ $wk=($CR.'weeks')();
 $ok(isset($wk['w13'],$wk['w2'],$wk['hw']) && $wk['w13']['parts']===['abandon','brand'] && $wk['w2']['parts']===['rfm:챔피언','rfm:충성','rfm:신규'] && !in_array('unpaid',$wk['hw']['parts'],true) && !in_array('rfm:휴면',$wk['hw']['parts'],true), '주차 플랜: 1·3주차 = 담고 나간 + 노보·디오, 2주차 = 챔피언·충성·신규, 할로윈에 미입금 · 휴면은 없다');
 foreach ($wk as $w) { foreach ($w['parts'] as $pp) { $ok(isset(($CR.'parts')()[$pp]), '주차 플랜의 조각이 실제 조각 목록에 있다: '.$pp); } }
 
+// 보낸 기록 — 최근에 받은 사람 빼기 · 순수
+$now=1700000000; $bs=[
+ ['id'=>'a','at'=>$now-2*86400,'seg'=>'abandon','group'=>'담고 나간 · 적립금','rows'=>[['name'=>'가','phone'=>'01011112222','why'=>'x'],['name'=>'나','phone'=>'010-3333-4444','why'=>'y']]],
+ ['id'=>'b','at'=>$now-30*86400,'seg'=>'brand','group'=>'노보','rows'=>[['name'=>'다','phone'=>'01055556666','why'=>'z']]],
+];
+$ss=($CR.'sent_set')($bs,21,$now);
+$ok(isset($ss['01011112222'],$ss['01033334444']) && !isset($ss['01055556666']) && ($CR.'sent_set')($bs,0,$now)===[], '보낸 기록 집합: 21일 안의 묶음만 · 하이픈 번호도 정규화 · 0일이면 비어 있음');
+[$keep,$n]=($CR.'without_sent')([['name'=>'가','phone'=>'01011112222'],['name'=>'라','phone'=>'01077778888'],['name'=>'다','phone'=>'01055556666'],['name'=>'번호없음','phone'=>'']],$ss);
+$ok($n===1 && array_column($keep,'name')===['라','다','번호없음'], '받은 사람 빼기: 2일 전 받은 가 만 빠지고 30일 전 다 · 번호 없는 줄은 남는다');
+$ok(($CR.'without_sent')([['phone'=>'01011112222']],[])===[[['phone'=>'01011112222']],0], '받은 사람 빼기: 기록이 없으면 그대로');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

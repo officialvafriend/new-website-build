@@ -155,3 +155,167 @@ function plan_box( string $back, array $inc ): void {
 	}
 	echo '<button class="button">보상 라벨 저장</button><span class="dhr-sl-note" style="margin:0">라벨은 그룹명 · 메모에만 쓰입니다 — 적립금 · 쿠폰을 실제로 주는 것은 따로(쿠폰 한 번에 만들기 · 관리자 적립금)</span></form></div>';
 }
+
+/* ── 보낸 기록 — 1주차에 받은 사람은 2주차(RFM)에서 빠진다 ───────────────────────────
+ * 양식(.xls)을 내려받은 순간 그 파일에 든 사람(이름 · 번호 · 기준 · 그룹)을 묶음으로 적는다. 그 뒤 모든 탭은
+ * 최근 `skip_days()`(21일) 안에 받은 사람을 기본으로 뺀다 (`?skip=0` 이면 안 뺀다). 3주차 「쿠폰 7일 남았습니다」는
+ * 그 묶음을 **그대로 다시 내려받는다** — 새로 뽑으면 명단이 바뀌어 받은 적 없는 사람에게 리마인드가 간다.
+ * 쓰는 옵션 하나(`duckhoo_crm_sent`) · 주문 · 회원에는 안 쓴다. 사장님 2026-10-08 「여기서 받은 사람은 RFM 에서 제외」. */
+
+const SENT_OPT = 'duckhoo_crm_sent';
+
+/** 최근 며칠 안에 받은 사람을 빼나. 필터 `duckhoo_crm_skip_days`. */
+function skip_days(): int {
+	return max( 0, (int) apply_filters( 'duckhoo_crm_skip_days', 21 ) );
+}
+
+/** `?skip=0` 이면 안 뺀다. */
+function skip_on(): bool {
+	return ! ( isset( $_GET['skip'] ) && '0' === (string) $_GET['skip'] ); // phpcs:ignore WordPress.Security.NonceVerification
+}
+
+/** @return array<int,array{id:string,at:int,seg:string,group:string,rows:array<int,array{name:string,phone:string,why:string}>}> 최신 먼저. */
+function sent_batches(): array {
+	$v = get_option( SENT_OPT, array() );
+	$v = is_array( $v ) ? array_values( array_filter( $v, 'is_array' ) ) : array();
+	usort( $v, fn( $a, $b ) => (int) ( $b['at'] ?? 0 ) <=> (int) ( $a['at'] ?? 0 ) );
+	return $v;
+}
+
+/** 최근 `$days` 일 안에 받은 번호 집합. 순수. @return array<string,int> phone => 받은 시각 */
+function sent_set( array $batches, int $days, int $now ): array {
+	$out = array();
+	if ( $days <= 0 ) {
+		return $out;
+	}
+	foreach ( $batches as $b ) {
+		$at = (int) ( $b['at'] ?? 0 );
+		if ( $at < $now - $days * DAY_IN_SECONDS ) {
+			continue;
+		}
+		foreach ( (array) ( $b['rows'] ?? array() ) as $r ) {
+			$p = phone_norm( (string) ( $r['phone'] ?? '' ) );
+			if ( '' !== $p ) {
+				$out[ $p ] = max( $out[ $p ] ?? 0, $at );
+			}
+		}
+	}
+	return $out;
+}
+
+/** 받은 사람을 뺀다. 순수. @return array{0:array<int,array<string,mixed>>,1:int} 남은 줄 · 뺀 수 */
+function without_sent( array $rows, array $set ): array {
+	if ( ! $set ) {
+		return array( $rows, 0 );
+	}
+	$keep = array();
+	$n    = 0;
+	foreach ( $rows as $r ) {
+		$p = phone_norm( (string) ( $r['phone'] ?? '' ) );
+		if ( '' !== $p && isset( $set[ $p ] ) ) {
+			++$n;
+			continue;
+		}
+		$keep[] = $r;
+	}
+	return array( $keep, $n );
+}
+
+/** 화면 · CSV · xls 가 같은 줄을 보도록 — skip 이 켜져 있으면 최근 받은 사람을 뺀다. @return array{0:array,1:int} */
+function apply_skip( array $rows ): array {
+	if ( ! skip_on() ) {
+		return array( $rows, 0 );
+	}
+	return without_sent( $rows, sent_set( sent_batches(), skip_days(), time() ) );
+}
+
+/** 내려받은 파일의 사람들을 묶음으로 적는다 (번호 있는 줄만 — 파일에 든 사람과 같다). */
+function record_sent( array $rows, string $seg, string $group ): string {
+	$keep = array();
+	foreach ( $rows as $r ) {
+		$p = phone_norm( (string) ( $r['phone'] ?? '' ) );
+		if ( '' === $p ) {
+			continue;
+		}
+		$keep[] = array( 'name' => (string) ( $r['name'] ?? '' ), 'phone' => $p, 'why' => mb_substr( (string) ( $r['why'] ?? '' ), 0, 80 ), 'group' => (string) ( $r['group'] ?? $group ) );
+	}
+	if ( ! $keep ) {
+		return '';
+	}
+	$id = wp_date( 'ymd-His' ) . '-' . substr( wp_hash( (string) microtime( true ) ), 0, 4 );
+	$v  = get_option( SENT_OPT, array() );
+	$v  = is_array( $v ) ? $v : array();
+	$v[] = array( 'id' => $id, 'at' => time(), 'seg' => $seg, 'group' => '' !== $group ? $group : ( $keep[0]['group'] ?? '' ), 'rows' => $keep );
+	usort( $v, fn( $a, $b ) => (int) ( $b['at'] ?? 0 ) <=> (int) ( $a['at'] ?? 0 ) );
+	update_option( SENT_OPT, array_slice( $v, 0, 40 ), false ); // 40묶음까지 (한 해치 넘게)
+	return $id;
+}
+
+function sent_delete(): void {
+	if ( ! may() ) {
+		wp_die( '권한이 없습니다.' );
+	}
+	check_admin_referer( 'dhr-crm-sent' );
+	$id = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['id'] ) ) : '';
+	$v  = array_values( array_filter( sent_batches(), fn( $b ) => (string) ( $b['id'] ?? '' ) !== $id ) );
+	update_option( SENT_OPT, $v, false );
+	$back = isset( $_POST['back'] ) ? esc_url_raw( wp_unslash( (string) $_POST['back'] ) ) : admin_url( 'admin.php?page=' . SLUG );
+	wp_safe_redirect( add_query_arg( 'dhr_sms_saved', 'sentdel', $back ) );
+	exit;
+}
+add_action( 'admin_post_dhr_crm_sent_del', __NAMESPACE__ . '\\sent_delete' );
+
+/** 묶음을 그대로 다시 내려받는다 — 리마인드. 그룹명은 `grp`(비우면 「원래 그룹 · 리마인드」). 기록은 새로 적지 않는다 (같은 사람). */
+function sent_resend(): void {
+	if ( ! may() ) {
+		wp_die( '권한이 없습니다.' );
+	}
+	check_admin_referer( 'dhr-crm-sent' );
+	$id = isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['id'] ) ) : '';
+	$b  = null;
+	foreach ( sent_batches() as $x ) {
+		if ( (string) ( $x['id'] ?? '' ) === $id ) {
+			$b = $x;
+			break;
+		}
+	}
+	if ( ! $b ) {
+		wp_die( '그 묶음이 없습니다.' );
+	}
+	$grp  = isset( $_GET['grp'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['grp'] ) ) : '';
+	$rows = array_map( fn( $r ) => $r + array( 'note' => '' ), (array) $b['rows'] );
+	if ( '' === $grp ) {
+		foreach ( $rows as &$r ) {
+			$r['group'] = (string) ( $r['group'] ?? $b['group'] ) . ' · 리마인드';
+		}
+		unset( $r );
+	}
+	$body = xls_html( $rows, $grp );
+	nocache_headers();
+	header( 'Content-Type: application/vnd.ms-excel; charset=euc-kr' );
+	header( 'Content-Disposition: attachment; filename="tothemoon_remind_' . $id . '_' . wp_date( 'Ymd' ) . '.xls"' );
+	header( 'Content-Length: ' . strlen( $body ) );
+	echo $body; // phpcs:ignore WordPress.Security.EscapeOutput -- 바이너리(EUC-KR) 파일 본문
+	exit;
+}
+add_action( 'admin_post_dhr_crm_sent_resend', __NAMESPACE__ . '\\sent_resend' );
+
+/** 보낸 기록 상자 — 묶음마다 날짜 · 그룹 · 수, 「리마인드로 다시 내려받기」 · 「기록 지우기」. */
+function sent_box( string $back, int $skipped ): void {
+	$bs = sent_batches();
+	echo '<details class="dhr-crm-adv" style="margin:0 0 14px"><summary style="cursor:pointer;font-weight:700">보낸 기록 ' . esc_html( number_format_i18n( count( $bs ) ) ) . '묶음 — 최근 ' . (int) skip_days() . '일 안에 받은 사람은 명단에서 뺍니다'
+		. ( skip_on() ? ' (지금 ' . esc_html( number_format_i18n( $skipped ) ) . '명 뺌 · <a href="' . esc_url( add_query_arg( 'skip', '0', $back ) ) . '">안 빼고 보기</a>)' : ' (<b>지금은 안 빼고</b> 보는 중 · <a href="' . esc_url( remove_query_arg( 'skip', $back ) ) . '">빼고 보기</a>)' ) . '</summary>';
+	echo '<p style="margin:10px 0 6px">양식(.xls)을 내려받으면 그 파일에 든 사람이 여기 적힙니다. 1주차에 받은 사람은 2주차 RFM 명단에서 저절로 빠지고, 3주차 「쿠폰 7일 남았습니다」는 아래 <b>리마인드로 다시 내려받기</b>로 1주차 그 사람들에게 그대로 보냅니다 (새로 뽑으면 명단이 바뀝니다).</p>';
+	if ( ! $bs ) {
+		echo '<p class="dhr-sl-note">아직 내려받은 파일이 없습니다.</p></details>';
+		return;
+	}
+	echo '<table class="widefat striped" style="max-width:900px"><thead><tr><th>내려받은 때</th><th>그룹명</th><th>사람</th><th></th></tr></thead><tbody>';
+	foreach ( $bs as $b ) {
+		$n   = count( (array) ( $b['rows'] ?? array() ) );
+		$url = wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_sent_resend&id=' . rawurlencode( (string) $b['id'] ) ), 'dhr-crm-sent' );
+		echo '<tr><td>' . esc_html( wp_date( 'm.d H:i', (int) $b['at'] ) ) . '</td><td>' . esc_html( (string) $b['group'] ) . '</td><td>' . esc_html( number_format_i18n( $n ) ) . '명</td><td style="white-space:nowrap"><a class="button button-small" href="' . esc_url( $url ) . '">리마인드로 다시 내려받기</a> '
+			. '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'이 묶음의 기록을 지웁니다. 그 사람들이 다음 명단에 다시 들어옵니다.\')"><input type="hidden" name="action" value="dhr_crm_sent_del"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-sent' ) ) . '"><input type="hidden" name="id" value="' . esc_attr( (string) $b['id'] ) . '"><input type="hidden" name="back" value="' . esc_attr( $back ) . '"><button class="button button-small button-link-delete">기록 지우기</button></form></td></tr>';
+	}
+	echo '</tbody></table></details>';
+}

@@ -698,6 +698,7 @@ function screen(): void {
 	if ( 'yes' === $smsmode ) {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
+	[ $rows, $skipped ] = apply_skip( $rows ); // 최근 21일 안에 양식으로 내려받은(= 문자 받은) 사람은 뺀다
 	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
 	$dt   = fn( $ts ) => $ts ? wp_date( 'Y.m.d', (int) $ts ) : '—';
 	$name = fn( string $k ) => segs()[ $k ] ?? $k;
@@ -744,8 +745,9 @@ function screen(): void {
 		}
 	}
 
-	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) );
+	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) . ( skip_on() ? '' : '&skip=0' ) );
 	sms_saved_notice();
+	sent_box( $back, $skipped );
 	if ( 'all' === $seg ) {
 		plan_box( $back, $inc );
 	}
@@ -754,7 +756,7 @@ function screen(): void {
 		. ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' )
 		. ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
 	echo '<form method="get" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="dhr-crm-bar" style="margin:0 0 14px">';
-	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">';
+	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' . ( skip_on() ? '' : '<input type="hidden" name="skip" value="0">' ) . ( 'all' === $smsmode ? '<input type="hidden" name="sms" value="all">' : '' );
 	foreach ( $inc as $k ) {
 		echo '<input type="hidden" name="inc[]" value="' . esc_attr( $k ) . '">';
 	}
@@ -763,7 +765,8 @@ function screen(): void {
 	} else {
 		echo '<span class="dhr-sl-note">그룹명 = 그 사람의 주 명단 (한 파일에 여러 그룹)</span>';
 	}
-	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — 동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</button>';
+	$file_n = count( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
+	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — 동의 ' . esc_html( $w( $file_n ) ) . '명</button>';
 	echo '<span class="dhr-sl-note" style="margin:0">NO · 그룹명 · 이름 · 전화번호 · 메모 다섯 칸, 올려 주신 tothemoon 양식 그대로 (EUC-KR)</span></form>';
 	if ( ! $rows ) {
 		echo '<p class="dhr-sl-empty">' . ( 'yes' === $smsmode && $all_n ? 'SMS 수신에 동의한 사람이 없습니다 (명단 ' . esc_html( $w( $all_n ) ) . '명).' : '해당하는 사람이 없습니다.' ) . '</p></div>';
@@ -812,6 +815,7 @@ function csv(): void {
 	if ( ! ( isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ) ) {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
+	[ $rows ] = apply_skip( $rows );
 	$smsw = array( 'yes' => '동의', 'no' => '거부', '' => '기록 없음' );
 	nocache_headers();
 	header( 'Content-Type: text/csv; charset=utf-8' );
