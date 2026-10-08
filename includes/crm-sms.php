@@ -5,8 +5,9 @@
  * 사장님 (2026-10-08): 「sms 수신 동의 안 한 사람들은 보내면 안 되니 체크해서 명단 주고, 각 그룹별로
  * 이 엑셀 양식(NO · 그룹명 · 이름 · 전화번호 · 메모)으로 제목도 변경해서 정리」.
  *
- * 가입 약관 화면(/agree/)의 「SMS 수신 동의」 체크박스는 **어디에도 저장되지 않는다** (버튼이 그냥 다음 장으로
- * 넘긴다 — 2026-10-08 확인). 그래서 동의 자료를 두 길에서 읽는다:
+ * 가입 약관 화면(/agree/)의 「SMS 수신 동의」 체크박스는 지금 버튼이 그냥 다음 장으로 넘길 뿐 폼에 실리지 않는다
+ * (2026-10-08 확인). 그런데 회원 메타 `wd_agree_sms` 가 49명에게만 있다(동의 12 · 거부 37) — 어느 시기의 가입 흐름이
+ * 적은 것이고 나머지 회원은 기록이 없다. 그래서 동의 자료를 두 길에서 읽는다:
  *   ① 회원 메타 — 이름에 sms · market · agree … 가 든 키를 찾아 보여 주고 사장님이 하나를 못 박는다 (옵션 `duckhoo_crm_sms_key`)
  *   ② 붙여 넣은 명단 — 아임웹 · 문자 사이트 내보내기처럼 「전화번호 + 수신동의」 칸이 있는 표 (옵션 `duckhoo_crm_sms_roster`)
  * 둘 다 없으면 전원 「기록 없음」이고 양식 파일은 비어 나간다 — 동의를 모르는 사람에게는 보내지 않는 쪽.
@@ -220,7 +221,21 @@ function xls_html( array $rows, string $group = '' ): string {
 /** 못 박은 회원 메타 키 (없으면 ''). */
 function sms_key(): string {
 	$k = (string) get_option( SMS_KEY_OPT, '' );
+	if ( '' === $k ) {
+		$k = auto_sms_key( sms_candidates() );
+	}
 	return (string) apply_filters( 'duckhoo_crm_sms_key', $k );
+}
+
+/** 못 박은 키가 없을 때 — 후보 중 이름에 sms · 문자가 들고 동의/거부 값이 실제로 있는 키가 **하나뿐**이면 그것. 순수. */
+function auto_sms_key( array $cands ): string {
+	$hit = array();
+	foreach ( $cands as $c ) {
+		if ( preg_match( '/sms|문자/i', (string) $c['key'] ) && ( (int) $c['yes'] + (int) $c['no'] ) > 0 ) {
+			$hit[] = (string) $c['key'];
+		}
+	}
+	return 1 === count( $hit ) ? $hit[0] : '';
 }
 
 /** 붙여 넣어 둔 명단 — {yes, no, rows, cols, at, n}. */
@@ -266,7 +281,8 @@ function sms_candidates( bool $fresh = false ): array {
 			}
 			$smp[] = mb_substr( (string) $v['v'], 0, 24 ) . '(' . (int) $v['n'] . ')';
 		}
-		$out[] = array( 'key' => $key, 'users' => (int) $k['n'], 'yes' => $yes, 'no' => $no, 'other' => $oth, 'sample' => $smp );
+		$span  = $wpdb->get_row( $wpdb->prepare( "SELECT MIN(u.user_registered) AS a, MAX(u.user_registered) AS b FROM {$wpdb->users} u INNER JOIN {$wpdb->usermeta} m ON m.user_id = u.ID AND m.meta_key = %s", $key ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		$out[] = array( 'key' => $key, 'users' => (int) $k['n'], 'yes' => $yes, 'no' => $no, 'other' => $oth, 'sample' => $smp, 'from' => substr( (string) ( $span['a'] ?? '' ), 0, 10 ), 'to' => substr( (string) ( $span['b'] ?? '' ), 0, 10 ) );
 	}
 	set_transient( $ck, $out, HOUR_IN_SECONDS );
 	return $out;
@@ -354,17 +370,21 @@ function sms_box( string $back ): void {
 	$roster = sms_roster();
 	$cands  = sms_candidates();
 	echo '<details class="dhr-crm-adv" style="margin:0 0 14px"' . ( sms_source_ok() ? '' : ' open' ) . '><summary style="cursor:pointer;font-weight:700">SMS 수신 동의 자료 — ' . ( '' !== $key ? '회원 메타 <code>' . esc_html( $key ) . '</code>' : '회원 메타 키 없음' ) . ' · 붙여 넣은 명단 ' . ( $roster['at'] ? esc_html( number_format_i18n( count( (array) $roster['yes'] ) ) . '명 동의 · ' . number_format_i18n( count( (array) $roster['no'] ) ) . '명 거부 (' . wp_date( 'm.d H:i', (int) $roster['at'] ) . ')' ) : '없음' ) . '</summary>';
-	echo '<p style="margin:10px 0 6px">가입 약관 화면의 「SMS 수신 동의」 체크박스는 <b>어디에도 저장되지 않습니다</b> (버튼이 그냥 다음 장으로 넘깁니다 — 2026-10-08 확인). 그래서 동의 자료를 아래 둘 중에서 읽습니다. 둘 다 없으면 전원 「기록 없음」이고 문자 사이트 양식 파일은 비어 나갑니다 — 동의를 모르는 사람에게는 보내지 않는 쪽입니다.</p>';
+	echo '<p style="margin:10px 0 6px">가입 약관 화면의 「SMS 수신 동의」 체크박스는 지금은 다음 장으로 넘길 때 실리지 않습니다 (2026-10-08 확인). 회원 메타에 남은 기록은 일부 회원뿐이라, 동의 자료를 아래 둘에서 읽습니다. 둘 다 없으면 전원 「기록 없음」이고 문자 사이트 양식 파일은 비어 나갑니다 — 동의를 모르는 사람에게는 보내지 않는 쪽입니다.</p>';
 	echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin:0 0 12px">';
 	wp_nonce_field( 'dhr-crm-sms' );
 	echo '<input type="hidden" name="action" value="dhr_crm_sms_key"><input type="hidden" name="back" value="' . esc_attr( $back ) . '">';
 	echo '<b>① 회원 메타에서 읽기</b> — 이름에 sms · 수신 · 동의 · marketing 이 든 키를 찾았습니다. 「동의/거부」 값이 갈리는 칸을 고르세요.<br>';
-	echo '<label><input type="radio" name="sms_key" value=""' . ( '' === $key ? ' checked' : '' ) . '> 쓰지 않음</label><br>';
+	$pinned = (string) get_option( SMS_KEY_OPT, '' );
+	if ( '' === $pinned && '' !== $key ) {
+		echo '<span class="dhr-sl-note">아직 고르지 않아 <code>' . esc_html( $key ) . '</code> 를 자동으로 쓰고 있습니다 (이름에 sms 가 든 키가 하나뿐). 저장하면 그것으로 못 박힙니다.</span><br>';
+	}
+	echo '<label><input type="radio" name="sms_key" value=""' . ( '' === $pinned ? ' checked' : '' ) . '> ' . ( '' !== $key && '' === $pinned ? '자동 (지금 ' . esc_html( $key ) . ')' : '쓰지 않음' ) . '</label><br>';
 	if ( ! $cands ) {
 		echo '<span class="dhr-sl-note">후보 키가 없습니다 — 회원 메타에 수신 동의 칸이 없습니다.</span><br>';
 	}
 	foreach ( $cands as $c ) {
-		echo '<label><input type="radio" name="sms_key" value="' . esc_attr( $c['key'] ) . '"' . ( $c['key'] === $key ? ' checked' : '' ) . '> <code>' . esc_html( $c['key'] ) . '</code> — ' . esc_html( number_format_i18n( $c['users'] ) ) . '명 · 동의로 읽힘 ' . (int) $c['yes'] . ' · 거부 ' . (int) $c['no'] . ' · 모름 ' . (int) $c['other'] . ' <span class="dhr-sl-note">값: ' . esc_html( implode( ', ', $c['sample'] ) ) . '</span></label><br>';
+		echo '<label><input type="radio" name="sms_key" value="' . esc_attr( $c['key'] ) . '"' . ( $c['key'] === $pinned ? ' checked' : '' ) . '> <code>' . esc_html( $c['key'] ) . '</code> — ' . esc_html( number_format_i18n( $c['users'] ) ) . '명 · 동의로 읽힘 ' . (int) $c['yes'] . ' · 거부 ' . (int) $c['no'] . ' · 모름 ' . (int) $c['other'] . ' <span class="dhr-sl-note">값: ' . esc_html( implode( ', ', $c['sample'] ) ) . ( ! empty( $c['from'] ) ? ' · 이 키가 있는 회원의 가입일 ' . esc_html( $c['from'] ) . ' ~ ' . esc_html( $c['to'] ) : '' ) . '</span></label><br>';
 	}
 	echo '<button class="button" style="margin-top:6px">이 키로 읽기</button></form>';
 	echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';

@@ -2810,6 +2810,8 @@ $x2=($CR.'xls_html')([['name'=>'가','phone'=>'01011112222','why'=>'a','note'=>'
 $u2=iconv('CP949','UTF-8',$x2);
 $ok(str_contains($u2,'<td>미입금 고객</td><td>가</td>') && str_contains($u2,'<td>RFM 이탈 위험</td><td>나</td>'), 'xls 양식: 그룹명을 비우면 줄마다 자기 주 명단 (한 사람에 한 통 탭)');
 $ok(mb_check_encoding($x,'UTF-8')===false && iconv('CP949','UTF-8',$x)!==false, 'xls 양식: 본문이 실제로 CP949 바이트다 (UTF-8 이 아니다)');
+$ak=$CR.'auto_sms_key'; $cs=[['key'=>'wd_agree_email','yes'=>5,'no'=>44],['key'=>'wd_agree_sms','yes'=>12,'no'=>37],['key'=>'wd_agree_third_party','yes'=>14,'no'=>35]];
+$ok($ak($cs)==='wd_agree_sms' && $ak([])==='' && $ak([['key'=>'sms_a','yes'=>1,'no'=>0],['key'=>'sms_b','yes'=>0,'no'=>1]])==='' && $ak([['key'=>'wd_agree_sms','yes'=>0,'no'=>0]])==='', '자동 키: sms 가 든 키가 하나뿐이고 값이 있을 때만 (둘이면 · 값 없으면 고르지 않음)');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
