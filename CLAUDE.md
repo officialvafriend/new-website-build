@@ -3877,3 +3877,17 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 - 다크 유리 틴트 `--dh-glass` 를 (30,33,40) 로 — 바탕보다 한 단 밝고 차갑게. 헤더 · 탭바도 같은 토큰이라 같이 바뀐다 (미세)
 - 유리 판에 **위에서 내려오는 하이라이트** `linear-gradient(180deg, var(--dh-glass-hi), transparent 42%)` 를 배경 앞에 겹친다 (시트 · 서랍 · 완료 막 카드)
 - **`dark-probe*.mjs` 의 LIGHT 목록은 알파를 안 본다** — `rgba(255,255,255,.07)` 도 밝은 면으로 적힌다. 유리 안쪽을 쓴 뒤로는 그 목록 대신 캡처로 본다
+
+### 유리 언어 일괄 — 「분류 알약도 안 어울려, 안 어울리는 색 다 교체」 (2026-10-08, 사장님)
+
+유리 판(헤더 · 탭바 · 시트 · 서랍 · 완료 막) 위나 옆에 **불투명 면색 알약**이 남아 있는 곳을 한 번에 바꿨다. 규칙 하나:
+**유리 위 · 유리 옆의 작은 면은 `--dh-glass-in` + `inset 0 0 0 1px --dh-glass-in-line` + `inset 0 1px 0 --dh-glass-hi`** (반투명 틴트 · 빛 받는 테두리).
+- 헤더 아래 분류 칩 줄 `.bnav` 는 헤더와 같은 유리(`--dh-glass` + blur) — 헤더 · 칩 줄이 한 판으로 읽힌다. 칩 · 검색 알약 `.hs` · `.gi.wide` · 안내 띠 칩 `.dhn__row`
+  (front.css + shell.css 핀) · `.gi` · `.dnav a` · `.dhc__x` · `.dhc__rm` 호버가 전부 이 틴트. 반전 칩(`.bnav__hi`) · 파랑 배지는 그대로
+- **장바구니 서랍 `.dhc__panel` 도 시트와 같은 유리 판** (28px · 하이라이트 그라데이션 · 막 `--dh-veil` + blur 14px). 안의 사진 칸 · 게이지 · 줄 선은 glass-in 계열.
+  **폰에서 서랍 발이 흰색이었다** — `<footer class="dhc__foot">` 라 테마가 폰 `footer` 에 흰 배경을 못 박은 것. shell.css 가 `footer.dhc__foot` 로 푼다
+  (우리 CSS 를 다 뒤져도 안 나오면 **요소 이름**에 걸린 테마 규칙을 의심한다)
+- `scratchpad/live/preview.mjs` 는 컨테이너 초기화로 사라졌다 — 이번엔 `glass-sweep.mjs`(상품 상세 390 라이트/다크 · 홈 1280 다크, 칩 · 안내 · 검색 · 서랍 computed + 캡처)
+- **`cat >> CLAUDE.md` 는 cwd 를 먼저 본다** — `cd scratchpad/live && …` 뒤에 cwd 가 거기 남아 있어 절 하나가 `scratchpad/live/CLAUDE.md` 로 들어갔다 (커밋 f9725d9). 절대 경로로 쓴다
+
+검증: `glass-sweep.mjs`(LOCAL · 프로덕션 — chip/notice/search 배경이 glass-in, 서랍 glass · 28px · 막 블러, 넘침 0) · smoke 20(배포 전후).
