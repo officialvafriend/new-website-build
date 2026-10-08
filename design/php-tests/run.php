@@ -2763,6 +2763,26 @@ $ok(($CR.'seg_unpaid')($orders, $now, 0)[0]['id'] === 6 && ($CR.'seg_unpaid')($o
 $dd = ($CR.'dedupe')([['name'=>'a','phone'=>'010-1111-2222'],['name'=>'b','phone'=>'01011112222'],['name'=>'c','phone'=>''],['name'=>'d','phone'=>'']]);
 $ok(count($dd) === 3 && $dd[0]['phone'] === '01011112222' && $dd[0]['name'] === 'a', '같은 연락처는 앞 줄만 · 번호는 숫자만 · 연락처 없는 줄은 그대로');
 $ok(($CR.'filter_only')([['why'=>'챔피언 (R5 F5 M5)'],['why'=>'신규 (R5 F1 M1)']], '신규')[0]['why'] === '신규 (R5 F1 M1)' && count(($CR.'filter_only')([['why'=>'x']], '')) === 1, 'RFM 갈래 하나만 남기기');
+// 한 사람에 한 통 — 네 명단을 연락처로 합친다
+$cb = ($CR.'combine')([
+  'rfm'     => [['name'=>'가','phone'=>'010-1111-2222','why'=>'이탈 위험'], ['name'=>'나','phone'=>'01033334444','why'=>'관심 필요'], ['name'=>'다','phone'=>'','why'=>'휴면']],
+  'brand'   => [['name'=>'가','phone'=>'01011112222','why'=>'노보'], ['name'=>'라','phone'=>'01055556666','why'=>'디오']],
+  'unpaid'  => [['name'=>'가','phone'=>'+82 10 1111 2222','why'=>'입금전 3일'], ['name'=>'마','phone'=>'','why'=>'입금전 2일']],
+  'abandon' => [['name'=>'나','phone'=>'010 3333 4444','why'=>'담고 나감']],
+]);
+$ok(array_column($cb,'seg') === ['unpaid','unpaid','abandon','brand','rfm'] && array_column($cb,'name') === ['가','마','나','라','다'], '합치기: 우선순위(미입금 → 담고 나간 → 노보/디오 → RFM)대로, 줄 수 8 → 5 '.json_encode(array_column($cb,'name')));
+$ok($cb[0]['also'] === ['brand','rfm'] && $cb[0]['why'] === '입금전 3일' && $cb[0]['phone'] === '01011112222', '합치기: 가 는 미입금 줄 하나만 남고 다른 명단 이름은 also 에 (brand · rfm 순)');
+$ok($cb[2]['seg'] === 'abandon' && $cb[2]['also'] === ['rfm'] && $cb[3]['also'] === [], '합치기: 나 는 담고 나간 줄 + RFM 표시, 라 는 혼자');
+$ok($cb[1]['phone'] === '' && $cb[4]['phone'] === '' && $cb[1]['also'] === [], '합치기: 연락처 없는 줄은 합치지 않고 그대로 남는다 (마 · 다)');
+$cb2 = ($CR.'combine')(['rfm' => [['name'=>'가','phone'=>'01011112222','why'=>'A'], ['name'=>'가','phone'=>'01011112222','why'=>'B']]]);
+$ok(count($cb2) === 1 && $cb2[0]['also'] === [] && $cb2[0]['why'] === 'A', '합치기: 같은 명단 안의 중복은 also 에 자기 이름을 적지 않는다');
+add_filter('duckhoo_crm_priority', fn($p) => ['brand','unpaid','abandon','rfm']);
+$cb3 = ($CR.'combine')(['unpaid' => [['name'=>'가','phone'=>'01011112222','why'=>'입금전']], 'brand' => [['name'=>'가','phone'=>'01011112222','why'=>'노보']]]);
+$GLOBALS['__filters']['duckhoo_crm_priority'] = [];
+$ok($cb3[0]['seg'] === 'brand' && $cb3[0]['also'] === ['unpaid'], '합치기: 필터로 우선순위를 바꾸면 그 순서대로 (brand 가 주 명단)');
+$cb4 = ($CR.'combine')(['extra' => [['name'=>'x','phone'=>'01099998888']], 'unpaid' => [['name'=>'y','phone'=>'01099998888']]]);
+$ok($cb4[0]['seg'] === 'unpaid' && $cb4[0]['also'] === ['extra'], '합치기: 우선순위에 없는 명단은 맨 뒤로');
+$ok(($CR.'default_parts')() === ['unpaid','abandon','brand','rfm:이탈 위험','rfm:관심 필요'] && isset(($CR.'parts')()['rfm:휴면']) && count(($CR.'parts')()) === 10 && isset(($CR.'segs')()['all']), '합치기 조각: 기본 다섯 · RFM 갈래 일곱 + 명단 셋 = 열 · 탭 all');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

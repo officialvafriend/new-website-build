@@ -340,6 +340,48 @@ function dedupe( array $rows ): array {
 	return $out;
 }
 
+/** 합칠 때의 우선순위 — 급한 것부터. 필터 `duckhoo_crm_priority`. @return string[] */
+function priority(): array {
+	return (array) apply_filters( 'duckhoo_crm_priority', array( 'unpaid', 'abandon', 'brand', 'rfm' ) );
+}
+
+/**
+ * 네 명단을 연락처로 합쳐 **한 사람에 안내 하나**. 같은 사람이 여러 명단에 들면 우선순위가 높은 명단의 줄만 남기고,
+ * 나머지 명단 이름은 `also` 에 적는다. 연락처가 없는 줄은 합칠 수 없어 그대로 둔다 (문자도 못 보낸다).
+ *
+ * @param array<string,array<int,array<string,mixed>>> $lists seg => 줄(phone 칸 포함).
+ * @return array<int,array<string,mixed>> 줄에 `seg`(주 명단) · `also`(다른 명단 이름들) 가 붙는다.
+ */
+function combine( array $lists ): array {
+	$order = array_values( array_filter( priority(), fn( $k ) => isset( $lists[ $k ] ) ) );
+	foreach ( array_keys( $lists ) as $k ) {
+		if ( ! in_array( $k, $order, true ) ) {
+			$order[] = $k;
+		}
+	}
+	$by  = array();
+	$out = array();
+	foreach ( $order as $seg ) {
+		foreach ( $lists[ $seg ] as $r ) {
+			$p = phone_norm( (string) ( $r['phone'] ?? '' ) );
+			if ( '' === $p ) {
+				$r['seg'] = $seg; $r['also'] = array(); $out[] = $r;
+				continue;
+			}
+			if ( isset( $by[ $p ] ) ) {
+				if ( ! in_array( $seg, $out[ $by[ $p ] ]['also'], true ) && $out[ $by[ $p ] ]['seg'] !== $seg ) {
+					$out[ $by[ $p ] ]['also'][] = $seg;
+				}
+				continue;
+			}
+			$r['phone'] = $p; $r['seg'] = $seg; $r['also'] = array();
+			$by[ $p ] = count( $out );
+			$out[]    = $r;
+		}
+	}
+	return $out;
+}
+
 /* ── 읽기 (워드프레스 안에서만) ───────────────────────────────────────── */
 
 /**
@@ -575,7 +617,51 @@ function segs(): array {
 		'brand'   => '노보 · 디오리퀴드 구매 손님',
 		'rfm'     => 'RFM',
 		'unpaid'  => '미입금 고객',
+		'all'     => '한 사람에 한 통',
 	);
+}
+
+/** 합치기 탭에 넣을 수 있는 조각 — 명단 넷 + RFM 갈래. 기본은 미입금 · 담고 나간 · 노보/디오 · RFM 이탈 위험 · 관심 필요. */
+function parts(): array {
+	$p = array( 'unpaid' => '미입금 고객', 'abandon' => '장바구니 담고 나간 손님', 'brand' => '노보 · 디오리퀴드 구매 손님' );
+	foreach ( rfm_advice() as $k => $_ ) {
+		$p[ 'rfm:' . $k ] = 'RFM ' . $k;
+	}
+	return $p;
+}
+function default_parts(): array {
+	return array( 'unpaid', 'abandon', 'brand', 'rfm:이탈 위험', 'rfm:관심 필요' );
+}
+function chosen_parts(): array {
+	if ( ! isset( $_GET['inc'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return default_parts();
+	}
+	$want = array_map( fn( $v ) => sanitize_text_field( wp_unslash( (string) $v ) ), (array) $_GET['inc'] ); // phpcs:ignore WordPress.Security.NonceVerification
+	return array_values( array_intersect( $want, array_keys( parts() ) ) );
+}
+
+/** 합치기 탭의 줄 — 고른 조각마다 캐시된 명단을 읽어 combine(). RFM 갈래는 `rfm:갈래` 로 들어오고 seg 는 `rfm` 하나로 합친다. */
+function combined( array $inc, bool $fresh = false ): array {
+	$lists = array();
+	$at    = 0;
+	foreach ( array( 'unpaid', 'abandon', 'brand' ) as $k ) {
+		if ( in_array( $k, $inc, true ) ) {
+			$d = data( $k, opts( $k ), $fresh );
+			$lists[ $k ] = dedupe( $d['rows'] );
+			$at = max( $at, (int) $d['at'] );
+		}
+	}
+	$labels = array_values( array_map( fn( $v ) => substr( $v, 4 ), array_filter( $inc, fn( $v ) => str_starts_with( $v, 'rfm:' ) ) ) );
+	if ( $labels ) {
+		$d    = data( 'rfm', opts( 'rfm' ), $fresh );
+		$rows = array();
+		foreach ( $labels as $l ) {
+			$rows = array_merge( $rows, filter_only( $d['rows'], $l ) );
+		}
+		$lists['rfm'] = dedupe( $rows );
+		$at = max( $at, (int) $d['at'] );
+	}
+	return array( 'rows' => combine( $lists ), 'at' => $at, 'n' => array_map( 'count', $lists ) );
 }
 
 function screen(): void {
@@ -591,7 +677,7 @@ function screen(): void {
 	}
 	echo '<style>.dhr-crm-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 16px}.dhr-crm-tabs a{display:inline-block;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #dcdcde;color:#1d2327;text-decoration:none;font-weight:600}.dhr-crm-tabs a.on{background:#1d2327;color:#fff;border-color:#1d2327}.dhr-crm-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}.dhr-crm-bar form{display:inline-flex;gap:6px;align-items:center}.dhr-crm-bar input[type=number]{width:70px}.dhr-crm-segs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}.dhr-crm-segs a{padding:6px 12px;border-radius:999px;border:1px solid #dcdcde;background:#fff;text-decoration:none;color:#1d2327}.dhr-crm-segs a.on{background:#1a5cff;border-color:#1a5cff;color:#fff}.dhr-crm-adv{margin:0 0 12px;padding:10px 14px;background:#f6f7f7;border-radius:10px;font-size:13px;line-height:1.6}</style>';
 	echo '<h1 class="dhr-sl-h1">고객 세그먼트</h1>';
-	echo '<p class="dhr-sl-note">문자 · 쿠폰을 보낼 명단을 실제 주문 · 장바구니에서 뽑습니다. 읽기만 합니다 — 보내는 것은 따로. CSV 는 이름 · 연락처 · 기준 · 금액 · 날짜 · 메모 여섯 칸이고 같은 연락처는 한 줄만 남습니다. 10분 캐시.</p>';
+	echo '<p class="dhr-sl-note">문자 · 쿠폰을 보낼 명단을 실제 주문 · 장바구니에서 뽑습니다. 읽기만 합니다 — 보내는 것은 따로. CSV 는 이름 · 연락처 · 기준 · 금액 · 날짜 · 메모 여섯 칸이고 같은 연락처는 한 줄만 남습니다. 같은 사람이 여러 명단에 들면 「한 사람에 한 통」 탭으로 합쳐 보내세요. 10분 캐시.</p>';
 	echo '<div class="dhr-crm-tabs">';
 	foreach ( segs() as $k => $label ) {
 		echo '<a class="' . ( $k === $seg ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $k ) ) . '">' . esc_html( $label ) . '</a>';
@@ -599,28 +685,37 @@ function screen(): void {
 	echo '</div>';
 
 	try {
-		$d = data( $seg, $opt, $fresh );
+		$inc = 'all' === $seg ? chosen_parts() : array();
+		$d   = 'all' === $seg ? combined( $inc, $fresh ) : data( $seg, $opt, $fresh );
 	} catch ( \Throwable $e ) {
 		echo '<div class="notice notice-error"><p>읽다 멈췄습니다: ' . esc_html( $e->getMessage() ) . ' (' . esc_html( basename( $e->getFile() ) . ':' . $e->getLine() ) . ')</p></div></div>';
 		return;
 	}
-	$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
+	$rows = 'all' === $seg ? $d['rows'] : dedupe( filter_only( $d['rows'], $opt['only'] ) );
 	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
 	$dt   = fn( $ts ) => $ts ? wp_date( 'Y.m.d', (int) $ts ) : '—';
+	$name = fn( string $k ) => segs()[ $k ] ?? $k;
 
 	$explain = array(
 		'abandon' => '회원의 저장 장바구니에 상품이 있는데 최근 <b>%d일</b> 안에 살아 있는 주문이 없는 사람. 장바구니에는 담은 시각이 없어 「최근 주문이 없다」로 가릅니다. 담은 것이 오래된 것일 수 있으니 문구는 「담아 두신 상품 아직 있어요」 정도로.',
 		'brand'   => '최근 <b>%d일</b> 돈 들어온 주문에 노보 · 디오리퀴드 상품이 든 회원. 같은 브랜드 다른 맛 · 10+1 · 5+5 묶음 안내가 맞는 명단. 브랜드는 필터 duckhoo_crm_brands.',
 		'rfm'     => '돈 들어온 주문 전체로 회원마다 R(마지막 구매 뒤 며칠 — 가까울수록 5점) · F(주문 수) · M(누적 금액)을 5분위로 매깁니다. 갈래를 누르면 그 명단만 남습니다.',
 		'unpaid'  => '입금전으로 <b>%d일</b> 넘게 서 있는 주문. 입금 안내 문자 한 통이 가장 돈이 되는 명단 — 입금자명을 주문자명과 같게 보내 달라는 말을 꼭 넣습니다. 비회원 주문은 주문서의 연락처.',
+		'all'     => '네 명단을 연락처로 합쳐 <b>한 사람에 안내 하나</b>. 여러 명단에 든 사람은 급한 순서(미입금 → 담고 나간 → 노보 · 디오 → RFM)로 하나만 남기고, 다른 명단 이름은 메모에 적습니다. 어느 조각을 넣을지 아래에서 고릅니다 — RFM 전체를 넣으면 산 적 있는 회원이 전부 들어오니 갈래를 고르세요.',
 	);
+	$incq = 'all' === $seg ? '&' . http_build_query( array( 'inc' => $inc ) ) : '';
 	echo '<div class="dhr-crm-bar"><form method="get"><input type="hidden" name="page" value="' . esc_attr( SLUG ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '">';
-	if ( 'rfm' !== $seg ) {
+	if ( 'all' === $seg ) {
+		foreach ( parts() as $k => $label ) {
+			echo '<label><input type="checkbox" name="inc[]" value="' . esc_attr( $k ) . '"' . ( in_array( $k, $inc, true ) ? ' checked' : '' ) . '> ' . esc_html( $label ) . '</label> ';
+		}
+		echo '<button class="button">다시 보기</button>';
+	} elseif ( 'rfm' !== $seg ) {
 		echo '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '"></label> <button class="button">다시 보기</button>';
 	}
 	echo '</form>';
-	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
-	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
+	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . $incq . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
+	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) . $incq ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
 	echo '<span class="dhr-sl-note" style="margin:0">읽은 시각 ' . esc_html( wp_date( 'm.d H:i', (int) $d['at'] ) ) . '</span></div>';
 	echo '<p class="dhr-sl-note">' . wp_kses( sprintf( $explain[ $seg ], (int) $opt['days'] ), array( 'b' => array() ) ) . '</p>';
 
@@ -647,6 +742,21 @@ function screen(): void {
 		echo '<p class="dhr-sl-empty">해당하는 사람이 없습니다.</p></div>';
 		return;
 	}
+	if ( 'all' === $seg ) {
+		$overlap = count( array_filter( $rows, fn( $r ) => ! empty( $r['also'] ) ) );
+		$byseg   = array();
+		foreach ( $rows as $r ) { $byseg[ $r['seg'] ] = ( $byseg[ $r['seg'] ] ?? 0 ) + 1; }
+		echo '<div class="dhr-crm-adv">명단을 따로 보내면 ' . esc_html( $w( array_sum( $d['n'] ) ) ) . '통, 합치면 <b>' . esc_html( $w( count( $rows ) ) ) . '통</b> — 겹친 사람 ' . esc_html( $w( $overlap ) ) . '명. 보낼 안내: ';
+		foreach ( priority() as $k ) {
+			if ( isset( $byseg[ $k ] ) ) { echo '<b>' . esc_html( $name( $k ) ) . '</b> ' . esc_html( $w( $byseg[ $k ] ) ) . '명 · '; }
+		}
+		echo '</div>';
+		foreach ( $rows as &$r ) {
+			$r['why']  = $name( $r['seg'] ) . ' — ' . $r['why'];
+			if ( $r['also'] ) { $r['note'] = trim( ( $r['note'] ? $r['note'] . ' / ' : '' ) . '다른 명단: ' . implode( ' · ', array_map( $name, $r['also'] ) ) ); }
+		}
+		unset( $r );
+	}
 	$sum = array_sum( array_column( $rows, 'amount' ) );
 	echo '<div class="dhr-sl-cards">';
 	\Duckhoo\Redesign\Sales\card( '명단', $w( count( $rows ) ) . '명', '연락처 있음 ' . $w( count( array_filter( $rows, fn( $r ) => '' !== $r['phone'] ) ) ) . '명' );
@@ -670,8 +780,18 @@ function csv(): void {
 	}
 	$seg = isset( $_GET['seg'] ) && isset( segs()[ $_GET['seg'] ] ) ? (string) $_GET['seg'] : 'abandon';
 	$opt = opts( $seg );
-	$d   = data( $seg, $opt );
-	$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
+	if ( 'all' === $seg ) {
+		$rows = combined( chosen_parts() )['rows'];
+		$name = fn( string $k ) => segs()[ $k ] ?? $k;
+		foreach ( $rows as &$r ) {
+			$r['why'] = $name( $r['seg'] ) . ' — ' . $r['why'];
+			if ( $r['also'] ) { $r['note'] = trim( ( $r['note'] ? $r['note'] . ' / ' : '' ) . '다른 명단: ' . implode( ' · ', array_map( $name, $r['also'] ) ) ); }
+		}
+		unset( $r );
+	} else {
+		$d    = data( $seg, $opt );
+		$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
+	}
 	nocache_headers();
 	header( 'Content-Type: text/csv; charset=utf-8' );
 	header( 'Content-Disposition: attachment; filename="duckhoo-' . $seg . ( $opt['only'] ? '-' . rawurlencode( $opt['only'] ) : '' ) . '-' . wp_date( 'Ymd' ) . '.csv"' );
