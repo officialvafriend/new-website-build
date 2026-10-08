@@ -1501,7 +1501,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{
   width: min(400px, calc(100vw - 48px)); height: auto !important; max-height: calc(100dvh - 120px) !important;
   overflow-y: auto !important; overscroll-behavior: contain;
   border-radius: 20px; padding-top: 0;
-  background: var(--dh-glass); border-color: var(--dh-glass-line);
+  background: linear-gradient(180deg, var(--dh-glass-hi), transparent 42%), var(--dh-glass); border-color: var(--dh-glass-line);
   -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
   box-shadow: inset 0 1px 0 var(--dh-glass-hi), 0 4px 10px rgba(17,17,17,.09), 0 44px 80px -30px rgba(17,17,17,.5);
   animation: dhp-dock-in .42s cubic-bezier(.16,1,.3,1);
@@ -1978,7 +1978,7 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet{
   /* 유리 시안 ④ (2026-10-08): 시트 모서리 28 · 유리 면 · 열림 320ms 드로어 커브(닫힘 220ms 는 front.js) */
   border-radius: 28px 28px 0 0 !important; padding-top: 0 !important;
   padding-bottom: calc(1.1rem + env(safe-area-inset-bottom)) !important;
-  background: var(--dh-glass) !important; border-color: var(--dh-glass-line) !important;
+  background: linear-gradient(180deg, var(--dh-glass-hi), transparent 42%), var(--dh-glass) !important; border-color: var(--dh-glass-line) !important;
   -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
   box-shadow: inset 0 1px 0 var(--dh-glass-hi), 0 -26px 60px -22px rgba(16,24,32,.55) !important;
   animation: dhp-sheet-in .32s cubic-bezier(.32,.72,0,1);
@@ -2813,3 +2813,34 @@ html body.dhr.dhr-wrap.dhr-wrap .dhd__btn{ background: var(--dh-primary) !import
 html body.dhr.dhr-wrap.dhr-wrap .dhd__skip{ background: transparent !important; color: var(--dh-ink-2) !important; border: 0 !important; border-radius: 999px !important; min-height: 40px !important; height: auto !important; width: auto !important; padding: 0 1rem !important; font-size: 14px !important; font-weight: 700 !important; box-shadow: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhd__t{ margin: 4px 0 0 !important; padding: 0 !important; font-size: 22px !important; font-weight: 900 !important; color: var(--dh-ink) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhd__s{ margin: 0 !important; padding: 0 !important; font-size: 14px !important; color: var(--dh-ink-2) !important; }
+
+/* ④-2 유리 안쪽 (2026-10-08, 사장님 「칸 색상이 글래스모피즘과 안 어울려」) — 시트 · 서랍 안의 옵션 상자 · 선택창 · 스테퍼 · 맛 타일은
+   불투명 면색이 아니라 반투명 흰 틴트(--dh-glass-in) + 밝은 테두리로. 유리 위에 종이 상자를 올리지 않는다. 글자색은 그대로 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .dhp-card--form.is-sheet .wd-option-item, html body.dhr.dhr-wrap.dhr-wrap.single-product .dhp-card--form.is-docked .wd-option-item{
+  background: var(--dh-glass-in) !important; border-color: var(--dh-glass-in-line) !important; box-shadow: inset 0 1px 0 var(--dh-glass-hi);
+}
+html body.dhr.dhr-wrap.dhr-wrap.single-product .dhp-card--form.is-sheet .wd-option-qty, html body.dhr.dhr-wrap.dhr-wrap.single-product .dhp-card--form.is-docked .wd-option-qty{
+  background: var(--dh-glass-in) !important; border-color: var(--dh-glass-in-line) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhsel__btn, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhsel__btn{
+  background: var(--dh-glass-in); border-color: var(--dh-glass-in-line); box-shadow: inset 0 1px 0 var(--dh-glass-hi);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet form.cart .quantity, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked form.cart .quantity{
+  background: var(--dh-glass-in) !important; border-color: var(--dh-glass-in-line) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx{
+  --dhx-bg: var(--dh-glass-in); --dhx-ground: var(--dh-glass-in); --dhx-line: var(--dh-glass-in-line);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx .dhx-bundle, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx .dhx-bundle,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx-bundle__mark, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx-bundle__mark,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx-chip, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx-chip,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx-qty button, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx-qty button,
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhx-qty__n, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhx-qty__n{
+  background: var(--dh-glass-in) !important; border-color: var(--dh-glass-in-line) !important;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhpk, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhpk{
+  background: var(--dh-glass-in); box-shadow: 0 0 0 1px var(--dh-glass-in-line), inset 0 1px 0 var(--dh-glass-hi);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhpk__tile, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhpk__tile{
+  background: var(--dh-glass-in); box-shadow: 0 0 0 1.5px var(--dh-glass-in-line);
+}

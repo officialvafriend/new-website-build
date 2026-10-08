@@ -100,6 +100,8 @@
   --dh-glass: rgba(255,255,255,.74);
   --dh-glass-hi: rgba(255,255,255,.65);
   --dh-glass-line: rgba(17,17,17,.08);
+  --dh-glass-in: rgba(255,255,255,.55);       /* 유리 안쪽 상자 · 선택창 · 스테퍼 — 불투명 면색을 쓰면 유리 위에 종이가 앉는다 (2026-10-08) */
+  --dh-glass-in-line: rgba(17,17,17,.07);
   --dh-veil: rgba(17,17,17,.42);
   --dh-shadow: 0 1px 2px rgba(17,17,17,.06), 0 12px 32px rgba(17,17,17,.10);
 
@@ -139,9 +141,11 @@ html[data-theme="dark"] {
   --dh-accent-deep: #7FA8FF;
   --dh-accent-warm: #7FA8FF;
   --dh-accent-soft: rgba(77,139,255,.16);
-  --dh-glass: rgba(23,25,29,.74);
-  --dh-glass-hi: rgba(255,255,255,.08);
-  --dh-glass-line: rgba(255,255,255,.09);
+  --dh-glass: rgba(30,33,40,.74);             /* 바탕(#0F1012)보다 한 단 밝고 차갑게 — 같은 색이면 판이 뜨지 않는다 */
+  --dh-glass-hi: rgba(255,255,255,.10);
+  --dh-glass-line: rgba(255,255,255,.12);
+  --dh-glass-in: rgba(255,255,255,.07);
+  --dh-glass-in-line: rgba(255,255,255,.14);
   --dh-veil: rgba(15,16,18,.6);
   --dh-shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.45);
   --dh-status-pending: #E3B45A;
