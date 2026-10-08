@@ -1082,6 +1082,8 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item{
   border-radius: 14px !important; padding: .85rem .95rem !important; margin: 0 !important;
   display: flex !important; flex-direction: column !important; gap: .6rem !important;
 }
+/* 제목 아래 점선은 테마가 #ddd 로 못 박아 다크에서 흰 선 — 토큰으로 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__top{ border-bottom-color: var(--dh-line) !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__title{ font-size: 15px !important; font-weight:700 !important; letter-spacing: 0 !important; color: var(--dh-ink) !important; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-item__bottom{ display: flex !important; align-items: center !important; justify-content: space-between !important; gap: .6rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty{
@@ -1095,7 +1097,8 @@ html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty button{
   display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important;
 }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty button:hover{ background: var(--dh-surface-2) !important; }
-html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty > span{ min-width: 2.2rem; text-align: center; font-size: 16px; font-weight:800; font-variant-numeric: tabular-nums; color: var(--dh-ink); }
+/* 숫자 칸 — 테마가 span 에 #FFF 배경 · 테두리를 못 박아 다크에서 흰 상자 위 흰 글자였다 (2026-10-08). 알약 안이라 배경은 투명 */
+html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-qty > span{ min-width: 2.2rem; text-align: center; font-size: 16px; font-weight:800; font-variant-numeric: tabular-nums; color: var(--dh-ink) !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-price{ font-size: 17px !important; font-weight:800 !important; letter-spacing: 0 !important; color: var(--dh-ink) !important; font-variant-numeric: tabular-nums; }
 
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-option-builder-summary{ background: none !important; border: 0 !important; border-top: 1px solid var(--dh-line) !important; margin: 1.1rem 0 0 !important; padding: 1rem 0 0 !important; }
