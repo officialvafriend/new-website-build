@@ -1114,3 +1114,26 @@ html[data-theme="dark"] .dhr .card.is-gated .fig img{mix-blend-mode:normal;borde
 
 /* 홈 — 타일 바로 아래 가림 안내: 위아래 16px 한 리듬 (2026-10-07, 사장님 「간격이 문제」) */
 .dhr .qcats + .dhr-gate{margin:1rem 0 1rem}
+
+/* ④ 담기 완료 막 (2026-10-08, 유리 시안) — 화면 전체가 흐려지고 가운데 유리 카드에 체크 원이 그려진다.
+   유리는 헤더 · 탭바 · 시트 · 이 막에만. 움직이는 것은 opacity · transform · stroke-dashoffset 뿐 */
+.dhr .dhd{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px;background:var(--dh-veil);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);opacity:0;transition:opacity .2s ease}
+.dhr .dhd[hidden]{display:none}
+.dhr .dhd.on{opacity:1}
+.dhr .dhd__k{width:min(100%,360px);display:grid;justify-items:center;gap:12px;padding:28px 24px;border-radius:28px;background:var(--dh-glass);border:1px solid var(--dh-glass-line);box-shadow:inset 0 1px 0 var(--dh-glass-hi),var(--dh-shadow);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);transform:scale(.95);opacity:0;transition:transform .24s cubic-bezier(.23,1,.32,1),opacity .24s cubic-bezier(.23,1,.32,1);outline:0}
+.dhr .dhd.on .dhd__k{transform:none;opacity:1}
+.dhr .dhd__ring{width:96px;height:96px;border-radius:50%;background:var(--dh-accent);display:grid;place-items:center;box-shadow:0 12px 28px rgba(26,92,255,.32);transform:scale(.9);transition:transform .3s cubic-bezier(.23,1,.32,1) .08s}
+.dhr .dhd.on .dhd__ring{transform:none}
+.dhr .dhd__ring svg{width:48px;height:48px;fill:none;stroke:var(--dh-accent-ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;transition:stroke-dashoffset .36s cubic-bezier(.23,1,.32,1) .12s}
+.dhr .dhd.on .dhd__ring svg{stroke-dashoffset:0}
+.dhr .dhd__t{margin:4px 0 0;font-size:22px;font-weight:900;line-height:1.3;color:var(--dh-ink);text-align:center;word-break:keep-all}
+.dhr .dhd__s{margin:0;font-size:14px;line-height:1.5;color:var(--dh-ink-2);text-align:center;word-break:keep-all}
+.dhr .dhd__s[hidden]{display:none}
+.dhr .dhd__btn{width:100%;min-height:48px;margin-top:6px;padding:0 1.2rem;border:0;border-radius:999px;background:var(--dh-primary);color:var(--dh-primary-ink);font:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:transform .16s cubic-bezier(.23,1,.32,1)}
+.dhr .dhd__btn:active{transform:scale(.97)}
+.dhr .dhd__skip{min-height:40px;padding:0 1rem;border:0;border-radius:999px;background:transparent;color:var(--dh-ink-2);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.dhr .dhd__skip:hover{color:var(--dh-ink)}
+.dhr .dhd__skip[hidden]{display:none}
+body.dhr.dhd-open{overflow:hidden}
+@media(prefers-reduced-transparency:reduce){.dhr .dhd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(17,17,17,.62)}.dhr .dhd__k{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-reduced-motion:reduce){.dhr .dhd,.dhr .dhd__k,.dhr .dhd__ring,.dhr .dhd__ring svg{transition:opacity .2s ease}.dhr .dhd__k,.dhr .dhd__ring{transform:none}.dhr .dhd__ring svg{stroke-dashoffset:0}}

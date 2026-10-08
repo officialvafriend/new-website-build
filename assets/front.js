@@ -122,6 +122,68 @@
    내용은 WooCommerce Store API(/wc/store/v1/cart) 로 읽는다. 지우기만 여기서 하고
    수량은 장바구니 페이지(키플)에서 — 묶음 옵션은 그쪽 규칙이 있다.
    비로그인은 사진을 그리지 않는다: Store API 사진은 키플의 19 가림을 안 거친다. */
+/* 담기 완료 막 (2026-10-08, 유리 시안 ④). 담은 직후 화면 전체가 흐려지며 체크 원이 그려진다 —
+   라라스윗식. 서버가 다시 그린 `.woocommerce-message` 를 읽어 띄우고(어느 화면이든), 막은 JS 가
+   그때 만든다. 장바구니 데이터 · 폼에는 손대지 않는다. `window.DHR.done(kind, opts)` 로 ⑤ 주문 완료도 같은 막을 쓴다.
+   머무는 시간 2.2초(두 줄을 읽고 버튼을 고를 시간) · 안을 만지면 자동 닫힘이 멈춘다 · 막 · Esc · 계속 쇼핑하기로 닫는다. */
+(function(){
+  var D = window.DHR || (window.DHR = {});
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var box = null, timer = 0, opener = null;
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function build(){
+    box = document.createElement('div'); box.className = 'dhd'; box.hidden = true;
+    box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+    box.innerHTML = '<div class="dhd__k" tabindex="-1"><div class="dhd__ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>'
+      + '<h2 class="dhd__t"></h2><p class="dhd__s"></p><button type="button" class="dhd__btn" data-dhd-go></button><button type="button" class="dhd__skip" data-dhd-close></button></div>';
+    document.body.appendChild(box);
+    box.addEventListener('click', function(e){
+      if(e.target === box || e.target.closest('[data-dhd-close]')){ close(); return; }
+      var go = e.target.closest('[data-dhd-go]'); if(go){ var fn = box.__go; close(); if(fn) fn(); }
+    });
+    /* 안을 만지면 저절로 닫히지 않는다 — 읽는 중이다 */
+    box.addEventListener('pointerdown', hold);
+    box.addEventListener('focusin', function(e){ if(e.target !== box.querySelector('.dhd__k')) hold(); });   /* 열릴 때 카드 자신에 주는 포커스는 빼고 */
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && box && !box.hidden) close(); });
+  }
+  function hold(){ if(timer){ clearTimeout(timer); timer = 0; } }
+  function close(){
+    if(!box || box.hidden) return; hold();
+    box.classList.remove('on'); document.body.classList.remove('dhd-open');
+    setTimeout(function(){ box.hidden = true; }, still.matches ? 0 : 220);
+    if(opener && opener.focus) try{ opener.focus(); }catch(_){}
+  }
+  /* kind: 'cart' | 'order' · opts: title · sub(HTML 아님, 글자) · go(버튼 글자) · onGo · skip(버튼 글자, '' 이면 숨김) · hold(ms, 0 이면 머문다) */
+  function done(kind, o){
+    o = o || {}; if(!box) build(); hold();
+    var k = box.querySelector('.dhd__k');
+    box.className = 'dhd dhd--' + (kind || 'cart');
+    box.setAttribute('aria-label', o.title || '완료');
+    box.querySelector('.dhd__t').textContent = o.title || (kind === 'order' ? '주문이 접수되었어요' : '장바구니에 담았어요');
+    var sub = box.querySelector('.dhd__s'); sub.textContent = o.sub || ''; sub.hidden = !o.sub;
+    var go = box.querySelector('.dhd__btn'); go.textContent = o.go || (kind === 'order' ? '주문 내역 보기' : '장바구니 보기'); box.__go = o.onGo || null;
+    var skip = box.querySelector('.dhd__skip'); skip.textContent = o.skip == null ? '계속 쇼핑하기' : o.skip; skip.hidden = !skip.textContent;
+    opener = document.activeElement; box.hidden = false; document.body.classList.add('dhd-open');
+    requestAnimationFrame(function(){ box.classList.add('on'); k.focus(); });
+    var ms = o.hold == null ? 2200 : o.hold;
+    if(ms > 0) timer = setTimeout(close, ms);
+    return box;
+  }
+  D.done = done; D.closeDone = close;
+
+  /* 담은 직후 — 워드커머스 알림이 「장바구니에 추가」 를 말하면 막을 띄운다 (전에는 서랍을 바로 열었다).
+     장바구니 · 주문서에서는 띄우지 않는다. 상품 이름은 알림의 따옴표 안에서 읽는다. */
+  var msg = document.querySelector('.woocommerce-message'), here = document.body.classList;
+  if(msg && /장바구니|cart/i.test(msg.textContent) && !here.contains('woocommerce-cart') && !here.contains('woocommerce-checkout')){
+    msg.setAttribute('data-wd-toasted', '1');   /* 스니펫 #21 의 토스트까지 겹치지 않게 — 막이 그 말을 한다 */
+    msg.classList.add('dhr-hide-note');
+    var m = msg.textContent.match(/[“"「]([^”"」]+)[”"」]/), name = m ? m[1].trim() : '';
+    setTimeout(function(){
+      done('cart', { sub: name ? name + ' · 잠시 뒤 닫힙니다' : '잠시 뒤 닫힙니다', onGo: function(){ if(D.openCart) D.openCart(null); else location.href = D.cartUrl || '/cart/'; } });
+    }, 120);
+  }
+})();
+
 (function(){
   var D = window.DHR || {}, root = document.querySelector('[data-cart-drawer]'); if(!root || !window.fetch) return;
   var list = root.querySelector('[data-cart-list]'), count = root.querySelector('[data-cart-count]'), total = root.querySelector('[data-cart-total]');
@@ -210,11 +272,7 @@
   /* 담긴 직후 — WooCommerce 알림이 "장바구니에 추가" 를 말하면 서랍을 연다.
      **장바구니 · 주문서에서는 열지 않는다** — 거기까지 온 손님에게 장바구니를 다시
      펴 보이는 것은 길을 막는 것이다 (주문서 제외는 2026-09-14). */
-  var msg  = document.querySelector('.woocommerce-message');
-  var here = document.body.classList;
-  if(msg && /장바구니|cart/i.test(msg.textContent) && !here.contains('woocommerce-cart') && !here.contains('woocommerce-checkout')){
-    setTimeout(function(){ open(null); }, 350);
-  }
+  /* (2026-10-08) 담은 직후 서랍을 바로 열던 것은 위 「담기 완료 막」이 대신한다 — 막의 「장바구니 보기」가 openCart 를 부른다 */
   window.DHR = D; D.openCart = open;
 })();
 
@@ -332,6 +390,12 @@
      구매 게이트가 읽는 칸 이름도 폼 안쪽이라 바뀌지 않는다. */
   function openSheet(){
     if(wide.matches) return false;
+    if(onSheet && closing){
+      closing(); card.style.transition = 'transform 240ms cubic-bezier(.32,.72,0,1)'; card.style.transform = 'translate3d(0,0,0)';
+      if(dim){ dim.style.transition = 'opacity 200ms ease-out'; dim.style.opacity = ''; }
+      setTimeout(function(){ if(onSheet && !closing){ card.style.transition = ''; card.style.transform = ''; card.style.animation = ''; if(dim){ dim.style.transition = ''; dim.style.animation = ''; } } }, 260);
+      return true;
+    }
     if(onSheet) return true;
     wrap.style.minHeight = wrap.getBoundingClientRect().height + 'px';
     onSheet = true;
@@ -341,8 +405,25 @@
     card.scrollTop = 0;
     return true;
   }
-  function closeSheet(){
+  var stillM = window.matchMedia('(prefers-reduced-motion: reduce)'), closing = null;
+  function closeSheet(now){
     if(!onSheet) return false;
+    if(closing) return true;
+    /* 닫힘은 열림(320ms)보다 빠른 220ms — Emil. 끌어서 닫은 뒤(now) · 동작 줄이기면 바로 */
+    if(!(now === true) && !stillM.matches && !card.classList.contains('is-dragging')){
+      var h = card.offsetHeight || 1, tm;
+      card.style.animation = 'none'; if(dim){ dim.style.animation = 'none'; }
+      void card.offsetWidth;
+      card.style.transition = 'transform 220ms cubic-bezier(.32,.72,0,1)'; if(dim) dim.style.transition = 'opacity 220ms ease-out';
+      card.style.transform = 'translate3d(0,' + h + 'px,0)'; if(dim) dim.style.opacity = '0';
+      var fin = function(ev){ if(ev && ev.target !== card) return; clearTimeout(tm); card.removeEventListener('transitionend', fin); closing = null; finishClose(); };
+      closing = function(){ clearTimeout(tm); card.removeEventListener('transitionend', fin); closing = null; };
+      card.addEventListener('transitionend', fin); tm = setTimeout(fin, 280);
+      return true;
+    }
+    finishClose(); return true;
+  }
+  function finishClose(){
     onSheet = false;
     card.classList.remove('is-sheet');
     document.body.classList.remove('dhp-sheet-on');
@@ -353,7 +434,7 @@
   }
   window.DHR = window.DHR || {};
   window.DHR.openBuySheet = openSheet;
-  if(dim) dim.addEventListener('click', closeSheet);
+  if(dim) dim.addEventListener('click', function(){ closeSheet(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSheet(); });
   /* 담기 · 결제하기를 누르면 시트는 할 일을 마쳤다 */
   card.addEventListener('click', function(e){
@@ -412,13 +493,13 @@
       var proj = y + (v / 1000) * .998 / (1 - .998);
       var close = e.type !== 'pointercancel' && (proj > h * .35 || v > 900);
       card.classList.remove('is-dragging');
-      if(still.matches){ settle(); if(close) closeSheet(); return; }
+      if(still.matches){ settle(); if(close) closeSheet(true); return; }
       if(close){
         var ms = Math.max(140, Math.min(260, (h - y) / Math.max(900, v) * 1000));
         card.style.transition = 'transform ' + ms + 'ms cubic-bezier(.32,.72,0,1)';
         if(dim) dim.style.transition = 'opacity ' + ms + 'ms ease-out';
         setY(h); if(dim) dim.style.opacity = '0';
-        var done = false, tm, fin = function(){ if(done) return; done = true; clearTimeout(tm); card.removeEventListener('transitionend', fin); pend = null; closeSheet(); settle(); };
+        var done = false, tm, fin = function(){ if(done) return; done = true; clearTimeout(tm); card.removeEventListener('transitionend', fin); pend = null; closeSheet(true); settle(); };
         pend = function(){ done = true; clearTimeout(tm); card.removeEventListener('transitionend', fin); };
         card.addEventListener('transitionend', fin); tm = setTimeout(fin, ms + 60);
       }else{

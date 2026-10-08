@@ -1394,9 +1394,12 @@ html body.dhr.dhr-wrap.dhr-wrap ul.dhp-ben li:first-child{ color: var(--dh-ink);
 /* 아래 고정 구매 줄 — 모바일. 폼의 버튼이 보이는 동안은 내려가 있다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 36; display: block;
-  padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom)); background: var(--dh-surface); border-top: 1px solid var(--dh-line);
+  padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom)); background: var(--dh-glass); border-top: 1px solid var(--dh-glass-line);
+  border-radius: 28px 28px 0 0; box-shadow: inset 0 1px 0 var(--dh-glass-hi), 0 -12px 32px rgba(17,17,17,.10);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
   transform: translateY(110%); transition: transform .22s cubic-bezier(.22,1,.36,1);
 }
+@media (prefers-reduced-transparency: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ background: var(--dh-surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar[hidden]{ display: none; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-bar.is-away{ transform: none; }
 @media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-bar{ transition: none; } }
@@ -1498,14 +1501,18 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{
   width: min(400px, calc(100vw - 48px)); height: auto !important; max-height: calc(100dvh - 120px) !important;
   overflow-y: auto !important; overscroll-behavior: contain;
   border-radius: 20px; padding-top: 0;
-  box-shadow: 0 0 0 1px rgba(17,17,17,.06), 0 4px 10px rgba(17,17,17,.09), 0 44px 80px -30px rgba(17,17,17,.5);
+  background: var(--dh-glass); border-color: var(--dh-glass-line);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--dh-glass-hi), 0 4px 10px rgba(17,17,17,.09), 0 44px 80px -30px rgba(17,17,17,.5);
   animation: dhp-dock-in .42s cubic-bezier(.16,1,.3,1);
 }
+@media (prefers-reduced-transparency: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked{ background: var(--dh-surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @keyframes dhp-dock-in{ from{ transform: translate(20px, 14px); opacity: 0; } }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhp-dock__head{
   display: flex; align-items: center; gap: .8rem; position: sticky; top: 0; z-index: 3;
-  margin: 0 -1.2rem .9rem; padding: .9rem 1.2rem; background: var(--dh-surface);
-  border-bottom: 1px solid var(--dh-line); border-radius: 20px 20px 0 0;
+  margin: 0 -1.2rem .9rem; padding: .9rem 1.2rem; background: var(--dh-glass);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--dh-glass-line); border-radius: 20px 20px 0 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx{ min-width: 0; flex: 1 1 auto; display: grid; gap: .1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-dock__tx b{ font-size: 14px; font-weight:800; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1955,9 +1962,11 @@ html body.dhr.dhr-wrap.dhr-wrap .keyple-my-coupon.is-used .keyple-my-coupon-name
    **폼을 복제하지 않는다.** 진짜 폼이 그대로 올라오므로 고른 옵션이 유지되고,
    구매 게이트가 읽는 칸 이름도 폼 안쪽이라 바뀌지 않는다. */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-sheetdim{
-  position: fixed; inset: 0; z-index: 38; background: rgba(17,17,17,.5);
+  position: fixed; inset: 0; z-index: 38; background: var(--dh-veil);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   animation: dhp-dim-in .24s ease;
 }
+@media (prefers-reduced-transparency: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-sheetdim{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(17,17,17,.62); } }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-sheetdim[hidden]{ display: none; }
 @keyframes dhp-dim-in{ from{ opacity: 0; } }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet{
@@ -1966,12 +1975,16 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet{
   /* 위 .dhp-card 규칙이 max-height: none !important 라 여기서도 못을 박아야 한다 */
   height: auto !important; max-height: 86dvh !important;
   overflow-y: auto !important; overscroll-behavior: contain;
-  border-radius: 22px 22px 0 0 !important; padding-top: 0 !important;
+  /* 유리 시안 ④ (2026-10-08): 시트 모서리 28 · 유리 면 · 열림 320ms 드로어 커브(닫힘 220ms 는 front.js) */
+  border-radius: 28px 28px 0 0 !important; padding-top: 0 !important;
   padding-bottom: calc(1.1rem + env(safe-area-inset-bottom)) !important;
-  box-shadow: 0 -1px 0 rgba(17,17,17,.08), 0 -26px 60px -22px rgba(16,24,32,.55) !important;
-  animation: dhp-sheet-in .32s cubic-bezier(.16,1,.3,1);
+  background: var(--dh-glass) !important; border-color: var(--dh-glass-line) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--dh-glass-hi), 0 -26px 60px -22px rgba(16,24,32,.55) !important;
+  animation: dhp-sheet-in .32s cubic-bezier(.32,.72,0,1);
 }
-@keyframes dhp-sheet-in{ from{ transform: translateY(14%); opacity: .5; } }
+@keyframes dhp-sheet-in{ from{ transform: translateY(100%); } }
+@media (prefers-reduced-transparency: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet{ background: var(--dh-surface) !important; -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @media (prefers-reduced-motion: reduce){
   html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet,
   html body.dhr.dhr-wrap.dhr-wrap .dhp-sheetdim{ animation: none; }
@@ -1979,8 +1992,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet{
 /* 시트 머리 — 잡는 손잡이와 닫기. 데스크톱 서랍 머리를 그대로 쓴다 */
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head{
   display: flex; align-items: center; gap: .8rem; position: sticky; top: 0; z-index: 3;
-  margin: 0 -1.1rem .9rem; padding: 1rem 1.1rem .8rem; background: var(--dh-surface);
-  border-bottom: 1px solid var(--dh-line); border-radius: 22px 22px 0 0;
+  margin: 0 -1.1rem .9rem; padding: 1rem 1.1rem .8rem; background: var(--dh-glass);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--dh-glass-line); border-radius: 28px 28px 0 0;
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhp-dock__head::before{
   content: ""; position: absolute; left: 50%; top: .4rem; width: 38px; height: 4px; margin-left: -19px;
@@ -2793,3 +2807,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty button:hover{ background: var(--dh
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty__n{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; border-color: var(--dh-line-strong) !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini button,
 html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-qty--mini .dhx-qty__n{ background: var(--dh-surface) !important; color: var(--dh-ink) !important; }
+
+/* ④ 담기 완료 막 — 테마의 button · h2 · p 규칙(!important)이 덮지 않게 못 박는다 (모양은 front.css) */
+html body.dhr.dhr-wrap.dhr-wrap .dhd__btn{ background: var(--dh-primary) !important; color: var(--dh-primary-ink) !important; border: 0 !important; border-radius: 999px !important; min-height: 48px !important; height: auto !important; width: 100% !important; padding: 0 1.2rem !important; font-size: 16px !important; font-weight: 800 !important; line-height: 1.2 !important; box-shadow: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhd__skip{ background: transparent !important; color: var(--dh-ink-2) !important; border: 0 !important; border-radius: 999px !important; min-height: 40px !important; height: auto !important; width: auto !important; padding: 0 1rem !important; font-size: 14px !important; font-weight: 700 !important; box-shadow: none !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhd__t{ margin: 4px 0 0 !important; padding: 0 !important; font-size: 22px !important; font-weight: 900 !important; color: var(--dh-ink) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhd__s{ margin: 0 !important; padding: 0 !important; font-size: 14px !important; color: var(--dh-ink-2) !important; }
