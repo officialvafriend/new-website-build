@@ -1861,6 +1861,14 @@
     if(!box || box.dataset.dhrAg2) return !!box;
     box.dataset.dhrAg2 = '1';
 
+    /* 「회원가입하고 상품 보기」가 /join/ 로 가고 그 주소는 /join-form/(3단계)로 301 된다 — 약관을 건너뛴다.
+       1단계(/register/)로 바꾸되 돌아올 곳(redirect_to)은 그대로 — 스니펫 파일은 안 건드린다 (2026-10-08) */
+    box.querySelectorAll('a[href*="/join/"],a[href*="/join-form/"]').forEach(function(a){
+      try{ var u = new URL(a.getAttribute('href'), location.href); if(u.origin !== location.origin) return;
+        var to = u.searchParams.get('redirect_to'); var r = new URL('/register/', location.origin); if(to) r.searchParams.set('redirect_to', to);
+        a.setAttribute('href', r.toString()); }catch(e){}
+    });
+
     var later = box.querySelector('.dh-ag2-later');
     if(later){
       /* 문구가 하는 일과 맞아야 한다 — 누르면 오늘은 다시 뜨지 않는다 */
@@ -2414,4 +2422,19 @@
     if(!hit && tries++ < 20) setTimeout(init, 300);
   }
   if(document.readyState === 'complete') init(); else addEventListener('load', init);
+})();
+
+/* 가입 2단계(/agree/) — 「동의하고 가입」을 누를 때 필수 셋이 체크돼 있으면 선택 동의(SMS · 이메일 · 제3자)를 쿠키에 적는다.
+   테마 버튼 스크립트는 그대로(그쪽이 /join-form/ 으로 넘긴다) — 캡처 단계에서 먼저 보고 쿠키만 쓴다. 가입 때 서버가 wd_agree_* 로 옮긴다. */
+(function(){
+  var name = window.DHR && window.DHR.agreeCookie; if (!name) return;
+  var $ = function(id){ return document.getElementById(id); };
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest && e.target.closest('#wdAgreeSubmit'); if (!b) return;
+    var terms = $('wdAgreeTerms'), priv = $('wdAgreePrivacy'), age = $('wdAgreeAge'); if (!terms || !priv || !age) return;
+    if (!(terms.checked && priv.checked && age.checked)) return; // 테마가 alert 로 막는다
+    var on = function(id){ var c = $(id); return c && c.checked ? '1' : '0'; };
+    var v = 's' + on('wdAgreeSms') + 'e' + on('wdAgreeEmail') + 't' + on('wdAgreeThird');
+    try { document.cookie = name + '=' + v + '; path=/; max-age=3600; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (err) {}
+  }, true);
 })();

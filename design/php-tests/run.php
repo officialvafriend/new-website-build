@@ -2812,6 +2812,14 @@ $ok(str_contains($u2,'<td>미입금 고객</td><td>가</td>') && str_contains($u
 $ok(mb_check_encoding($x,'UTF-8')===false && iconv('CP949','UTF-8',$x)!==false, 'xls 양식: 본문이 실제로 CP949 바이트다 (UTF-8 이 아니다)');
 $ak=$CR.'auto_sms_key'; $cs=[['key'=>'wd_agree_email','yes'=>5,'no'=>44],['key'=>'wd_agree_sms','yes'=>12,'no'=>37],['key'=>'wd_agree_third_party','yes'=>14,'no'=>35]];
 $ok($ak($cs)==='wd_agree_sms' && $ak([])==='' && $ak([['key'=>'sms_a','yes'=>1,'no'=>0],['key'=>'sms_b','yes'=>0,'no'=>1]])==='' && $ak([['key'=>'wd_agree_sms','yes'=>0,'no'=>0]])==='', '자동 키: sms 가 든 키가 하나뿐이고 값이 있을 때만 (둘이면 · 값 없으면 고르지 않음)');
+/* ── 가입 2단계 건너뛰기 막기 (includes/agree-gate.php) ───────────────────────────── */
+require_once dirname(__DIR__, 2).'/includes/agree-gate.php';
+$AG='Duckhoo\\Redesign\\AgreeGate\\';
+$ok(($AG.'parse_agree')('s1e0t1')===['sms'=>'yes','email'=>'no','third'=>'yes'] && ($AG.'parse_agree')('s0e0t0')===['sms'=>'no','email'=>'no','third'=>'no'] && ($AG.'parse_agree')('')===null && ($AG.'parse_agree')('s2e0t0')===null && ($AG.'parse_agree')('yes')===null, '약관 쿠키 읽기: s1e0t1 → yes/no/yes · 꼴이 아니면 null');
+$ok(($AG.'agree_meta')(['sms'=>'yes','email'=>'no','third'=>'yes'])===['wd_agree_sms'=>'yes','wd_agree_email'=>'no','wd_agree_third_party'=>'yes'], '약관 → 회원 메타: 테마와 같은 키(wd_agree_sms · email · third_party) · 값 yes/no');
+$na=$AG.'needs_agree';
+$ok($na(true,false,'GET',false,false)===true && $na(true,false,'get',false,false)===true, '3단계 문: 비로그인 GET · 쿠키 없음 · 처음이면 2단계로');
+$ok($na(true,false,'POST',false,false)===false && $na(true,true,'GET',false,false)===false && $na(true,false,'GET',true,false)===false && $na(true,false,'GET',false,true)===false && $na(false,false,'GET',false,false)===false, '3단계 문: POST(가입 제출) · 로그인 · 약관 쿠키 있음 · 이미 한 번 보냄 · 필터로 끔 이면 안 보낸다');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

@@ -24,7 +24,7 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/6
 const rows = [];
 const ok = (name, pass, note = '') => { rows.push({ name, pass: !!pass, note }); };
 const nc = () => 'nocache=' + Math.random().toString(36).slice(2);
-const jar = new Map();
+const jar = new Map([['dhr_agree', 's0e0t0']]); // 약관을 거친 것처럼 — 안 거치면 /join-form/ 이 /agree/ 로 302 (agree-gate.php)
 const cookie = () => [...jar.entries()].map(([k, v]) => k + '=' + v).join('; ');
 async function get(path, opt = {}) {
   const u = SITE + path + (path.includes('?') ? '&' : '?') + nc();
@@ -33,6 +33,8 @@ async function get(path, opt = {}) {
   for (const c of (r.headers.getSetCookie ? r.headers.getSetCookie() : [])) { const [kv] = c.split(';'); const i = kv.indexOf('='); if (i > 0) jar.set(kv.slice(0, i).trim(), kv.slice(i + 1).trim()); }
   return r;
 }
+// 가입 3단계를 약관 없이 열면 2단계로 돌려보내는지 (쿠키 없이 · 한 번만)
+async function gateCheck(){ const r = await fetch(SITE + '/join-form/?' + nc(), { headers: { 'user-agent': UA }, redirect: 'manual' }); const loc = r.headers.get('location') || ''; ok('약관 없이 3단계 → 2단계로 302', r.status === 302 && /\/agree\/?/.test(loc), r.status + ' ' + loc); }
 const fatal = (t) => /critical error|치명적인 오류|Fatal error|There has been a critical error/i.test(t);
 
 // 1 · 2 · 3 · 8 · 9 — 화면 200 과 치명 오류
@@ -46,6 +48,7 @@ for (const [p, label] of pages) {
     if (p === '/' && !productUrl) { const m = t.match(/href="(https?:\/\/[^"]+\/product\/[^"]+)"/); if (m) productUrl = m[1].replace(SITE, ''); }
   } catch (e) { ok(`${label} ${p}`, false, e.message); }
 }
+try { await gateCheck(); } catch (e) { ok('약관 없이 3단계 → 2단계로 302', false, e.message); }
 for (const a of ['/wp-content/plugins/new-website-build/assets/front.js', '/wp-content/plugins/new-website-build/assets/shell.css']) {
   try { const r = await get(a); ok('자산 ' + a.split('/').pop(), r.status === 200, `HTTP ${r.status}`); } catch (e) { ok('자산 ' + a, false, e.message); }
 }
@@ -104,6 +107,7 @@ if (pw) {
     // 크로미움이 직접 소켓을 열지 않게 모든 요청을 Node fetch(NODE_USE_ENV_PROXY=1 로 프록시 · CA 를 탄다)로 대신 받아 준다
     const br = await pw.chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
     const ctx = await br.newContext({ userAgent: UA, viewport: { width: 390, height: 844 } }); const posts = [];
+    await ctx.addCookies([{ name: 'dhr_agree', value: 's0e0t0', domain: new URL(SITE).hostname, path: '/' }]);
     await ctx.route('**/*', async r => { const req = r.request(); const u = req.url(); if (!/^https?:/.test(u)) return r.continue();
       if (req.method() === 'POST' && u.includes('/join-form')) { posts.push(req.postData() || ''); return r.fulfill({ status: 200, headers: { 'content-type': 'text/html' }, body: '<html></html>' }); }
       if (req.method() === 'POST') return r.fulfill({ status: 200, headers: { 'content-type': 'application/json' }, body: '{}' });
