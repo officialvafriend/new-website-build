@@ -611,7 +611,9 @@ function about_home_html(): string {
 
 	// 왼쪽 — 무엇을 파는가. 큰 한 줄 + 브랜드는 글자 그대로
 	list( $lead, $rest ) = $split( (string) $items[0]['p'] );
-	$h .= '<div class="dhr-about__lead"><p class="dhr-about__big">' . esc_html( $lead ) . '</p>' . $more( $rest ) . $links( (array) ( $items[0]['links'] ?? array() ) ) . '</div>';
+	// 괄호 묶음은 한 덩어리로 — 폰에서 「…(전담 액상)」 / 「을 파는」 처럼 조사만 다음 줄로 떨어지지 않게
+	$big = (string) preg_replace_callback( '/\([^)]*\)[가-힣]?/u', fn( $m ) => str_replace( array( ' ', ')' ), array( "\u{00A0}", ")\u{2060}" ), $m[0] ), $lead );
+	$h .= '<div class="dhr-about__lead"><p class="dhr-about__big">' . esc_html( $big ) . '</p>' . $more( $rest ) . $links( (array) ( $items[0]['links'] ?? array() ) ) . '</div>';
 
 	// 오른쪽 — 항목 셋
 	$h .= '<div class="dhr-about__idx">';
