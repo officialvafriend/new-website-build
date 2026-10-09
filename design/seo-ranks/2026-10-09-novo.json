@@ -1,0 +1,75 @@
+{
+ "date": "2026-10-09",
+ "where": "naver web tab (where=web) top 15",
+ "note": "노보 맛 이름 되돌림(10/6) 3일 뒤 재측정",
+ "ranks": {
+  "노보 데저트": {
+   "docs": 15,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/product/%EB%85%B8%EB%B3%B4-%EB%8D%B0%EC%A0%80%ED%8A%B8-9-8mg-30ml/"
+    ]
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 블랙멘솔": {
+   "docs": 15,
+   "hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 아메리카노": {
+   "docs": 15,
+   "hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 액상": {
+   "docs": 15,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/"
+    ],
+    [
+     4,
+     "https://duck-hoo.com/brand/novo/"
+    ]
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 코코넛커피": {
+   "docs": 15,
+   "hits": [
+    [
+     13,
+     "https://duck-hoo.com/price/"
+    ]
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/%EB%85%B8%EB%B3%B4-%EC%BD%94%EC%BD%94%EB%84%9B%EC%BB%A4"
+  },
+  "노보 쿠바시가": {
+   "docs": 15,
+   "hits": [
+    [
+     13,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ],
+    [
+     14,
+     "https://duck-hoo.com/brand/novo/"
+    ]
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/%EB%85%B8%EB%B3%B4-%EC%BF%A0%EB%B0%94%EC%8B%9C%EA%B0%80"
+  },
+  "노보 타박멘솔": {
+   "docs": 15,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/product/%EB%85%B8%EB%B3%B4-%ED%83%80%EB%B0%95%EB%A9%98%EC%86%94-9-8mg"
+    ]
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  }
+ }
+}
