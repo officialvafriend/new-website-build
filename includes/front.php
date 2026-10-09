@@ -568,15 +568,16 @@ add_action( 'wp_head', __NAMESPACE__ . '\\observe_guard', 0 );
  * 고른다. 그 두 파일이 아직 없으면 1:1 원본을 가운데에 놓고 양옆을 같은 어둠으로 메운다.
  * 끄기: `add_filter( 'duckhoo_hero_video', '__return_empty_array' );`
  *
- * @return array{product:int,src:string,poster:string,wide:string,tall:string,cta:string}|array{}
+ * @return array{product:int,src:string,poster:string,wide:string,tall:string,tposter:string,cta:string}|array{}
  */
 function hero_video(): array {
 	$v = (array) apply_filters( 'duckhoo_hero_video', array(
 		'product' => 5381,
-		'file'    => 'assets/media/jello-crystal-loop.mp4',   // 둘 다 없을 때 쓰는 원본 (1:1)
-		'poster'  => 'assets/media/jello-crystal-loop.jpg',
-		'wide'    => 'assets/media/jello-crystal-16x9.mp4',   // 880px 위 — 있으면 화면 폭을 다 채운다
-		'tall'    => 'assets/media/jello-crystal-9x16.mp4',   // 879px 아래
+		'file'        => 'assets/media/jello-crystal-16x9.mp4',   // 데스크톱 · 기본 (20초, 16:9)
+		'poster'      => 'assets/media/jello-crystal-16x9.jpg',
+		'wide'        => 'assets/media/jello-crystal-16x9.mp4',   // 있으면 화면 폭을 다 채운다 (없으면 가운데 정사각)
+		'tall'        => 'assets/media/jello-crystal-9x16.mp4',   // 879px 아래 (9:16)
+		'tall_poster' => 'assets/media/jello-crystal-9x16.jpg',
 		'cta'     => '젤로 크리스탈 10병 구매하기',
 	) );
 	if ( empty( $v['product'] ) || empty( $v['file'] ) || gated() ) {
@@ -594,6 +595,7 @@ function hero_video(): array {
 		'poster'  => $have( 'poster' ),
 		'wide'    => $have( 'wide' ),
 		'tall'    => $have( 'tall' ),
+		'tposter' => $have( 'tall_poster' ),
 		'cta'     => (string) ( $v['cta'] ?? '' ),
 	);
 }

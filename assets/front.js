@@ -45,6 +45,9 @@
   if(!v) return;
   var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var seen = true;
+  /* 폰은 세로(9:16) 첫 장면을 쓴다 — 가로 장면을 세로 칸에 넣으면 가운데만 잘려 보인다 */
+  var tp = v.getAttribute('data-poster-tall');
+  if(tp && window.matchMedia && window.matchMedia('(max-width: 879px)').matches) v.setAttribute('poster', tp);
   function go(){
     if(calm || document.hidden || !seen){ v.pause(); return; }
     var p = v.play(); if(p && p.catch) p.catch(function(){});

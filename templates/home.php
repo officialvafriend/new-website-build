@@ -174,17 +174,18 @@ $month = (int) wp_date( 'n' );
 	?>
 <section class="hvid<?php echo $hv['wide'] ? '' : ' hvid--sq'; ?>" aria-label="<?php echo esc_attr( $hvn ); ?>">
 	<a class="hvid__media" href="<?php echo esc_url( $hvu ); ?>" tabindex="-1" aria-hidden="true">
-		<video class="hvid__v" muted loop playsinline autoplay preload="metadata"<?php echo $hv['poster'] ? ' poster="' . esc_url( $hv['poster'] ) . '"' : ''; ?>>
-			<?php if ( $hv['wide'] ) : ?><source media="(min-width: 880px)" src="<?php echo esc_url( $hv['wide'] ); ?>" type="video/mp4"><?php endif; ?>
+		<video class="hvid__v" muted loop playsinline autoplay preload="metadata"<?php echo $hv['poster'] ? ' poster="' . esc_url( $hv['poster'] ) . '"' : ''; ?><?php echo $hv['tposter'] ? ' data-poster-tall="' . esc_url( $hv['tposter'] ) . '"' : ''; ?>>
 			<?php if ( $hv['tall'] ) : ?><source media="(max-width: 879px)" src="<?php echo esc_url( $hv['tall'] ); ?>" type="video/mp4"><?php endif; ?>
+			<?php if ( $hv['wide'] && $hv['wide'] !== $hv['src'] ) : ?><source media="(min-width: 880px)" src="<?php echo esc_url( $hv['wide'] ); ?>" type="video/mp4"><?php endif; ?>
 			<source src="<?php echo esc_url( $hv['src'] ); ?>" type="video/mp4">
 		</video>
 	</a>
 	<div class="hvid__bar">
 		<div class="hvid__in">
-			<p class="hvid__t"><span class="hvid__eb">JELLO CRYSTAL</span><b><?php echo esc_html( $hvn ); ?></b></p>
-			<p class="hvid__p"><?php if ( $hvo > 0 ) : ?><em>-<?php echo (int) $hvo; ?>%</em><?php endif; ?><b><?php echo esc_html( number_format_i18n( $hvs ) ); ?>원</b><?php if ( $hvr > $hvs ) : ?><s><?php echo esc_html( number_format_i18n( $hvr ) ); ?>원</s><?php endif; ?></p>
-			<a class="hvid__cta" href="<?php echo esc_url( $hvu ); ?>"><?php echo esc_html( $hvt ); ?> <?php echo icon( 'arrow' ); // phpcs:ignore ?></a>
+			<h2 class="hvid__t"><?php echo esc_html( $hvn ); ?></h2>
+			<p class="hvid__sub">액상 10병은 맛을 직접 골라 담습니다</p>
+			<p class="hvid__p"><b><?php echo esc_html( number_format_i18n( $hvs ) ); ?>원</b><?php if ( $hvr > $hvs ) : ?><s><?php echo esc_html( number_format_i18n( $hvr ) ); ?>원</s><?php endif; ?><?php if ( $hvo > 0 ) : ?><em><?php echo (int) $hvo; ?>% 할인</em><?php endif; ?></p>
+			<a class="hvid__cta" href="<?php echo esc_url( $hvu ); ?>"><?php echo esc_html( $hvt ); ?></a>
 		</div>
 	</div>
 </section>

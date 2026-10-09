@@ -1144,27 +1144,28 @@ body.dhr.dhd-open{overflow:hidden}
 /* ── 홈 맨 위 영상 띠 (2026-10-09, 사장님 「히어로 배너처럼 큰 화면 · 영상 밑에 구매하기」) ──
    회원에게만 그린다. 영상과 아래 구매 줄은 한 장의 어두운 판 — 라이트 · 다크 어느 쪽이든 같은 색이다
    (영상 자체가 어둡다). 데스크톱 16:9 · 폰 9:16 파일이 없으면 1:1 원본을 가운데에 두고 양옆을 같은 어둠으로 녹인다. */
-.dhr .hvid{background:#07090D;color:#F3F4F6;margin:0 0 clamp(1.2rem,.8rem + 1.6vw,2.2rem)}
-.dhr .hvid__media{display:block;position:relative;overflow:hidden;aspect-ratio:9/16;max-height:min(74dvh,720px);margin:0 auto;background:#07090D}
+.dhr .hvid{position:relative;background:#07090D;color:#F3F4F6;margin:0 0 clamp(1.2rem,.8rem + 1.6vw,2.2rem)}
+.dhr .hvid__media{display:block;position:relative;overflow:hidden;width:100%;height:min(177.78vw,max(440px,calc(100dvh - 290px)));margin:0 auto;background:#07090D}
 .dhr .hvid__v{display:block;width:100%;height:100%;object-fit:cover}
 .dhr .hvid--sq .hvid__media{aspect-ratio:1/1;max-height:none}
-.dhr .hvid__bar{background:#07090D;border-top:1px solid rgba(255,255,255,.08)}
-.dhr .hvid__in{max-width:1200px;margin:0 auto;padding:.85rem clamp(1.1rem,.6rem + 2vw,2.5rem) 1.1rem;display:grid;grid-template-columns:minmax(0,1fr);gap:.3rem}
-.dhr .hvid__t{margin:0;display:flex;flex-direction:column;gap:.2rem;min-width:0}
-.dhr .hvid__eb{display:none;font-size:.72rem;font-weight:700;letter-spacing:.18em;color:#9AA3B2}
-.dhr .hvid__t b{font-size:clamp(1.15rem,1rem + .7vw,1.5rem);font-weight:800;line-height:1.3;color:#F3F4F6;word-break:keep-all}
-.dhr .hvid__p{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:.1rem .55rem;font-variant-numeric:tabular-nums}
-.dhr .hvid__p em{font-style:normal;font-weight:800;color:#7FA6FF;font-size:1.05rem}
-.dhr .hvid__p b{font-weight:800;font-size:1.3rem;color:#fff}
-.dhr .hvid__p s{color:#8B93A1;font-size:.9rem}
-.dhr .hvid__cta{display:flex;align-items:center;justify-content:center;gap:.45rem;min-height:52px;margin-top:.45rem;padding:0 1.6rem;border-radius:999px;background:var(--dh-accent,#1A5CFF);color:#fff;font-weight:800;font-size:1rem;text-decoration:none;white-space:nowrap;transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s ease}
-.dhr .hvid__cta svg{width:18px;height:18px}
-.dhr .hvid__cta:active{transform:scale(.97)}
+/* 구매 줄은 영상 위에 얹는다 (2026-10-09, 사장님 「밑에 두지 말고 영상 위에 텍스트랑 버튼만」).
+   아래에서 올라오는 어둠 그라데이션 위에 글 · 버튼. 블러는 쓰지 않는다 (움직이는 영상 위라 매 프레임 다시 그린다).
+   글자 칸은 클릭이 영상 링크로 지나가게 두고, 버튼만 눌린다. */
+.dhr .hvid__bar{position:absolute;left:0;right:0;bottom:0;pointer-events:none;background:linear-gradient(to top,rgba(7,9,13,.94) 0%,rgba(7,9,13,.78) 38%,rgba(7,9,13,.32) 72%,rgba(7,9,13,0) 100%)}
+.dhr .hvid__in{max-width:760px;margin:0 auto;padding:clamp(4.5rem,3rem + 6vw,8rem) 1.25rem clamp(1.4rem,1rem + 1.6vw,2.4rem);display:flex;flex-direction:column;align-items:center;text-align:center;font-family:inherit}
+.dhr .hvid__eb{margin:0 0 .5rem;font-size:.8125rem;line-height:1.2;font-weight:700;letter-spacing:.16em;color:#C3CAD5;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.dhr .hvid__t{margin:0;font-size:clamp(1.6rem,1.05rem + 2.4vw,3rem);line-height:1.14;font-weight:800;color:#fff;word-break:keep-all;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.dhr .hvid__sub{margin:.55rem 0 0;font-size:clamp(.95rem,.9rem + .3vw,1.125rem);line-height:1.5;font-weight:600;color:#DDE2EA;word-break:keep-all;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.dhr .hvid__p{margin:.9rem 0 0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.25rem .6rem;font-variant-numeric:tabular-nums;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.dhr .hvid__p b{font-size:clamp(1.375rem,1.2rem + .7vw,1.75rem);line-height:1.2;font-weight:800;color:#fff}
+.dhr .hvid__p s{font-size:1rem;font-weight:600;color:#A9B1BE}
+.dhr .hvid__p em{font-style:normal;font-size:.8125rem;line-height:1;font-weight:800;color:#fff;background:var(--dh-accent,#1A5CFF);padding:.4rem .6rem;border-radius:999px;text-shadow:none}
+.dhr .hvid__cta{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;min-height:52px;margin-top:1.15rem;padding:0 1.9rem;border-radius:999px;background:var(--dh-accent,#1A5CFF);color:#fff;font-size:1.0625rem;font-weight:700;line-height:1;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(26,92,255,.35);transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s ease}
+.dhr .hvid__cta:active{transform:scale(.97);transition-duration:.1s}
 .dhr .hvid__cta:focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media (hover:hover){.dhr .hvid__cta:hover{background:#3A73FF}}
+@media (max-width:479px){.dhr .hvid__cta{align-self:stretch}}
 @media (min-width:600px){.dhr .hvid--sq .hvid__media{aspect-ratio:auto;height:clamp(360px,calc(100dvh - 300px),640px);display:flex;justify-content:center}
   .dhr .hvid--sq .hvid__v{width:auto;height:100%;aspect-ratio:1/1;object-fit:cover;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}}
-@media (min-width:880px){.dhr .hvid__media{aspect-ratio:16/9;max-height:clamp(360px,calc(100dvh - 300px),820px);width:100%}
-  .dhr .hvid__in{grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:2rem;padding-top:1.1rem;padding-bottom:1.1rem}
-  .dhr .hvid__eb{display:block}
-  .dhr .hvid__cta{margin-top:0;min-height:56px;padding:0 2rem;font-size:1.05rem}}
+@media (min-width:880px){.dhr .hvid__media{height:auto;aspect-ratio:16/9;max-height:min(86dvh,900px);width:100%}
+  .dhr .hvid__cta{min-height:56px;padding:0 2.25rem;font-size:1.125rem}}
