@@ -2559,3 +2559,59 @@
     try { document.cookie = name + '=' + v + '; path=/; max-age=3600; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (err) {}
   }, true);
 })();
+
+/* 도움말 화면의 **지금 상태** (2026-10-09) — 「지금 상담 가능 · 18:00까지」 · 「오늘 16:00까지 입금 확인되면 당일 출고」.
+   서버(`Help\state()`)가 한 번 그리고, 같은 셈을 여기서 1분마다 다시 한다 — 비로그인 화면은 페이지 캐시가 몇 분 낡은
+   글을 내주므로 서버 글만 믿으면 「남은 시간」이 틀린다. 시각은 한국 시간(UTC+9)으로 센다. */
+(function(){
+  var els = document.querySelectorAll('.dhr-live[data-live]'); if(!els.length) return;
+  var mins = function(hm){ var m = /^(\d{1,2}):(\d{2})$/.exec(String(hm||'').trim()); return m ? (+m[1])*60 + (+m[2]) : -1; };
+  var ymd = function(d){ return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2); };
+  var W = ['일','월','화','수','목','금','토'];
+  var work = function(d, off){ var w = d.getUTCDay(); return w >= 1 && w <= 5 && off.indexOf(ymd(d)) < 0; };
+  var next = function(d, off){ for(var i=1;i<=21;i++){ var n = new Date(d.getTime() + i*864e5); if(work(n, off)) return i === 1 ? '내일' : (n.getUTCMonth()+1)+'월 '+n.getUTCDate()+'일('+W[n.getUTCDay()]+')'; } return '다음 평일'; };
+  function state(kind, c){
+    var d = new Date(Date.now() + 9*36e5), m = d.getUTCHours()*60 + d.getUTCMinutes(), off = c.off || [], ok = work(d, off);
+    if(kind === 'ship'){
+      var cut = mins(c.cut);
+      if(ok && cut > 0 && m < cut){ var l = cut - m; return { on:true, k:'오늘 '+c.cut+'까지 입금 확인되면 당일 출고', s:((l>=60? Math.floor(l/60)+'시간 ':'') + (l%60? (l%60)+'분':'')).trim()+' 남음' }; }
+      return { on:false, k:'오늘 출고는 마감됐어요', s:'다음 출고 '+next(d, off)+' 오후 4시' };
+    }
+    var o = mins(c.open), cl = mins(c.close), l0 = mins((c.lunch||[])[0]), l1 = mins((c.lunch||[])[1]);
+    if(ok && m >= o && m < cl){
+      if(l0 >= 0 && l1 > l0 && m >= l0 && m < l1) return { on:false, k:'점심시간이에요', s:c.lunch[1]+'부터 다시 답해요' };
+      return { on:true, k:'지금 상담 가능', s:c.close+'까지' };
+    }
+    return { on:false, k:'지금은 상담 시간이 아니에요', s:((ok && m < o) ? '오늘' : next(d, off))+' '+c.open+'부터 답해요' };
+  }
+  function paint(){
+    els.forEach(function(el){
+      var c; try { c = JSON.parse(el.getAttribute('data-clock') || '{}'); } catch(e){ return; }
+      var st = state(el.getAttribute('data-live'), c), b = el.querySelector('b'), s = el.querySelector('span');
+      el.classList.toggle('is-on', !!st.on);
+      if(b && b.textContent !== st.k) b.textContent = st.k;
+      if(s && s.textContent !== st.s) s.textContent = st.s;
+    });
+  }
+  paint(); setInterval(paint, 60000);
+})();
+
+/* 장바구니 (2026-10-09) — 합계를 **입금 전표**로. 이 가게는 무통장입금만 받고, 입금자명이 주문자명과 같아야
+   자동으로 확인된다. 그 말을 결제 화면에서 처음 듣지 않게 합계 바로 아래에 한 번 적는다 (CLAUDE.md 「앞단에서도 한 번」).
+   글자는 폼 바깥 규칙과 상관없다 — 이 상자는 키플 장바구니 폼 안이지만 구매 게이트가 읽는 상품 폼이 아니다.
+   빈 장바구니에는 가격표로 가는 길을 하나 더 둔다. */
+(function(){
+  var cpg = document.querySelector('.wd-cpg'); if(!cpg || !document.body.classList.contains('dhr-help-on')) return;   // 작업 중 — Help\\on() 이 켜야 붙는다
+  var sum = cpg.querySelector('.wd-cpg-summary');
+  if(sum && !cpg.querySelector('.dhr-slip')){
+    var slip = document.createElement('div'); slip.className = 'dhr-slip';
+    slip.innerHTML = '<p class="dhr-slip__k">결제는 <b>무통장입금</b>이에요</p>' +
+      '<p class="dhr-slip__s">주문을 마치면 계좌가 나옵니다. <b>입금자명을 주문자명과 똑같이</b> 넣으면 자동으로 확인돼요.</p>';
+    sum.appendChild(slip);
+  }
+  var empty = cpg.querySelector('.wd-cpg-empty');
+  if(empty && !empty.querySelector('.dhr-empty-more')){
+    var a = document.createElement('a'); a.className = 'dhr-empty-more'; a.href = '/price/'; a.textContent = '전 상품 가격표 보기';
+    empty.appendChild(a);
+  }
+})();

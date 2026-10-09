@@ -69,6 +69,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/seo-texts.php'; // 사장�
 require_once plugin_dir_path( __FILE__ ) . 'includes/seo-pages.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/novo-seo.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/broad-seo.php'; // 「전담 액상」 목표 — 홈 · 입호흡 · 폐호흡 · 전체 상품의 제목 · 설명 · FAQ (2026-10-01)  // 노보 품절 국면 — 다른 맛 링크 · FAQ · 안내 글 초안 (2026-10-01)
+require_once plugin_dir_path( __FILE__ ) . 'includes/help.php';       // 도움말 화면 — 배송 · 고객센터 · 자주 묻는 질문 · 공지 · 1:1 문의 머리판과 본문 (2026-10-09)
 require_once plugin_dir_path( __FILE__ ) . 'includes/pricelist.php';  // /price/ 가격표 숏코드 (값을 묻는 검색에 답한다) // 네이버 진단 — 페이지 설명 · noindex · 사이트맵 · 이미지 alt
 require_once plugin_dir_path( __FILE__ ) . 'includes/mail.php';       // 메일 발신자 이름 · 비밀번호 찾기 (워드프레스 기본 화면으로 새지 않게)
 
