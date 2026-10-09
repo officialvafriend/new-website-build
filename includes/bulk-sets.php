@@ -30,6 +30,9 @@ defined( 'ABSPATH' ) || exit;
  *                     서비스 병은 세트마다 1병 · 맛마다 1병까지
  * - `kind => addon` : 구성 줄 수가 키. `extra` = 덧붙는 구성 줄 이름에 든 낱말 (「추가」)
  *
+ * - `kind => fixed` : 병 수가 정해진 상품 (사장님 2026-10-09 「대량은 33병 · 55병 상품을 따로」). `n` = 구성 하나당
+ *                     10병 묶음 수 = 서비스 병 수 (33병 → 3, 55병 → 5). 할인 줄 없음 · choices 필요 없음
+ *
  * `choices[키] = array( label, fee )` — fee 는 깎아 줄 금액(양수).
  *
  * @return array<int,array>
@@ -38,7 +41,7 @@ function config(): array {
 	$c = (array) apply_filters( 'duckhoo_bulk_sets', array() );
 	$out = array();
 	foreach ( $c as $pid => $cfg ) {
-		if ( (int) $pid > 0 && is_array( $cfg ) && ! empty( $cfg['choices'] ) ) {
+		if ( (int) $pid > 0 && is_array( $cfg ) && ( ! empty( $cfg['choices'] ) || ( 'fixed' === ( $cfg['kind'] ?? '' ) && (int) ( $cfg['n'] ?? 0 ) > 0 ) ) ) {
 			$out[ (int) $pid ] = $cfg;
 		}
 	}
@@ -95,6 +98,9 @@ function rows( $raw ): array {
  */
 function key_of( array $rows, array $cfg ): int {
 	$req = array_values( array_filter( $rows, fn( $r ) => 'required' === $r['type'] ) );
+	if ( 'fixed' === ( $cfg['kind'] ?? '' ) ) {
+		return (int) array_sum( array_column( $req, 'qty' ) );
+	}
 	if ( 'addon' === ( $cfg['kind'] ?? 'sets' ) ) {
 		$extra = (string) ( $cfg['extra'] ?? '추가' );
 		$main  = 0;
@@ -119,6 +125,13 @@ function key_of( array $rows, array $cfg ): int {
  * @return string
  */
 function check( array $rows, array $cfg ): string {
+	if ( 'fixed' === ( $cfg['kind'] ?? '' ) ) {
+		$k = key_of( $rows, $cfg );
+		if ( $k < 1 ) {
+			return '구성을 먼저 골라 주세요.';
+		}
+		return lots( $rows, $cfg, max( 1, (int) ( $cfg['n'] ?? 0 ) ) * $k, (string) ( $cfg['label'] ?? '' ) );
+	}
 	$choices = (array) ( $cfg['choices'] ?? array() );
 	$key     = key_of( $rows, $cfg );
 	$names   = implode( ' · ', array_map( fn( $c ) => (string) ( $c['label'] ?? '' ), $choices ) );
@@ -130,6 +143,19 @@ function check( array $rows, array $cfg ): string {
 	if ( 'sets' !== ( $cfg['kind'] ?? 'sets' ) ) {
 		return '';
 	}
+	return lots( $rows, $cfg, $key, (string) ( $choices[ $key ]['label'] ?? '' ) );
+}
+
+/**
+ * 같은 맛 10병 단위 + 서비스(맛마다 1병) 규칙 — `$n` 번의 10병과 서비스 `$n` 병.
+ *
+ * @param array  $rows  줄.
+ * @param array  $cfg   설정.
+ * @param int    $n     10병 묶음 수 = 서비스 병 수.
+ * @param string $label 안내에 쓸 구성 이름.
+ * @return string
+ */
+function lots( array $rows, array $cfg, int $n, string $label ): string {
 	$lot  = max( 1, (int) ( $cfg['lot'] ?? 10 ) );
 	$tens = 0;
 	$ones = 0;
@@ -144,9 +170,8 @@ function check( array $rows, array $cfg ): string {
 		$tens += intdiv( $r['qty'], $lot );
 		$ones += $rest;
 	}
-	if ( $tens !== $key || $ones !== $key ) {
-		$label = (string) ( $choices[ $key ]['label'] ?? '' );
-		return $label . ' 구성은 ' . $lot . '병씩 ' . $key . '번 + 서비스 ' . $key . '병(맛마다 1병)입니다. 맛을 다시 맞춰 주세요.';
+	if ( $tens !== $n || $ones !== $n ) {
+		return trim( $label . ' 구성은 ' . $lot . '병씩 ' . $n . '번 + 서비스 ' . $n . '병(맛마다 1병)입니다. 맛을 다시 맞춰 주세요.' );
 	}
 	return '';
 }
@@ -159,7 +184,7 @@ function check( array $rows, array $cfg ): string {
  * @return int
  */
 function fee_for( array $rows, array $cfg ): int {
-	if ( '' !== check( $rows, $cfg ) ) {
+	if ( 'fixed' === ( $cfg['kind'] ?? '' ) || '' !== check( $rows, $cfg ) ) {
 		return 0;
 	}
 	$c = $cfg['choices'][ key_of( $rows, $cfg ) ] ?? array();

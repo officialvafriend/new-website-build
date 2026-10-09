@@ -2897,6 +2897,15 @@ $fees=[]; $cart=new class($r55,$main,$add,$fl){ public $f=[]; private $it; funct
 ($BS.'add_fees')($cart);
 $ok($cart->f===['디오리퀴드 55병 구성 할인'=>-33000,'젤로 10병 구성 할인'=>-38000], '할인 줄: 맞는 줄만 · 이름별 하나 '.json_encode($cart->f,JSON_UNESCAPED_UNICODE));
 $GLOBALS['__filters']['duckhoo_bulk_sets']=[];
+$fx=['kind'=>'fixed','n'=>3,'label'=>'디오리퀴드 33병','lot'=>10];
+$one=['group_key'=>'required_main','type'=>'required','label'=>'디오리퀴드 33병 구성','qty'=>1];
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',11),$fl('B',21),$fl('C',1)]),$fx)==='' && ($BS.'fee_for')(($BS.'rows')([$one,$fl('A',11),$fl('B',21),$fl('C',1)]),$fx)===0, '33병 따로 상품: 10+1 · 20+1 · 서비스 1 → 통과 · 할인 줄 없음');
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$fl('B',3)]),$fx)!=='' && ($BS.'check')(($BS.'rows')([$one,$fl('A',33)]),$fx)!=='' && ($BS.'check')(($BS.'rows')([$fl('A',33)]),$fx)!=='', '33병 따로 상품: 서비스를 한 맛에 몰면 · 구성 없이 막는다');
+$ok(($BS.'check')(($BS.'rows')([array_merge($one,['qty'=>2]),$fl('A',61),$fl('B',1),$fl('C',1),$fl('D',1),$fl('E',1),$fl('F',1)]),$fx)==='', '33병 구성을 두 개 담으면 66병 (10병 6번 + 서비스 6)');
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[fn($c)=>[9003=>$fx]];
+$ok(isset(($BS.'config')()[9003]), 'fixed 는 choices 없이도 대상이 된다');
+$ok(($BS.'check')(($BS.'rows')([$fl('A',11),$fl('B',21),$fl('C',1)]),$fx)==='구성을 먼저 골라 주세요.', '33병 따로 상품: 맛이 맞아도 구성 줄이 없으면 막는다');
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[];
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
