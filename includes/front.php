@@ -1235,6 +1235,9 @@ function js_config( array $extra = array() ): string {
 		// 값이 붙지 않는 옵션(기기 색상처럼 +0원인 칸)을 세트당 몇 개까지 고를 수 있는가.
 		// 기본 1 — 한 세트에 기기 한 대다. 0 이면 이 제한을 아예 끈다.
 		'freeChoicePerSet' => (int) apply_filters( 'duckhoo_free_choice_per_set', 1 ),
+		// 대량 상품(33 · 55병) — 상품 번호 => { n: 10병 묶음 수, lot: 10, split: 맛 칸 · 서비스 칸 따로 }.
+		// front.js 가 맛 칸은 10병씩, 서비스 칸은 맛마다 1병씩 고르게 그린다. 검사는 bulk-sets.php.
+		'bulk' => function_exists( '\\Duckhoo\\Redesign\\BulkSets\\js_config' ) ? (object) \Duckhoo\Redesign\BulkSets\js_config() : (object) array(),
 		// 우리 로그인 화면. 키플 쿠폰 플러그인은 비로그인이 「쿠폰 받기」를 누르면
 		// **워드프레스 관리자 로그인(`wp-login.php`)** 으로 보낸다 — 1:1 문의에서 고친 그 문제다.
 		// front.js 가 `KeypleCoupon.login_url` 을 이 주소로 갈아 끼운다 (플러그인은 안 건드린다).

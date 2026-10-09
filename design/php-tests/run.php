@@ -2871,7 +2871,10 @@ $ok(($CR.'exclude_default')()===['왕한빈','진선영','유지민'], '제외 �
 // 한 상품 안에서 병 수 고르기 — 세트 수 + 할인 줄
 require_once dirname(__DIR__, 2).'/includes/bulk-sets.php';
 $BS='Duckhoo\\Redesign\\BulkSets\\';
-$ok(($BS.'config')()===[], '병 수 고르기: 설정이 비면 대상 없음 (아무 일도 안 한다)');
+$ok(array_keys(($BS.'config')())===[5373,5375] && ($BS.'js_config')()[5373]===['n'=>3,'lot'=>10,'split'=>true] && ($BS.'js_config')()[5375]['n']===5, '병 수 고르기: 기본은 디오리퀴드 대량 33병(#5373) · 55병(#5375)');
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[fn($c)=>[]];
+$ok(($BS.'config')()===[], '필터로 비우면 대상 없음 (아무 일도 안 한다)');
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[];
 $dio=['kind'=>'sets','name'=>'디오리퀴드','lot'=>10,'choices'=>[3=>['label'=>'33병','fee'=>0],5=>['label'=>'55병','fee'=>33000]]];
 $set=fn($n)=>['group_key'=>'required_main','type'=>'required','label'=>'디오리퀴드 10+1 세트','qty'=>$n];
 $fl=fn($l,$n)=>['group_key'=>'addon_1','type'=>'addon','label'=>$l,'qty'=>$n];
@@ -2906,6 +2909,16 @@ $GLOBALS['__filters']['duckhoo_bulk_sets']=[fn($c)=>[9003=>$fx]];
 $ok(isset(($BS.'config')()[9003]), 'fixed 는 choices 없이도 대상이 된다');
 $ok(($BS.'check')(($BS.'rows')([$fl('A',11),$fl('B',21),$fl('C',1)]),$fx)==='구성을 먼저 골라 주세요.', '33병 따로 상품: 맛이 맞아도 구성 줄이 없으면 막는다');
 $GLOBALS['__filters']['duckhoo_bulk_sets']=[];
+// 칸이 나뉜 대량 상품 — 맛 칸(addon_1) 10병씩 · 서비스 칸(addon_2) 맛마다 1병 (사장님 그룹 62 · 63)
+$sp=($BS.'defaults')()[5373]; $sp5=($BS.'defaults')()[5375];
+$sv=fn($l,$n)=>['group_key'=>'addon_2','type'=>'addon','label'=>$l,'qty'=>$n];
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',10),$fl('B',20),$sv('A',1),$sv('C',1),$sv('D',1)]),$sp)==='', '33병(칸 나눔): 맛 10 + 20 · 서비스 셋 → 통과');
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$sv('A',1),$sv('B',1),$sv('C',1),['group_key'=>'addon_pod_3','type'=>'addon','label'=>'팟','qty'=>1]]),$sp)==='', '33병(칸 나눔): 한 맛 30병도 된다 · 팟(addon_pod)은 안 센다');
+$ok(str_contains(($BS.'check')(($BS.'rows')([$one,$fl('A',15),$fl('B',15),$sv('A',1),$sv('B',1),$sv('C',1)]),$sp),'10병씩'), '33병(칸 나눔): 15 + 15 는 막는다');
+$ok(str_contains(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$sv('A',2),$sv('B',1)]),$sp),'맛마다'), '33병(칸 나눔): 서비스 한 맛 2병은 막는다');
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$sv('A',1),$sv('B',1)]),$sp)!=='' && ($BS.'check')(($BS.'rows')([$one,$fl('A',20),$sv('A',1),$sv('B',1),$sv('C',1)]),$sp)!=='', '33병(칸 나눔): 서비스 2병 · 맛 20병이면 막는다');
+$ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$fl('B',20),$sv('A',1),$sv('B',1),$sv('C',1),$sv('D',1),$sv('E',1)]),$sp5)==='', '55병(칸 나눔): 맛 50 + 서비스 다섯 → 통과');
+$ok(($BS.'check')(($BS.'rows')([array_merge($one,['qty'=>2]),$fl('A',60),$sv('A',2),$sv('B',2),$sv('C',2)]),$sp)==='', '33병 두 개: 맛 60 + 서비스 6 (맛마다 2병까지)');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

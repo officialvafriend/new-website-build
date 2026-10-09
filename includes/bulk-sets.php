@@ -38,11 +38,43 @@ defined( 'ABSPATH' ) || exit;
  * @return array<int,array>
  */
 function config(): array {
-	$c = (array) apply_filters( 'duckhoo_bulk_sets', array() );
+	$c = (array) apply_filters( 'duckhoo_bulk_sets', defaults() );
 	$out = array();
 	foreach ( $c as $pid => $cfg ) {
 		if ( (int) $pid > 0 && is_array( $cfg ) && ( ! empty( $cfg['choices'] ) || ( 'fixed' === ( $cfg['kind'] ?? '' ) && (int) ( $cfg['n'] ?? 0 ) > 0 ) ) ) {
 			$out[ (int) $pid ] = $cfg;
+		}
+	}
+	return $out;
+}
+
+/**
+ * 지금 파는 대량 상품 (2026-10-09). 칸은 사장님 PPOM 그룹 62 · 63 — 1번 구성 · 2번 맛(10병씩) · 3번 서비스(맛마다 1병).
+ * `split` 이면 2번 칸(addon_1)과 3번 칸(addon_2)을 따로 센다. 번호를 바꾸거나 빼려면 `duckhoo_bulk_sets` 필터.
+ *
+ * @return array<int,array>
+ */
+function defaults(): array {
+	return array(
+		5373 => array( 'kind' => 'fixed', 'n' => 3, 'lot' => 10, 'split' => true, 'label' => '디오리퀴드 대량 33병' ),
+		5375 => array( 'kind' => 'fixed', 'n' => 5, 'lot' => 10, 'split' => true, 'label' => '디오리퀴드 대량 55병' ),
+	);
+}
+
+/**
+ * 화면(front.js)에 넘길 값 — 상품 번호 => 10병 묶음 수 · 단위 · 칸 나눔.
+ *
+ * @return array<int,array{n:int,lot:int,split:bool}>
+ */
+function js_config(): array {
+	$out = array();
+	foreach ( config() as $pid => $cfg ) {
+		if ( 'fixed' === ( $cfg['kind'] ?? '' ) ) {
+			$out[ $pid ] = array(
+				'n'     => (int) $cfg['n'],
+				'lot'   => max( 1, (int) ( $cfg['lot'] ?? 10 ) ),
+				'split' => ! empty( $cfg['split'] ),
+			);
 		}
 	}
 	return $out;
@@ -156,7 +188,10 @@ function check( array $rows, array $cfg ): string {
  * @return string
  */
 function lots( array $rows, array $cfg, int $n, string $label ): string {
-	$lot  = max( 1, (int) ( $cfg['lot'] ?? 10 ) );
+	$lot = max( 1, (int) ( $cfg['lot'] ?? 10 ) );
+	if ( ! empty( $cfg['split'] ) ) {
+		return split_lots( $rows, $lot, $n, $label );
+	}
 	$tens = 0;
 	$ones = 0;
 	foreach ( $rows as $r ) {
@@ -172,6 +207,45 @@ function lots( array $rows, array $cfg, int $n, string $label ): string {
 	}
 	if ( $tens !== $n || $ones !== $n ) {
 		return trim( $label . ' 구성은 ' . $lot . '병씩 ' . $n . '번 + 서비스 ' . $n . '병(맛마다 1병)입니다. 맛을 다시 맞춰 주세요.' );
+	}
+	return '';
+}
+
+/**
+ * 칸이 나뉜 대량 상품 — 맛 칸(addon_1)은 같은 맛 `$lot` 병씩 `$n` 번, 서비스 칸(addon_2)은 `$n` 병 · 맛마다 1병.
+ * `$n` 은 이미 구성 수량을 곱한 값이고, 서비스는 맛마다 구성 수량만큼까지다 (두 개 사면 2병).
+ *
+ * @param array  $rows  줄.
+ * @param int    $lot   단위 (10).
+ * @param int    $n     10병 묶음 수 = 서비스 병 수.
+ * @param string $label 안내에 쓸 구성 이름.
+ * @return string
+ */
+function split_lots( array $rows, int $lot, int $n, string $label ): string {
+	$sets = 0;
+	foreach ( $rows as $r ) {
+		if ( 'required' === $r['type'] ) {
+			$sets += $r['qty'];
+		}
+	}
+	$per  = max( 1, $sets );
+	$main = 0;
+	$svc  = 0;
+	foreach ( $rows as $r ) {
+		if ( 'addon_1' === $r['group'] ) {
+			if ( 0 !== $r['qty'] % $lot ) {
+				return '맛은 같은 맛 ' . $lot . '병씩 골라 주세요.';
+			}
+			$main += $r['qty'];
+		} elseif ( 'addon_2' === $r['group'] ) {
+			if ( $r['qty'] > $per ) {
+				return '서비스 병은 맛마다 ' . $per . '병까지 골라 주세요.';
+			}
+			$svc += $r['qty'];
+		}
+	}
+	if ( $main !== $lot * $n || $svc !== $n ) {
+		return trim( $label . ' 구성은 같은 맛 ' . $lot . '병씩 ' . ( $lot * $n ) . '병 + 서비스 ' . $n . '병(맛마다 1병)입니다. 지금 맛 ' . $main . '병 · 서비스 ' . $svc . '병이에요.' );
 	}
 	return '';
 }

@@ -806,6 +806,7 @@
 
   /* 줄마다 값이 안 붙은 카드 = 고르는 칸(색상 · 구성). 하나라도 값이 붙으면 유료 추가다. */
   function isChoice(card){
+    if(card.hasAttribute('data-dhbulk')) return false;   /* 대량 상품의 서비스 칸 — 맛 고르기 쪽이 맛마다 1병으로 묶는다 */
     var rows = card.querySelectorAll('.dhx-row');
     if(!rows.length) return false;
     for(var i = 0; i < rows.length; i++){ if(rows[i].querySelector('.dhx-row__price')) return false; }
@@ -2277,29 +2278,79 @@
   var form = document.querySelector('form.cart');
   if(!form) return;
 
-  function chips(card){ return [].slice.call(card.querySelectorAll('.dhx-chip')); }
-  function chipName(c){ var p = c.querySelector('.dhx-chip__pick'); return p ? p.textContent.trim() : ''; }
-  function chipN(c){ var n = c.querySelector('.dhx-qty__n'); return n ? (parseInt(n.textContent, 10) || 0) : 0; }
-  function chipBtn(c, d){ var bs = c.querySelectorAll('.dhx-qty button'); return d > 0 ? bs[bs.length - 1] : bs[0]; }
+  /* 대량 상품(33 · 55병, 2026-10-09) — 맛 칸은 같은 맛 10병씩, 서비스 칸은 맛마다 1병씩. 값은 front.php 의 DHR.bulk,
+     검사는 bulk-sets.php (담기 · 장바구니 · 결제). 필요 병 수는 게이트 글자가 아니라 설정 × 구성 수량으로 센다 —
+     게이트는 맛 칸과 서비스 칸을 합쳐 말하기 때문이다 */
+  var pidIn = form.querySelector('[name="add-to-cart"]'), pm = document.body.className.match(/\bpostid-(\d+)\b/);
+  var PID = (pidIn && pidIn.value) || (pm && pm[1]) || '';
+  var B = (window.DHR && window.DHR.bulk && window.DHR.bulk[PID]) || null;
+
+  /* 맛 하나 = { name, n(), press(d, k) }. 보통은 옛 옵션 UI 의 칩(.dhx-chip)을 대신 누른다.
+     대량 상품은 **테마 칸을 그룹 이름으로 직접** 누른다 — 맛 칸과 서비스 칸의 맛 이름이 같아서, 옛 옵션 UI 는
+     라벨만 보고 버튼을 찾다가(그룹이 달라도 라벨이 같으면 그 버튼) 서비스 병을 맛 칸에 넣는다 (2026-10-09 확인) */
+  function chipItems(card){
+    return [].slice.call(card.querySelectorAll('.dhx-chip')).map(function(c){
+      var p = c.querySelector('.dhx-chip__pick'), bs = function(){ return c.querySelectorAll('.dhx-qty button'); };
+      return { name: p ? p.textContent.trim() : '', n: function(){ var x = c.querySelector('.dhx-qty__n'); return x ? (parseInt(x.textContent, 10) || 0) : 0; },
+        press: function(d, k){ var b = bs(), t = d > 0 ? b[b.length - 1] : b[0]; if(!t) return; for(var i = 0; i < (k || 1); i++) t.click(); } };
+    });
+  }
+  function norm(x){ return String(x || '').replace(/\[[^\]]*\]/g, '').replace(/\s+/g, ' ').trim(); }
+  function rowsJson(){ var i = form.querySelector('input[name="wd_option_builder_json"]'); try{ return i && i.value ? JSON.parse(i.value) : []; }catch(err){ return []; } }
+  function themeItems(sel, group){
+    if(!sel) return [];
+    return [].slice.call(sel.options).slice(1).filter(function(o){ return o.value; }).map(function(o){
+      var name = norm(o.textContent);
+      return { name: name,
+        n: function(){ return rowsJson().reduce(function(s, r){ return s + (r && r.group_key === group && norm(r.label) === name ? (parseInt(r.qty, 10) || 0) : 0); }, 0); },
+        press: function(d, k){
+          for(var i = 0; i < (k || 1); i++){
+            if(d > 0){
+              /* 테마는 같은 맛을 다시 고르면 수량을 1 올린다. change 는 한 번만 — jQuery 로만 쏜다 (두 번 쏘면 두 병이 담긴다) */
+              sel.value = o.value;
+              if(window.jQuery) window.jQuery(sel).trigger('change'); else sel.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+              var b = [].slice.call(form.querySelectorAll('.wd-option-minus')).filter(function(x){ return x.getAttribute('data-group') === group && norm(x.getAttribute('data-label')) === name; })[0];
+              if(!b) return; b.click();
+            }
+          }
+        } };
+    });
+  }
   function gateBtn(){ return form.querySelector('.single_add_to_cart_button'); }
+  /* 구성 수량 — 테마가 쥔 값이 정답이다. 아직 안 골랐으면 0 */
+  function sets(){
+    var i = form.querySelector('input[name="wd_option_builder_json"]'), n = 0;
+    if(i && i.value){ try{ JSON.parse(i.value).forEach(function(r){ if(r && r.type === 'required') n += parseInt(r.qty, 10) || 0; }); }catch(err){} }
+    if(!n) form.querySelectorAll('.dhx-bundle .dhx-qty__n').forEach(function(x){ n += parseInt(x.textContent, 10) || 0; });
+    return n;
+  }
   /* 필요한 병 수 — 게이트 버튼이 「N병 더 담아주세요」라고 말한다. 다 채우면 글자가 바뀌므로 그때는 고른 수가 곧 필요 수 */
   /* 「다 골랐다」는 글자가 아니라 버튼이 열렸는지로 본다 — 글자는 게이트가 한 박자 뒤에 바꾼다.
      아직 하나도 안 골라 「맛을 선택해주세요」일 때는 필요 수를 모른다(known=false) — 첫 병을 담으면 「N병 더」가 뜬다 */
-  function need(card){
-    var b = gateBtn(), t = b ? b.textContent : '', m = t.match(/(\d+)\s*병\s*더/);
-    var have = chips(card).reduce(function(s, c){ return s + chipN(c); }, 0);
+  function need(card, opt){
+    var have = (opt.items || []).reduce(function(s, c){ return s + c.n(); }, 0);
+    if(opt.target){ var t = opt.target(); return { have: have, need: t, done: have >= t, known: true }; }
+    var b = gateBtn(), tx = b ? b.textContent : '', m = tx.match(/(\d+)\s*병\s*더/);
     var done = !!b && !b.disabled && !m;
     return { have: have, need: m ? have + parseInt(m[1], 10) : have, done: done, known: !!m || done };
   }
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
   function btnDiv(cls, label, text){ var d = el('div', cls, text); d.setAttribute('role', 'button'); d.setAttribute('tabindex', '0'); d.setAttribute('aria-label', label); return d; }
 
-  function build(card){
-    if(card.dataset.dhpk) return; card.dataset.dhpk = '1';
-    var list = chips(card); if(!list.length) return;
-    var root = el('div', 'dhpk');
+  function build(card, opt){
+    opt = opt || {};
+    var unit = opt.unit || 1, per = opt.per || 0;
+    if(card.dataset.dhpk) return;
+    var list = opt.items = opt.items || chipItems(card); if(!list.length) return;
+    card.dataset.dhpk = '1';
+    if(opt.mode) card.dataset.dhbulk = opt.mode;
+    function chipN(c){ return c.n(); }
+    function chipName(c){ return c.name; }
+    var noEl = card.querySelector('.dhx-card__no');
+    var root = el('div', 'dhpk' + (opt.mode ? ' dhpk--' + opt.mode : ''));
     var head = el('div', 'dhpk__head');
-    var ttl = el('div', 'dhpk__t'); ttl.appendChild(el('span', 'dhpk__no', '2')); ttl.appendChild(el('b', null, '맛 고르기'));
+    var ttl = el('div', 'dhpk__t'); ttl.appendChild(el('span', 'dhpk__no', noEl ? noEl.textContent.trim() : '2')); ttl.appendChild(el('b', null, opt.title || '맛 고르기'));
     var cnt = el('div', 'dhpk__cnt'); head.appendChild(ttl); head.appendChild(cnt);
     var bar = el('div', 'dhpk__bar'); bar.appendChild(el('i'));
     var grid = el('div', 'dhpk__grid');
@@ -2308,17 +2359,18 @@
     var names = list.map(chipName), first = names.map(function(n){ return (n.split(/\s+/)[0] || ''); });
     var dropFirst = names.length > 1 && first[0] && first.every(function(f){ return f === first[0]; }) && names.every(function(n){ return n.replace(/^\S+\s+/, '').length > 0; });
     function shown(n){ return dropFirst ? n.replace(/^\S+\s+/, '') : n; }
+    var word = unit > 1 ? unit + '병' : '한 병';
     var tiles = list.map(function(c){
       var t = el('div', 'dhpk__tile'); t.dataset.name = chipName(c);
       t.appendChild(el('span', 'dhpk__name', shown(chipName(c))));
       var q = el('div', 'dhpk__q');
-      q.appendChild(btnDiv('dhpk__b dhpk__b--m', chipName(c) + ' 한 병 빼기', '−'));
+      q.appendChild(btnDiv('dhpk__b dhpk__b--m', chipName(c) + ' ' + word + ' 빼기', unit > 1 ? '−' + unit : '−'));
       q.appendChild(el('span', 'dhpk__n', '0'));
-      q.appendChild(btnDiv('dhpk__b dhpk__b--p', chipName(c) + ' 한 병 더', '+'));
+      q.appendChild(btnDiv('dhpk__b dhpk__b--p', chipName(c) + ' ' + word + ' 더', unit > 1 ? '+' + unit : '+'));
       t.appendChild(q); grid.appendChild(t); return t;
     });
     var quick = el('div', 'dhpk__quick');
-    var even = btnDiv('dhpk__chip', '남은 병을 모든 맛에 골고루 나눠 담기', '골고루 채우기');
+    var even = btnDiv('dhpk__chip', '남은 병을 여러 맛에 골고루 나눠 담기', '골고루 채우기');
     var clear = btnDiv('dhpk__chip dhpk__chip--ghost', '고른 맛 전부 비우기', '비우기');
     quick.appendChild(even); quick.appendChild(clear);
     var hint = el('div', 'dhpk__hint');
@@ -2327,47 +2379,57 @@
 
     /* 구성(세트)을 아직 안 골랐으면 — 선택지가 하나뿐일 때만 그 하나를 대신 누른다. 손님이 맛을 누른 순간이라 손님 뜻이다 */
     function unlock(){
-      if(!card.classList.contains('is-locked')) return true;
+      if(!card.classList.contains('is-locked') && !(opt.mode && !sets())) return true;
       var picks = form.querySelectorAll('.dhx-bundle__pick');
       if(picks.length !== 1) return false;
       var row = picks[0].closest('.dhx-bundle'), n = row && row.querySelector('.dhx-qty__n');
       /* 이미 골라져 있으면(잠금이 풀리는 중) 다시 누르지 않는다 — 다시 누르면 「해지」 규칙이 세트를 도로 뺀다 */
       if(!(row && (row.classList.contains('is-on') || (parseInt(n && n.textContent, 10) || 0) > 0))) picks[0].click();
-      return !card.classList.contains('is-locked');
+      return !card.classList.contains('is-locked') && !(opt.mode && !sets());
     }
-    function press(c, d, times){ var b = chipBtn(c, d); if(!b) return; for(var i = 0; i < (times || 1); i++) b.click(); }
-    /* 잠금이 비동기로 풀리므로(옛 옵션 UI 가 한 박자 뒤에 연다) 1.2초까지 120ms 마다 다시 해 본다 */
+    function press(c, d, times){ c.press(d, times || 1); }
+    /* k = 단위 수 (대량 맛 칸은 1단위 = 10병). 잠금이 비동기로 풀리므로(옛 옵션 UI 가 한 박자 뒤에 연다) 1.2초까지 120ms 마다 다시 해 본다 */
     function add(c, k, retry){
       retry = retry || 0;
       if(!unlock()){ if(retry < 10) setTimeout(function(){ add(c, k, retry + 1); }, 120); else flash('먼저 위에서 구성을 골라 주세요'); return; }
-      var s = need(card); if(s.done){ flash('다 골랐어요'); return; }
+      var s = need(card, opt); if(s.done){ flash('다 골랐어요'); return; }
+      if(per){ var cap = per * Math.max(1, sets()); if(chipN(c) >= cap){ flash('서비스는 맛마다 ' + cap + '병이에요'); return; } }
       var room = s.known ? Math.max(0, s.need - s.have) : Infinity; if(room <= 0) return;
-      press(c, +1, Math.min(k || 1, room)); paint();
+      var n = Math.min((k || 1) * unit, room);
+      if(unit > 1) n = Math.floor(n / unit) * unit;
+      if(per) n = Math.min(n, per * Math.max(1, sets()) - chipN(c));
+      if(n > 0){ press(c, +1, n); paint(); }
     }
-    function sub(c, k){ if(chipN(c) <= 0) return; press(c, -1, Math.min(k || 1, chipN(c))); paint(); }
+    function sub(c, k){ var have = chipN(c); if(have <= 0) return; var n = unit > 1 ? (have % unit || unit) + ((k || 1) - 1) * unit : (k || 1); press(c, -1, Math.min(n, have)); paint(); }
     var flashT = null;
     function flash(msg){ hint.textContent = msg; hint.classList.add('is-flash'); clearTimeout(flashT); flashT = setTimeout(function(){ hint.classList.remove('is-flash'); paint(); }, 1400); }
 
     function paint(){
-      var s = need(card), lk = card.classList.contains('is-locked');
+      var s = need(card, opt), lk = card.classList.contains('is-locked');
+      var cap = per ? per * Math.max(1, sets()) : 0;
       list.forEach(function(c, i){
         var t = tiles[i], n = chipN(c), ne = t.querySelector('.dhpk__n');
         if(ne.textContent !== String(n)){ ne.textContent = String(n); ne.classList.remove('is-tick'); void ne.offsetWidth; ne.classList.add('is-tick'); }
         t.classList.toggle('is-on', n > 0);
         t.querySelector('.dhpk__b--m').classList.toggle('is-off', n <= 0);
-        t.querySelector('.dhpk__b--p').classList.toggle('is-off', s.done || (s.known && s.have >= s.need));
+        t.querySelector('.dhpk__b--p').classList.toggle('is-off', s.done || (s.known && s.need - s.have < unit) || (cap && n >= cap));
       });
       root.classList.toggle('is-locked', lk);
       root.classList.toggle('is-done', s.done);
       cnt.textContent = s.done ? s.have + '병 · 다 골랐어요' : (s.known ? s.have + ' / ' + s.need + '병' : s.have + '병');
       bar.firstChild.style.width = s.done ? '100%' : (s.known && s.need ? Math.min(100, Math.round(s.have / s.need * 100)) + '%' : '0%');
-      if(hint.classList.contains('is-flash')) return;
-      hint.textContent = lk ? '위에서 구성을 고르면 맛을 담을 수 있어요' : s.done ? '아래 담기를 누르면 됩니다' : s.known ? (s.need - s.have) + '병 더 고르면 담을 수 있어요' : '맛을 눌러 담아 보세요';
       even.classList.toggle('is-off', s.done);
       clear.classList.toggle('is-off', s.have <= 0);
+      if(hint.classList.contains('is-flash')) return;
+      var left = s.need - s.have;
+      hint.textContent = lk ? '위에서 구성을 고르면 맛을 담을 수 있어요'
+        : s.done ? (opt.doneHint || '아래 담기를 누르면 됩니다')
+        : opt.mode === 'lot' ? '같은 맛 ' + unit + '병씩 · ' + left + '병 더 고르면 돼요'
+        : opt.mode === 'svc' ? '서비스 맛을 ' + left + '개 더 골라 주세요 (맛마다 ' + (cap || 1) + '병)'
+        : s.known ? left + '병 더 고르면 담을 수 있어요' : '맛을 눌러 담아 보세요';
     }
 
-    /* 꾹 누르면 빨라진다 — 55병을 한 번에 채울 때 */
+    /* 꾹 누르면 빨라진다 — 55병을 한 번에 채울 때 (단위가 10병이면 빨라지지 않는다) */
     var holdT = null, holdI = null;
     function stopHold(){ clearTimeout(holdT); clearInterval(holdI); holdT = holdI = null; }
     root.addEventListener('pointerdown', function(e){
@@ -2375,6 +2437,7 @@
       var t = b.closest('.dhpk__tile'), c = list[tiles.indexOf(t)], d = b.classList.contains('dhpk__b--p') ? 1 : -1;
       e.preventDefault();
       (d > 0 ? add : sub)(c, 1);
+      if(unit > 1 || per) return;
       holdT = setTimeout(function(){ var k = 0; holdI = setInterval(function(){ k++; (d > 0 ? add : sub)(c, k > 12 ? 5 : 1); }, 110); }, 420);
     });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(ev){ root.addEventListener(ev, stopHold); });
@@ -2386,7 +2449,7 @@
       if(b.classList.contains('dhpk__b')){ var t = b.closest('.dhpk__tile'), c = list[tiles.indexOf(t)]; (b.classList.contains('dhpk__b--p') ? add : sub)(c, 1); }
       else b.click();
     });
-    /* 타일 본체(이름)를 누르면 한 병 더 — 스테퍼까지 손을 옮기지 않아도 된다 */
+    /* 타일 본체(이름)를 누르면 한 단위 더 — 스테퍼까지 손을 옮기지 않아도 된다 */
     root.addEventListener('click', function(e){
       if(e.target.closest('.dhpk__b')) return;
       var t = e.target.closest('.dhpk__tile');
@@ -2395,12 +2458,19 @@
         if(even.classList.contains('is-off')) return;
         var spread = function(retry){
           if(!unlock()){ if(retry < 10) setTimeout(function(){ spread(retry + 1); }, 120); return; }
-          var s = need(card);
+          var s = need(card, opt);
           /* 필요 수를 아직 모르면 첫 맛을 한 병 담아 게이트가 「N병 더」를 말하게 한 뒤 다시 온다 */
           if(!s.known){ if(retry >= 10) return; if(s.have === 0) press(list[0], +1, 1); setTimeout(function(){ spread(retry + 1); }, 180); return; }
-          var r = s.need - s.have; if(r <= 0) return;
-          var base = Math.floor(r / list.length), extra = r % list.length;
-          list.forEach(function(c, i){ var k = base + (i < extra ? 1 : 0); if(k) press(c, +1, k); });
+          var r = Math.floor((s.need - s.have) / unit); if(r <= 0) return;
+          if(opt.mode){
+            /* 한 단위씩, 덜 담긴 맛부터 — 서비스는 맛마다 상한까지 */
+            var cap = per ? per * Math.max(1, sets()) : Infinity, cur = list.map(chipN), give = list.map(function(){ return 0; });
+            while(r > 0){ var best = -1; for(var i = 0; i < list.length; i++){ if(cur[i] + give[i] * unit + unit > cap) continue; if(best < 0 || cur[i] + give[i] * unit < cur[best] + give[best] * unit) best = i; } if(best < 0) break; give[best]++; r--; }
+            list.forEach(function(c, i){ if(give[i]) press(c, +1, give[i] * unit); });
+          } else {
+            var base = Math.floor(r / list.length), extra = r % list.length;
+            list.forEach(function(c, i){ var k = base + (i < extra ? 1 : 0); if(k) press(c, +1, k); });
+          }
           paint();
         };
         spread(0); return;
@@ -2410,15 +2480,29 @@
 
     /* 테마 · 게이트가 뒤에서 바꾸는 것(칩 숫자 · 버튼 글자 · 잠금)을 따라간다 */
     var pend = null;
-    new MutationObserver(function(){ clearTimeout(pend); pend = setTimeout(paint, 60); }).observe(form, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'disabled'] });
+    new MutationObserver(function(){ clearTimeout(pend); pend = setTimeout(paint, 60); }).observe(form, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'disabled', 'value'] });
     paint();
   }
+
+  /* 값(+N원)이 하나도 안 붙은 줄 카드 — 서비스처럼 고르기만 하는 칸 */
+  function plainRows(c){ var r = c.querySelectorAll('.dhx-row'); if(!r.length) return false; for(var i = 0; i < r.length; i++){ if(r[i].querySelector('.dhx-row__price')) return false; } return true; }
 
   /* .dhx 가 load 뒤에 생길 때도 있다(폰에서 한 번 놓쳤다) — 6초까지 300ms 마다 본다 */
   var tries = 0;
   function init(){
     var cards = [].slice.call(form.querySelectorAll('.dhx-card')), hit = false;
-    cards.forEach(function(c){ if(c.querySelector('.dhx-chips')){ build(c); hit = true; } });
+    var sels = [].slice.call(form.querySelectorAll('.ppom-field-wrapper select'));
+    if(B){
+      var lotCard = null, svcCard = null;
+      cards.forEach(function(c){ if(!lotCard && c.querySelector('.dhx-chips')) lotCard = c; else if(lotCard && !svcCard && plainRows(c)) svcCard = c; });
+      if(lotCard){
+        hit = true;
+        build(lotCard, { mode: 'lot', unit: B.lot, items: themeItems(sels[1], 'addon_1'), title: '맛 고르기', target: function(){ return B.n * B.lot * Math.max(1, sets()); }, doneHint: svcCard ? '아래에서 서비스 맛을 골라 주세요' : '' });
+        if(svcCard && B.split) build(svcCard, { mode: 'svc', unit: 1, per: 1, items: themeItems(sels[2], 'addon_2'), title: '서비스 고르기', target: function(){ return B.n * Math.max(1, sets()); } });
+      }
+    } else {
+      cards.forEach(function(c){ if(c.querySelector('.dhx-chips')){ build(c); hit = true; } });
+    }
     if(!hit && tries++ < 20) setTimeout(init, 300);
   }
   if(document.readyState === 'complete') init(); else addEventListener('load', init);
