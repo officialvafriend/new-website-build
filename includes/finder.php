@@ -126,21 +126,90 @@ function plugin_dirs( bool $all = false ): array {
  * @return array{path:string,text:string}|null
  */
 function read_file( string $rel ): ?array {
-	if ( ! defined( 'WP_PLUGIN_DIR' ) ) {
-		return null;
-	}
 	$rel = str_replace( '\\', '/', trim( $rel ) );
 	if ( '' === $rel || str_contains( $rel, '..' ) || str_starts_with( $rel, '/' ) || ! preg_match( '/\.(php|js|txt|json|css)$/i', $rel ) ) {
 		return null;
 	}
-	$base = realpath( WP_PLUGIN_DIR );
-	$full = realpath( WP_PLUGIN_DIR . '/' . $rel );
-	if ( false === $base || false === $full || ! str_starts_with( $full, $base . DIRECTORY_SEPARATOR ) || ! is_file( $full ) ) {
+	$base = base_for( strtok( $rel, '/' ) );
+	if ( null === $base ) {
+		return null;
+	}
+	$full = realpath( dirname( $base ) . '/' . $rel );
+	if ( false === $full || ! str_starts_with( $full, $base . DIRECTORY_SEPARATOR ) || ! is_file( $full ) ) {
 		return null;
 	}
 	$text = file_get_contents( $full ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 	return false === $text ? null : array( 'path' => $rel, 'text' => $text );
 }
+
+/**
+ * 맨 앞 폴더 이름이 가리키는 실제 폴더 — 플러그인 폴더 또는 **테마 폴더**(2026-10-09:
+ * 구매 게이트가 테마 functions.php · assets/js 에 있어 통째로 받아야 했다).
+ * 둘 다 아니면 null. 그 폴더 밖으로는 못 나간다.
+ *
+ * @param string|false $top 폴더 이름 (`keyple-bank-auto-confirm` · `키플_액상덕후`).
+ * @return string|null
+ */
+function base_for( $top ): ?string {
+	$top = is_string( $top ) ? trim( $top ) : '';
+	if ( '' === $top || str_contains( $top, '..' ) || str_contains( $top, '/' ) || str_contains( $top, '\\' ) ) {
+		return null;
+	}
+	$roots = array();
+	if ( defined( 'WP_PLUGIN_DIR' ) ) {
+		$roots[] = WP_PLUGIN_DIR;
+	}
+	if ( function_exists( 'get_theme_root' ) ) {
+		$roots[] = get_theme_root();
+	}
+	foreach ( $roots as $root ) {
+		$r = realpath( (string) $root );
+		$d = realpath( $root . '/' . $top );
+		if ( false !== $r && false !== $d && is_dir( $d ) && str_starts_with( $d, $r . DIRECTORY_SEPARATOR ) ) {
+			return $d;
+		}
+	}
+	return null;
+}
+
+/**
+ * 테마 폴더 이름 (자식 · 부모) — 화면에 바로 누를 수 있게.
+ *
+ * @return string[]
+ */
+function theme_dirs(): array {
+	$out = array();
+	foreach ( array( 'get_stylesheet_directory', 'get_template_directory' ) as $fn ) {
+		if ( function_exists( $fn ) ) {
+			$out[] = basename( (string) $fn() );
+		}
+	}
+	return array_values( array_unique( array_filter( $out ) ) );
+}
+
+/**
+ * 파일 하나를 그대로 내려받는다 (`admin-post.php?action=dhr_finder_file`). 읽기만 한다.
+ *
+ * @return void
+ */
+function download_file(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( '권한이 없습니다.' );
+	}
+	check_admin_referer( 'dhr_finder_file' );
+	$rel = isset( $_GET['file'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['file'] ) ) : ''; // phpcs:ignore
+	$rf  = read_file( $rel );
+	if ( ! $rf ) {
+		wp_die( '그 파일을 열 수 없습니다.' );
+	}
+	$name = preg_replace( '/[^A-Za-z0-9._-]+/', '_', basename( $rf['path'] ) ) . '.txt';
+	nocache_headers();
+	header( 'Content-Type: text/plain; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename="' . $name . '"' );
+	echo $rf['path'] . "\n\n" . $rf['text']; // phpcs:ignore WordPress.Security.EscapeOutput
+	exit;
+}
+add_action( 'admin_post_dhr_finder_file', __NAMESPACE__ . '\\download_file' );
 
 /**
  * 플러그인 폴더 하나의 PHP · JS 파일 목록 (하위 폴더 포함 · 크기순 아님, 경로순).
@@ -149,16 +218,9 @@ function read_file( string $rel ): ?array {
  * @return array<int,array{rel:string,bytes:int,lines:int}>
  */
 function list_files( string $dir ): array {
-	if ( ! defined( 'WP_PLUGIN_DIR' ) ) {
-		return array();
-	}
-	$dir = trim( str_replace( array( '\\', '/' ), '', $dir ) );
-	if ( '' === $dir || str_contains( $dir, '..' ) ) {
-		return array();
-	}
-	$root = realpath( WP_PLUGIN_DIR . '/' . $dir );
-	$base = realpath( WP_PLUGIN_DIR );
-	if ( false === $root || false === $base || ! is_dir( $root ) || ! str_starts_with( $root, $base . DIRECTORY_SEPARATOR ) ) {
+	$dir  = trim( str_replace( array( '\\', '/' ), '', $dir ) );
+	$root = base_for( $dir );
+	if ( null === $root ) {
 		return array();
 	}
 	$out = array();
@@ -307,19 +369,27 @@ function screen(): void {
 	$dir  = isset( $_GET['dir'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['dir'] ) ) : ''; // phpcs:ignore
 	$file = isset( $_GET['file'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['file'] ) ) : ''; // phpcs:ignore
 	echo '<h2 style="margin-top:1.6em">파일 통째로 보기</h2>';
-	echo '<p style="max-width:56em;line-height:1.7">낱말을 하나씩 찾는 대신 <b>파일 하나를 열어 전체를 복사</b>해 보내 주시면 됩니다. 플러그인 폴더 이름을 넣고 목록에서 파일을 누르세요. 읽기만 합니다.</p>';
+	echo '<p style="max-width:56em;line-height:1.7">낱말을 하나씩 찾는 대신 <b>파일 하나를 열어 전체를 복사</b>해 보내 주시면 됩니다. 플러그인 · <b>테마</b> 폴더 이름을 넣고 목록에서 파일을 누르세요. 「받기」를 누르면 그 파일이 그대로 내려받아집니다. 읽기만 합니다.</p>';
+	$quick = array();
+	foreach ( theme_dirs() as $td ) {
+		$quick[] = '<a class="button" href="' . esc_url( add_query_arg( array( 'page' => SLUG, 'dir' => $td ), admin_url( 'tools.php' ) ) ) . '">테마 ' . esc_html( $td ) . '</a>';
+	}
+	if ( $quick ) {
+		echo '<p>' . implode( ' ', $quick ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput
+	}
 	echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( SLUG ) . '">';
 	echo '<input type="text" name="dir" value="' . esc_attr( '' !== $dir ? $dir : 'keyple-bank-auto-confirm' ) . '" class="regular-text" placeholder="keyple-bank-auto-confirm"> ';
 	echo '<button class="button">파일 목록</button></form>';
 	if ( '' !== $dir ) {
 		$files = list_files( $dir );
 		if ( ! $files ) {
-			echo '<p>그 이름의 플러그인 폴더가 없거나 PHP · JS 파일이 없습니다.</p>';
+			echo '<p>그 이름의 플러그인 · 테마 폴더가 없거나 PHP · JS 파일이 없습니다.</p>';
 		} else {
 			echo '<ul style="columns:2;max-width:70em;margin:.6em 0 1em">';
 			foreach ( $files as $f ) {
 				$u = add_query_arg( array( 'page' => SLUG, 'dir' => $dir, 'file' => $f['rel'] ), admin_url( 'tools.php' ) );
-				echo '<li><a href="' . esc_url( $u ) . '">' . esc_html( substr( $f['rel'], strlen( $dir ) + 1 ) ) . '</a> <small style="color:#646970">' . (int) $f['lines'] . '줄</small></li>';
+				$g = wp_nonce_url( add_query_arg( array( 'action' => 'dhr_finder_file', 'file' => rawurlencode( $f['rel'] ) ), admin_url( 'admin-post.php' ) ), 'dhr_finder_file' );
+				echo '<li><a href="' . esc_url( $u ) . '">' . esc_html( substr( $f['rel'], strlen( $dir ) + 1 ) ) . '</a> <small style="color:#646970">' . (int) $f['lines'] . '줄 · <a href="' . esc_url( $g ) . '">받기</a></small></li>';
 			}
 			echo '</ul>';
 		}
@@ -327,7 +397,7 @@ function screen(): void {
 	if ( '' !== $file ) {
 		$rf = read_file( $file );
 		if ( ! $rf ) {
-			echo '<p><b>그 파일을 열 수 없습니다.</b> (플러그인 폴더 안의 PHP · JS 만 봅니다)</p>';
+			echo '<p><b>그 파일을 열 수 없습니다.</b> (플러그인 · 테마 폴더 안의 PHP · JS 만 봅니다)</p>';
 		} else {
 			$lines = explode( "\n", $rf['text'] );
 			$w     = strlen( (string) count( $lines ) );
@@ -335,7 +405,8 @@ function screen(): void {
 			foreach ( $lines as $i => $l ) {
 				$numbered .= str_pad( (string) ( $i + 1 ), $w, ' ', STR_PAD_LEFT ) . '  ' . $l . "\n";
 			}
-			echo '<h3 style="margin:.4em 0">' . esc_html( $rf['path'] ) . ' <small style="font-weight:400;color:#646970">' . count( $lines ) . '줄 · 아래 상자를 누르고 Ctrl+A → Ctrl+C</small></h3>';
+			$g = wp_nonce_url( add_query_arg( array( 'action' => 'dhr_finder_file', 'file' => rawurlencode( $rf['path'] ) ), admin_url( 'admin-post.php' ) ), 'dhr_finder_file' );
+			echo '<h3 style="margin:.4em 0">' . esc_html( $rf['path'] ) . ' <small style="font-weight:400;color:#646970">' . count( $lines ) . '줄</small> <a class="button button-primary" href="' . esc_url( $g ) . '">이 파일 내려받기</a></h3>';
 			echo '<textarea readonly onclick="this.select()" style="width:100%;max-width:70em;height:520px;font-family:monospace;font-size:12px;line-height:1.45;white-space:pre;background:#f6f7f7;border:1px solid #dcdcde;padding:10px">' . esc_textarea( $numbered ) . '</textarea>';
 		}
 	}
