@@ -181,7 +181,7 @@ $month = (int) wp_date( 'n' );
 		$hs  = (float) $h0->get_price();
 		$off = ( $hr > $hs && $hr > 0 ) ? (int) round( ( 1 - $hs / $hr ) * 100 ) : 0;
 		$ht  = trim( (string) preg_replace( '/\s*\|\s*금액\s*[\d,]+\s*원\s*$/u', '', $hn['title'] ) );
-		$ht  = trim( (string) preg_replace( array( '/★[^★]*★/u', '/\s*(묶음\s*이벤트|할인\s*!?|이벤트\s*!?|EVENT\s*!?)\s*$/iu' ), '', $ht ) );
+		$ht  = trim( (string) preg_replace( array( '/★[^★]*★/u', '/\s*(묶음\s*이벤트|할인\s*!?|이벤트\s*!?|EVENT\s*!?)\s*$/iu', '/\s*\([^)]*\)\s*$/u' ), '', $ht ) );   // 끝의 괄호(「(30병 묶음 + 서비스 3병)」)도 뗀다 — 폰에서 두 줄을 굵게 먹었다
 		if ( '' !== $hn['brand'] && false === mb_strpos( $ht, $hn['brand'] ) && ! preg_match( '/이벤트|특가|할인/u', $hn['brand'] ) ) {
 			$ht = $hn['brand'] . ' ' . $ht;
 		}

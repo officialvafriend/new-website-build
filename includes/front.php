@@ -557,6 +557,39 @@ function observe_guard(): void {
 }
 add_action( 'wp_head', __NAMESPACE__ . '\\observe_guard', 0 );
 
+/**
+ * 바깥 서버에서 **멈춤 없이(동기로)** 받는 남의 스크립트에 async 를 단다 (2026-10-09, 사장님 아이폰).
+ *
+ * 메타(페이스북) 광고 플러그인이 `unpkg.com/meta-capi-param-builder-clientjs` 를 상품 화면 아래쪽에 동기로 싣는다.
+ * 바로 뒤가 테마 옵션 빌더 · 옛 옵션 UI · 구매 게이트 · 우리 front.js 다. 아이폰 사파리(추적 방지 · 느린 망)에서
+ * 그 한 장이 늦으면 **뒤의 것이 전부 멈춰** 원본 선택칸이 그대로 보이고 「장바구니」가 잠기지 않았다.
+ * 같은 상황을 재현해(unpkg 30초 지연) 확인했다: 그대로면 옵션 화면이 안 생기고, async 면 다 생긴다.
+ * defer 로는 안 된다 — defer 는 DOMContentLoaded 를 붙잡는다.
+ *
+ * 그 플러그인 파일은 건드리지 않는다. 뒤의 인라인 코드가 `typeof clientParamBuilder` 로 먼저 묻고,
+ * 픽셀 쪽도 이벤트 때 같은 것을 묻는다 — 늦게 와도 오류가 나지 않는다.
+ *
+ * @param string $tag    script 태그.
+ * @param string $handle 핸들.
+ * @return string
+ */
+function async_third_party( $tag, $handle ): string {
+	$tag = (string) $tag;
+	$hs  = (array) apply_filters( 'duckhoo_async_handles', array( 'facebook-capi-param-builder' ) );
+	if ( ! in_array( (string) $handle, $hs, true ) ) {
+		return $tag;
+	}
+	// 그 핸들의 src 태그 하나만 (뒤에 붙는 인라인 코드는 그대로). 이미 async · defer 면 손대지 않는다.
+	$id = preg_quote( (string) $handle, '/' ) . '-js';
+	return (string) preg_replace_callback(
+		'/<script\b[^>]*\bid=["\']' . $id . '["\'][^>]*>/',
+		fn( $m ) => preg_match( '/\s(async|defer)\b/', $m[0] ) ? $m[0] : preg_replace( '/^<script\b/', '<script async', $m[0] ),
+		$tag,
+		1
+	);
+}
+add_filter( 'script_loader_tag', __NAMESPACE__ . '\\async_third_party', 20, 2 );
+
 function header_html(): void {
 	$cart_n  = ( function_exists( 'WC' ) && WC()->cart ) ? (int) WC()->cart->get_cart_contents_count() : 0;
 	$cart    = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );

@@ -362,13 +362,15 @@
 (function(){
   if(!window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
-  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', function(){
+  /* 2026-10-09 사장님 아이폰 영상 — 흐림(blur 8px)에서 또렷해지는 등장이 스크롤 중에 **번진 화면**으로 보였다 (오류처럼).
+     폰은 아예 안 한다 (그냥 보인다). 데스크톱만 흐림 없이 짧게 올라온다. */
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference) and (min-width: 880px)', function(){
     var targets = gsap.utils.toArray('.dhr .grid > .card, .dhr .dhs .card, .dhr .sh, .dhr .stk, .dhr .qcats a, .dhr .deals-h, .dhr .banner > div, .dhr .dhr-about__c, .dhr .dhr-about__t');
     if(!targets.length) return;
-    gsap.set(targets, { y: 28, opacity: 0, filter: 'blur(8px)' });
-    ScrollTrigger.batch(targets, { start: 'top 92%', once: true, batchMax: 8,
-      onEnter: function(b){ gsap.to(b, { y: 0, opacity: 1, filter: 'blur(0px)', duration: .95, ease: 'expo.out', stagger: .06, overwrite: true,
-        onComplete: function(){ gsap.set(b, { clearProps: 'transform,opacity,filter' }); } }); } });
+    gsap.set(targets, { y: 16, opacity: 0 });
+    ScrollTrigger.batch(targets, { start: 'top 96%', once: true, batchMax: 8,
+      onEnter: function(b){ gsap.to(b, { y: 0, opacity: 1, duration: .5, ease: 'power2.out', stagger: .04, overwrite: true,
+        onComplete: function(){ gsap.set(b, { clearProps: 'transform,opacity' }); } }); } });
     /* 화면에 이미 들어와 있는 것은 바로 */
     ScrollTrigger.refresh();
   });
@@ -745,8 +747,15 @@
     if(document.querySelector('.dhx')) return;
     form.querySelectorAll('select.ppom-input, .ppom-field-wrapper select').forEach(build);
   }
-  if(document.readyState === 'complete') init();
-  else addEventListener('load', init);
+  /* 2026-10-09 — **load 를 기다리지 않는다.** load 는 바깥 스크립트(메타 광고 스크립트 등)가 다 받아져야 오는데, 아이폰에서
+     그것이 늦으면 우리 선택창이 영영 안 생겼다. 옛 옵션 UI 는 DOMContentLoaded 뒤 2초까지 다시 해 보므로 그 뒤에 본다. */
+  var once = false; function go(){ if(once) return; once = true; init(); }
+  if(document.readyState === 'complete') go();
+  else {
+    addEventListener('load', go);
+    var later = function(){ setTimeout(go, 2300); };
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', later); else later();
+  }
 })();
 
 /* 묶음 "다시 누르면 해지" — 옛 옵션 UI(dh-option-ui)의 안내대로 동작하지 않았다.
@@ -2256,14 +2265,12 @@
 
   if(!window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
-  /* 히어로 — 내려가면 살짝 줄며 흐려진다 (스크럽) */
-  var hero = document.querySelector('.dhr .hhero');
-  if(hero){ gsap.to(hero, { scale: .965, opacity: .55, transformOrigin: '50% 0%', ease: 'none', scrollTrigger: { trigger: hero, start: 'top 80px', end: 'bottom top', scrub: .4 } }); }
+  /* 히어로가 내려가며 줄고 흐려지던 스크럽은 뺐다 (2026-10-09) — 폰에서 「바로 구매」 버튼이 반쯤 투명하게 보여 고장 난 것 같았다 */
   /* 폰 — 브랜드 카드 스택: 다음 카드가 올라오면 앞 카드가 줄며 흐려진다 */
   gsap.matchMedia().add('(max-width: 879px)', function(){
     var stks = [].slice.call(document.querySelectorAll('.dhr .stk'));
     stks.forEach(function(w, i){ var next = stks[i + 1], card = w.querySelector('.bcard'); if(!next || !card) return;
-      gsap.to(card, { scale: .92, opacity: .45, filter: 'blur(2px)', ease: 'none', scrollTrigger: { trigger: next, start: 'top 85%', end: 'top 30%', scrub: .3 } }); });
+      gsap.to(card, { scale: .95, ease: 'none', scrollTrigger: { trigger: next, start: 'top 85%', end: 'top 30%', scrub: .3 } }); });
   });
 })();
 
@@ -2542,7 +2549,11 @@
     }
     if(!hit && tries++ < 20) setTimeout(init, 300);
   }
-  if(document.readyState === 'complete') init(); else addEventListener('load', init);
+  /* load 를 기다리지 않는다 (위 선택창과 같은 까닭) — 옛 옵션 UI 가 DOMContentLoaded 에서 .dhx 를 만들면 바로 붙는다 */
+  var kicked = false; function kick(){ if(kicked) return; kicked = true; init(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(kick, 60); });
+  else kick();
+  addEventListener('load', kick);
 })();
 
 /* 가입 2단계(/agree/) — 「동의하고 가입」을 누를 때 필수 셋이 체크돼 있으면 선택 동의(SMS · 이메일 · 제3자)를 쿠키에 적는다.

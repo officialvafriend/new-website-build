@@ -4234,3 +4234,23 @@ FAQPage JSON-LD), 배송 안내 머리(주문→입금 확인→출고→도착 
 kboard 목록 · 장바구니(폰 순서 표 → 합계 → 추천, 옵션 칸 전체 폭, 전표, 빈 장바구니) 를 쓰고, 테마 링크 규칙
 (`.page:not(...)x3 .wd-page__content a:not(.btn)`, 9단계)을 `:where()` 로 힘을 빼야 우리 알약이 파란 밑줄을 안 입는다. 푸터 고객센터 알약에
 「고객센터 · 자주 묻는 질문」 링크를 켤 때 같이 넣는다. 머리판은 다크에서도 어둡게 고정할 것(`.dhr-ah__s` 가 #D6DEE6 하드코딩).
+
+## 아이폰에서 옵션 화면이 통째로 안 생겼다 — 메타 광고 스크립트가 길을 막았다 (2026-10-09)
+
+사장님 아이폰(다크) 캡처 두 장: 디오 33 · 젤로 10 에서 **원본 PPOM 선택칸 그대로 · 「장바구니」 잠기지 않음** — 테마 옵션 빌더 ·
+옛 옵션 UI · 구매 게이트 · 우리 맛 고르기가 **전부** 안 돌았다. 크로미움에서는 늘 멀쩡했다.
+
+- **원인**: facebook-for-woocommerce 가 `unpkg.com/meta-capi-param-builder-clientjs` 를 **동기 `<script>`** 로 싣고, 바로 뒤가
+  `wd-option-builder.js` · `option-ui.js` · Swiper · GSAP · 우리 `front.js` · 사장님 게이트 인라인이다. 그 한 장이 늦으면(사파리 추적 방지 ·
+  느린 망 · unpkg 버전 없는 주소의 302) **뒤가 전부 멈춘다.** 재현: Playwright 에서 unpkg 를 30초 붙잡으면 캡처와 똑같다
+  (`scratchpad/live/hang.mjs`, `HANG=30000`)
+- **고친 것 1** `Front\async_third_party()` — `script_loader_tag` 로 그 핸들(`facebook-capi-param-builder`, 필터 `duckhoo_async_handles`)에
+  `async`. **`defer` 로는 안 된다** — defer 는 DOMContentLoaded 를 붙잡아 jQuery ready 가 그대로 멈춘다 (재현으로 확인). 플러그인 파일은
+  그대로, 뒤 인라인은 `typeof clientParamBuilder` 로 묻고 지나간다
+- **고친 것 2** 우리 선택창(`.dhsel`) · 맛 고르기(`.dhpk`)가 **`load` 를 기다리지 않는다.** async 스크립트도 `load` 를 붙잡으므로 그대로면
+  우리 것만 안 생겼다. 선택창은 DOMContentLoaded + 2.3초(옛 옵션 UI 가 2초까지 다시 해 본다), 맛 고르기는 DOMContentLoaded 에서
+- 확인 (unpkg 30초 지연 · 다크 · 390): 디오 33 맛 고르기 2 · 「33병 더」 / 젤로 10 · 「10병 더」 / 노보 낱병 선택창 / 조바 게이트 잠김
+- **교훈: 「아이폰에서만」은 사파리 문법보다 먼저 남의 동기 스크립트를 의심한다.** `grep '<script' | grep -v 'async\|defer'` 로
+  바깥 주소를 센다. 우리 Swiper · GSAP(cdnjs)도 동기지만 테마 옵션 빌더보다 뒤라 이번 증상과는 무관하다
+- 같은 날 영상: 스크롤 중 카드가 번져 보였다 → 폰은 등장 효과 끔, 데스크톱은 흐림 없이 짧게, 히어로가 흐려지던 스크럽 · 브랜드 카드 흐림 뺌.
+  히어로 제목 끝 괄호(「(30병 묶음 + 서비스 3병)」)를 뗀다
