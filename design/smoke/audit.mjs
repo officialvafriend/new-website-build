@@ -7,7 +7,9 @@ const UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, l
 const OUT=process.env.OUT||'/tmp/dhr-audit'; fs.mkdirSync(OUT,{recursive:true}); const S='https://duck-hoo.com';
 const ONLY=process.env.ONLY?process.env.ONLY.split(','):null; const LOCAL=process.env.LOCAL==='1';
 const pages0=[['home','/'],['shop','/shop/'],['novo','/product-category/novo-liquid/'],['prod','/product/%EB%85%B8%EB%B3%B4-%ED%83%80%EB%B0%95%EB%A9%98%EC%86%94-9-8mg-30ml/'],['cart','/cart/'],['login','/login/'],['reg1','/register/'],['reg2','/agree/'],['reg3','/join-form/']];
-const pages=ONLY?pages0.filter(p=>ONLY.includes(p[0])):pages0;
+// PAGES='key=/path/,key2=/path2/' 로 다른 화면을 잴 수 있다 (상품 종류별 표본 등)
+const pagesX=process.env.PAGES?process.env.PAGES.split(',').map(x=>{ const i=x.indexOf('='); return [x.slice(0,i), x.slice(i+1)]; }):pages0;
+const pages=ONLY?pagesX.filter(p=>ONLY.includes(p[0])):pagesX;
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const out=[];
 for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['light','dark']) for (const [k,pth] of pages) {
@@ -17,15 +19,17 @@ for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['li
   const errs=[]; page.on('pageerror', e=>errs.push(e.message)); page.on('console', m=>{ if(m.type()==='error') errs.push('[console] '+m.text().slice(0,140)); });
   await page.route('**/*', async (route) => { const req=route.request(); const url=req.url(); if(!/^https?:/.test(url)) return route.abort();
     const lm=LOCAL && url.match(/\/plugins\/new-website-build\/assets\/([a-z-]+\.(?:css|js))/); if(lm){ try { return route.fulfill({ status:200, headers:{'content-type': lm[1].endsWith('.css')?'text/css':'application/javascript'}, body: fs.readFileSync(path.join(process.cwd(),'assets',lm[1])) }); } catch(e){} }
-    try { const r = await fetch(url, { method: req.method(), headers: { 'user-agent': UA, accept: '*/*' }, body: req.postData() ?? undefined, redirect: 'manual' });
+    try { const hh={ 'user-agent': UA, accept: '*/*' }; if(/duck-hoo\.com/.test(url)) hh.cookie='dhr_agree=s0e0t0'; // 약관 문(10/8) — 3단계를 바로 연다
+      const r = await fetch(url, { method: req.method(), headers: hh, body: req.postData() ?? undefined, redirect: 'manual' });
       const headers = {}; r.headers.forEach((v,kk)=>{ if(!/^(content-encoding|transfer-encoding|content-length|set-cookie)$/i.test(kk)) headers[kk]=v; });
       route.fulfill({ status: r.status, headers, body: Buffer.from(await r.arrayBuffer()) }); } catch (e) { route.abort(); } });
   let status=0; try { const r=await page.goto(S+pth+(pth.includes('?')?'&':'?')+'nocache='+Date.now(), { waitUntil:'load', timeout:90000 }); status=r?.status()||0; } catch(e){ errs.push('goto '+e.message.slice(0,80)); }
-  await page.evaluate(() => { document.querySelectorAll('#pop-dim,#pop6,#dh-agegate2').forEach(e=>e.remove()); document.documentElement.classList.remove('dh-ag2-lock'); document.body.classList.remove('dh-ag2-lock'); });
+  await page.waitForLoadState('load').catch(()=>{});
+  await page.evaluate(() => { document.querySelectorAll('#pop-dim,#pop6,#dh-agegate2').forEach(e=>e.remove()); document.documentElement.classList.remove('dh-ag2-lock'); document.body.classList.remove('dh-ag2-lock'); }).catch(()=>{});
   await page.waitForTimeout(1200);
-  const H = await page.evaluate(()=>document.body.scrollHeight);
-  for (let y=0; y<Math.min(H,9000); y+=h*0.7) { await page.evaluate(v=>window.scrollTo(0,v), y); await page.waitForTimeout(120); }
-  await page.evaluate(()=>window.scrollTo(0,0)); await page.waitForTimeout(900);
+  const H = await page.evaluate(()=>document.body.scrollHeight).catch(()=>0);
+  for (let y=0; y<Math.min(H,9000); y+=h*0.7) { await page.evaluate(v=>window.scrollTo(0,v), y).catch(()=>{}); await page.waitForTimeout(120); }
+  await page.evaluate(()=>window.scrollTo(0,0)).catch(()=>{}); await page.waitForTimeout(900);
   const m = await page.evaluate(()=>{
     const q=s=>document.querySelector(s);
     window.scrollTo(600,0); const over=window.scrollX; window.scrollTo(0,0);
@@ -46,9 +50,14 @@ for (const [w,h,tag] of [[390,844,'m'],[1280,900,'d']]) for (const theme of ['li
       const L1=lum(fg), L2=lum(bg); const cr=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);
       if(cr<2.2) low.push({t:t.slice(0,28), cls:(el.className&&typeof el.className==='string'?el.className.slice(0,40):el.tagName), fg:cs.color, bg:`rgb(${bg.r},${bg.g},${bg.b})`, cr:+cr.toFixed(2)});
     }
+    // 아이콘(SVG) 대비: 선 · 칠 색 vs 배경 — 3:1 아래를 적는다 (그림 요소 기준)
+    const icons=[]; for (const svg of document.querySelectorAll('svg')) { const r=svg.getBoundingClientRect(); if(r.width<8||r.height<8||r.width>80) continue; const cs0=getComputedStyle(svg); if(cs0.display==='none'||cs0.visibility==='hidden') continue; let o=svg, hid=false; while(o&&o!==document.body){ const c=getComputedStyle(o); if(c.display==='none'||c.visibility==='hidden'||parseFloat(c.opacity)===0){hid=true;break;} o=o.parentElement; } if(hid) continue;
+      const sh=svg.querySelector('path,circle,line,rect,polyline,polygon'); if(!sh) continue; const scs=getComputedStyle(sh); let col=scs.stroke!=='none'&&scs.stroke?scs.stroke:scs.fill; const fg=toRgb(col); if(!fg) continue; const bg=bgOf(svg); const cr=(Math.max(lum(fg),lum(bg))+.05)/(Math.min(lum(fg),lum(bg))+.05);
+      if(cr<3) icons.push({icon:(svg.parentElement.className&&typeof svg.parentElement.className==='string'?svg.parentElement.className.slice(0,40):svg.parentElement.tagName), fg:col, bg:`rgb(${bg.r},${bg.g},${bg.b})`, cr:+cr.toFixed(2)}); }
+    for (const x of icons) low.push({t:'[아이콘]', cls:x.icon, fg:x.fg, bg:x.bg, cr:x.cr});
     return { theme: document.documentElement.getAttribute('data-theme'), over, whole, title: document.title.slice(0,50), low: low.slice(0,12), lowN: low.length, bytes: document.documentElement.outerHTML.length };
-  });
-  await page.screenshot({ path:`${OUT}/${k}-${theme}-${tag}.png`, fullPage:true });
+  }).catch(e=>({ theme:null, over:0, whole:false, title:'', low:[], lowN:0, bytes:0, evalErr:e.message.slice(0,80) }));
+  await page.screenshot({ path:`${OUT}/${k}-${theme}-${tag}.png`, fullPage:true }).catch(()=>{});
   out.push({ k, tag, theme, status, ...m, errs: errs.filter(e=>!/n\[e\] is not a function|woocommerce-analytics|favicon|googletagmanager|facebook|net::ERR_ABORTED/.test(e)).slice(0,4) });
   await ctx.close();
 }

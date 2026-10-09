@@ -4162,3 +4162,21 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 「인증 완료」 로 `page-profile-edit` 를 보면 안다). 사장님 계정은 가입 때 PASS 를 거치지 않아 `wd_phone_verified` 가 없다.
 `Verify\staff()` — administrator · shop_manager 는 재인증 문에서 뺀다 (필터 `duckhoo_reverify_staff_roles`). 성인인증 점검 화면도 직원은 안 센다 — 같은 기준.
 손님에게는 그대로다.
+
+### 다크 점검 — 검색창 네모 테두리 · 폰 페이지 번호 두 줄 · 반전 면 아이콘 (2026-10-09, 사장님 「숫자랑 검색창 돋보기 다크모드에서 이상」)
+
+- **검색칸 안에 네모난 파란 선이 하나 더** 생겼다 — shell.css 의 테마 화면 입력칸 규칙(`input:focus-visible`)이 옛 파랑 `rgba(21,101,192,.35)` 3px 테두리를
+  헤더 검색칸에도 씌웠다. 둥근 겉판(`.hs` · `.dhsearch__form`)이 고리를 그리므로 두 검색칸은 그 규칙에서 빼고(`:not(.dhsearch__in):not(.hs input)`),
+  고리는 `inset 1.5px accent + 0 0 0 4px var(--dh-ring)` 하나로. 새 토큰 **`--dh-ring`**(라이트 파랑 28% · 다크 38%) — 포커스 번짐은 이것만 쓴다
+- **폰 페이지 번호가 두 줄로 꺾였다** (1~8 다음 줄에 9 · 10 · →) → `Front\pager_compact()` 「← 5 / 10 →」 한 줄 (`templates/archive-product.php`, 599px 아래).
+  주소는 `get_pagenum_link()` 라 정렬 · 검색어가 따라간다. 600px 위는 워드커머스 번호 줄 그대로. 템플릿 `use function` 목록에 넣었다
+- **반전 면 위 파랑 아이콘**(가입 띠 · 푸터 계좌 상자)이 다크에서 2.96:1 — 잉크 면이 다크에서 밝아지므로 거꾸로 짙은 파랑이 필요하다 → 토큰 **`--dh-accent-inv`**
+  (라이트 `#4D8BFF` · 다크 `#1A5CFF`). 잉크 면 위 포인트 색은 앞으로 이것을 쓴다
+- 폰 검색창(`.dhsearch`)도 시트 · 서랍과 같은 유리 판(28px · 뒤 흐림 · 칩 glass-in) — 정해 둔 유리 자리에 「검색창」을 더한다
+- 남아 있던 주황 · 세로 선: 계정 머리판 배경 번짐(`.dhr-ah__bg`) · 탈퇴 안내(`membership-cancel.css`) · 워드커머스 알림 왼쪽 3px 선(`duckhoo-theme.css`) → 파랑 · 둥근 면
+- **`audit.mjs` 가 아이콘(SVG)도 잰다** (선 · 칠 색 vs 배경, 3:1 아래) · `PAGES='key=/path/,…'` 로 다른 화면 · 약관 쿠키를 실어 가입 3단계를 연다 · 이동 중에 안 죽는다
+- **상품 186종 전수 (curl)**: 전부 200 · 치명 오류 · PHP 경고 0 · 끊김 0. 구매 폼 없는 14종은 전부 품절(정상). 종류별 표본 10종(묶음 · 대량 · 젤로 · 조바 · 단품 · 품절 · 팟 ·
+  노보 10+1 · 화이트아웃) × 390/1280 × 라이트/다크 — 우리 JS 오류 0 · 넘침 0
+- **사장님 서랍장 스니펫 오류 하나**: PPOM 칸이 없는 단품(#164 브이메이트 V5 팟 등)에서 `new MutationObserver(…).observe($ppomWrapper[0], …)` 가
+  `parameter 1 is not of type 'Node'` 를 던진다. 담기 · 금액은 정상(12,000원 확인)이고 그 줄 뒤 라벨 정리만 안 돈다. 스니펫이라 우리가 안 고친다 —
+  고치려면 그 줄을 `if (window.MutationObserver && $ppomWrapper[0])` 로. `n[e] is not a function` 은 젯팩 woocommerce-analytics(모든 상품) — 우리 것 아님

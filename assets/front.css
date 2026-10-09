@@ -45,7 +45,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 @media(min-width:880px){.dhr .hs{display:flex}}
 .dhr .hs input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--dh-ink);min-height:40px;padding:0}
 .dhr .hs input:focus{outline:none}
-.dhr .hs:focus-within{box-shadow:inset 0 0 0 2px var(--dh-ink);background:var(--dh-glass-in)}
+.dhr .hs:focus-within{box-shadow:inset 0 0 0 1.5px var(--dh-accent),0 0 0 4px var(--dh-ring);background:var(--dh-glass-in)}
 .dhr .hs button{width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:var(--dh-ink)}
 .dhr .hs svg{width:20px;height:20px}
 .dhr .dnav{display:none;gap:.2rem}
@@ -255,7 +255,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
 .dhr .promo{display:flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.45rem 1rem;background:var(--dh-ink);color:var(--dh-surface);font-size:14px;line-height:1.35;text-align:center}
 .dhr .promo b{font-weight:800;color:var(--dh-surface)}
 .dhr .promo span{color:var(--dh-surface);opacity:.72;font-weight:500}
-.dhr .promo svg{width:18px;height:18px;stroke-width:2.4;color:var(--dh-accent)}
+.dhr .promo svg{width:18px;height:18px;stroke-width:2.4;color:var(--dh-accent-inv)}
 .dhr a.promo:hover b{text-decoration:underline;text-underline-offset:3px}
 .dhr .promo--in{background:var(--dh-accent-soft);color:var(--dh-ink)}
 .dhr .promo--in b{color:var(--dh-accent-deep)}.dhr .promo--in span{color:var(--dh-ink-2)}
@@ -285,7 +285,7 @@ body.dhr .lg img{height:28px;width:auto;display:block}
    밝은 알약으로 띄운다. 이 줄은 손님이 받아 적는 줄이라 가장 잘 보여야 한다. */
 .dhr .fbank{margin-top:1.8rem;padding:1.2rem 1.3rem;background:var(--dh-ink);color:var(--dh-surface);border:0;border-radius:var(--dh-radius-lg)}
 .dhr .fbank__t{display:flex;align-items:center;gap:.5rem;margin:0 0 .8rem}
-.dhr .fbank__t svg{width:20px;height:20px;color:var(--dh-accent);stroke-width:1.9}
+.dhr .fbank__t svg{width:20px;height:20px;color:var(--dh-accent-inv);stroke-width:1.9}
 .dhr .fbank__t b{color:var(--dh-surface);font-size:14.5px;font-weight:700;letter-spacing:.01em}
 .dhr .fbank__row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
 .dhr .fbank__row + .fbank__row{margin-top:.8rem}
@@ -591,16 +591,16 @@ body.dhr-ann #wd-top-announce:not([data-dhr-ann]){visibility:hidden!important}
    성인인증 안내(100010)보다는 아래에 둔다 — 그건 법적 안내라 항상 위여야 한다. */
 .dhr .dhsearch{position:fixed;inset:0;z-index:100000}
 .dhr .dhsearch[hidden]{display:none}
-.dhr .dhsearch__dim{position:absolute;inset:0;background:rgba(17,17,17,.5);opacity:0;transition:opacity .18s ease}
+.dhr .dhsearch__dim{position:absolute;inset:0;background:var(--dh-veil);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;transition:opacity .18s ease}
 .dhr .dhsearch.is-on .dhsearch__dim{opacity:1}
-.dhr .dhsearch__panel{position:absolute;top:0;left:0;right:0;background:var(--dh-surface);border-radius:0 0 18px 18px;
+.dhr .dhsearch__panel{position:absolute;top:0;left:0;right:0;background:linear-gradient(180deg,var(--dh-glass-hi),transparent 42%),var(--dh-glass);border-bottom:1px solid var(--dh-glass-line);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border-radius:0 0 28px 28px;
   padding:1.1rem 1rem 1.2rem;display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;gap:.2rem;box-shadow:0 18px 40px -18px rgba(0,0,0,.45);
   transform:translateY(-14px);opacity:0;transition:transform .2s cubic-bezier(.2,0,.2,1),opacity .18s ease;
   padding-top:calc(1.1rem + env(safe-area-inset-top))}
 .dhr .dhsearch.is-on .dhsearch__panel{transform:none;opacity:1}
-.dhr .dhsearch__form{display:flex;align-items:center;gap:.15rem;background:var(--dh-surface-2);border-radius:999px;
+.dhr .dhsearch__form{display:flex;align-items:center;gap:.15rem;background:var(--dh-glass-in);box-shadow:inset 0 0 0 1px var(--dh-glass-in-line),inset 0 1px 0 var(--dh-glass-hi);border-radius:999px;
   min-height:52px;padding:0 .9rem 0 .35rem;min-width:0}
-.dhr .dhsearch__form:focus-within{background:var(--dh-surface);box-shadow:inset 0 0 0 2px var(--dh-ink)}
+.dhr .dhsearch__form:focus-within{background:var(--dh-glass-in);box-shadow:inset 0 0 0 1.5px var(--dh-accent),0 0 0 4px var(--dh-ring)}
 .dhr .dhsearch__ic{flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
   border-radius:999px;color:var(--dh-ink)}
 .dhr .dhsearch__ic svg{width:21px;height:21px}
@@ -615,7 +615,7 @@ body.dhr-ann #wd-top-announce:not([data-dhr-ann]){visibility:hidden!important}
 .dhr .dhsearch__t{margin:0 0 .55rem;font-size:13px;font-weight:700;color:var(--dh-ink-3)}
 .dhr .dhsearch__cats{display:flex;flex-wrap:wrap;gap:.45rem}
 .dhr .dhsearch__cats a{display:inline-flex;align-items:center;min-height:40px;padding:0 .95rem;
-  border-radius:999px;background:var(--dh-ground);color:var(--dh-ink);font-size:14.5px;font-weight:600;letter-spacing:0}
+  border-radius:999px;background:var(--dh-glass-in);box-shadow:inset 0 0 0 1px var(--dh-glass-in-line),inset 0 1px 0 var(--dh-glass-hi);color:var(--dh-ink);font-size:14.5px;font-weight:600;letter-spacing:0}
 .dhr .dhsearch.is-empty .dhsearch__form{box-shadow:inset 0 0 0 2px var(--dh-accent-deep)}
 .dhr.dhr-search-on{overflow:hidden}
 /* 관리 바가 있으면 그만큼 내린다 */
@@ -623,7 +623,7 @@ body.admin-bar .dhsearch__panel{top:46px}
 @media(min-width:783px){body.admin-bar .dhsearch__panel{top:32px}}
 /* 880px 위에는 헤더에 진짜 검색창이 있다 — 창은 안 쓰지만 열리면 가운데로 */
 @media(min-width:880px){
-  .dhr .dhsearch__panel{max-width:640px;margin:0 auto;border-radius:18px;top:12vh;left:1rem;right:1rem}
+  .dhr .dhsearch__panel{max-width:640px;margin:0 auto;border-radius:28px;border:1px solid var(--dh-glass-line);top:12vh;left:1rem;right:1rem}
 }
 @media(prefers-reduced-motion:reduce){
   .dhr .dhsearch__panel,.dhr .dhsearch__dim{transition:none}
@@ -1139,4 +1139,4 @@ body.dhr.dhd-open{overflow:hidden}
 @media(prefers-reduced-transparency:reduce){.dhr .dhd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(17,17,17,.62)}.dhr .dhd__k{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media(prefers-reduced-motion:reduce){.dhr .dhd,.dhr .dhd__k,.dhr .dhd__ring,.dhr .dhd__ring svg{transition:opacity .2s ease}.dhr .dhd__k,.dhr .dhd__ring{transform:none}.dhr .dhd__ring svg{stroke-dashoffset:0}}
 
-@media(prefers-reduced-transparency:reduce){.dhr .dhc__panel{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhc__dim{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(17,17,17,.62)}}
+@media(prefers-reduced-transparency:reduce){.dhr .dhsearch__panel{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhsearch__dim{-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhc__panel{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhc__dim{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(17,17,17,.62)}}

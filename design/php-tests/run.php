@@ -2922,5 +2922,13 @@ $ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$sv('A',1),$sv('B',1)]),$sp)!==
 $ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$fl('B',20),$sv('A',1),$sv('B',1),$sv('C',1),$sv('D',1),$sv('E',1)]),$sp5)==='', '55병(칸 나눔): 맛 50 + 서비스 다섯 → 통과');
 $ok(($BS.'check')(($BS.'rows')([array_merge($one,['qty'=>2]),$fl('A',60),$sv('A',2),$sv('B',2),$sv('C',2)]),$sp)==='', '33병 두 개: 맛 60 + 서비스 6 (맛마다 2병까지)');
 
+/* ── 폰 페이지 줄 (Front\pager_compact) ── */
+if (!function_exists('get_pagenum_link')) { function get_pagenum_link($n, $esc = true){ return 'https://duck-hoo.com/shop/page/'.$n.'/?orderby=price'; } }
+$PG = 'Duckhoo\\Redesign\\Front\\pager_compact';
+$pg1 = $PG(1, 10); $pg5 = $PG(5, 10); $pgL = $PG(10, 10);
+$ok($PG(1, 1) === '' && $PG(1, 0) === '' , '한 쪽뿐이면 페이지 줄을 안 그린다');
+$ok(strpos($pg5, '<b>5</b> / 10') !== false && strpos($pg5, 'page/4/') !== false && strpos($pg5, 'page/6/') !== false && strpos($pg5, 'orderby=price') !== false, '가운데 쪽: 5 / 10 · 앞뒤 링크 · 정렬 그대로');
+$ok(strpos($pg1, 'dhr-pg__b--prev is-off') !== false && strpos($pg1, 'page/2/') !== false && strpos($pgL, 'dhr-pg__b--next is-off') !== false, '첫 쪽은 이전이 잠기고 · 끝 쪽은 다음이 잠긴다');
+$ok(strpos($PG(30, 10), '<b>10</b> / 10') !== false, '범위 밖 쪽 번호는 끝으로 맞춘다');
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

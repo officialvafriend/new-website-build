@@ -301,7 +301,7 @@ tr.woocommerce-orders-table__row--status-completed .woocommerce-orders-table__ce
 tr.woocommerce-orders-table__row--status-cancelled .woocommerce-orders-table__cell-order-status{ color: var(--dh-ink-3); }
 
 .woocommerce-info, .woocommerce-message{
-  background: var(--dh-surface); border-top: 0; border-left: 3px solid var(--dh-accent); border-radius: 0 12px 12px 0;
+  background: var(--dh-surface); border-top: 0; border-left: 0; border-radius: 16px;
   color: var(--dh-ink-2); font-size: 15px;
 }
 .woocommerce-info::before, .woocommerce-message::before{ color: var(--dh-accent-deep); }

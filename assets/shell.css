@@ -63,6 +63,18 @@ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers{ min-
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination li > .page-numbers.current{ background: var(--dh-ink); border-color: var(--dh-ink); color: var(--dh-surface); }
 html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination ul.page-numbers{ background: none !important; border-radius: 0 !important; min-width: 0 !important; height: auto !important; padding: 0 !important; }
 
+/* 폰 페이지 줄 「← 5 / 10 →」 — 번호 줄이 두 줄로 꺾여 나왔다 (2026-10-09). 600px 위는 번호 줄 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg{ display: flex; align-items: center; justify-content: center; gap: .75rem; margin: 1.5rem 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__b{ width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--dh-surface); border: 1px solid var(--dh-line); color: var(--dh-ink); text-decoration: none !important; transition: transform .16s cubic-bezier(.23,1,.32,1); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__b svg{ width: 18px; height: 18px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__b--prev svg{ transform: rotate(180deg); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__b:active{ transform: scale(.97); }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__b.is-off{ opacity: .35; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__n{ min-width: 5.5rem; text-align: center; font-size: 15px; font-weight: 600; color: var(--dh-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-pg__n b{ color: var(--dh-ink); font-weight: 800; }
+@media (max-width: 599px){ html body.dhr.dhr-wrap.dhr-wrap .woocommerce-pagination{ display: none !important; } }
+@media (min-width: 600px){ html body.dhr.dhr-wrap.dhr-wrap .dhr-pg{ display: none; } }
+
 /* 상세: 이미지 · 요약 두 칸, 그 위에 키플의 STEP 옵션은 그대로 */
 html body.dhr.dhr-wrap.dhr-wrap .single-product div.product{ display: grid; gap: 1.2rem; grid-template-columns: 1fr; }
 @media (min-width:900px){ html body.dhr.dhr-wrap.dhr-wrap .single-product div.product{ grid-template-columns: 1.05fr .95fr; gap: 2rem; align-items: start; } }
@@ -511,8 +523,8 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__bg{
   position: absolute; inset: -30%; z-index: -1; pointer-events: none;
   background:
     radial-gradient(46% 60% at 10% 8%,  rgba(56,189,248,.40) 0%, rgba(56,189,248,0) 62%),
-    radial-gradient(44% 58% at 92% 4%,  rgba(194,65,12,.34)  0%, rgba(194,65,12,0)  60%),
-    radial-gradient(52% 62% at 62% 104%, rgba(21,101,192,.42) 0%, rgba(21,101,192,0) 64%);
+    radial-gradient(44% 58% at 92% 4%,  rgba(26,92,255,.30)  0%, rgba(26,92,255,0)  60%),
+    radial-gradient(52% 62% at 62% 104%, rgba(26,92,255,.38) 0%, rgba(26,92,255,0) 64%);
 }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__in{ display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.1rem; }
 html body.dhr.dhr-wrap.dhr-wrap .dhr-ah__txt{ flex: 1 1 240px; min-width: 0; }
@@ -1068,8 +1080,8 @@ html body.dhr.dhr-wrap.dhr-wrap select:not([multiple]){
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%234E565F' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right .8rem center; cursor: pointer;
 }
-html body.dhr.dhr-wrap.dhr-wrap select:focus-visible, html body.dhr.dhr-wrap.dhr-wrap input:focus-visible, html body.dhr.dhr-wrap.dhr-wrap textarea:focus-visible{
-  outline: 3px solid rgba(21,101,192,.35); outline-offset: 1px; border-color: var(--dh-accent-deep);
+html body.dhr.dhr-wrap.dhr-wrap select:focus-visible, html body.dhr.dhr-wrap.dhr-wrap input:focus-visible:not(.dhsearch__in):not(.hs input), html body.dhr.dhr-wrap.dhr-wrap textarea:focus-visible{
+  outline: 3px solid var(--dh-ring); outline-offset: 1px; border-color: var(--dh-accent-deep);
 }
 html body.dhr.dhr-wrap.dhr-wrap select:hover, html body.dhr.dhr-wrap.dhr-wrap input:hover{ border-color: var(--dh-ink-3); }
 
@@ -2116,7 +2128,9 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsearch__in{
   border: 0 !important; border-radius: 0 !important; background: none !important;
   box-shadow: none !important; font-size: 16px !important;
 }
-html body.dhr.dhr-wrap.dhr-wrap .dhsearch__form:focus-within{ box-shadow: inset 0 0 0 2px var(--dh-ink) !important; }
+html body.dhr.dhr-wrap.dhr-wrap .dhsearch__form:focus-within{ box-shadow: inset 0 0 0 1.5px var(--dh-accent), 0 0 0 4px var(--dh-ring) !important; }
+/* 검색칸 자신은 고리를 안 그린다 — 둥근 겉판이 그린다 (네모 파란 선이 안에 하나 더 생겼다, 2026-10-09) */
+html body.dhr.dhr-wrap.dhr-wrap .hs input:focus, html body.dhr.dhr-wrap.dhr-wrap .dhsearch__in:focus{ outline: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch{ z-index: 100000 !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch__ic{ color: var(--dh-ink) !important; background: none !important; }
 html body.dhr.dhr-wrap.dhr-wrap .dhsearch__x{ color: var(--dh-ink-2) !important; background: none !important; }

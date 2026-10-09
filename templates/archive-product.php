@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use function Duckhoo\Redesign\Front\{card, icon, gate_note};
+use function Duckhoo\Redesign\Front\{card, icon, gate_note, pager_compact};
 use function Duckhoo\Redesign\Seo\{brand_title, brand_intro_html};
 
 $dha_total = (int) $GLOBALS['wp_query']->found_posts;
@@ -80,6 +80,7 @@ $dha_cur   = is_product_taxonomy() ? get_queried_object_id() : 0;
 			?>
 		</div>
 		<?php woocommerce_pagination(); ?>
+		<?php echo pager_compact(); // phpcs:ignore — 폰 한 줄 (안에서 escape) ?>
 		<?php do_action( 'duckhoo_archive_after_grid' ); // 격자 **아래** — 상품 위에 글이 깔리면 안 된다. 지금은 노보 FAQ 가 쓴다. ?>
 	<?php else : ?>
 		<div class="dha-empty">

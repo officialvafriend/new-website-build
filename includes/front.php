@@ -896,6 +896,50 @@ function chuseok_html(): string {
 }
 
 /**
+ * 폰용 페이지 줄 — 「← 5 / 10 →」 (2026-10-09).
+ *
+ * 워드커머스 번호 줄은 버튼이 아홉 개까지 늘어 폰 폭(358px)에서 두 줄로 꺾였다.
+ * 폰에서는 이 한 줄을 보이고 번호 줄은 감춘다 (데스크톱은 번호 줄 그대로).
+ * 주소는 워드커머스와 같은 `get_pagenum_link()` 라 정렬 · 검색어가 그대로 따라간다.
+ *
+ * @param int $cur   지금 쪽 (0 이면 질의에서 읽는다).
+ * @param int $total 전체 쪽 (0 이면 질의에서 읽는다).
+ * @return string
+ */
+function pager_compact( int $cur = 0, int $total = 0 ): string {
+	if ( $total <= 0 ) {
+		$total = function_exists( 'wc_get_loop_prop' ) ? (int) wc_get_loop_prop( 'total_pages' ) : 0;
+		if ( $total <= 0 && isset( $GLOBALS['wp_query']->max_num_pages ) ) {
+			$total = (int) $GLOBALS['wp_query']->max_num_pages;
+		}
+	}
+	if ( $cur <= 0 ) {
+		$cur = function_exists( 'wc_get_loop_prop' ) ? (int) wc_get_loop_prop( 'current_page' ) : 0;
+		if ( $cur <= 0 ) {
+			$cur = max( 1, (int) get_query_var( 'paged' ) );
+		}
+	}
+	if ( $total < 2 ) {
+		return '';
+	}
+	$cur  = min( max( 1, $cur ), $total );
+	$link = static function ( int $n ): string {
+		return esc_url( remove_query_arg( 'add-to-cart', get_pagenum_link( $n, false ) ) );
+	};
+	$btn  = static function ( int $n, string $rel, string $label ) use ( $link, $total ): string {
+		if ( $n < 1 || $n > $total ) {
+			return '<span class="dhr-pg__b dhr-pg__b--' . $rel . ' is-off" aria-hidden="true">' . icon( 'chev' ) . '</span>';
+		}
+		return '<a class="dhr-pg__b dhr-pg__b--' . $rel . '" href="' . $link( $n ) . '" rel="' . $rel . '" aria-label="' . esc_attr( $label ) . '">' . icon( 'chev' ) . '</a>';
+	};
+	return '<nav class="dhr-pg" aria-label="페이지">'
+		. $btn( $cur - 1, 'prev', '이전 쪽' )
+		. '<span class="dhr-pg__n" aria-current="page"><b>' . (int) $cur . '</b> / ' . (int) $total . '</span>'
+		. $btn( $cur + 1, 'next', '다음 쪽' )
+		. '</nav>';
+}
+
+/**
  * 목록 · 홈 맨 위에 한 줄 — 사진이 왜 안 보이는지, 어떻게 열리는지.
  * 카드마다 붙는 띠는 「무엇」만 말하고, 「왜」는 여기서 한 번만 말한다.
  *
