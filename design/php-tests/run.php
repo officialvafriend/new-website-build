@@ -2867,5 +2867,36 @@ $ok($we($rows,[])===[$rows,[]], '제외: 명단이 비면 그대로');
 $ok(count($k2)===0 && count($g2)===2, '제외: 같은 이름은 전부 빠진다 (동명이인 주의 — 번호로 적으면 한 사람만)');
 $ok(($CR.'exclude_default')()===['왕한빈','진선영','유지민'], '제외 기본값: 사장님이 말한 세 사람');
 
+
+// 한 상품 안에서 병 수 고르기 — 세트 수 + 할인 줄
+require_once dirname(__DIR__, 2).'/includes/bulk-sets.php';
+$BS='Duckhoo\\Redesign\\BulkSets\\';
+$ok(($BS.'config')()===[], '병 수 고르기: 설정이 비면 대상 없음 (아무 일도 안 한다)');
+$dio=['kind'=>'sets','name'=>'디오리퀴드','lot'=>10,'choices'=>[3=>['label'=>'33병','fee'=>0],5=>['label'=>'55병','fee'=>33000]]];
+$set=fn($n)=>['group_key'=>'required_main','type'=>'required','label'=>'디오리퀴드 10+1 세트','qty'=>$n];
+$fl=fn($l,$n)=>['group_key'=>'addon_1','type'=>'addon','label'=>$l,'qty'=>$n];
+$r33=($BS.'rows')([$set(3),$fl('로젤하트',11),$fl('레드에너지',21),$fl('레몬라임',1)]);
+$ok(($BS.'check')($r33,$dio)==='' && ($BS.'fee_for')($r33,$dio)===0 && ($BS.'key_of')($r33,$dio)===3, '33병: 10+1 · 20+1 · 서비스만 1 → 통과 · 할인 0');
+$r55=($BS.'rows')([$set(5),$fl('로젤하트',20),$fl('레드에너지',31),$fl('A',1),$fl('B',1),$fl('C',1),$fl('D',1)]);
+$ok(($BS.'check')($r55,$dio)==='' && ($BS.'fee_for')($r55,$dio)===33000 && ($BS.'fee_name')($r55,$dio)==='디오리퀴드 55병 구성 할인', '55병: 50 + 서비스 5 → 할인 33,000 · 이름');
+$ok(($BS.'check')(($BS.'rows')([$set(4),$fl('A',44)]),$dio)!=='' , '4세트는 고를 수 없다');
+$ok(str_contains(($BS.'check')(($BS.'rows')([$set(3),$fl('A',12),$fl('B',21)]),$dio),'10병씩'), '같은 맛 12병(서비스 2병)은 막는다');
+$ok(($BS.'check')(($BS.'rows')([$set(3),$fl('A',30),$fl('B',3)]),$dio)!=='' , '서비스 3병을 한 맛에 몰면 막는다 (3 % 10 = 3)');
+$ok(($BS.'check')(($BS.'rows')([$set(3),$fl('A',33)]),$dio)!=='' , '33병을 한 맛에: 30 + 서비스 3 은 맛마다 1병 규칙에 걸린다');
+$ok(($BS.'check')(($BS.'rows')([$set(3),$fl('A',20),$fl('B',1),$fl('C',1),$fl('D',1)]),$dio)!=='', '30병이 아니라 20병이면 막는다');
+$ok(($BS.'fee_for')(($BS.'rows')([$set(5),$fl('A',44)]),$dio)===0, '규칙에 안 맞으면 할인 줄도 없다');
+$je=['kind'=>'addon','name'=>'젤로','extra'=>'추가','choices'=>[1=>['label'=>'5병','fee'=>0],2=>['label'=>'10병','fee'=>38000]]];
+$main=['group_key'=>'required_main','type'=>'required','label'=>'젤로크리스탈 기기 + 액상 5병','qty'=>1];
+$add=['group_key'=>'required_main','type'=>'required','label'=>'액상 5병 추가','qty'=>1];
+$ok(($BS.'check')(($BS.'rows')([$main,$fl('빌런 자두',5)]),$je)==='' && ($BS.'fee_for')(($BS.'rows')([$main,$fl('빌런 자두',5)]),$je)===0, '젤로 5병: 기기 줄 하나 · 할인 0');
+$ok(($BS.'fee_for')(($BS.'rows')([$main,$add,$fl('빌런 자두',10)]),$je)===38000, '젤로 10병: 기기 + 추가 → 할인 38,000');
+$ok(($BS.'check')(($BS.'rows')([$add,$fl('A',5)]),$je)!=='' && ($BS.'check')(($BS.'rows')([array_merge($main,['qty'=>2])]),$je)!=='' && ($BS.'check')(($BS.'rows')([$main,array_merge($add,['qty'=>2])]),$je)!=='', '젤로: 추가만 · 기기 두 대 · 추가 두 번은 막는다');
+// 할인 줄 붙이기 — 같은 이름은 합친다
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[fn($c)=>[9001=>$dio,9002=>$je]];
+$fees=[]; $cart=new class($r55,$main,$add,$fl){ public $f=[]; private $it; function __construct($a,$m,$ad,$fl){ $this->it=[['product_id'=>9001,'quantity'=>1,'wd_option_builder'=>[['group_key'=>'required_main','type'=>'required','label'=>'s','qty'=>5],$fl('A',20),$fl('B',31),$fl('C',1),$fl('D',1),$fl('E',1),$fl('F',1)]],['product_id'=>9001,'quantity'=>1,'wd_option_builder'=>[['group_key'=>'required_main','type'=>'required','label'=>'s','qty'=>5],$fl('A',55)]],['product_id'=>9002,'quantity'=>1,'wd_option_builder'=>[$m,$ad,$fl('A',10)]],['product_id'=>5,'quantity'=>1]]; } function get_cart(){return $this->it;} function add_fee($n,$a,$t){ $this->f[$n]=$a; } };
+($BS.'add_fees')($cart);
+$ok($cart->f===['디오리퀴드 55병 구성 할인'=>-33000,'젤로 10병 구성 할인'=>-38000], '할인 줄: 맞는 줄만 · 이름별 하나 '.json_encode($cart->f,JSON_UNESCAPED_UNICODE));
+$GLOBALS['__filters']['duckhoo_bulk_sets']=[];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

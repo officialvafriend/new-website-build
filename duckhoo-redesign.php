@@ -87,6 +87,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/review-ui.php';
 // 담아 둔 뒤 값이 바뀌면 옛 금액으로 주문된다 — 결제에서 막는다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/price-check.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/must-pick.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/bulk-sets.php';   // 한 상품 안에서 병 수 고르기 — 세트 수 + 할인 줄 (대상은 config() 의 상품 번호, 비면 아무 일도 안 한다)
 require_once plugin_dir_path( __FILE__ ) . 'includes/twin-login.php';  // 같은 아이디 계정이 둘일 때 로그인을 맞는 쪽으로 (비밀번호 검증은 그대로)   // 옵션(색상)을 고르지 않으면 못 담는다 — 서버 쪽 빗장
 // 옛 회원 재인증 문 — 인증 기록도 옛 사이트 확인 표시도 없는 회원만 결제 전에 테마 재인증 화면으로 (2026-09-24)
 require_once plugin_dir_path( __FILE__ ) . 'includes/verify-gate.php';
