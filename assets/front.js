@@ -2356,9 +2356,12 @@
     var grid = el('div', 'dhpk__grid');
     /* 타일에 보이는 이름 — 모든 맛이 같은 낱말로 시작하면(「노보 블랙멘솔」 「노보 데저트」…) 그 낱말은 뺀다.
        여섯 칸에 같은 브랜드가 여섯 번 찍히면 정작 맛 이름이 두 줄로 꺾인다. data-name · aria-label 은 원래 이름 그대로 */
-    var names = list.map(chipName), first = names.map(function(n){ return (n.split(/\s+/)[0] || ''); });
-    var dropFirst = names.length > 1 && first[0] && first.every(function(f){ return f === first[0]; }) && names.every(function(n){ return n.replace(/^\S+\s+/, '').length > 0; });
-    function shown(n){ return dropFirst ? n.replace(/^\S+\s+/, '') : n; }
+    /* 2026-10-09 — 앞 낱말이 둘 이상 같으면(「화이트 아웃 멘솔시가」 …) 같은 만큼 다 뺀다. 한 낱말만 빼면 「아웃 멘솔시가」가 됐다 */
+    var names = list.map(chipName), words = names.map(function(n){ return n.trim().split(/\s+/); }), drop = 0;
+    if(names.length > 1){
+      while(words.every(function(w){ return w.length > drop + 1 && w[drop] === words[0][drop]; })) drop++;
+    }
+    function shown(n){ return drop ? n.trim().split(/\s+/).slice(drop).join(' ') : n; }
     var word = unit > 1 ? unit + '병' : '한 병';
     var tiles = list.map(function(c){
       var t = el('div', 'dhpk__tile'); t.dataset.name = chipName(c);
