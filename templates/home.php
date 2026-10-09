@@ -8,7 +8,7 @@
  * @package DuckhooRedesign
  */
 
-use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note, chuseok_html, chuseok, chuseok_on, novo_announce};
+use function Duckhoo\Redesign\Front\{products, cat_by_name, card, split_name, per_bottle, brands, featured_brands, brand_products, brand_url, cat_icon, icon, header_html, tabbar_html, footer_html, short_cat, carousel, section_head, gate_note, chuseok_html, chuseok, chuseok_on, novo_announce, hero_video};
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -85,6 +85,19 @@ if ( $sale_cat ) {
 }
 $hero_pick( array_filter( products( array( 'limit' => 24, 'orderby' => 'popularity' ) ), fn( $p ) => (bool) preg_match( '/묶음|세트|\d+\s*병|\d\s*\+\s*\d/u', $p->get_name() ) ) );
 $hero_pick( $newest );
+// 히어로 영상 (2026-10-09) — 회원에게만. 그 상품을 첫 장으로 올리고, 같은 브랜드(젤로 5병 등)의 다른 장은 뺀다.
+$hv = hero_video();
+if ( $hv ) {
+	$hvp = wc_get_product( $hv['product'] );
+	if ( $hvp && 'publish' === $hvp->get_status() && $hvp->is_in_stock() ) {
+		$hvk    = $hero_key( $hvp );
+		$heroes = array_values( array_filter( $heroes, fn( $p ) => $p->get_id() !== $hvp->get_id() && $hero_key( $p ) !== $hvk ) );
+		array_unshift( $heroes, $hvp );
+		$heroes = array_slice( $heroes, 0, 5 );
+	} else {
+		$hv = array();
+	}
+}
 $hero = $heroes[0] ?? null;
 
 // 노보 전 라인 줄 (2026-10-01, 사장님 「노보 주문 안 되서 품절되고 있다 — 노를 무지하게 저어야 한다」).
@@ -197,7 +210,8 @@ $month = (int) wp_date( 'n' );
 	?>
 	<section class="hero hhero"<?php echo $hmany ? ' data-hslides aria-roledescription="carousel" aria-label="묶음 이벤트"' : ''; ?>>
 		<?php foreach ( $heroes as $hi => $h0 ) : $v = $hero_slide( $h0 ); ?>
-		<div class="hslide<?php echo 0 === $hi ? ' on' : ''; ?>"<?php echo $hmany ? ' role="group" aria-roledescription="slide" aria-label="' . esc_attr( ( $hi + 1 ) . ' / ' . count( $heroes ) ) . '"' . ( 0 === $hi ? '' : ' aria-hidden="true"' ) : ''; ?>>
+		<?php $hvid = $hv && $h0->get_id() === $hv['product']; ?>
+		<div class="hslide<?php echo 0 === $hi ? ' on' : ''; ?><?php echo $hvid ? ' hslide--vid' : ''; ?>"<?php echo $hvid ? ' data-dwell="16000"' : ''; ?><?php echo $hmany ? ' role="group" aria-roledescription="slide" aria-label="' . esc_attr( ( $hi + 1 ) . ' / ' . count( $heroes ) ) . '"' . ( 0 === $hi ? '' : ' aria-hidden="true"' ) : ''; ?>>
 		<div class="hero__tx">
 			<span class="eb2 hero__eb"><i></i><?php echo esc_html( $v['heb'] ); ?></span>
 			<?php if ( 0 === $hi ) : ?><h2 class="hero__t"><?php echo esc_html( $v['ht'] ); ?></h2><?php else : ?><p class="hero__t"><?php echo esc_html( $v['ht'] ); ?></p><?php endif; ?>
@@ -209,7 +223,11 @@ $month = (int) wp_date( 'n' );
 		</div>
 		<a class="stage" href="<?php echo esc_url( get_permalink( $h0->get_id() ) ); ?>" aria-label="<?php echo esc_attr( $v['ht'] . ' ' . number_format_i18n( $v['hs'] ) . '원' ); ?>">
 			<?php if ( $v['off'] > 0 ) : ?><span class="stage__pill">-<?php echo (int) $v['off']; ?>%</span><?php endif; ?>
+			<?php if ( $hvid ) : ?>
+			<span class="stage__img"><video class="stage__vid" src="<?php echo esc_url( $hv['src'] ); ?>"<?php echo $hv['poster'] ? ' poster="' . esc_url( $hv['poster'] ) . '"' : ''; ?> muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video></span>
+			<?php else : ?>
 			<span class="stage__img"><?php echo $h0->get_image( 'woocommerce_single' ); // phpcs:ignore ?></span>
+			<?php endif; ?>
 			<span class="stage__cap"><b><?php echo esc_html( $v['ht'] ); ?></b>
 				<span class="n"><?php if ( $v['hr'] > $v['hs'] ) : ?><s><?php echo esc_html( number_format_i18n( $v['hr'] ) ); ?>원</s> <?php endif; ?><em data-count="<?php echo (int) $v['hs']; ?>" data-suffix="원"><?php echo esc_html( number_format_i18n( $v['hs'] ) ); ?>원</em></span></span>
 		</a>

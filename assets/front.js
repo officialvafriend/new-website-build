@@ -45,7 +45,7 @@
   var root = document.querySelector('[data-hslides]');
   if(!root) return;
   var items = [].slice.call(root.querySelectorAll('.hslide'));
-  if(items.length < 2) return;
+  if(items.length < 2) return;   // 한 장뿐이면 영상은 autoplay 그대로 돈다
   var dots  = [].slice.call(root.querySelectorAll('.hdot'));
   var calm  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var i = 0, timer = null, on = !calm;
@@ -61,16 +61,24 @@
       [].forEach.call(el.querySelectorAll('a,button'), function(f){ if(cur) f.removeAttribute('tabindex'); else f.setAttribute('tabindex','-1'); });
     });
     dots.forEach(function(d, k){ d.classList.toggle('on', k === i); d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+    vids();
   }
-  function stop(){ if(timer){ clearInterval(timer); timer = null; } }
-  function start(){ stop(); if(on) timer = setInterval(function(){ show(i + 1); }, 6000); }
+  /* 영상 장(2026-10-09) — 보이는 장의 영상만 돈다. 동작 줄이기면 멈춘 첫 장면(poster)만 */
+  function vids(){
+    items.forEach(function(el, k){ [].forEach.call(el.querySelectorAll('video'), function(v){
+      if(k === i && !calm && !document.hidden){ var p = v.play(); if(p && p.catch) p.catch(function(){}); } else v.pause();
+    }); });
+  }
+  function stop(){ if(timer){ clearTimeout(timer); timer = null; } }
+  /* 장마다 머무는 시간 — 영상 장은 한 바퀴(16초)를 다 보여 준다 (data-dwell) */
+  function start(){ stop(); if(on) timer = setTimeout(function(){ show(i + 1); start(); }, +(items[i].getAttribute('data-dwell') || 6000)); }
 
   dots.forEach(function(d, k){ d.addEventListener('click', function(){ on = false; stop(); show(k); }); });
   root.addEventListener('mouseenter', stop);
   root.addEventListener('mouseleave', function(){ if(on) start(); });
   root.addEventListener('focusin', stop);
   root.addEventListener('focusout', function(){ if(on) start(); });
-  document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : (on && start()); });
+  document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : (on && start()); vids(); });
 
   /* 손가락으로 넘기기 — 세로 스크롤은 방해하지 않는다 */
   var x0 = null, y0 = null;

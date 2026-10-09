@@ -558,6 +558,37 @@ function observe_guard(): void {
 add_action( 'wp_head', __NAMESPACE__ . '\\observe_guard', 0 );
 
 /**
+ * 홈 히어로 영상 (2026-10-09, 사장님 「히어로 배너에 영상 · 누르면 젤로 크리스탈 10병」).
+ *
+ * **회원(성인인증)에게만 튼다.** 비로그인에게는 상품 사진이 모두 「19」로 가려진다 — 키플의 성인 인증
+ * 게이트이고 우회하지 않는다. 영상도 상품을 보여 주므로 같은 규칙을 따른다: 비로그인은 지금 히어로 그대로.
+ * 파일은 플러그인 안(`assets/media/`)에 두어 우리 도메인에서 나간다. 파일이 없으면 아무것도 안 바뀐다.
+ * 끄기: `add_filter( 'duckhoo_hero_video', '__return_empty_array' );`
+ *
+ * @return array{product:int,src:string,poster:string}|array{}
+ */
+function hero_video(): array {
+	$v = (array) apply_filters( 'duckhoo_hero_video', array(
+		'product' => 5381,
+		'file'    => 'assets/media/jello-crystal-loop.mp4',
+		'poster'  => 'assets/media/jello-crystal-loop.jpg',
+	) );
+	if ( empty( $v['product'] ) || empty( $v['file'] ) || gated() ) {
+		return array();
+	}
+	$root = dirname( __DIR__ ) . '/';
+	if ( ! file_exists( $root . $v['file'] ) ) {
+		return array();
+	}
+	$url = fn( $f ) => plugins_url( $f, $root . 'duckhoo-redesign.php' ) . '?v=' . (int) @filemtime( $root . $f );
+	return array(
+		'product' => (int) $v['product'],
+		'src'     => $url( (string) $v['file'] ),
+		'poster'  => ! empty( $v['poster'] ) && file_exists( $root . $v['poster'] ) ? $url( (string) $v['poster'] ) : '',
+	);
+}
+
+/**
  * 바깥 서버에서 **멈춤 없이(동기로)** 받는 남의 스크립트에 async 를 단다 (2026-10-09, 사장님 아이폰).
  *
  * 메타(페이스북) 광고 플러그인이 `unpkg.com/meta-capi-param-builder-clientjs` 를 상품 화면 아래쪽에 동기로 싣는다.

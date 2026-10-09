@@ -910,6 +910,16 @@ $GLOBALS['__logged_in'] = 0;
 add_filter('duckhoo_photos_gated', '__return_false');
 $ok(($F.'gated')() === false, '필터로 끌 수 있다');
 $GLOBALS['__filters']['duckhoo_photos_gated'] = [];
+// 히어로 영상 (2026-10-09) — 회원에게만, 파일이 있을 때만
+$GLOBALS['__logged_in'] = 0;
+$ok(($F.'hero_video')() === [], '히어로 영상: 비로그인에게는 안 튼다 (19 가림과 같은 규칙)');
+$GLOBALS['__logged_in'] = 5;
+$hv = ($F.'hero_video')();
+$ok(isset($hv['product']) && 5381 === $hv['product'] && array_key_exists('src', $hv) && array_key_exists('poster', $hv), '히어로 영상: 회원이면 젤로 10병(#5381)과 파일 주소');
+add_filter('duckhoo_hero_video', fn($v) => ['product' => 5381, 'file' => 'assets/media/없는-파일.mp4']);
+$ok(($F.'hero_video')() === [], '히어로 영상: 파일이 없으면 아무것도 안 바뀐다');
+$GLOBALS['__filters']['duckhoo_hero_video'] = [];
+$GLOBALS['__logged_in'] = 0;
 
 // ── 구매 깔때기 (includes/funnel.php) ─────────────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/funnel.php';
