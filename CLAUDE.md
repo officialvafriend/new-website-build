@@ -4073,3 +4073,22 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 `도구 → 코드 찾기` 에 **「결과 전부 파일로 내려받기 (.txt)」** 버튼 (`admin-post.php?action=dhr_finder_txt` + 논스, UTF-8 BOM).
 화면은 낱말마다 40곳에서 자르지만 파일은 400곳까지(`duckhoo_finder_download_max`). **낱말 여럿은 `|` 로 한 번에** —
 `BUNDLE_RATIO | 맛 선택을 총` 이면 두 낱말 결과가 한 파일에 나뉘어 담긴다 (최대 6개, 3자 미만은 버림). 읽기만 한다.
+
+### 구매 게이트의 실제 자리 — 코드 찾기 결과 (2026-10-09, 사장님이 .txt 로 보냄)
+
+맛 개수 검사는 **테마 다섯 곳**에 따로 있다. 셋 다 「구성 수량 × 비율(ratio)」이고 비율은 **상품마다 하나**다.
+
+| 자리 | 비율을 정하는 곳 |
+|---|---|
+| `functions.php` ~8940–9104 상품 화면 인라인 검사 (`BUNDLE_RATIO`) | ID 목록 `$wd_bundle_10_ids` · `$wd_bundle_5_ids` · `$wd_bundle_fixed_map`(563→33 · 567→56, 지금은 없는 상품) → 없으면 **자동 감지** |
+| `functions.php` ~10736 `wd_detect_bundle_ratio_for_validation()` + `woocommerce_check_cart_items` (서버) | 10: 119·123·124·139·143·145·147 / 5: 207·384·387·390·559·578 → 없으면 같은 자동 감지 |
+| `assets/js/wd-option-builder.js` 370–431 (`getBundleExpectedQty`, `wdOptionBuilder.bundleRule.ratio`) | wp_localize 로 받음 |
+| `assets/js/wd-single-product-checkout-popup.js` 78 (`rule.ratio`) | 같음 |
+| 서랍장 인라인 `detectQuantityRule()` | 「서랍장 필수 선택 수량」 → 없으면 `.ppom-wrapper` 글자에서 `N병 단위`(배수) 또는 N병/가지/종 중 **가장 큰 수** |
+
+**자동 감지 규칙** (상품명 + PPOM 칸 제목 · 설명을 이어 붙인 글에서, 앞에서부터): ① `N+M` → N+M ② `N병 단위|묶음|병당` → N
+③ `N병|가지` 뒤 숫자 없이 10자 안에 `골라|선택` → N. 그리고 팟 · 코일 · 사은품이 아닌 칸이 2개 이상이어야 묶음으로 본다.
+그래서 **새 묶음 상품은 테마를 안 고치고 글자로 맞출 수 있다** — 맛 칸 제목을 「액상 33병을 선택해주세요」로 두고,
+상품명 · 칸 제목 어디에도 `N+M` · `N병 단위` · 더 큰 병 수를 쓰지 않는다. 복제한 상품은 PPOM 그룹을 같이 쓰므로 그룹을 복제해 글자를 바꾼다.
+한 상품 안에서 5병/10병을 고르게 하려면 위 다섯 곳을 모두 「고른 구성 이름의 병 수」로 바꿔야 해서 하지 않았다 (테마를 고쳤다가 사이트가 멈춘 적이 있다).
+확인은 상품 페이지 HTML 의 `var BUNDLE_RATIO = N;` 과 `"bundleRule":{…"ratio":N}` 을 curl 로 본다.
