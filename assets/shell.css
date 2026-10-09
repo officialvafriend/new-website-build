@@ -1035,6 +1035,32 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-unit{
 html body.dhr.dhr-wrap.dhr-wrap .dhp-unit b{ font-size: 17px; font-weight:900; letter-spacing: 0; color: var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .dhp-unit span{ font-size: 13px; font-weight:700; color: var(--dh-accent-deep); }
 
+/* 같은 상품의 다른 구성 (Product\variants) — 「액상 5병 / 액상 10병」. 상품이 따로라 링크로 오간다.
+   iOS 세그먼트처럼 회색 홈 안에 지금 것이 흰 판으로 올라온다. form.cart 바깥 */
+html body.dhr.dhr-wrap.dhr-wrap .dhp-vars{
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); gap: 4px;
+  margin: .9rem 0 .2rem; padding: 4px; border-radius: 16px; background: var(--dh-surface-2);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var{
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-height: 52px; padding: .4rem .5rem; border-radius: 12px; text-align: center;
+  color: var(--dh-ink-2) !important; text-decoration: none !important; background: transparent;
+  transition: background-color .16s ease, transform .16s cubic-bezier(.23,1,.32,1);
+  -webkit-tap-highlight-color: transparent;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var b{ font-size: 15px; font-weight: 800; color: inherit; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var > span{ font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--dh-ink-3); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var.is-on{
+  background: var(--dh-surface); color: var(--dh-ink) !important;
+  box-shadow: 0 1px 2px rgba(17,17,17,.08), 0 2px 8px rgba(17,17,17,.06);
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var.is-on > span{ color: var(--dh-accent-deep); }
+html body.dhr.dhr-wrap.dhr-wrap a.dhp-var:active{ transform: scale(.97); }
+html body.dhr.dhr-wrap.dhr-wrap a.dhp-var:focus-visible{ outline: none; box-shadow: inset 0 0 0 1.5px var(--dh-accent), 0 0 0 4px var(--dh-ring); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-var.is-out{ opacity: .5; cursor: not-allowed; }
+@media (hover: hover){ html body.dhr.dhr-wrap.dhr-wrap a.dhp-var:hover{ background: var(--dh-glass-in); color: var(--dh-ink) !important; } }
+@media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhp-var{ transition: none; } }
+
 /* 키플 위젯(조회수 · 오늘출발 · 무료배송)은 정보다. 다만 상자를 겹치지 않는다. */
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-viewer-count{ order: -1; align-self: flex-start; margin: 0 0 .7rem !important; padding: .3rem .6rem !important; }
 html body.dhr.dhr-wrap.dhr-wrap.single-product .wd-today-dispatch,

@@ -266,6 +266,82 @@ function summary_extras(): void {
 add_action( 'duckhoo_product_after_price', __NAMESPACE__ . '\\summary_extras', 30 );
 
 /**
+ * 같은 상품의 다른 구성 — 「액상 5병 / 액상 10병」 처럼 상품이 둘로 나뉜 것을 한 줄에서 오간다.
+ *
+ * 테마 구매 게이트는 상품마다 맛 병 수를 하나만 안다 (상품 이름에서 읽는다). 그래서 병 수가 다른 구성은
+ * 상품을 따로 두고, 손님에게는 이 줄로 한 페이지에서 고르는 것처럼 보이게 한다.
+ * 값은 상품에서 그때그때 읽는다. 품절인 쪽은 누를 수 없게 그린다. `form.cart` 바깥이다.
+ * 묶음 바꾸기: add_filter( 'duckhoo_product_variants', fn( $g ) => … ); — [ [ 상품번호 => 이름, … ], … ]
+ *
+ * @return array<int,array<int,string>>
+ */
+function variant_groups(): array {
+	$g = apply_filters(
+		'duckhoo_product_variants',
+		array(
+			array( 207 => '액상 5병', 5381 => '액상 10병' ),
+			array( 5373 => '33병', 5375 => '55병' ),
+		)
+	);
+	return is_array( $g ) ? array_values( array_filter( $g, 'is_array' ) ) : array();
+}
+
+/**
+ * 그 상품이 든 묶음을 [ 상품번호 => 이름 ] 으로. 없거나 상품이 하나뿐이면 빈 배열.
+ *
+ * @param int $pid 상품 번호.
+ * @return array<int,string>
+ */
+function variants_of( int $pid ): array {
+	foreach ( variant_groups() as $grp ) {
+		$ids = array_map( 'intval', array_keys( $grp ) );
+		if ( in_array( $pid, $ids, true ) && count( $ids ) > 1 ) {
+			return array_combine( $ids, array_map( 'strval', array_values( $grp ) ) );
+		}
+	}
+	return array();
+}
+
+/**
+ * @param \WC_Product|null $product 지금 상품.
+ * @return void
+ */
+function variants( $product = null ): void {
+	if ( ! $product instanceof \WC_Product ) {
+		$product = $GLOBALS['product'] ?? null;
+	}
+	if ( ! $product instanceof \WC_Product ) {
+		return;
+	}
+	$cur  = (int) $product->get_id();
+	$list = variants_of( $cur );
+	if ( ! $list ) {
+		return;
+	}
+	$out = '';
+	foreach ( $list as $id => $label ) {
+		$p = ( $id === $cur ) ? $product : wc_get_product( $id );
+		if ( ! $p instanceof \WC_Product || 'publish' !== $p->get_status() ) {
+			continue;
+		}
+		$price = '<span>' . esc_html( number_format_i18n( (float) $p->get_price() ) ) . '원</span>';
+		$name  = '<b>' . esc_html( $label ) . '</b>';
+		if ( $id === $cur ) {
+			$out .= '<span class="dhp-var is-on" aria-current="page">' . $name . $price . '</span>';
+		} elseif ( ! $p->is_in_stock() ) {
+			$out .= '<span class="dhp-var is-out" aria-disabled="true">' . $name . '<span>품절</span></span>';
+		} else {
+			$out .= '<a class="dhp-var" href="' . esc_url( get_permalink( $id ) ) . '">' . $name . $price . '</a>';
+		}
+	}
+	if ( substr_count( $out, 'class="dhp-var' ) < 2 ) {
+		return;
+	}
+	echo '<nav class="dhp-vars" aria-label="구성 고르기">' . $out . '</nav>';
+}
+add_action( 'duckhoo_product_after_price', __NAMESPACE__ . '\\variants', 5 );
+
+/**
  * 상품 구조화 데이터(Product JSON-LD)를 붙입니다.
  *
  * **왜 필요한가.** 워드커머스는 `woocommerce_single_product_summary` 훅이 돌 때

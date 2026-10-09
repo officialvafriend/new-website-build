@@ -2922,6 +2922,24 @@ $ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$sv('A',1),$sv('B',1)]),$sp)!==
 $ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$fl('B',20),$sv('A',1),$sv('B',1),$sv('C',1),$sv('D',1),$sv('E',1)]),$sp5)==='', '55병(칸 나눔): 맛 50 + 서비스 다섯 → 통과');
 $ok(($BS.'check')(($BS.'rows')([array_merge($one,['qty'=>2]),$fl('A',60),$sv('A',2),$sv('B',2),$sv('C',2)]),$sp)==='', '33병 두 개: 맛 60 + 서비스 6 (맛마다 2병까지)');
 
+
+/* ── 같은 상품의 다른 구성 (Product\variants) ── */
+$VR = 'Duckhoo\\Redesign\\Product\\';
+$GLOBALS['__products'][207]  = new WC_Product(207, '[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 !', 69000);
+$GLOBALS['__products'][5381] = new WC_Product(5381, '[젤로 크리스탈] 기기 + 액상 10병 묶음', 100000);
+ob_start(); ($VR.'variants')($GLOBALS['__products'][207]); $v1 = ob_get_clean();
+$ok(strpos($v1, 'class="dhp-vars"') !== false && strpos($v1, 'is-on" aria-current="page"><b>액상 5병</b><span>69,000원') !== false && strpos($v1, '<a class="dhp-var" href=') !== false && strpos($v1, '100,000원') !== false, '구성 줄: 지금 상품은 표시만 · 다른 구성은 링크와 값');
+$GLOBALS['__products'][5381]->in_stock = false;
+ob_start(); ($VR.'variants')($GLOBALS['__products'][207]); $v2 = ob_get_clean();
+$ok(strpos($v2, 'is-out" aria-disabled="true"><b>액상 10병</b><span>품절') !== false && strpos($v2, '<a ') === false, '구성 줄: 품절인 쪽은 누를 수 없게');
+$GLOBALS['__products'][5381]->in_stock = true; $GLOBALS['__pstatus'][5381] = 'draft';
+ob_start(); ($VR.'variants')($GLOBALS['__products'][207]); $v3 = ob_get_clean();
+$ok($v3 === '', '구성 줄: 다른 쪽이 공개 전이면 줄 자체를 안 그린다');
+unset($GLOBALS['__pstatus'][5381]);
+$GLOBALS['__products'][9]  = new WC_Product(9, '[노보] 타박멘솔', 13000);
+ob_start(); ($VR.'variants')($GLOBALS['__products'][9]); $v4 = ob_get_clean();
+$ok($v4 === '' && ($VR.'variants_of')(5375) === [5373 => '33병', 5375 => '55병'], '구성 줄: 묶음에 없는 상품은 안 그린다 · 디오 33/55 묶음');
+
 /* ── 폰 페이지 줄 (Front\pager_compact) ── */
 if (!function_exists('get_pagenum_link')) { function get_pagenum_link($n, $esc = true){ return 'https://duck-hoo.com/shop/page/'.$n.'/?orderby=price'; } }
 $PG = 'Duckhoo\\Redesign\\Front\\pager_compact';

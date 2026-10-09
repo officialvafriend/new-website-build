@@ -169,6 +169,7 @@ class WC_Product {
   public function set_sale_price($v){ $this->sale = (string)$v; }
   public function is_on_sale(){ return $this->sale !== ''; }
   public function is_in_stock(){ return $this->in_stock; }
+  public function get_status(){ return $GLOBALS['__pstatus'][$this->id] ?? 'publish'; }
   public function managing_stock(){ return $this->manage; }
   public function get_stock_quantity(){ return $this->stock; }
   public function get_average_rating(){ return 0.0; }
