@@ -58,6 +58,8 @@ function defaults(): array {
 	return array(
 		5373 => array( 'kind' => 'fixed', 'n' => 3, 'lot' => 10, 'split' => true, 'label' => '디오리퀴드 대량 33병' ),
 		5375 => array( 'kind' => 'fixed', 'n' => 5, 'lot' => 10, 'split' => true, 'label' => '디오리퀴드 대량 55병' ),
+		5384 => array( 'kind' => 'fixed', 'n' => 3, 'lot' => 10, 'split' => true, 'label' => '화이트아웃 대량 33병' ),   // 2026-10-09 · 디오와 같은 칸 구성
+		5387 => array( 'kind' => 'fixed', 'n' => 5, 'lot' => 10, 'split' => true, 'label' => '화이트아웃 대량 55병' ),
 	);
 }
 

@@ -2885,7 +2885,7 @@ $ok(($CR.'exclude_default')()===['왕한빈','진선영','유지민'], '제외 �
 // 한 상품 안에서 병 수 고르기 — 세트 수 + 할인 줄
 require_once dirname(__DIR__, 2).'/includes/bulk-sets.php';
 $BS='Duckhoo\\Redesign\\BulkSets\\';
-$ok(array_keys(($BS.'config')())===[5373,5375] && ($BS.'js_config')()[5373]===['n'=>3,'lot'=>10,'split'=>true] && ($BS.'js_config')()[5375]['n']===5, '병 수 고르기: 기본은 디오리퀴드 대량 33병(#5373) · 55병(#5375)');
+$ok(array_keys(($BS.'config')())===[5373,5375,5384,5387] && ($BS.'js_config')()[5373]===['n'=>3,'lot'=>10,'split'=>true] && ($BS.'js_config')()[5375]['n']===5 && ($BS.'js_config')()[5384]['n']===3 && ($BS.'js_config')()[5387]['n']===5, '병 수 고르기: 기본은 디오리퀴드 33 · 55병(#5373 · #5375) + 화이트아웃 33 · 55병(#5384 · #5387)');
 $GLOBALS['__filters']['duckhoo_bulk_sets']=[fn($c)=>[]];
 $ok(($BS.'config')()===[], '필터로 비우면 대상 없음 (아무 일도 안 한다)');
 $GLOBALS['__filters']['duckhoo_bulk_sets']=[];

@@ -281,6 +281,7 @@ function variant_groups(): array {
 		array(
 			array( 207 => '액상 5병', 5381 => '액상 10병' ),
 			array( 5373 => '33병', 5375 => '55병' ),
+			array( 5384 => '33병', 5387 => '55병' ),
 		)
 	);
 	return is_array( $g ) ? array_values( array_filter( $g, 'is_array' ) ) : array();
