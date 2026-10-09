@@ -2484,6 +2484,39 @@
     paint();
   }
 
+  /* 대량 상품의 합계 상자 — 옛 옵션 UI 의 「선택한 액상 30 / 33」은 맛 칸만 세고 서비스 병을 빼서, 다 골라도 덜 고른 것처럼 보였다.
+     그 칸은 감추고(그쪽 스크립트가 계속 고쳐 쓰므로 지우지 않는다) 같은 모양으로 맛 + 서비스를 함께 센 칸을 옆에 세운다. 수는 wd_option_builder_json 에서 */
+  function bulkGauge(){
+    var old = form.querySelector('.dhx-gauge'); if(!old || form.querySelector('.dhpk-gauge')) return;
+    old.classList.add('dhr-off');
+    var g = el('div', 'dhx-gauge dhpk-gauge'), row = el('div', 'dhx-gauge__row');
+    row.appendChild(el('span', 'dhx-sum__label', '선택한 액상'));
+    var n = el('span', 'dhx-gauge__n', '0 / 0'); row.appendChild(n);
+    var track = el('div', 'dhx-gauge__track'), fill = el('div', 'dhx-gauge__fill'); track.appendChild(fill);
+    var list = el('div', 'dhx-picked');
+    g.appendChild(row); g.appendChild(track); g.appendChild(list);
+    old.parentNode.insertBefore(g, old.nextSibling);
+    var last = '';
+    function paint(){
+      var rows = rowsJson(), k = Math.max(1, sets()), need = B.n * (B.lot + 1) * k, have = 0, lines = [];
+      ['addon_1', 'addon_2'].forEach(function(gk){
+        rows.forEach(function(r){ if(!r || r.group_key !== gk) return; var q = parseInt(r.qty, 10) || 0; if(q < 1) return; have += q; lines.push([(gk === 'addon_2' ? '서비스 · ' : '') + norm(r.label), q]); });
+      });
+      var key = have + '|' + need + '|' + JSON.stringify(lines); if(key === last) return; last = key;
+      n.textContent = have + ' / ' + need;
+      g.classList.toggle('is-off', have !== need);
+      fill.style.width = need ? Math.min(100, have / need * 100) + '%' : '0%';
+      list.textContent = '';
+      if(!lines.length){ list.appendChild(el('div', 'dhx-picked__empty', '맛을 고르면 여기에 내역이 쌓입니다.')); return; }
+      lines.forEach(function(l){ var r = el('div', 'dhx-picked__row'); r.appendChild(el('b', null, l[0])); r.appendChild(el('span', null, l[1] + '병')); list.appendChild(r); });
+    }
+    /* 숨은 필드의 값은 속성이 아니라 속성값(property)으로 바뀌어 관찰자가 못 본다 — 폼이 바뀔 때마다 한 번씩(묶어서) 다시 센다 */
+    var t = null;
+    new MutationObserver(function(){ if(t) return; t = setTimeout(function(){ t = null; paint(); }, 120); }).observe(form, { childList: true, subtree: true, characterData: true });
+    form.addEventListener('click', function(){ setTimeout(paint, 200); setTimeout(paint, 700); });
+    paint();
+  }
+
   /* 값(+N원)이 하나도 안 붙은 줄 카드 — 서비스처럼 고르기만 하는 칸 */
   function plainRows(c){ var r = c.querySelectorAll('.dhx-row'); if(!r.length) return false; for(var i = 0; i < r.length; i++){ if(r[i].querySelector('.dhx-row__price')) return false; } return true; }
 
@@ -2499,6 +2532,7 @@
         hit = true;
         build(lotCard, { mode: 'lot', unit: B.lot, items: themeItems(sels[1], 'addon_1'), title: '맛 고르기', target: function(){ return B.n * B.lot * Math.max(1, sets()); }, doneHint: svcCard ? '아래에서 서비스 맛을 골라 주세요' : '' });
         if(svcCard && B.split) build(svcCard, { mode: 'svc', unit: 1, per: 1, items: themeItems(sels[2], 'addon_2'), title: '서비스 고르기', target: function(){ return B.n * Math.max(1, sets()); } });
+        if(B.split) bulkGauge();
       }
     } else {
       cards.forEach(function(c){ if(c.querySelector('.dhx-chips')){ build(c); hit = true; } });

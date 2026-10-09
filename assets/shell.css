@@ -2784,10 +2784,20 @@ html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-done .dhpk__hint{ color: var(--dh-accen
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__hint.is-flash{ color: var(--dh-ink); }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk.is-locked .dhpk__grid{ opacity: .55; }
 /* 대량 상품(33 · 55병) — 맛 칸은 「+10」 단위, 서비스 칸은 맛마다 1병 (2026-10-09) */
-html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__q{ grid-template-columns: 40px minmax(0, 1fr) 40px; }
-html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__b{ font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+/* 맛 칸(10병 단위) — 「−10 · 10 · +10」을 한 알약에 넣으면 3칸 화면에서 가운데 숫자가 20px 밖에 안 남아 「1 / 0」으로 꺾였다.
+   숫자를 위 한 줄(병 수 · 크게), 버튼 둘을 아래 반반으로 나눈다. 버튼은 44px (터치 타깃), 누르면 .97 로 눌린다 */
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__q{ grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "n n" "m p"; gap: 6px; height: auto; border-radius: 0; background: none; overflow: visible; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__n{ grid-area: n; text-align: left; font-size: 20px; line-height: 1.1; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__n::after{ content: "병"; margin-left: 2px; font-size: 13px; font-weight: 700; color: var(--dh-ink-3); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__b{ height: 44px; border-radius: 999px; background: var(--dh-surface-2); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; transition: opacity .15s, transform .16s cubic-bezier(.23,1,.32,1); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__b--m{ grid-area: m; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__b--p{ grid-area: p; }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk--lot .dhpk__b:not(.is-off):active{ transform: scale(.97); }
+html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhpk--lot .dhpk__b, html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-docked .dhpk--lot .dhpk__b{ background: var(--dh-glass-in); box-shadow: inset 0 0 0 1px var(--dh-glass-in-line); }
+html body.dhr.dhr-wrap.dhr-wrap .dhpk__n, html body.dhr.dhr-wrap.dhr-wrap .dhpk__b{ white-space: nowrap; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk__t b{ white-space: nowrap; }
 html body.dhr.dhr-wrap.dhr-wrap .dhpk--svc{ margin-top: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhx .dhx-gauge.dhr-off{ display: none !important; }
 @media (prefers-reduced-motion: reduce){ html body.dhr.dhr-wrap.dhr-wrap .dhpk__n.is-tick{ animation: none; } html body.dhr.dhr-wrap.dhr-wrap .dhpk__tile, html body.dhr.dhr-wrap.dhr-wrap .dhpk__chip{ transition: none; } }
 
 /* ③ 목록 · 카드(2026-10-07) — 상세 추천(`li.product > .card`)에서만 「19」 축소가 졌다: 테마 style.css 와 사장님 추가 CSS 가
