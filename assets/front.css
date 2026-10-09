@@ -1168,4 +1168,5 @@ body.dhr.dhd-open{overflow:hidden}
 @media (min-width:600px){.dhr .hvid--sq .hvid__media{aspect-ratio:auto;height:clamp(360px,calc(100dvh - 300px),640px);display:flex;justify-content:center}
   .dhr .hvid--sq .hvid__v{width:auto;height:100%;aspect-ratio:1/1;object-fit:cover;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}}
 @media (min-width:880px){.dhr .hvid__media{height:auto;aspect-ratio:16/9;max-height:min(86dvh,900px);width:100%}
+  .dhr .hvid__v{object-fit:contain;background:#07090D}   /* 화면이 낮으면 위아래를 자르지 않고 줄인다 — 끝 장면의 글자가 맨 위에 있다 (2026-10-09) */
   .dhr .hvid__cta{min-height:56px;padding:0 2.25rem;font-size:1.125rem}}
