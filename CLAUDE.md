@@ -4180,3 +4180,12 @@ smoke 가 「길이 끊겼는가」라면 이것은 「보이는가」다. `LOCA
 - **사장님 서랍장 스니펫 오류 하나**: PPOM 칸이 없는 단품(#164 브이메이트 V5 팟 등)에서 `new MutationObserver(…).observe($ppomWrapper[0], …)` 가
   `parameter 1 is not of type 'Node'` 를 던진다. 담기 · 금액은 정상(12,000원 확인)이고 그 줄 뒤 라벨 정리만 안 돈다. 스니펫이라 우리가 안 고친다 —
   고치려면 그 줄을 `if (window.MutationObserver && $ppomWrapper[0])` 로. `n[e] is not a function` 은 젯팩 woocommerce-analytics(모든 상품) — 우리 것 아님
+
+### 서랍장 스니펫의 observe 오류는 플러그인이 받아 넘긴다 (2026-10-09, 사장님 「오류는 네가 고쳐야지」)
+
+PPOM 칸이 없는 단품(#164 브이메이트 V5 팟 등)에서 스니펫의 `new MutationObserver(…).observe($ppomWrapper[0])` 가 TypeError 를 던졌다.
+그 줄 뒤의 novalidate 설정 · 필수 해제 · 요약 · 버튼 문구 갱신이 전혀 안 돌았다. 스니펫은 건드리지 않았다.
+대신 `Front\observe_guard()` 가 상품 화면(`is_product()`)의 `<head>` 맨 앞에 짧은 스크립트를 찍는다.
+이 스크립트는 `MutationObserver.prototype.observe` 가 **대상이 null · undefined 일 때만** 조용히 돌아오게 한다.
+스니펫에 `if ($ppomWrapper[0])` 를 넣은 것과 효과가 같다. 대상이 있는 호출은 그대로 둔다. 끄기: `duckhoo_observe_guard` → false.
+확인 결과: 가드를 끼워 #164 의 오류 0 · 담기 12,000원 · 장바구니 비움. #254(PPOM 상품) 회귀 없음.

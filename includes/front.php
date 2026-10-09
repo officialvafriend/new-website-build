@@ -531,6 +531,27 @@ function no_tel_detect(): void {
 }
 add_action( 'wp_head', __NAMESPACE__ . '\\no_tel_detect', 0 );
 
+/**
+ * 사장님 서랍장 스니펫이 PPOM 칸 없는 단품(#164 브이메이트 V5 팟 등)에서
+ * `new MutationObserver(...).observe( $('.ppom-wrapper')[0] )` 를 부르는데 그 자리가 비어 있어
+ * TypeError 를 던지고, 그 줄 뒤(novalidate · 필수 해제 · 요약 · 버튼 문구 갱신)가 통째로 안 돌았다.
+ * 스니펫은 건드리지 않고, 상품 화면에서만 「없는 대상을 지켜보라」는 호출을 조용히 넘긴다.
+ * 스니펫에 `if ($ppomWrapper[0])` 를 넣은 것과 같다. 대상이 있는 호출은 그대로다.
+ * 끄기: add_filter( 'duckhoo_observe_guard', '__return_false' );
+ *
+ * @return void
+ */
+function observe_guard(): void {
+	if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+		return;
+	}
+	if ( ! apply_filters( 'duckhoo_observe_guard', true ) ) {
+		return;
+	}
+	echo '<script>(function(){var M=window.MutationObserver;if(!M||!M.prototype||M.prototype.__dhrGuard)return;var o=M.prototype.observe;M.prototype.observe=function(t,c){if(t==null)return;return o.call(this,t,c)};M.prototype.__dhrGuard=1})();</script>' . "\n";
+}
+add_action( 'wp_head', __NAMESPACE__ . '\\observe_guard', 0 );
+
 function header_html(): void {
 	$cart_n  = ( function_exists( 'WC' ) && WC()->cart ) ? (int) WC()->cart->get_cart_contents_count() : 0;
 	$cart    = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );
