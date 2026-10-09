@@ -47,7 +47,7 @@ function get_user_meta($id,$key='',$single=false){
 function update_user_meta($id,$k,$v){ $GLOBALS['__usermeta'][$id][$k]=$v; }
 function delete_user_meta($id,$k){ unset($GLOBALS['__usermeta'][$id][$k]); }
 function maybe_unserialize($v){ return $v; }
-function get_userdata($id){ $u=new stdClass; $u->ID=$id; $u->user_pass='hash'; return $u; }
+function get_userdata($id){ $u=new stdClass; $u->ID=$id; $u->user_pass='hash'; $u->roles=$GLOBALS['__userroles'][$id] ?? []; return $u; }
 function wp_update_user($a){ $GLOBALS['__updated']=$a; return $a['ID']; }
 function wp_set_password($p,$id){ $GLOBALS['__pwset']=true; }
 function wp_generate_password($l=12,$s=true,$x=false){ return str_repeat('x',$l); }

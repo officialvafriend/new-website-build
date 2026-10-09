@@ -1950,6 +1950,8 @@ $ok(($G.'mark_legacy')(11, 'imweb') === true && !($G.'needs_reverify')(11) && ($
 $GLOBALS['__filters']['duckhoo_reverify_gate'] = [fn() => false];
 $ok(!($G.'needs_reverify')(12), '필터로 문을 끄면 아무도 안 묻는다');
 $GLOBALS['__filters']['duckhoo_reverify_gate'] = [];
+$GLOBALS['__userroles'] = [13 => ['administrator'], 14 => ['customer']];
+$ok(!($G.'needs_reverify')(13) && ($G.'needs_reverify')(14), '관리자는 재인증 문에서 빠지고 · 손님은 그대로 묻는다');
 $redir = function (int $uid, bool $checkout): string {
   $GLOBALS['__logged_in'] = $uid; $GLOBALS['__is_checkout'] = $checkout; $GLOBALS['__redirect'] = '';
   try { ('Duckhoo\\Redesign\\Verify\\gate')(); } catch (\RuntimeException $e) {}

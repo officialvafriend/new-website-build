@@ -67,7 +67,28 @@ function needs_reverify( int $uid ): bool {
 	if ( ! (bool) apply_filters( 'duckhoo_reverify_gate', true ) ) {
 		return false;
 	}
+	if ( staff( $uid ) ) {
+		return false;
+	}
 	return ! verified( $uid ) && ! legacy( $uid );
+}
+
+/**
+ * 직원 계정인가 — 관리자 · 상점 관리자는 재인증 문에서 뺀다 (2026-10-09).
+ *
+ * 사장님 계정이 결제를 시험하다 재인증 화면으로 튕겼다. 성인인증 점검 화면도 직원 역할은
+ * 세지 않는다 — 같은 기준. 필터 `duckhoo_reverify_staff_roles`.
+ *
+ * @param int $uid 회원.
+ * @return bool
+ */
+function staff( int $uid ): bool {
+	$u = get_userdata( $uid );
+	if ( ! $u || empty( $u->roles ) ) {
+		return false;
+	}
+	$roles = (array) apply_filters( 'duckhoo_reverify_staff_roles', array( 'administrator', 'shop_manager' ) );
+	return (bool) array_intersect( (array) $u->roles, $roles );
 }
 
 /**
