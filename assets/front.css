@@ -1021,8 +1021,6 @@ body.dhr-imgfx .card .fig img.is-ld,body.dhr-imgfx .bthumbs img.is-ld,body.dhr-i
 .dhr .stage{position:relative;display:block;aspect-ratio:1/1;border-radius:var(--dh-radius-xl,28px);background:var(--dh-surface);box-shadow:var(--lift-0,0 1px 2px rgba(17,17,17,.06));overflow:hidden;transform-origin:50% 0;color:var(--dh-ink);text-decoration:none}
 .dhr .stage__img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--dh-surface-2)}
 .dhr .stage__img img{width:100%;height:100%;object-fit:cover;transition:transform .9s cubic-bezier(.22,1,.36,1)}
-.dhr .stage__vid{display:block;width:100%;height:100%;object-fit:cover;background:#0b0d12}   /* 히어로 영상 (2026-10-09) — 회원에게만, 1:1 원본을 4:3 칸에서는 위아래만 잘라 쓴다 */
-@media (prefers-reduced-motion: reduce){.dhr .stage__vid{animation:none}}
 @media(hover:hover) and (pointer:fine){.dhr .stage:hover .stage__img img{transform:scale(1.03)}}
 .dhr .stage__pill{position:absolute;left:16px;top:16px;z-index:2;padding:.35rem .75rem;border-radius:999px;background:var(--dh-ink);color:var(--dh-surface);font-size:13px;font-weight:800;line-height:1.2}
 .dhr .stage__cap{position:absolute;left:14px;right:14px;bottom:14px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.75rem 1rem;border-radius:999px;background:var(--dh-glass);border:1px solid var(--dh-glass-line);box-shadow:inset 0 1px 0 var(--dh-glass-hi),var(--dh-shadow);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
@@ -1142,3 +1140,31 @@ body.dhr.dhd-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.dhr .dhd,.dhr .dhd__k,.dhr .dhd__ring,.dhr .dhd__ring svg{transition:opacity .2s ease}.dhr .dhd__k,.dhr .dhd__ring{transform:none}.dhr .dhd__ring svg{stroke-dashoffset:0}}
 
 @media(prefers-reduced-transparency:reduce){.dhr .dhsearch__panel{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhsearch__dim{-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhc__panel{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}.dhr .dhc__dim{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(17,17,17,.62)}}
+
+/* ── 홈 맨 위 영상 띠 (2026-10-09, 사장님 「히어로 배너처럼 큰 화면 · 영상 밑에 구매하기」) ──
+   회원에게만 그린다. 영상과 아래 구매 줄은 한 장의 어두운 판 — 라이트 · 다크 어느 쪽이든 같은 색이다
+   (영상 자체가 어둡다). 데스크톱 16:9 · 폰 9:16 파일이 없으면 1:1 원본을 가운데에 두고 양옆을 같은 어둠으로 녹인다. */
+.dhr .hvid{background:#07090D;color:#F3F4F6;margin:0 0 clamp(1.2rem,.8rem + 1.6vw,2.2rem)}
+.dhr .hvid__media{display:block;position:relative;overflow:hidden;aspect-ratio:9/16;max-height:min(74dvh,720px);margin:0 auto;background:#07090D}
+.dhr .hvid__v{display:block;width:100%;height:100%;object-fit:cover}
+.dhr .hvid--sq .hvid__media{aspect-ratio:1/1;max-height:none}
+.dhr .hvid__bar{background:#07090D;border-top:1px solid rgba(255,255,255,.08)}
+.dhr .hvid__in{max-width:1200px;margin:0 auto;padding:.85rem clamp(1.1rem,.6rem + 2vw,2.5rem) 1.1rem;display:grid;grid-template-columns:minmax(0,1fr);gap:.3rem}
+.dhr .hvid__t{margin:0;display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.dhr .hvid__eb{display:none;font-size:.72rem;font-weight:700;letter-spacing:.18em;color:#9AA3B2}
+.dhr .hvid__t b{font-size:clamp(1.15rem,1rem + .7vw,1.5rem);font-weight:800;line-height:1.3;color:#F3F4F6;word-break:keep-all}
+.dhr .hvid__p{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:.1rem .55rem;font-variant-numeric:tabular-nums}
+.dhr .hvid__p em{font-style:normal;font-weight:800;color:#7FA6FF;font-size:1.05rem}
+.dhr .hvid__p b{font-weight:800;font-size:1.3rem;color:#fff}
+.dhr .hvid__p s{color:#8B93A1;font-size:.9rem}
+.dhr .hvid__cta{display:flex;align-items:center;justify-content:center;gap:.45rem;min-height:52px;margin-top:.45rem;padding:0 1.6rem;border-radius:999px;background:var(--dh-accent,#1A5CFF);color:#fff;font-weight:800;font-size:1rem;text-decoration:none;white-space:nowrap;transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s ease}
+.dhr .hvid__cta svg{width:18px;height:18px}
+.dhr .hvid__cta:active{transform:scale(.97)}
+.dhr .hvid__cta:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media (hover:hover){.dhr .hvid__cta:hover{background:#3A73FF}}
+@media (min-width:600px){.dhr .hvid--sq .hvid__media{aspect-ratio:auto;height:clamp(360px,calc(100dvh - 300px),640px);display:flex;justify-content:center}
+  .dhr .hvid--sq .hvid__v{width:auto;height:100%;aspect-ratio:1/1;object-fit:cover;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}}
+@media (min-width:880px){.dhr .hvid__media{aspect-ratio:16/9;max-height:clamp(360px,calc(100dvh - 300px),820px);width:100%}
+  .dhr .hvid__in{grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:2rem;padding-top:1.1rem;padding-bottom:1.1rem}
+  .dhr .hvid__eb{display:block}
+  .dhr .hvid__cta{margin-top:0;min-height:56px;padding:0 2rem;font-size:1.05rem}}

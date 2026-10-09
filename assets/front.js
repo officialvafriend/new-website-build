@@ -38,6 +38,24 @@
   });
 })();
 
+/* 홈 맨 위 영상 띠 (2026-10-09) — 화면에 보일 때만 돈다. 지나치면 멈춰 배터리를 아낀다.
+   동작 줄이기를 켠 사람에게는 첫 장면(poster)에서 멈춰 둔다. */
+(function(){
+  var v = document.querySelector('.hvid__v');
+  if(!v) return;
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var seen = true;
+  function go(){
+    if(calm || document.hidden || !seen){ v.pause(); return; }
+    var p = v.play(); if(p && p.catch) p.catch(function(){});
+  }
+  if(calm){ v.removeAttribute('autoplay'); v.pause(); }
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){ seen = es[0].isIntersecting; go(); }, {threshold:.2}).observe(v);
+  }
+  document.addEventListener('visibilitychange', go);
+})();
+
 /* 히어로 슬라이드 — 묶음 상품을 넘겨 본다 (2026-10-07, 겹쳐 두고 크로스페이드).
    스스로 넘어가는 것에는 멈춤이 따라와야 한다: 마우스·포커스가 들어오면 서고,
    점을 누르면 자동 넘김은 끝나고, 동작 줄이기를 켠 사람에게는 아예 자동으로 넘기지 않는다. */

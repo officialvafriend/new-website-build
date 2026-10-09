@@ -563,15 +563,21 @@ add_action( 'wp_head', __NAMESPACE__ . '\\observe_guard', 0 );
  * **회원(성인인증)에게만 튼다.** 비로그인에게는 상품 사진이 모두 「19」로 가려진다 — 키플의 성인 인증
  * 게이트이고 우회하지 않는다. 영상도 상품을 보여 주므로 같은 규칙을 따른다: 비로그인은 지금 히어로 그대로.
  * 파일은 플러그인 안(`assets/media/`)에 두어 우리 도메인에서 나간다. 파일이 없으면 아무것도 안 바뀐다.
+ * 2026-10-09 사장님 「히어로 배너처럼 큰 화면 · 영상 밑에 구매하기」 — 홈 맨 위 화면 폭을 다 쓰는 띠 `.hvid`
+ * 로 그리고, 아래에 상품 이름 · 값 · 구매하기 줄을 붙인다. 데스크톱 16:9 · 폰 9:16 두 판을 `<source media>` 로
+ * 고른다. 그 두 파일이 아직 없으면 1:1 원본을 가운데에 놓고 양옆을 같은 어둠으로 메운다.
  * 끄기: `add_filter( 'duckhoo_hero_video', '__return_empty_array' );`
  *
- * @return array{product:int,src:string,poster:string}|array{}
+ * @return array{product:int,src:string,poster:string,wide:string,tall:string,cta:string}|array{}
  */
 function hero_video(): array {
 	$v = (array) apply_filters( 'duckhoo_hero_video', array(
 		'product' => 5381,
-		'file'    => 'assets/media/jello-crystal-loop.mp4',
+		'file'    => 'assets/media/jello-crystal-loop.mp4',   // 둘 다 없을 때 쓰는 원본 (1:1)
 		'poster'  => 'assets/media/jello-crystal-loop.jpg',
+		'wide'    => 'assets/media/jello-crystal-16x9.mp4',   // 880px 위 — 있으면 화면 폭을 다 채운다
+		'tall'    => 'assets/media/jello-crystal-9x16.mp4',   // 879px 아래
+		'cta'     => '젤로 크리스탈 10병 구매하기',
 	) );
 	if ( empty( $v['product'] ) || empty( $v['file'] ) || gated() ) {
 		return array();
@@ -580,11 +586,15 @@ function hero_video(): array {
 	if ( ! file_exists( $root . $v['file'] ) ) {
 		return array();
 	}
-	$url = fn( $f ) => plugins_url( $f, $root . 'duckhoo-redesign.php' ) . '?v=' . (int) @filemtime( $root . $f );
+	$url  = fn( $f ) => plugins_url( $f, $root . 'duckhoo-redesign.php' ) . '?v=' . (int) @filemtime( $root . $f );
+	$have = fn( $k ) => ! empty( $v[ $k ] ) && file_exists( $root . $v[ $k ] ) ? $url( (string) $v[ $k ] ) : '';
 	return array(
 		'product' => (int) $v['product'],
 		'src'     => $url( (string) $v['file'] ),
-		'poster'  => ! empty( $v['poster'] ) && file_exists( $root . $v['poster'] ) ? $url( (string) $v['poster'] ) : '',
+		'poster'  => $have( 'poster' ),
+		'wide'    => $have( 'wide' ),
+		'tall'    => $have( 'tall' ),
+		'cta'     => (string) ( $v['cta'] ?? '' ),
 	);
 }
 
