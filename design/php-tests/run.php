@@ -1256,6 +1256,18 @@ $tags = ($S.'social_title')(['og:title' => '[노보] 타박멘솔 (9.8mg / 30ml)
 $ok($tags['og:title'] === '노보 타박멘솔 액상 입호흡 9.8mg 30ml 13,000원 재고 있음 | 액상덕후' && $tags['og:type'] === 'product' && !isset($tags['twitter:title']), 'og:title 만 바꾸고 없는 칸은 만들지 않는다');
 $GLOBALS['__qid'] = 901;
 $ok(($S.'title')('[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후') === '[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후', '펠릭스 제목은 AIOSEO 값 그대로');
+// 2026-10-09 — 이름이 「라임 알로에」로 바뀐 #254 (주소는 옛 더블라임). 손으로 쓴 「더블라임」 제목 · 설명을 우리가 덮는다.
+$GLOBALS['__products'][908] = new WC_Product(908, '[펠릭스] 라임 알로에 (9.8mg / 30ml)', 20000);
+$GLOBALS['__slugs'][908] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__pterms'][908] = [(object)['name'=>'타격감'], (object)['name'=>'입호흡 액상']];
+$ok(($S.'product_title')($GLOBALS['__products'][908]) === '펠릭스 라임 알로에 입호흡 액상 9.8mg 30ml 20,000원 | 액상덕후', '틀린 손글 목록의 펠릭스는 우리 제목 (분류의 입호흡 · 규격 · 값)');
+$GLOBALS['__qid'] = 908;
+$ok(($S.'title')($felix) !== $felix && !str_contains(($S.'title')('[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후'), '더블라임'), '#254 제목에서 「더블라임」이 빠진다');
+$d = ($S.'description')($felix);
+$ok(!str_contains($d, '더블라임') && str_contains($d, '라임 알로에'), '#254 설명은 라임 알로에 사실로 엮은 글');
+$GLOBALS['__qid'] = 901;
+$ok(($S.'description')($felix) === $felix, '새 더블라임(#4701 주소)의 손글은 그대로 — 그쪽은 맞는 글이다');
+unset($GLOBALS['__products'][908], $GLOBALS['__slugs'][908], $GLOBALS['__pterms'][908]);   // 브랜드 수 셈에 끼지 않게
 $GLOBALS['__filters']['duckhoo_product_title_brands'] = [fn($v) => []];
 $GLOBALS['__qid'] = 905;
 $ok(($S.'title')('원래 제목') === '원래 제목', '필터로 브랜드를 비우면 노보도 AIOSEO 값');

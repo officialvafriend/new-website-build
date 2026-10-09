@@ -388,6 +388,7 @@ function with_shop( string $own ): string {
  * |---|---|
  * | `노보-데저트-9-8mg-30ml` | 일반 라인인데 「노보 **블랙** 데저트」라고 적혀 있었다 |
  * | `초특가-노보-10병-병당-8000원-금액-80000원` | 실제 130,000원인데 「병당 7,000원(총 70,000원)」 |
+ * | `펠릭스-더블라임-9-8mg-30ml` (#254) | 상품이 「라임 알로에」로 바뀌었는데 글은 「더블라임 20,000원」 (2026-10-09) — 더블라임은 새 상품 #4701 |
  *
  * 사장님이 AIOSEO 상자를 직접 고치시면 이 목록에서 그 주소만 빼면 된다 (필터 한 줄).
  *
@@ -401,6 +402,7 @@ function overrides(): array {
 			array(
 				'노보-데저트-9-8mg-30ml',
 				'초특가-노보-10병-병당-8000원-금액-80000원',
+				'펠릭스-더블라임-9-8mg-30ml',
 			)
 		)
 	);
@@ -515,8 +517,13 @@ function title_brands(): array {
 function product_title( \WC_Product $p ): string {
 	$n     = split_name( $p );
 	$brand = brand_aliases()[ $n['brand'] ] ?? $n['brand'];
-	if ( '' === $brand || ! in_array( $brand, title_brands(), true ) ) {
+	if ( '' === $brand ) {
 		return '';
+	}
+	if ( ! in_array( $brand, title_brands(), true ) ) {
+		// 2026-10-09 — 손으로 쓴 제목이 틀린 상품(overrides())은 다른 브랜드라도 우리가 정한다.
+		// 「[펠릭스] 더블라임 20,000원」이 이름이 바뀐 라임 알로에(#254)에 남아 새 더블라임(#4701)과 제목이 같았다.
+		return overridden( $p ) ? plain_title( $p, $n ) : '';
 	}
 	$line  = trim( (string) preg_replace( '/\s*리퀴드\s*$/u', '', $n['brand'] ) );   // 노보 · 노보 블랙
 	$title = $n['title'];
@@ -539,6 +546,33 @@ function product_title( \WC_Product $p ): string {
 	if ( $p->is_in_stock() ) {
 		$parts[] = '재고 있음';
 	}
+	return trim( implode( ' ', array_filter( $parts, fn( $x ) => '' !== trim( (string) $x ) ) ) ) . ' | ' . get_bloginfo( 'name' );
+}
+
+/**
+ * 노보가 아닌 상품의 제목 — `펠릭스 라임 알로에 입호흡 액상 9.8mg 30ml 20,000원 | 액상덕후`.
+ * 입호흡 · 폐호흡은 분류에 있을 때만 적는다. 값은 상품에서 읽는다.
+ *
+ * @param \WC_Product $p 상품.
+ * @param array       $n split_name() 결과.
+ * @return string
+ */
+function plain_title( \WC_Product $p, array $n ): string {
+	$title = (string) $n['title'];
+	$spec  = '';
+	if ( preg_match( '/\(([^)]*)\)/u', $title, $m ) ) {
+		$spec = trim( (string) preg_replace( '/\s+/u', ' ', str_replace( '/', ' ', $m[1] ) ) );
+	}
+	$flavor = trim( (string) preg_replace( '/\s*\([^)]*\)\s*/u', ' ', $title ) );
+	$kind   = '';
+	foreach ( cat_names( $p ) as $c ) {
+		if ( preg_match( '/입호흡|폐호흡/u', $c, $k ) ) {
+			$kind = $k[0];
+			break;
+		}
+	}
+	$price = (float) $p->get_price();
+	$parts = array( $n['brand'] . ' ' . $flavor, trim( $kind . ' 액상' ), $spec, $price > 0 ? number_format( $price ) . '원' : '' );
 	return trim( implode( ' ', array_filter( $parts, fn( $x ) => '' !== trim( (string) $x ) ) ) ) . ' | ' . get_bloginfo( 'name' );
 }
 
