@@ -1216,7 +1216,7 @@ $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][901] = '글-없는-상품';
 $auto = ($S.'description')($tpl);
 $ok(str_contains($auto, '가입 즉시 8,800원 적립') && ! str_contains($auto, '적립.  ') && 1 === substr_count($auto, '액상덕후'), '우리 글이 없으면 사실로 엮은 글 — 꼬리는 한 번만');
-$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블-라임-9-8mg-30ml');
 // 손으로 쓴 글이지만 **틀린** 상품은 덮는다 (노보 데저트에 블랙 설명이 붙어 있었다).
 $GLOBALS['__pmeta'][901]['_dhr_text'] = '우리 글';
 $wrong = '노보 블랙 데저트 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용.';
@@ -1227,7 +1227,7 @@ $GLOBALS['__filters']['duckhoo_meta_desc_override'] = [fn($v) => []];
 $ok(($S.'description')($wrong) === $wrong, '필터로 목록을 비우면 도로 사장님 글');
 $GLOBALS['__filters']['duckhoo_meta_desc_override'] = [];
 $GLOBALS['__pmeta'][901] = [];
-$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블-라임-9-8mg-30ml');
 // 2026-09-21 — 코덱스가 노보 13개에 규격대로 찍은 꼬리도 템플릿이다 (맛이 없고 다섯 개는 남의 맛).
 $codex = '노보 블랙 데저트 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용. 액상덕후에서 3만원 이상 무료배송, 신규 가입 시 적립금 8,800원 증정.';
 $codex2 = '노보 타박멘솔 액상 30ml, 니코틴 9.8mg 입호흡(MTL) 전용. 액상덕후 노보 액상 판매량 1위 제품. 3만원 이상 무료배송, 가입 시 적립금 8,800원.';
@@ -1240,7 +1240,7 @@ $d = ($S.'description')($codex);
 $ok(str_starts_with($d, '노보 블랙 타박멘솔 액상 — 담배 잎의 구수함') && !str_contains($d, '데저트'), '블랙 타박멘솔에 붙어 있던 「데저트」 설명이 우리 글로 바뀐다');
 $GLOBALS['__slugs'][901] = rawurlencode('노보-엠에스블랜드-9-8mg-30ml');
 $ok(str_starts_with(($S.'description')($codex2), '노보 엠에스블랜드 액상 — 구수한 연초') && !str_contains(($S.'description')($codex2), '판매량 1위'), '엠에스블랜드에 붙어 있던 「타박멘솔 판매량 1위」가 우리 글로 바뀐다');
-$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블-라임-9-8mg-30ml');
 $ok(($S.'description')($felix) === $felix, '펠릭스 손글은 그대로');
 // 노보 상품 제목 — 값 · 병 수는 상품에서 읽는다
 $GLOBALS['__products'][905] = new WC_Product(905, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000);
@@ -1346,7 +1346,7 @@ $_POST = []; $GLOBALS['__can'] = false;
 // ── 승인된 상품 글 (includes/seo-texts.php) ───────────────────────────────
 require_once dirname(__DIR__, 2).'/includes/seo-texts.php';
 $GLOBALS['__pmeta'][901] = [];
-$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블-라임-9-8mg-30ml');
 $ok(str_starts_with(($S.'hand_text')($GLOBALS['__products'][901]), '라임을 두 겹'), '상자가 비면 승인된 글을 쓴다 (slug 는 퍼센트 인코딩돼 있어도)');
 ob_start(); ($S.'render_text')($GLOBALS['__products'][901]); $h = ob_get_clean();
 $ok(str_contains($h, 'dhp-about') && str_contains($h, '입호흡(MTL)'), '화면에도 그린다');
