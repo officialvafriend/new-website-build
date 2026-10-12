@@ -1195,6 +1195,13 @@ body.dhr.dhd-open{overflow:hidden}
 .dhr .hvid__p em{font-style:normal;font-size:.8125rem;line-height:1;font-weight:800;color:#fff;background:var(--dh-accent,#1A5CFF);padding:.4rem .6rem;border-radius:999px;text-shadow:none}
 .dhr .hvid__cta{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;min-height:52px;margin-top:1.15rem;padding:0 1.9rem;border-radius:999px;background:var(--dh-accent,#1A5CFF);color:#fff;font-size:1.0625rem;font-weight:700;line-height:1;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(26,92,255,.35);transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s ease}
 .dhr .hvid__cta:active{transform:scale(.97);transition-duration:.1s}
+/* 영상 위 글자는 늘 영상보다 위 층 (2026-10-12, 사장님 라이트 캡처 — 기기 병이 제목 앞을 가리고 제목이 어둡게 보였다).
+   영상 칸 0 · 글자 칸 2 로 순서를 못 박고, 글자 칸을 자기 층으로 올린다. 제목 색 · 투명도는 다른 규칙이 못 덮게 */
+.dhr .hvid{isolation:isolate}
+.dhr .hvid .hvid__media{z-index:0}
+.dhr .hvid .hvid__bar{z-index:2;transform:translateZ(0)}
+.dhr .hvid .hvid__t{color:#fff !important;-webkit-text-fill-color:#fff;opacity:1 !important}
+
 .dhr .hvid__cta:focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media (hover:hover){.dhr .hvid__cta:hover{background:#3A73FF}}
 @media (max-width:479px){.dhr .hvid__cta{align-self:stretch}}
