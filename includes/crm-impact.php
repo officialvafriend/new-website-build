@@ -115,7 +115,7 @@ function impact( array $phones, int $at, array $orders, array $uphone, int $days
 	};
 	$end    = min( $now, $at + $win );
 	$after  = $side( $at, $at + $win );
-	$before = $side( $at - $win, $at );
+	$before = $side( $at - max( DAY_IN_SECONDS, $end - $at ), $at ); // 보낸 뒤 지난 만큼만 — 길이가 같아야 견줄 수 있다
 	$known  = 0; // 우리 가게 회원 · 주문에 있는 번호
 	$all    = array();
 	foreach ( $uphone as $ps ) {
@@ -240,7 +240,7 @@ function impact_html( array $r, string $title ): string {
 	$h .= $row( '돈 들어온 주문', $w( $r['orders'] ) . '건 · ' . $w( $r['sales'] ) . '원 (객단가 ' . $w( $r['aov'] ) . '원)' );
 	$h .= $row( '주문만 하고 아직 입금 전', $w( $r['pend'] ) . '명' );
 	$h .= $row( '받고 첫 주문까지 (가운데 값)', $r['buyers'] ? number_format_i18n( $r['first_med'], 1 ) . '일' : '—' );
-	$h .= $row( '보내기 전 같은 ' . (int) $r['days'] . '일 (같은 사람들)', $w( $r['before']['buyers'] ) . '명 · ' . $pc( $r['before']['rate'] ) . ' · ' . $w( $r['before']['sales'] ) . '원' );
+	$h .= $row( '보내기 전 같은 ' . (int) max( 1, $r['done'] ? $r['days'] : $r['elapsed'] ) . '일 (같은 사람들)', $w( $r['before']['buyers'] ) . '명 · ' . $pc( $r['before']['rate'] ) . ' · ' . $w( $r['before']['sales'] ) . '원' );
 	$h .= $row( '보내기 전과 견주면', $r['before']['rate'] > 0 ? number_format_i18n( $lift, 2 ) . '배' : '보내기 전 구매 0명' );
 	$h .= $row( '우리 회원 · 주문에서 찾은 번호', $w( $r['known'] ) . ' / ' . $w( $r['n'] ) . '명' );
 	$h .= '</tbody></table>';

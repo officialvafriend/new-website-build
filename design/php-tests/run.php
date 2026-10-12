@@ -2993,6 +2993,9 @@ $ok($r['pend']===1 && abs($r['rate']-0.25)<1e-9 && $r['first_med']==2.0, '발송
 $ok($r['before']['buyers']===1 && $r['before']['sales']==40000.0 && $r['known']===3 && $r['done']===true, '발송 성과: 보내기 전 같은 길이 1명 · 찾은 번호 3/4 · 끝남');
 $r2 = ($IM.'impact')(['01011111111'], $at, $ords, [7=>['01011111111']], 14, $at+5*$D, ['delivered'], ['cancelled']);
 $ok($r2['done']===false && $r2['elapsed']===5, '발송 성과: 아직 5일째');
+$o3 = [['id'=>1,'ts'=>$at-10*$D,'s'=>'delivered','t'=>1,'u'=>7,'p'=>''],['id'=>2,'ts'=>$at-2*$D,'s'=>'delivered','t'=>1,'u'=>8,'p'=>'']];
+$r3 = ($IM.'impact')(['01011111111','01088888888'], $at, $o3, [7=>['01011111111'],8=>['01088888888']], 14, $at+4*$D, ['delivered'], ['cancelled']);
+$ok($r3['before']['buyers']===1, '발송 성과: 4일째면 보내기 전도 4일만 본다 (10일 전 주문은 안 센다)');
 $h = ($IM.'impact_html')($r, '시험');
 $ok(strpos($h, '전환율 <b style="font-size:18px">25') !== false && !preg_match('/01[016789]\d{7,8}/', $h), '발송 성과: 화면에 번호를 안 적는다');
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
