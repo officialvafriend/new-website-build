@@ -748,6 +748,7 @@ function screen(): void {
 
 	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) . ( skip_on() ? '' : '&skip=0' ) );
 	sms_saved_notice();
+	impact_box( $back );
 	sent_box( $back, $skipped );
 	exclude_box( $back, $gone, $seg );
 	if ( 'all' === $seg ) {

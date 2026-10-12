@@ -2970,5 +2970,30 @@ $ok($PG(1, 1) === '' && $PG(1, 0) === '' , '한 쪽뿐이면 페이지 줄을 �
 $ok(strpos($pg5, '<b>5</b> / 10') !== false && strpos($pg5, 'page/4/') !== false && strpos($pg5, 'page/6/') !== false && strpos($pg5, 'orderby=price') !== false, '가운데 쪽: 5 / 10 · 앞뒤 링크 · 정렬 그대로');
 $ok(strpos($pg1, 'dhr-pg__b--prev is-off') !== false && strpos($pg1, 'page/2/') !== false && strpos($pgL, 'dhr-pg__b--next is-off') !== false, '첫 쪽은 이전이 잠기고 · 끝 쪽은 다음이 잠긴다');
 $ok(strpos($PG(30, 10), '<b>10</b> / 10') !== false, '범위 밖 쪽 번호는 끝으로 맞춘다');
+
+/* ── 발송 성과 (includes/crm-impact.php) ── */
+require_once dirname(__DIR__, 2).'/includes/crm-impact.php';
+$IM = 'Duckhoo\\Redesign\\Crm\\';
+$ph = ($IM.'phones_in')('<td>010-1111-2222</td><td>01033334444</td><td>+82 10-5555-6666</td><td>010-1111-2222</td><td>02-123-4567</td><td>2026-10-08</td>');
+$ok(count($ph) === 3 && in_array('01055556666', $ph, true), '발송 성과: 번호 셋을 모으고 같은 번호 · 지역번호 · 날짜는 뺀다');
+$ok(($IM.'date_in_name')('tothemoon_20261008.xls') === '2026-10-08' && ($IM.'date_in_name')('x.xls') === '', '발송 성과: 파일 이름의 날짜');
+$at = 1_000_000_000; $D = 86400;
+$ords = [
+  ['id'=>1,'ts'=>$at+2*$D,'s'=>'delivered','t'=>50000,'u'=>7,'p'=>''],          // 회원 7 (번호 A) 산다
+  ['id'=>2,'ts'=>$at+3*$D,'s'=>'delivered','t'=>30000,'u'=>7,'p'=>''],          // 같은 사람 두 번째
+  ['id'=>3,'ts'=>$at+1*$D,'s'=>'on-hold','t'=>20000,'u'=>0,'p'=>'01022222222'], // 비회원 B 입금 전
+  ['id'=>4,'ts'=>$at+4*$D,'s'=>'cancelled','t'=>99000,'u'=>0,'p'=>'01033333333'], // C 취소 — 안 센다
+  ['id'=>5,'ts'=>$at-3*$D,'s'=>'delivered','t'=>40000,'u'=>0,'p'=>'01033333333'], // C 보내기 전
+  ['id'=>6,'ts'=>$at+20*$D,'s'=>'delivered','t'=>10000,'u'=>7,'p'=>''],         // 14일 밖
+  ['id'=>7,'ts'=>$at+2*$D,'s'=>'delivered','t'=>77000,'u'=>9,'p'=>''],          // 명단 밖 사람
+];
+$r = ($IM.'impact')(['01011111111','01022222222','01033333333','01044444444'], $at, $ords, [7=>['01011111111'],9=>['01099999999']], 14, $at+30*$D, ['delivered'], ['cancelled']);
+$ok($r['n']===4 && $r['buyers']===1 && $r['orders']===2 && $r['sales']==80000.0 && $r['aov']==40000.0, '발송 성과: 산 사람 1 · 주문 2 · 80,000원 (14일 밖 · 명단 밖 · 취소는 안 센다)');
+$ok($r['pend']===1 && abs($r['rate']-0.25)<1e-9 && $r['first_med']==2.0, '발송 성과: 입금 전 1명 따로 · 전환율 25% · 첫 주문 2일');
+$ok($r['before']['buyers']===1 && $r['before']['sales']==40000.0 && $r['known']===3 && $r['done']===true, '발송 성과: 보내기 전 같은 길이 1명 · 찾은 번호 3/4 · 끝남');
+$r2 = ($IM.'impact')(['01011111111'], $at, $ords, [7=>['01011111111']], 14, $at+5*$D, ['delivered'], ['cancelled']);
+$ok($r2['done']===false && $r2['elapsed']===5, '발송 성과: 아직 5일째');
+$h = ($IM.'impact_html')($r, '시험');
+$ok(strpos($h, '전환율 <b style="font-size:18px">25') !== false && !preg_match('/01[016789]\d{7,8}/', $h), '발송 성과: 화면에 번호를 안 적는다');
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
