@@ -490,6 +490,167 @@ function run_revoke( string $key, float $budget = 20.0 ): array {
 	return array( 'n' => $n, 'sum' => $sum, 'left' => $left );
 }
 
+
+/* ── 넣었다 거둔 묶음 — 손님 적립금 내역에서 그 줄 지우기 ───────────────── */
+
+/** 원장 표 이름. */
+function log_table(): string {
+	global $wpdb;
+	if ( function_exists( 'wd_get_keyple_points_log_table' ) ) {
+		$t = (string) wd_get_keyple_points_log_table();
+		if ( '' !== $t ) {
+			return $t;
+		}
+	}
+	return $wpdb->prefix . 'keyple_points_log';
+}
+
+/**
+ * 원장 칸 이름을 짐작한다. 순수.
+ *
+ * @param string[] $cols 표의 칸 이름.
+ * @return array{id:string,user:string,amount:string,reason:string}|null 넷 중 하나라도 없으면 null.
+ */
+function guess_cols( array $cols ): ?array {
+	$pick = function ( array $names ) use ( $cols ) {
+		foreach ( $names as $n ) {
+			foreach ( $cols as $c ) {
+				if ( strtolower( (string) $c ) === $n ) {
+					return (string) $c;
+				}
+			}
+		}
+		return '';
+	};
+	$out = array(
+		'id'     => $pick( array( 'id', 'log_id', 'point_id', 'idx', 'no' ) ),
+		'user'   => $pick( array( 'user_id', 'uid', 'customer_id', 'member_id', 'userid' ) ),
+		'amount' => $pick( array( 'points', 'point', 'amount', 'change', 'delta', 'change_amount', 'point_change', 'value' ) ),
+		'reason' => $pick( array( 'reason', 'memo', 'description', 'note', 'message', 'title', 'content', 'comment', 'label', 'detail', 'details' ) ),
+	);
+	return in_array( '', $out, true ) ? null : $out;
+}
+
+/** 그 묶음 이름으로 찍힌 사유인가 (넣은 줄 · 거둔 줄). 순수. */
+function is_batch_reason( string $reason, string $label ): ?int {
+	$r = trim( $reason );
+	if ( '' === $label ) {
+		return null;
+	}
+	if ( $r === $label . ' 회수' || $r === $label . ' 사용기간 종료' ) {
+		return -1;
+	}
+	if ( $r === $label || str_starts_with( $r, $label . ' · ' ) ) {
+		return 1;
+	}
+	return null;
+}
+
+/**
+ * 지울 줄을 고른다. 순수 — 회원마다 넣은 줄과 거둔 줄의 합이 0 일 때만 지운다.
+ *
+ * @param array<int,array{id:int,user:int,amount:int,reason:string}> $rows 원장 줄.
+ * @return array{del:int[],users:int,rows:int,left:array<int,int>}
+ */
+function cleanup_pick( array $rows, string $label ): array {
+	$by = array();
+	foreach ( $rows as $r ) {
+		$sign = is_batch_reason( (string) $r['reason'], $label );
+		if ( null === $sign ) {
+			continue;
+		}
+		$amt = (int) $r['amount'];
+		$amt = $amt < 0 ? $amt : $sign * $amt; // 크기만 적는 원장이면 사유로 부호를 정한다.
+		$by[ (int) $r['user'] ][] = array( (int) $r['id'], $amt );
+	}
+	$del  = array();
+	$left = array();
+	$n    = 0;
+	foreach ( $by as $uid => $list ) {
+		$sum = array_sum( array_column( $list, 1 ) );
+		$pos = count( array_filter( $list, fn( $x ) => $x[1] > 0 ) );
+		$neg = count( array_filter( $list, fn( $x ) => $x[1] < 0 ) );
+		if ( 0 === $sum && $pos > 0 && $neg > 0 ) {
+			$del = array_merge( $del, array_column( $list, 0 ) );
+			++$n;
+		} else {
+			$left[ $uid ] = $sum;
+		}
+	}
+	return array( 'del' => $del, 'users' => $n, 'rows' => count( $del ), 'left' => $left );
+}
+
+/** 그 묶음의 원장 줄을 읽는다. */
+function cleanup_scan( string $key ): array {
+	global $wpdb;
+	$all   = (array) get_option( OPT, array() );
+	$label = (string) ( $all[ $key ]['label'] ?? '' );
+	$table = log_table();
+	$out   = array( 'label' => $label, 'cols' => array(), 'map' => null, 'pick' => null, 'sample' => array() );
+	if ( '' === $label || (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) { // phpcs:ignore WordPress.DB
+		return $out;
+	}
+	$out['cols'] = array_map( 'strval', (array) $wpdb->get_col( 'SHOW COLUMNS FROM `' . esc_sql( $table ) . '`' ) ); // phpcs:ignore WordPress.DB
+	$map         = guess_cols( $out['cols'] );
+	$out['map']  = $map;
+	if ( ! $map ) {
+		$out['sample'] = (array) $wpdb->get_results( 'SELECT * FROM `' . esc_sql( $table ) . '` ORDER BY 1 DESC LIMIT 3', ARRAY_A ); // phpcs:ignore WordPress.DB
+		return $out;
+	}
+	$q    = $wpdb->prepare(
+		'SELECT `' . esc_sql( $map['id'] ) . '` AS id, `' . esc_sql( $map['user'] ) . '` AS user, `' . esc_sql( $map['amount'] ) . '` AS amount, `' . esc_sql( $map['reason'] ) . '` AS reason FROM `' . esc_sql( $table ) . '` WHERE `' . esc_sql( $map['reason'] ) . '` LIKE %s', // phpcs:ignore WordPress.DB
+		$wpdb->esc_like( $label ) . '%'
+	);
+	$rows        = (array) $wpdb->get_results( $q, ARRAY_A ); // phpcs:ignore WordPress.DB
+	$out['pick'] = cleanup_pick( $rows, $label );
+	return $out;
+}
+
+/** 지운다 — 고른 번호만, 500 줄씩. */
+function run_cleanup( string $key ): array {
+	global $wpdb;
+	$scan = cleanup_scan( $key );
+	if ( ! $scan['map'] || ! $scan['pick'] || ! $scan['pick']['del'] ) {
+		return array( 'rows' => 0, 'users' => 0 );
+	}
+	$table = log_table();
+	$done  = 0;
+	foreach ( array_chunk( array_map( 'intval', $scan['pick']['del'] ), 500 ) as $chunk ) {
+		$done += (int) $wpdb->query( 'DELETE FROM `' . esc_sql( $table ) . '` WHERE `' . esc_sql( $scan['map']['id'] ) . '` IN (' . implode( ',', $chunk ) . ')' ); // phpcs:ignore WordPress.DB
+	}
+	$all = (array) get_option( OPT, array() );
+	if ( isset( $all[ $key ] ) ) {
+		$all[ $key ]['cleaned'] = time();
+		update_option( OPT, $all, false );
+	}
+	return array( 'rows' => $done, 'users' => (int) $scan['pick']['users'] );
+}
+
+/** 미리 보기 상자. */
+function cleanup_box( string $key ): string {
+	$s = cleanup_scan( $key );
+	$h = '<div style="margin:16px 0;padding:16px;border:2px solid #b42318;border-radius:8px;max-width:860px;background:#fff">';
+	$h .= '<h3 style="margin-top:0">손님 적립금 내역에서 지우기 — ' . esc_html( $s['label'] ) . '</h3>';
+	if ( ! $s['map'] ) {
+		$h .= '<p>적립금 원장 표의 칸을 알아보지 못해 지우지 않았습니다. 이 상자를 캡처해 주세요.</p><p>칸: ' . esc_html( implode( ', ', $s['cols'] ) ) . '</p>';
+		foreach ( $s['sample'] as $row ) {
+			$h .= '<p style="font:12px monospace">' . esc_html( wp_json_encode( $row, JSON_UNESCAPED_UNICODE ) ) . '</p>';
+		}
+		return $h . '</div>';
+	}
+	$p  = $s['pick'];
+	$h .= '<p>이 이름으로 넣었다 거둔 줄을 지웁니다. <b>넣은 줄과 거둔 줄의 합이 0 인 손님만</b> 지우므로 잔액은 바뀌지 않습니다.</p>';
+	$h .= '<p><b>' . number_format( $p['users'] ) . '명 · ' . number_format( $p['rows'] ) . '줄</b>을 지웁니다.';
+	if ( $p['left'] ) {
+		$h .= ' 합이 0 이 아닌 ' . number_format( count( $p['left'] ) ) . '명은 그대로 둡니다 (그 사이 적립금을 썼거나 거두기가 덜 됐습니다).';
+	}
+	$h .= '</p><p style="color:#646970">칸: 번호 ' . esc_html( $s['map']['id'] ) . ' · 회원 ' . esc_html( $s['map']['user'] ) . ' · 금액 ' . esc_html( $s['map']['amount'] ) . ' · 사유 ' . esc_html( $s['map']['reason'] ) . '</p>';
+	if ( $p['rows'] > 0 ) {
+		$h .= '<form method="post">' . wp_nonce_field( 'dhr-pts', '_wpnonce', true, false ) . '<input type="hidden" name="key" value="' . esc_attr( $key ) . '"><button class="button button-primary" name="dhr_pts" value="cleanup" onclick="return confirm(\'' . esc_js( number_format( $p['rows'] ) . '줄을 지울까요? 되돌릴 수 없습니다.' ) . '\')">' . esc_html( number_format( $p['rows'] ) ) . '줄 지우기</button></form>';
+	}
+	return $h . '</div>';
+}
+
 /** 화면. */
 function screen(): void {
 	if ( ! may() ) {
@@ -500,6 +661,7 @@ function screen(): void {
 	$msg   = '';
 	$plan  = null;
 	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : wp_date( 'n월' ) . ' 감사 적립금'; // phpcs:ignore WordPress.Security.NonceVerification
+	$clean = '';
 	$ready = function_exists( 'Duckhoo\\Redesign\\Points\\grant' ) && \Duckhoo\Redesign\Points\can_return();
 
 	if ( isset( $_POST['dhr_pts'] ) && check_admin_referer( 'dhr-pts' ) ) {
@@ -545,6 +707,11 @@ function screen(): void {
 					. ( $res['fail'] ? ' 넣지 못한 ' . $res['fail'] . '명이 있습니다.' : '' );
 				$plan  = build( $saved['rows'], $label );
 			}
+		} elseif ( 'cleanup_preview' === $act && ! empty( $_POST['key'] ) ) {
+			$clean = sanitize_key( wp_unslash( $_POST['key'] ) );
+		} elseif ( 'cleanup' === $act && ! empty( $_POST['key'] ) ) {
+			$res = run_cleanup( sanitize_key( wp_unslash( $_POST['key'] ) ) );
+			$msg = number_format( $res['users'] ) . '명의 적립금 내역에서 ' . number_format( $res['rows'] ) . '줄을 지웠습니다. 잔액은 그대로입니다.';
 		} elseif ( 'revoke' === $act && ! empty( $_POST['key'] ) ) {
 			$res = run_revoke( sanitize_key( wp_unslash( $_POST['key'] ) ) );
 			$msg = number_format( $res['n'] ) . '명에게서 ' . number_format( $res['sum'] ) . '원을 거뒀습니다.' . ( $res['left'] ? ' ' . $res['left'] . '명 남음 — 한 번 더 누르세요.' : '' );
@@ -646,6 +813,9 @@ function screen(): void {
 		}
 	}
 
+	if ( '' !== $clean ) {
+		echo cleanup_box( $clean ); // phpcs:ignore WordPress.Security.EscapeOutput
+	}
 	$all = (array) get_option( OPT, array() );
 	if ( $all ) {
 		echo '<h2 style="margin-top:28px">넣은 묶음</h2><table class="widefat striped" style="max-width:860px"><thead><tr><th>묶음</th><th>인원</th><th>금액</th><th>마지막</th><th></th></tr></thead><tbody>';
@@ -655,6 +825,13 @@ function screen(): void {
 				echo '<form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="revoke" onclick="return confirm(\'이 묶음으로 넣은 적립금을 거둘까요? 이미 쓴 만큼은 빼지 못합니다.\')">거두기</button></form>';
+			}
+			if ( ! empty( $b['revoked'] ) && empty( $b['cleaned'] ) ) {
+				echo ' <form method="post" style="display:inline">';
+				wp_nonce_field( 'dhr-pts' );
+				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="cleanup_preview">손님 내역에서 지우기</button></form>';
+			} elseif ( ! empty( $b['cleaned'] ) ) {
+				echo ' 내역 지움';
 			}
 			echo '</td></tr>';
 		}

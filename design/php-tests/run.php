@@ -3030,6 +3030,16 @@ $pm = ($PA.'plan')([['name'=>'남남','phone'=>'01055555555','kind'=>'','amount'
 $ok($pm[0]['status']==='many' && $pm[0]['cands']===[7,6] && isset($pm[0]['cinfo'][6]), '적립금: 번호가 여럿이면 이름 같은 · 주문 있는 계정을 먼저 세운다 (고르게)');
 $pd = ($PA.'plan')([['name'=>'남남','phone'=>'01055555555','kind'=>'','amount'=>5000,'line'=>2]], $bp, $us2, [], [6=>5000]);
 $ok($pd[0]['status']==='done' && $pd[0]['uid']===6, '적립금: 고른 계정에 이미 넣었으면 다시 볼 때 「이미 넣음」');
+$ok(($PA.'guess_cols')(['id','user_id','points','reason','created_at'])===['id'=>'id','user'=>'user_id','amount'=>'points','reason'=>'reason'] && ($PA.'guess_cols')(['id','foo'])===null, '내역 지우기: 칸 이름을 짐작하고 모르면 손대지 않는다');
+$L='10월 13일 CRM 적립금';
+$ok(($PA.'is_batch_reason')($L.' · 이탈 방지(1회)',$L)===1 && ($PA.'is_batch_reason')($L.' 회수',$L)===-1 && ($PA.'is_batch_reason')($L,$L)===1 && ($PA.'is_batch_reason')('주문 #1 취소 적립금 반환',$L)===null && ($PA.'is_batch_reason')($L.'X',$L)===null, '내역 지우기: 그 묶음의 넣은 줄 · 거둔 줄만 알아본다');
+$cp = ($PA.'cleanup_pick')([
+ ['id'=>1,'user'=>7,'amount'=>5000,'reason'=>$L.' · 이탈 방지(1회)'],['id'=>2,'user'=>7,'amount'=>-5000,'reason'=>$L.' 회수'],
+ ['id'=>3,'user'=>8,'amount'=>5000,'reason'=>$L.' · 첫구매 유도'],['id'=>4,'user'=>8,'amount'=>3000,'reason'=>$L.' 회수'],
+ ['id'=>5,'user'=>9,'amount'=>8800,'reason'=>$L.' · 이탈 방지(단골)'],['id'=>6,'user'=>9,'amount'=>8800,'reason'=>$L.' 회수'],
+ ['id'=>7,'user'=>9,'amount'=>1000,'reason'=>'사진 후기 적립'],
+], $L);
+$ok($cp['del']===[1,2,5,6] && $cp['users']===2 && $cp['left']===[8=>2000], '내역 지우기: 합이 0 인 손님만 (부호 없는 원장도) · 남은 돈이 있는 손님 · 다른 사유는 그대로');
 $xf = getenv('DHR_PTS_XLSX');
 if ($xf && is_file($xf)) { $xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $ok(count($xt['rows'])===913 && array_sum(array_column($xt['rows'],'amount'))===4827200, '적립금: 사장님 엑셀 913명 · 4,827,200원'); }
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
