@@ -268,8 +268,26 @@ function plan( array $rows, array $by_phone, array $users, array $excluded, arra
 		if ( ! $ids ) {
 			$r['status'] = 'none';
 		} elseif ( count( $ids ) > 1 ) {
-			$r['status'] = 'many';
-			$r['note']   = '이 번호의 회원 ' . count( $ids ) . '명 (#' . implode( ' #', $ids ) . ')';
+			$hit = array_values( array_filter( $ids, fn( $id ) => ! empty( $given[ $id ] ) ) );
+			if ( $hit ) {
+				$r['uid']    = $hit[0];
+				$r['status'] = 'done';
+				$r['note']   = '이 묶음으로 이미 ' . number_format( (int) $given[ $hit[0] ] ) . '원 (#' . $hit[0] . ')';
+			} else {
+				// 같은 사람이 이메일을 바꿔 두 번 가입한 경우가 대부분 — 사장님이 고르게 하고, 쓰는 계정을 먼저 세운다.
+				$nm = nnorm( $r['name'] );
+				$score = fn( $id ) => array(
+					'' !== $nm && in_array( $nm, array_map( __NAMESPACE__ . '\\nnorm', (array) ( $users[ $id ]['names'] ?? array() ) ), true ) ? 1 : 0,
+					(int) ( $users[ $id ]['orders'] ?? 0 ),
+					! empty( $users[ $id ]['verified'] ) ? 1 : 0,
+					$id,
+				);
+				usort( $ids, fn( $a, $b ) => $score( $b ) <=> $score( $a ) );
+				$r['status'] = 'many';
+				$r['cands']  = $ids;
+				$r['cinfo']  = array_intersect_key( $users, array_flip( $ids ) );
+				$r['note']   = '이 번호의 회원 ' . count( $ids ) . '명 (#' . implode( ' #', $ids ) . ')';
+			}
 		} else {
 			$uid      = $ids[0];
 			$r['uid'] = $uid;
@@ -332,7 +350,32 @@ function users_info( array $ids, string $key ): array {
 			'email'    => (string) $u->user_email,
 			'verified' => '1' === (string) get_user_meta( $id, 'wd_phone_verified', true ) || '' !== (string) get_user_meta( $id, '_dhr_legacy_verified', true ),
 			'given'    => (int) get_user_meta( $id, META . $key, true ),
+			'reg'      => substr( (string) $u->user_registered, 0, 10 ),
+			'points'   => (int) get_user_meta( $id, '_keyple_points', true ),
+			'orders'   => 0,
 		);
+	}
+	foreach ( order_counts( array_keys( $out ) ) as $id => $n ) {
+		$out[ $id ]['orders'] = $n;
+	}
+	return $out;
+}
+
+/** 회원 번호 => 주문 수 (임시글 · 실패 제외, 한 질의). */
+function order_counts( array $ids ): array {
+	global $wpdb;
+	$ids = array_values( array_filter( array_map( 'intval', $ids ) ) );
+	if ( ! $ids || ! isset( $wpdb ) ) {
+		return array();
+	}
+	$in   = implode( ',', $ids );
+	$hpos = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
+	$sql  = $hpos
+		? "SELECT customer_id AS u, COUNT(*) AS n FROM {$wpdb->prefix}wc_orders WHERE type = 'shop_order' AND status NOT IN ('wc-checkout-draft','wc-failed','trash') AND customer_id IN ($in) GROUP BY customer_id"
+		: "SELECT m.meta_value AS u, COUNT(*) AS n FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = '_customer_user' AND p.post_type = 'shop_order' AND p.post_status NOT IN ('wc-checkout-draft','wc-failed','trash') AND m.meta_value IN ($in) GROUP BY m.meta_value";
+	$out = array();
+	foreach ( (array) $wpdb->get_results( $sql, ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$out[ (int) $r['u'] ] = (int) $r['n'];
 	}
 	return $out;
 }
@@ -365,7 +408,7 @@ function status_label( string $s ): string {
 }
 
 /** 넣기 — 시간이 모자라면 멈추고 남은 수를 돌려준다. */
-function run_grant( array $plan, string $label, bool $with_name, float $budget = 20.0 ): array {
+function run_grant( array $plan, string $label, bool $with_name, float $budget = 20.0, array $picks = array() ): array {
 	$key   = bkey( $label );
 	$t0    = microtime( true );
 	$n     = 0;
@@ -373,6 +416,13 @@ function run_grant( array $plan, string $label, bool $with_name, float $budget =
 	$left  = 0;
 	$fail  = 0;
 	foreach ( $plan as $r ) {
+		if ( 'many' === $r['status'] ) {
+			$pick = (int) ( $picks[ $r['line'] ] ?? 0 );
+			if ( $pick > 0 && in_array( $pick, (array) ( $r['cands'] ?? array() ), true ) ) {
+				$r['uid']    = $pick; // 사장님이 고른 계정 — 후보 안의 것만 받는다.
+				$r['status'] = 'ok';
+			}
+		}
 		if ( ! ( 'ok' === $r['status'] || ( $with_name && 'name' === $r['status'] ) ) ) {
 			continue;
 		}
@@ -488,7 +538,8 @@ function screen(): void {
 			} else {
 				$label = (string) $saved['label'];
 				$plan  = build( $saved['rows'], $label );
-				$res   = run_grant( $plan, $label, ! empty( $_POST['with_name'] ) );
+				$picks = isset( $_POST['pick'] ) && is_array( $_POST['pick'] ) ? array_map( 'intval', wp_unslash( $_POST['pick'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+				$res   = run_grant( $plan, $label, ! empty( $_POST['with_name'] ), 20.0, $picks );
 				$msg   = number_format( $res['n'] ) . '명에게 ' . number_format( $res['sum'] ) . '원을 넣었습니다.'
 					. ( $res['left'] ? ' 시간이 모자라 ' . number_format( $res['left'] ) . '명이 남았습니다 — 「넣기」를 한 번 더 누르면 이어서 넣습니다.' : '' )
 					. ( $res['fail'] ? ' 넣지 못한 ' . $res['fail'] . '명이 있습니다.' : '' );
@@ -552,16 +603,40 @@ function screen(): void {
 			}
 			echo '</tbody></table>';
 		}
-		if ( ! empty( $cnt['ok'] ) || ! empty( $cnt['name'] ) ) {
-			echo '<form method="post" style="margin:16px 0;padding:16px;border:2px solid #1a5cff;border-radius:8px;max-width:760px;background:#fff">';
+		if ( ! empty( $cnt['ok'] ) || ! empty( $cnt['name'] ) || ! empty( $cnt['many'] ) ) {
+			echo '<form method="post" style="margin:16px 0;padding:16px;border:2px solid #1a5cff;border-radius:8px;max-width:900px;background:#fff">';
 			wp_nonce_field( 'dhr-pts' );
+			if ( ! empty( $cnt['many'] ) ) {
+				echo '<h3 style="margin-top:0">번호가 여럿 — 넣을 계정을 고르세요 (' . number_format( $cnt['many'] ) . '명)</h3>';
+				echo '<p style="margin-top:0;color:#50575e">같은 번호로 이메일이 다른 계정이 둘 있는 손님입니다. 대부분 같은 사람이 두 번 가입한 것이라 <b>주문이 있는 계정 · 엑셀 이름과 같은 계정</b>을 먼저 골라 두었습니다. 그 손님이 실제로 로그인하는 계정에 넣어야 잔액이 보입니다.</p>';
+				echo '<table class="widefat striped"><thead><tr><th>엑셀 줄</th><th>이름</th><th>금액</th><th>계정 (가입일 · 이메일 · 본인확인 · 주문 · 적립금)</th></tr></thead><tbody>';
+				foreach ( $plan as $r ) {
+					if ( 'many' !== $r['status'] ) {
+						continue;
+					}
+					echo '<tr><td>' . (int) $r['line'] . '</td><td>' . esc_html( $r['name'] ) . '</td><td>' . number_format( $r['amount'] ) . '</td><td>';
+					foreach ( (array) $r['cands'] as $i => $id ) {
+						$c  = (array) ( $r['cinfo'][ $id ] ?? array() );
+						$em = (string) ( $c['email'] ?? '' );
+						$at = strpos( $em, '@' );
+						$em = false === $at ? $em : substr( $em, 0, min( 3, $at ) ) . '***' . substr( $em, $at );
+						echo '<label style="display:block;margin:2px 0"><input type="radio" name="pick[' . (int) $r['line'] . ']" value="' . (int) $id . '"' . ( 0 === $i ? ' checked' : '' ) . '> '
+							. '<a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . (int) $id ) ) . '" target="_blank">#' . (int) $id . '</a> · '
+							. esc_html( (string) ( $c['reg'] ?? '' ) ) . ' 가입 · ' . esc_html( $em ) . ' · '
+							. ( ! empty( $c['verified'] ) ? '본인확인 ✓' : '본인확인 없음' ) . ' · 주문 ' . (int) ( $c['orders'] ?? 0 ) . '건 · 적립금 ' . number_format( (int) ( $c['points'] ?? 0 ) ) . '원'
+							. ( 0 === $i ? ' <b style="color:#1a5cff">추천</b>' : '' ) . '</label>';
+					}
+					echo '<label style="display:block;margin:2px 0;color:#646970"><input type="radio" name="pick[' . (int) $r['line'] . ']" value="0"> 넣지 않음</label></td></tr>';
+				}
+				echo '</tbody></table>';
+			}
 			if ( ! empty( $cnt['name'] ) ) {
 				echo '<p><label><input type="checkbox" name="with_name" value="1"> 이름이 다른 ' . number_format( $cnt['name'] ) . '명도 넣기 (번호는 맞음 — 아래 표에서 확인)</label></p>';
 			}
-			echo '<p style="margin:0 0 10px">「넣을 사람」 <b>' . number_format( $cnt['ok'] ?? 0 ) . '명 · ' . number_format( $amt['ok'] ?? 0 ) . '원</b>을 지금 넣습니다. 손님 잔액에 바로 보입니다.</p>';
+			echo '<p style="margin:0 0 10px">「넣을 사람」 <b>' . number_format( $cnt['ok'] ?? 0 ) . '명 · ' . number_format( $amt['ok'] ?? 0 ) . '원</b>' . ( ! empty( $cnt['many'] ) ? ' + 위에서 고른 계정' : '' ) . '을 지금 넣습니다. 손님 잔액에 바로 보입니다.</p>';
 			echo '<button class="button button-primary button-hero" name="dhr_pts" value="grant" onclick="return confirm(\'적립금을 넣을까요? 「거두기」로 되돌릴 수 있습니다.\')">넣기</button></form>';
 		}
-		$rest = array_filter( $plan, fn( $r ) => 'ok' !== $r['status'] );
+		$rest = array_filter( $plan, fn( $r ) => ! in_array( $r['status'], array( 'ok', 'many' ), true ) );
 		if ( $rest ) {
 			echo '<h3>넣지 않는 줄 (' . count( $rest ) . ')</h3><table class="widefat striped"><thead><tr><th>엑셀 줄</th><th>이름</th><th>번호</th><th>종류</th><th>금액</th><th>까닭</th><th>메모</th></tr></thead><tbody>';
 			foreach ( array_slice( $rest, 0, 400 ) as $r ) {

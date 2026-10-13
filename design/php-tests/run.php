@@ -3025,6 +3025,11 @@ $ok($st===['ok','ok','none','ok','many','excluded','dup','done'], '적립금: �
 $ok($pl[3]['uid']===5, '적립금: 같은 이메일 쌍둥이는 본인확인된 계정으로');
 $pl2 = ($PA.'plan')([['name'=>'박다름','phone'=>'01011111111','kind'=>'','amount'=>5000,'line'=>2]], $bp, $us, [], []);
 $ok($pl2[0]['status']==='name' && strpos($pl2[0]['note'],'김현빈')!==false, '적립금: 번호는 맞는데 이름이 다르면 따로 묶는다');
+$us2 = $us; $us2[7]['orders'] = 3; $us2[6]['names'] = ['다른이름'];
+$pm = ($PA.'plan')([['name'=>'남남','phone'=>'01055555555','kind'=>'','amount'=>5000,'line'=>2]], $bp, $us2, [], []);
+$ok($pm[0]['status']==='many' && $pm[0]['cands']===[7,6] && isset($pm[0]['cinfo'][6]), '적립금: 번호가 여럿이면 이름 같은 · 주문 있는 계정을 먼저 세운다 (고르게)');
+$pd = ($PA.'plan')([['name'=>'남남','phone'=>'01055555555','kind'=>'','amount'=>5000,'line'=>2]], $bp, $us2, [], [6=>5000]);
+$ok($pd[0]['status']==='done' && $pd[0]['uid']===6, '적립금: 고른 계정에 이미 넣었으면 다시 볼 때 「이미 넣음」');
 $xf = getenv('DHR_PTS_XLSX');
 if ($xf && is_file($xf)) { $xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $ok(count($xt['rows'])===913 && array_sum(array_column($xt['rows'],'amount'))===4827200, '적립금: 사장님 엑셀 913명 · 4,827,200원'); }
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
