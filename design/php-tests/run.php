@@ -2998,5 +2998,34 @@ $r3 = ($IM.'impact')(['01011111111','01088888888'], $at, $o3, [7=>['01011111111'
 $ok($r3['before']['buyers']===1, '발송 성과: 4일째면 보내기 전도 4일만 본다 (10일 전 주문은 안 센다)');
 $h = ($IM.'impact_html')($r, '시험');
 $ok(strpos($h, '전환율 <b style="font-size:18px">25') !== false && !preg_match('/01[016789]\d{7,8}/', $h), '발송 성과: 화면에 번호를 안 적는다');
+
+/* ── 적립금 한 번에 넣기 (includes/points-admin.php) ── */
+require_once dirname(__DIR__, 2).'/includes/points-admin.php';
+$PA = 'Duckhoo\\Redesign\\Points\\Admin\\';
+$rt = ($PA.'read_table')([['번호','이름','전화번호','문자종류','적립금','지급완료'],['1','김현빈','010-4434-3207','이탈 방지(1회)','5000',''],['2','장명기','010 5383 5924','이탈 방지(단골)','8,800',''],['3','완료된사람','010-1111-2222','x','5000','O'],['4','번호없음','','x','5000',''],['5','큰금액','010-2222-3333','x','500000','']]);
+$ok(count($rt['rows'])===2 && $rt['rows'][1]['amount']===8800 && $rt['rows'][1]['phone']==='01053835924' && $rt['rows'][0]['kind']==='이탈 방지(1회)', '적립금: 머리줄로 칸을 찾고 · 하이픈 · 빈칸 · 쉼표를 읽는다');
+$ok(count($rt['bad'])===2, '적립금: 지급완료 줄은 건너뛰고 · 번호 없음 · 10만원 넘는 줄은 못 읽은 줄로');
+$rp = ($PA.'read_table')(($PA.'paste_table')("김가나\t010-9999-0000\t3000\n이다라 01088887777 5,000원"));
+$ok(count($rp['rows'])===2 && $rp['rows'][0]['amount']===3000 && $rp['rows'][1]['amount']===5000 && $rp['rows'][1]['name']==='이다라', '적립금: 머리줄 없이 붙여 넣어도 번호 · 마지막 숫자 · 이름');
+$rows = [
+ ['name'=>'김현빈','phone'=>'01011111111','kind'=>'a','amount'=>5000,'line'=>2],
+ ['name'=>'장명기','phone'=>'01022222222','kind'=>'a','amount'=>5000,'line'=>3],
+ ['name'=>'없는사람','phone'=>'01033333333','kind'=>'a','amount'=>5000,'line'=>4],
+ ['name'=>'쌍둥이','phone'=>'01044444444','kind'=>'a','amount'=>5000,'line'=>5],
+ ['name'=>'남남','phone'=>'01055555555','kind'=>'a','amount'=>5000,'line'=>6],
+ ['name'=>'왕한빈','phone'=>'01066666666','kind'=>'a','amount'=>5000,'line'=>7],
+ ['name'=>'김현빈','phone'=>'01011111111','kind'=>'a','amount'=>5000,'line'=>8],
+ ['name'=>'이미','phone'=>'01077777777','kind'=>'a','amount'=>5000,'line'=>9],
+];
+$bp = ['01011111111'=>[1],'01022222222'=>[2],'01044444444'=>[4,5],'01055555555'=>[6,7],'01066666666'=>[8],'01077777777'=>[9]];
+$us = [1=>['names'=>['김현빈'],'email'=>'a@x'],2=>['names'=>['장 명기','Jang'],'email'=>'b@x'],4=>['names'=>['쌍둥이'],'email'=>'t@x','verified'=>false],5=>['names'=>['쌍둥이'],'email'=>'T@x','verified'=>true],6=>['names'=>['남남'],'email'=>'c@x'],7=>['names'=>['남남'],'email'=>'d@x'],8=>['names'=>['왕한빈'],'email'=>'e@x'],9=>['names'=>['이미'],'email'=>'f@x']];
+$pl = ($PA.'plan')($rows, $bp, $us, ['왕한빈'], [9=>5000]);
+$st = array_column($pl, 'status');
+$ok($st===['ok','ok','none','ok','many','excluded','dup','done'], '적립금: 넣음 · 이름 빈칸 무시 · 못 찾음 · 쌍둥이 하나로 · 다른 사람 여럿 · 제외 · 두 줄 · 이미 넣음');
+$ok($pl[3]['uid']===5, '적립금: 같은 이메일 쌍둥이는 본인확인된 계정으로');
+$pl2 = ($PA.'plan')([['name'=>'박다름','phone'=>'01011111111','kind'=>'','amount'=>5000,'line'=>2]], $bp, $us, [], []);
+$ok($pl2[0]['status']==='name' && strpos($pl2[0]['note'],'김현빈')!==false, '적립금: 번호는 맞는데 이름이 다르면 따로 묶는다');
+$xf = getenv('DHR_PTS_XLSX');
+if ($xf && is_file($xf)) { $xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $ok(count($xt['rows'])===913 && array_sum(array_column($xt['rows'],'amount'))===4827200, '적립금: 사장님 엑셀 913명 · 4,827,200원'); }
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
