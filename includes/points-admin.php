@@ -434,8 +434,8 @@ function run_grant( array $plan, string $label, bool $with_name, float $budget =
 		if ( (int) get_user_meta( $uid, META . $key, true ) > 0 ) {
 			continue; // 두 번 안 넣는다.
 		}
-		$memo = $label . ( '' !== $r['kind'] ? ' · ' . $r['kind'] : '' );
-		if ( \Duckhoo\Redesign\Points\grant( $uid, (int) $r['amount'], $memo ) ) {
+		// 원장 사유는 손님의 적립금 내역에 그대로 보인다 — 「이탈 방지」 같은 내부 그룹 이름은 넣지 않는다.
+		if ( \Duckhoo\Redesign\Points\grant( $uid, (int) $r['amount'], $label ) ) {
 			update_user_meta( $uid, META . $key, (int) $r['amount'] );
 			++$n;
 			$sum += (int) $r['amount'];
@@ -477,7 +477,7 @@ function run_revoke( string $key, float $budget = 20.0 ): array {
 		$bal = (int) get_user_meta( $uid, '_keyple_points', true );
 		$take = min( $amt, max( 0, $bal ) );
 		if ( $take > 0 ) {
-			\Duckhoo\Redesign\Points\grant( $uid, -$take, $label . ' 회수' );
+			\Duckhoo\Redesign\Points\grant( $uid, -$take, $label . ' 사용기간 종료' );
 			$sum += $take;
 		}
 		delete_user_meta( $uid, META . $key );
@@ -499,7 +499,7 @@ function screen(): void {
 	$tkey  = 'dhr_pts_prev_' . $me;
 	$msg   = '';
 	$plan  = null;
-	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : wp_date( 'n월 j일' ) . ' CRM 적립금'; // phpcs:ignore WordPress.Security.NonceVerification
+	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : wp_date( 'n월' ) . ' 감사 적립금'; // phpcs:ignore WordPress.Security.NonceVerification
 	$ready = function_exists( 'Duckhoo\\Redesign\\Points\\grant' ) && \Duckhoo\Redesign\Points\can_return();
 
 	if ( isset( $_POST['dhr_pts'] ) && check_admin_referer( 'dhr-pts' ) ) {
@@ -518,7 +518,7 @@ function screen(): void {
 				$table = paste_table( (string) wp_unslash( $_POST['paste'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 			}
 			if ( '' === $label ) {
-				$msg = '묶음 이름을 적어 주세요 — 원장에 그대로 남습니다.';
+				$msg = '적립 사유를 적어 주세요 — 손님의 적립금 내역에 그대로 보입니다.';
 			} elseif ( $table ) {
 				$read = read_table( $table );
 				$plan = build( $read['rows'], $label );
@@ -568,7 +568,7 @@ function screen(): void {
 
 	echo '<form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:16px;max-width:760px">';
 	wp_nonce_field( 'dhr-pts' );
-	echo '<p><label><b>묶음 이름</b> (원장에 「묶음 이름 · 문자종류」로 남습니다)<br><input type="text" name="label" value="' . esc_attr( $label ) . '" class="regular-text"></label></p>';
+	echo '<p><label><b>적립 사유</b> — <b style="color:#b42318">손님의 적립금 내역에 이 글자 그대로 보입니다.</b> 「이탈 방지」 같은 내부 그룹 이름은 쓰지 마세요<br><input type="text" name="label" value="' . esc_attr( $label ) . '" class="regular-text"></label></p>';
 	echo '<p><label><b>엑셀 파일</b> (.xlsx · .csv)<br><input type="file" name="f" accept=".xlsx,.csv,.txt"></label></p>';
 	echo '<p><label>또는 엑셀에서 머리줄부터 복사해 붙여 넣기<br><textarea name="paste" rows="4" style="width:100%"></textarea></label></p>';
 	echo '<p><button class="button button-primary" name="dhr_pts" value="preview">미리 보기</button></p></form>';
