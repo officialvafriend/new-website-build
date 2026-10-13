@@ -803,9 +803,10 @@ function screen(): void {
 			echo '<p style="margin:0 0 10px">「넣을 사람」 <b>' . number_format( $cnt['ok'] ?? 0 ) . '명 · ' . number_format( $amt['ok'] ?? 0 ) . '원</b>' . ( ! empty( $cnt['many'] ) ? ' + 위에서 고른 계정' : '' ) . '을 지금 넣습니다. 손님 잔액에 바로 보입니다.</p>';
 			echo '<button class="button button-primary button-hero" name="dhr_pts" value="grant" onclick="return confirm(\'적립금을 넣을까요? 「거두기」로 되돌릴 수 있습니다.\')">넣기</button></form>';
 		}
-		$rest = array_filter( $plan, fn( $r ) => ! in_array( $r['status'], array( 'ok', 'many' ), true ) );
+		// 이미 받은 사람(done)은 빼고 — 다시 미리 보기 하면 이 표가 곧 「아직 못 받은 사람」이다.
+		$rest = array_filter( $plan, fn( $r ) => ! in_array( $r['status'], array( 'ok', 'many', 'done' ), true ) );
 		if ( $rest ) {
-			echo '<h3>넣지 않는 줄 (' . count( $rest ) . ')</h3><table class="widefat striped"><thead><tr><th>엑셀 줄</th><th>이름</th><th>번호</th><th>종류</th><th>금액</th><th>까닭</th><th>메모</th></tr></thead><tbody>';
+			echo '<h3>' . ( ! empty( $cnt['done'] ) ? '아직 못 받은 사람' : '넣지 않는 줄' ) . ' (' . count( $rest ) . ')</h3><table class="widefat striped"><thead><tr><th>엑셀 줄</th><th>이름</th><th>번호</th><th>종류</th><th>금액</th><th>까닭</th><th>메모</th></tr></thead><tbody>';
 			foreach ( array_slice( $rest, 0, 400 ) as $r ) {
 				echo '<tr><td>' . (int) $r['line'] . '</td><td>' . esc_html( $r['name'] ) . '</td><td>' . esc_html( substr( $r['phone'], 0, 3 ) . '-****-' . substr( $r['phone'], -4 ) ) . '</td><td>' . esc_html( $r['kind'] ) . '</td><td>' . number_format( $r['amount'] ) . '</td><td>' . esc_html( status_label( $r['status'] ) ) . '</td><td>' . esc_html( $r['note'] ) . ( $r['uid'] ? ' <a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . (int) $r['uid'] ) ) . '">#' . (int) $r['uid'] . '</a>' : '' ) . '</td></tr>';
 			}
