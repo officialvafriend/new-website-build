@@ -651,6 +651,182 @@ function cleanup_box( string $key ): string {
 	return $h . '</div>';
 }
 
+
+/* ── 참여 — 받은 사람이 다시 샀는가 · 적립금을 썼는가 ───────────────────── */
+
+/**
+ * 묶음 하나의 참여를 센다. 순수.
+ *
+ * @param array<int,array{0:int,1:string}> $recips 회원 번호 => [받은 금액, 문자종류].
+ * @param array<int,array{id:int,ts:int,s:string,t:float,u:int}> $orders 주문 (ts 는 실제 시각).
+ * @param array<int,int> $used 주문 번호 => 그 주문에서 쓴 적립금.
+ * @param int   $at   넣은 시각.
+ * @param int   $now  지금.
+ * @param array $paid 돈 들어온 상태.
+ * @param array $pend 입금 전 상태.
+ * @return array<string,array<string,mixed>> '' => 전체, 문자종류 => 그 그룹.
+ */
+function participation( array $recips, array $orders, array $used, int $at, int $now, array $paid, array $pend ): array {
+	$len  = max( DAY_IN_SECONDS, $now - $at );
+	$by   = array();
+	foreach ( $orders as $o ) {
+		$u = (int) $o['u'];
+		if ( $u > 0 && isset( $recips[ $u ] ) ) {
+			$by[ $u ][] = $o;
+		}
+	}
+	$blank = fn() => array( 'n' => 0, 'given' => 0, 'buyers' => 0, 'pend' => 0, 'orders' => 0, 'sales' => 0.0, 'users' => 0, 'used' => 0, 'before' => 0, 'days' => array() );
+	$out   = array( '' => $blank() );
+	foreach ( $recips as $uid => $rv ) {
+		$kind = '' !== (string) ( $rv[1] ?? '' ) ? (string) $rv[1] : '(종류 없음)';
+		$out[ $kind ] = $out[ $kind ] ?? $blank();
+		$after = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] >= $at && $o['ts'] <= $now );
+		$prev  = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] < $at && $o['ts'] >= $at - $len && in_array( $o['s'], $paid, true ) );
+		$ok    = array_filter( $after, fn( $o ) => in_array( $o['s'], $paid, true ) );
+		$wait  = array_filter( $after, fn( $o ) => in_array( $o['s'], $pend, true ) );
+		$spent = 0;
+		foreach ( array_merge( $ok, $wait ) as $o ) {
+			$spent += (int) ( $used[ (int) $o['id'] ] ?? 0 );
+		}
+		$first = $ok ? min( array_column( $ok, 'ts' ) ) : 0;
+		foreach ( array( '', $kind ) as $k ) {
+			$r = &$out[ $k ];
+			++$r['n'];
+			$r['given'] += (int) $rv[0];
+			if ( $ok ) {
+				++$r['buyers'];
+				$r['orders'] += count( $ok );
+				$r['sales']  += array_sum( array_column( $ok, 't' ) );
+				$r['days'][]  = ( $first - $at ) / DAY_IN_SECONDS;
+			} elseif ( $wait ) {
+				++$r['pend'];
+			}
+			if ( $spent > 0 ) {
+				++$r['users'];
+				$r['used'] += $spent;
+			}
+			if ( $prev ) {
+				++$r['before'];
+			}
+			unset( $r );
+		}
+	}
+	foreach ( $out as &$r ) {
+		$d = $r['days'];
+		sort( $d );
+		$r['first_med'] = $d ? $d[ (int) floor( ( count( $d ) - 1 ) / 2 ) ] : null;
+		$r['rate']      = $r['n'] ? $r['buyers'] / $r['n'] : 0.0;
+		$r['use_rate']  = $r['n'] ? $r['users'] / $r['n'] : 0.0;
+		unset( $r['days'] );
+	}
+	unset( $r );
+	$out['']['elapsed'] = (int) floor( $len / DAY_IN_SECONDS );
+	return $out;
+}
+
+/** 주문마다 쓴 적립금 (`_wd_point_discount`). 한 질의. */
+function used_points( int $since ): array {
+	global $wpdb;
+	$gmt  = gmdate( 'Y-m-d H:i:s', $since - DAY_IN_SECONDS );
+	$hpos = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
+	$sql  = $hpos
+		? $wpdb->prepare( "SELECT m.order_id AS id, m.meta_value AS v FROM {$wpdb->prefix}wc_orders_meta m JOIN {$wpdb->prefix}wc_orders o ON o.id = m.order_id WHERE m.meta_key = '_wd_point_discount' AND o.date_created_gmt >= %s", $gmt )
+		: $wpdb->prepare( "SELECT m.post_id AS id, m.meta_value AS v FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = '_wd_point_discount' AND p.post_type = 'shop_order' AND p.post_date_gmt >= %s", $gmt );
+	$out = array();
+	foreach ( (array) $wpdb->get_results( $sql, ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$v = (int) round( abs( (float) $r['v'] ) );
+		if ( $v > 0 ) {
+			$out[ (int) $r['id'] ] = $v;
+		}
+	}
+	return $out;
+}
+
+/** 묶음의 참여 — DB 를 읽어 센다 (10분 캐시). */
+function participation_for( string $key ): ?array {
+	global $wpdb;
+	$all = (array) get_option( OPT, array() );
+	if ( ! isset( $all[ $key ] ) ) {
+		return null;
+	}
+	$tk = 'dhr_pts_part_' . $key;
+	$c  = get_transient( $tk );
+	if ( is_array( $c ) ) {
+		return $c;
+	}
+	$b      = $all[ $key ];
+	$at     = (int) ( $b['created'] ?? time() );
+	$kinds  = (array) ( $b['kinds'] ?? array() );
+	$recips = array();
+	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$uid            = (int) $r['user_id'];
+		$recips[ $uid ] = array( (int) $r['meta_value'], (string) ( $kinds[ $uid ] ?? '' ) );
+	}
+	$off    = (int) ( function_exists( 'wp_timezone' ) ? ( new \DateTime( 'now', wp_timezone() ) )->getOffset() : 9 * 3600 );
+	$orders = array();
+	foreach ( ( function_exists( '\\Duckhoo\\Redesign\\Anatomy\\orders' ) ? \Duckhoo\Redesign\Anatomy\orders() : array() ) as $o ) {
+		$o['ts'] = (int) $o['ts'] - $off; // 사이트 시간으로 밀려 있다
+		if ( $o['ts'] >= $at - 60 * DAY_IN_SECONDS ) {
+			$orders[] = $o;
+		}
+	}
+	$paid = function_exists( '\\Duckhoo\\Redesign\\Crm\\paid_statuses' ) ? \Duckhoo\Redesign\Crm\paid_statuses() : array( 'payment-confirmed', 'ready-to-ship', 'shipping', 'delivered', 'completed', 'processing' );
+	$pend = function_exists( '\\Duckhoo\\Redesign\\Crm\\pending_statuses' ) ? \Duckhoo\Redesign\Crm\pending_statuses() : array( 'on-hold', 'pending' );
+	$res  = array( 'label' => (string) $b['label'], 'at' => $at, 'kinds' => count( $kinds ), 'p' => participation( $recips, $orders, used_points( $at ), $at, time(), $paid, $pend ) );
+	set_transient( $tk, $res, 10 * MINUTE_IN_SECONDS );
+	return $res;
+}
+
+/** 참여 상자. */
+function participation_box( string $key ): string {
+	$r = participation_for( $key );
+	if ( ! $r ) {
+		return '';
+	}
+	$p   = $r['p'];
+	$t   = $p[''];
+	$pct = fn( $x ) => number_format( $x * 100, 1 ) . '%';
+	$h   = '<div style="margin:16px 0;padding:16px;border:2px solid #1a5cff;border-radius:8px;max-width:960px;background:#fff">';
+	$h  .= '<h3 style="margin-top:0">참여 — ' . esc_html( $r['label'] ) . ' <span style="font-weight:400;color:#646970">(' . esc_html( wp_date( 'n월 j일 H:i', $r['at'] ) ) . ' 넣음 · ' . (int) $t['elapsed'] . '일째)</span></h3>';
+	$h  .= '<p style="font-size:15px">받은 <b>' . number_format( $t['n'] ) . '명</b> 중 <b>' . number_format( $t['buyers'] ) . '명 주문 (' . $pct( $t['rate'] ) . ')</b> · 적립금을 쓴 사람 <b>' . number_format( $t['users'] ) . '명 (' . $pct( $t['use_rate'] ) . ')</b> · 입금 전으로만 남은 사람 ' . number_format( $t['pend'] ) . '명</p>';
+	$h  .= '<p>주문 ' . number_format( $t['orders'] ) . '건 · 실입금 <b>' . number_format( (int) $t['sales'] ) . '원</b> · 쓴 적립금 ' . number_format( $t['used'] ) . '원 / 넣은 적립금 ' . number_format( $t['given'] ) . '원'
+		. ( null !== $t['first_med'] ? ' · 넣고 첫 주문까지 가운데 ' . number_format( (float) $t['first_med'], 1 ) . '일' : '' ) . '</p>';
+	$h  .= '<p style="color:#646970">견줄 값: 같은 사람들이 넣기 전 ' . (int) $t['elapsed'] . '일 동안 산 사람 ' . number_format( $t['before'] ) . '명.</p>';
+	$rows = array_filter( $p, fn( $k ) => '' !== $k, ARRAY_FILTER_USE_KEY );
+	if ( count( $rows ) > 1 || ( 1 === count( $rows ) && ! isset( $rows['(종류 없음)'] ) ) ) {
+		$h .= '<table class="widefat striped"><thead><tr><th>문자종류</th><th>받은 사람</th><th>주문한 사람</th><th>적립금 쓴 사람</th><th>주문</th><th>실입금</th><th>넣기 전 같은 기간</th></tr></thead><tbody>';
+		foreach ( $rows as $k => $v ) {
+			$h .= '<tr><td>' . esc_html( $k ) . '</td><td>' . number_format( $v['n'] ) . '</td><td>' . number_format( $v['buyers'] ) . ' (' . $pct( $v['rate'] ) . ')</td><td>' . number_format( $v['users'] ) . ' (' . $pct( $v['use_rate'] ) . ')</td><td>' . number_format( $v['orders'] ) . '</td><td>' . number_format( (int) $v['sales'] ) . '원</td><td>' . number_format( $v['before'] ) . '명</td></tr>';
+		}
+		$h .= '</tbody></table>';
+	} else {
+		$h .= '<p style="color:#646970">문자종류별로 나눠 보려면 같은 엑셀 · 같은 적립 사유로 <b>미리 보기</b>를 한 번 누르세요 (넣지 않아도 됩니다). 그때 종류가 기록됩니다.</p>';
+	}
+	$h .= '<p style="color:#646970;margin-bottom:0">「주문한 사람」은 넣은 뒤 돈이 들어온 주문이 있는 사람입니다. 입금 확인이 이어지므로 숫자는 하루 동안 계속 오릅니다 (10분마다 새로 셈). 문자를 넣은 뒤 늦게 보냈다면 그만큼 낮게 보입니다.</p>';
+	return $h . '</div>';
+}
+
+/** 미리 보기 · 넣기 때 회원마다 문자종류를 묶음에 적는다 (참여를 종류별로 나눠 보려고). */
+function remember_kinds( string $label, array $plan ): void {
+	$key = bkey( $label );
+	$all = (array) get_option( OPT, array() );
+	if ( ! isset( $all[ $key ] ) ) {
+		return;
+	}
+	$k = (array) ( $all[ $key ]['kinds'] ?? array() );
+	$n = count( $k );
+	foreach ( $plan as $r ) {
+		if ( in_array( $r['status'], array( 'ok', 'done' ), true ) && (int) $r['uid'] > 0 && '' !== (string) $r['kind'] && ! isset( $k[ (int) $r['uid'] ] ) ) {
+			$k[ (int) $r['uid'] ] = (string) $r['kind'];
+		}
+	}
+	if ( count( $k ) !== $n ) {
+		$all[ $key ]['kinds'] = $k;
+		update_option( OPT, $all, false );
+		delete_transient( 'dhr_pts_part_' . $key );
+	}
+}
+
 /** 화면. */
 function screen(): void {
 	if ( ! may() ) {
@@ -662,6 +838,7 @@ function screen(): void {
 	$plan  = null;
 	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : wp_date( 'n월' ) . ' 감사 적립금'; // phpcs:ignore WordPress.Security.NonceVerification
 	$clean = '';
+	$part  = '';
 	$ready = function_exists( 'Duckhoo\\Redesign\\Points\\grant' ) && \Duckhoo\Redesign\Points\can_return();
 
 	if ( isset( $_POST['dhr_pts'] ) && check_admin_referer( 'dhr-pts' ) ) {
@@ -684,6 +861,7 @@ function screen(): void {
 			} elseif ( $table ) {
 				$read = read_table( $table );
 				$plan = build( $read['rows'], $label );
+				remember_kinds( $label, $plan );
 				set_transient( $tkey, array( 'label' => $label, 'rows' => $read['rows'], 'bad' => $read['bad'] ), HOUR_IN_SECONDS );
 				if ( $read['bad'] ) {
 					$msg = '번호나 금액을 못 읽은 줄 ' . count( $read['bad'] ) . '개는 뺐습니다: ' . implode( ' / ', array_slice( $read['bad'], 0, 3 ) );
@@ -706,7 +884,11 @@ function screen(): void {
 					. ( $res['left'] ? ' 시간이 모자라 ' . number_format( $res['left'] ) . '명이 남았습니다 — 「넣기」를 한 번 더 누르면 이어서 넣습니다.' : '' )
 					. ( $res['fail'] ? ' 넣지 못한 ' . $res['fail'] . '명이 있습니다.' : '' );
 				$plan  = build( $saved['rows'], $label );
+				remember_kinds( $label, $plan );
+				delete_transient( 'dhr_pts_part_' . bkey( $label ) );
 			}
+		} elseif ( 'part' === $act && ! empty( $_POST['key'] ) ) {
+			$part = sanitize_key( wp_unslash( $_POST['key'] ) );
 		} elseif ( 'cleanup_preview' === $act && ! empty( $_POST['key'] ) ) {
 			$clean = sanitize_key( wp_unslash( $_POST['key'] ) );
 		} elseif ( 'cleanup' === $act && ! empty( $_POST['key'] ) ) {
@@ -817,6 +999,9 @@ function screen(): void {
 	if ( '' !== $clean ) {
 		echo cleanup_box( $clean ); // phpcs:ignore WordPress.Security.EscapeOutput
 	}
+	if ( '' !== $part ) {
+		echo participation_box( $part ); // phpcs:ignore WordPress.Security.EscapeOutput
+	}
 	$all = (array) get_option( OPT, array() );
 	if ( $all ) {
 		echo '<h2 style="margin-top:28px">넣은 묶음</h2><table class="widefat striped" style="max-width:860px"><thead><tr><th>묶음</th><th>인원</th><th>금액</th><th>마지막</th><th></th></tr></thead><tbody>';
@@ -826,6 +1011,11 @@ function screen(): void {
 				echo '<form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="revoke" onclick="return confirm(\'이 묶음으로 넣은 적립금을 거둘까요? 이미 쓴 만큼은 빼지 못합니다.\')">거두기</button></form>';
+			}
+			if ( (int) $b['n'] > 0 ) {
+				echo ' <form method="post" style="display:inline">';
+				wp_nonce_field( 'dhr-pts' );
+				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button button-primary" name="dhr_pts" value="part">참여 보기</button></form>';
 			}
 			if ( ! empty( $b['revoked'] ) && empty( $b['cleaned'] ) ) {
 				echo ' <form method="post" style="display:inline">';
