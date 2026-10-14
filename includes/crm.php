@@ -21,7 +21,7 @@ namespace Duckhoo\Redesign\Crm;
 defined( 'ABSPATH' ) || exit;
 
 const SLUG  = 'duckhoo-crm';
-const CACHE = 'dhr_crm_v1_';
+const CACHE = 'dhr_crm_v2_';
 const D     = 86400;
 
 function may(): bool {
@@ -318,6 +318,53 @@ function seg_unpaid( array $orders, int $now, int $min_days = 1 ): array {
 }
 
 /**
+ * 두 번 주문해 하나는 돈이 들어오고 하나는 입금전으로 남은 사람 — 미입금 안내를 보내면 안 된다 (2026-10-14, 사장님).
+ * 「같은 사람」= 같은 회원 번호이거나 같은 연락처 (쌍둥이 계정 · 비회원 주문). 두 주문이 ±N일 안에 있어야 한다
+ * (필터 `duckhoo_crm_unpaid_dup_days`, 기본 7) — 몇 달 전에 산 단골이 이번 주문을 잊은 것은 그대로 안내한다.
+ *
+ * @param array<int,array{id:int,ts:int,keys:string[]}> $unpaid 미입금 주문.
+ * @param array<int,array{id:int,ts:int,keys:string[]}> $paid   돈 들어온 주문.
+ * @return array{0:array<int,int>,1:array<int,int>} [남길 미입금 주문 번호들, 미입금 주문 번호 => 짝 결제 주문 번호]
+ */
+function paid_dups( array $unpaid, array $paid, int $window_days ): array {
+	$by = array();
+	foreach ( $paid as $p ) {
+		foreach ( (array) $p['keys'] as $k ) {
+			if ( '' !== (string) $k ) {
+				$by[ (string) $k ][] = $p;
+			}
+		}
+	}
+	$keep = array();
+	$drop = array();
+	foreach ( $unpaid as $u ) {
+		$hit = 0;
+		foreach ( (array) $u['keys'] as $k ) {
+			foreach ( $by[ (string) $k ] ?? array() as $p ) {
+				if ( (int) $p['id'] !== (int) $u['id'] && abs( (int) $p['ts'] - (int) $u['ts'] ) <= $window_days * D ) {
+					$hit = (int) $p['id'];
+					break 2;
+				}
+			}
+		}
+		if ( $hit ) {
+			$drop[ (int) $u['id'] ] = $hit;
+		} else {
+			$keep[] = (int) $u['id'];
+		}
+	}
+	return array( $keep, $drop );
+}
+
+/** 짝 결제 주문이 있으면 미입금에서 뺄지 — 필터 `duckhoo_crm_unpaid_skip_paid_dup`. */
+function skip_paid_dup_days(): int {
+	if ( ! apply_filters( 'duckhoo_crm_unpaid_skip_paid_dup', true ) ) {
+		return -1;
+	}
+	return max( 0, (int) apply_filters( 'duckhoo_crm_unpaid_dup_days', 7 ) );
+}
+
+/**
  * 같은 연락처는 한 줄만 (쌍둥이 계정 · 같은 사람의 주문 여럿). 앞 줄이 남는다. 연락처가 없는 줄은 그대로.
  *
  * @param array<int,array<string,mixed>> $rows 'phone' 칸이 있는 줄.
@@ -566,8 +613,39 @@ function build( string $seg, array $opt, int $now ): array {
 		$meta = array( 'counts' => $x['counts'], 'total' => count( $x['rows'] ) );
 	} elseif ( 'unpaid' === $seg ) {
 		$list = seg_unpaid( $orders, $now, (int) $opt['days'] );
-		$ct   = contacts( array_column( $list, 'u' ) );
-		$oc   = order_contacts( array_column( $list, 'id' ) );
+		$win  = skip_paid_dup_days();
+		$dups = array();
+		$pair = array();
+		$pd   = array();
+		if ( $win >= 0 && $list ) {
+			$from = min( array_column( $list, 'ts' ) ) - $win * D;
+			$paid = paid_statuses();
+			foreach ( $orders as $o ) {
+				if ( (int) $o['ts'] >= $from && in_array( $o['s'], $paid, true ) ) {
+					$pd[] = $o;
+				}
+			}
+		}
+		$ct = contacts( array_merge( array_column( $list, 'u' ), array_column( $pd, 'u' ) ) );
+		$oc = order_contacts( array_merge( array_column( $list, 'id' ), array_column( $pd, 'id' ) ) );
+		if ( $pd ) {
+			$keys = function ( array $o ) use ( $ct, $oc ): array {
+				$k = array();
+				if ( (int) $o['u'] > 0 ) {
+					$k[] = 'u:' . (int) $o['u'];
+				}
+				foreach ( array( $ct[ (int) $o['u'] ]['phone'] ?? '', $oc[ (int) $o['id'] ]['phone'] ?? '' ) as $ph ) {
+					if ( '' !== $ph ) {
+						$k[] = 'p:' . $ph;
+					}
+				}
+				return array_values( array_unique( $k ) );
+			};
+			$mk = fn( array $o ) => array( 'id' => (int) $o['id'], 'ts' => (int) $o['ts'], 'keys' => $keys( $o ) );
+			[ $kept, $pair ] = paid_dups( array_map( $mk, $list ), array_map( $mk, $pd ), $win );
+			$dups = array_values( array_filter( $list, fn( $r ) => isset( $pair[ (int) $r['id'] ] ) ) );
+			$list = array_values( array_filter( $list, fn( $r ) => ! isset( $pair[ (int) $r['id'] ] ) ) );
+		}
 		foreach ( $list as $r ) {
 			$c = $ct[ $r['u'] ] ?? $oc[ $r['id'] ] ?? array( 'name' => '', 'phone' => '', 'email' => '' );
 			if ( '' === $c['phone'] && isset( $oc[ $r['id'] ] ) ) {
@@ -576,6 +654,7 @@ function build( string $seg, array $opt, int $now ): array {
 			}
 			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => '입금전 ' . $r['days'] . '일째 · 주문 #' . $r['id'], 'amount' => $r['t'], 'when' => $r['ts'], 'note' => $r['u'] ? '' : '비회원' );
 		}
+		$meta = array( 'dups' => array_map( fn( $r ) => array( 'id' => (int) $r['id'], 'paid' => (int) $pair[ (int) $r['id'] ], 't' => (float) $r['t'], 'days' => (int) $r['days'] ), $dups ), 'dup_days' => $win );
 	}
 	return array( 'rows' => $rows, 'meta' => $meta, 'at' => $now );
 }
@@ -744,6 +823,22 @@ function screen(): void {
 			}
 			echo '</div>';
 		}
+	}
+
+	if ( 'unpaid' === $seg && isset( $d['meta']['dups'] ) ) {
+		$dl = (array) $d['meta']['dups'];
+		echo '<div class="dhr-crm-adv">' . ( (int) ( $d['meta']['dup_days'] ?? -1 ) < 0
+			? '짝 결제 주문 빼기가 꺼져 있습니다 (duckhoo_crm_unpaid_skip_paid_dup).'
+			: '<b>두 번 주문해 하나는 이미 결제된 사람 ' . esc_html( $w( count( $dl ) ) ) . '건은 뺐습니다</b> — 같은 회원 또는 같은 연락처로 앞뒤 ' . (int) $d['meta']['dup_days'] . '일 안에 돈 들어온 주문이 있는 입금전 주문입니다. 이 주문들은 안내 대신 관리자에서 취소하면 됩니다.' );
+		if ( $dl ) {
+			$hp  = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
+			$eurl = fn( int $id ) => admin_url( $hp ? 'admin.php?page=wc-orders&action=edit&id=' . $id : 'post.php?post=' . $id . '&action=edit' );
+			echo '<br>';
+			foreach ( array_slice( $dl, 0, 60 ) as $x ) {
+				echo '<a href="' . esc_url( $eurl( (int) $x['id'] ) ) . '">#' . (int) $x['id'] . '</a> (' . esc_html( $w( $x['t'] ) ) . '원 · 입금전 ' . (int) $x['days'] . '일) ↔ 결제됨 <a href="' . esc_url( $eurl( (int) $x['paid'] ) ) . '">#' . (int) $x['paid'] . '</a> · ';
+			}
+		}
+		echo '</div>';
 	}
 
 	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) . ( skip_on() ? '' : '&skip=0' ) );
