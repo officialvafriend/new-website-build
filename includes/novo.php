@@ -905,14 +905,18 @@ function product_notice( $p = null ): void {
 	}
 	$stock = show_stock() ? stock_left( $p ) : null;
 	$cap   = limited( $p );
-	if ( ! $cap && null === $stock ) {
+	$dl    = ( $p && $p->is_in_stock() ) ? deal() : array();   // 품절 상품에 「재고 한정」은 할 말이 아니다
+	if ( ! $cap && null === $stock && ! $dl ) {
 		return; // 낱병이고 재고 숫자도 없으면 할 말이 없다.
 	}
 	$each = bottles( $p );
 	$cost = paid( $p );
 
 	echo '<div class="dhp-novo">';
-	if ( $cap ) {
+	if ( $dl && ! $cap ) {
+		echo '<b class="dhp-novo__t">노보 액상 <span>' . esc_html( $dl['tag'] ) . '</span></b>';
+		echo '<p class="dhp-novo__p">' . esc_html( $dl['line'] . ' ' . $dl['end'] ) . '</p>';
+	} elseif ( $cap ) {
 		echo '<b class="dhp-novo__t">노보 10+1 <span>하루 한 세트</span></b>';
 		echo '<p class="dhp-novo__p">물량이 넉넉하지 않습니다. 묶음은 한 분이 하루에 한 세트까지 사실 수 있습니다. 낱병은 제한이 없습니다.</p>';
 	} elseif ( limiting() ) {
@@ -924,6 +928,10 @@ function product_notice( $p = null ): void {
 		echo '<b class="dhp-novo__t">노보 액상</b>';
 	}
 
+	if ( ! $cap && null === $stock && $each < 2 ) {
+		echo '</div>';   // 줄이 하나도 없으면 빈 칸(윗줄 선)을 그리지 않는다
+		return;
+	}
 	echo '<div class="dhp-novo__rows">';
 	if ( $cap ) {
 		if ( function_exists( 'is_user_logged_in' ) && is_user_logged_in() ) {
@@ -1185,6 +1193,7 @@ function stock_banner(): void {
 	if ( ! $ss['all'] && $ss['out'] ) {
 		array_unshift( $notes, out_note() . ' — 입고되면 다시 안내합니다' );
 	}
+	$dl = deal();
 	$b = (array) apply_filters(
 		'duckhoo_novo_stock_banner',
 		array(
@@ -1194,10 +1203,10 @@ function stock_banner(): void {
 				? '노보 리퀴드 ' . $what . ' 모두 품절 없이 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.'
 				: '노보 리퀴드 ' . $what . '을 지금 바로 주문하실 수 있습니다. 평일 오후 4시 이전에 입금이 확인되면 당일 출고합니다.',
 			'notes'      => $notes,
-			'price_head' => '가격 인상 안내',
-			'price_lead' => '노보 액상 판매가가 올랐습니다. 지금 가격은 아래와 같습니다.',
+			'price_head' => $dl ? $dl['head'] : '가격 인상 안내',
+			'price_lead' => $dl ? $dl['line'] : '노보 액상 판매가가 올랐습니다. 지금 가격은 아래와 같습니다.',
 			'price'      => price_lines(),
-			'price_note' => '가격이 바뀌기 전에 장바구니에 담아 두신 상품은 비우고 다시 담아 주세요.',
+			'price_note' => $dl ? $dl['end'] : '가격이 바뀌기 전에 장바구니에 담아 두신 상품은 비우고 다시 담아 주세요.',
 		)
 	);
 	if ( ! $b ) {
@@ -1305,6 +1314,14 @@ function price_brief(): string {
  */
 function price_notice_text(): string {
 	$own = trim( (string) get_option( 'duckhoo_novo_price_notice', '' ) );
+	$d   = deal();
+	if ( '' === $own && $d ) {
+		$parts = array();
+		foreach ( price_lines() as $r ) {
+			$parts[] = $r['label'] . ' ' . number_format_i18n( (float) $r['price'] ) . '원';
+		}
+		$own = $d['line'] . ' ' . ( $parts ? '지금 판매가는 ' . implode( ' · ', $parts ) . ' 입니다. ' : '' ) . $d['end'];
+	}
 	if ( '' === $own ) {
 		$parts = array();
 		foreach ( price_lines() as $r ) {
@@ -1315,6 +1332,34 @@ function price_notice_text(): string {
 			. '가격이 바뀌기 전에 장바구니에 담아 두신 상품은 비우고 다시 담아 주세요.';
 	}
 	return trim( (string) apply_filters( 'duckhoo_novo_price_notice', $own ) );
+}
+
+/* ── 도매가 수준 · 현재 재고 한정 (2026-10-14) ─────────────────────────────
+   사장님: 손님이 전화로 「이 값은 도매가」라고 했다. 노보는 입고가 잘 안 되므로
+   **지금 가격은 지금 있는 재고에 한한다**고 같이 말한다 (합성니코틴 온라인 판매 금지 —
+   2026-04-24 — 뒤로 다시 들어올 물량이 없다는 것과 같은 이야기).
+   문구는 여기 한 곳. 홈 띠 · 안내 띠 · 노보 분류 배너 · 홈 노보 줄 · 상품 상세 · 노보 FAQ 가 이것을 읽는다.
+   끄기: add_filter( 'duckhoo_novo_deal', '__return_empty_array' ); — 끄면 9월의 「가격 인상 안내」로 돌아간다.
+   **다른 가게 이름 · 값은 적지 않는다** (우리 재고 · 우리 값 이야기만). */
+
+/**
+ * @return array{tag:string,head:string,short:string,line:string,end:string}|array{}
+ */
+function deal(): array {
+	$d = (array) apply_filters(
+		'duckhoo_novo_deal',
+		array(
+			'tag'   => '현재 재고 한정',                                    // 상품 상세 제목 옆 · 안내 띠
+			'head'  => '도매가 수준 · 현재 재고 한정',                       // 배너 · 안내 띠 한 줄
+			'short' => '도매가 수준 가격 · 지금 있는 재고에 한합니다',        // 홈 노보 줄 부제 · 홈 띠
+			'line'  => '노보 액상을 도매가 수준으로 판매하고 있습니다. 입고가 원활하지 않아 이 가격은 지금 있는 재고에 한합니다.',
+			'end'   => '재고가 소진되면 이 가격으로 다시 판매하기 어렵습니다.',
+		)
+	);
+	if ( ! $d || '' === trim( (string) ( $d['line'] ?? '' ) ) ) {
+		return array();
+	}
+	return array_map( 'strval', $d + array( 'tag' => '', 'head' => '', 'short' => '', 'line' => '', 'end' => '' ) );
 }
 
 /* ── 노보를 금액대별 자동 할인에서 뺀다 ────────────────────────────────────

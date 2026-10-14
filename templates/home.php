@@ -114,6 +114,11 @@ if ( $novo_cat && apply_filters( 'duckhoo_home_novo', true ) ) {
 	$n_bundle  = count( $novo_all ) - $n_single;
 	$novo_sub  = ( $n_single ? '낱병 ' . $n_single . '종' : '' ) . ( $n_single && $n_bundle ? ' · ' : '' ) . ( $n_bundle ? '10+1 묶음' : '' )
 		. '. 평일 오후 4시 이전 입금 확인분은 당일 출고합니다';
+	// 2026-10-14 — 도매가 수준 · 현재 재고 한정 (문구는 Novo\deal() 한 곳)
+	$novo_deal = function_exists( '\\Duckhoo\\Redesign\\Novo\\deal' ) ? \Duckhoo\Redesign\Novo\deal() : array();
+	if ( $novo_deal ) {
+		$novo_sub = $novo_deal['short'] . '. ' . $novo_sub;
+	}
 }
 // 2026-10-02 — 한 맛이 품절이면 「전 라인」이라고 하지 않는다 (그린펀치 품절)
 $novo_state = function_exists( '\\Duckhoo\\Redesign\\Novo\\stock_state' ) ? \Duckhoo\Redesign\Novo\stock_state() : array( 'all' => true, 'out' => array() );

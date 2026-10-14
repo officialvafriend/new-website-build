@@ -148,6 +148,7 @@ function flavors_by_line(): array {
  */
 function faq(): array {
 	$lines  = flavors_by_line();
+	$dl     = function_exists( '\\Duckhoo\\Redesign\\Novo\\deal' ) ? \Duckhoo\Redesign\Novo\deal() : array();
 	$n      = array_sum( array_map( 'count', $lines ) );
 	$prices = array();
 	foreach ( price_lines() as $r ) {
@@ -170,7 +171,9 @@ function faq(): array {
 		),
 		array(
 			'q' => '노보 액상 가격은 얼마인가요?',
-			'a' => ( $prices ? '지금 판매가는 ' . implode( ' · ', $prices ) . ' 입니다. ' : '판매가는 상품 페이지에 실시간으로 표시됩니다. ' )
+			'a' => ( $dl ? $dl['line'] . ' ' : '' )
+				. ( $prices ? '지금 판매가는 ' . implode( ' · ', $prices ) . ' 입니다. ' : '판매가는 상품 페이지에 실시간으로 표시됩니다. ' )
+				. ( $dl ? $dl['end'] . ' ' : '' )
 				. '10병 이상 사실 계획이면 10+1 묶음(11병)이 병당 더 저렴하고, 맛은 묶음 안에서 골라 담으실 수 있습니다.',
 		),
 		array(

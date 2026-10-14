@@ -1684,11 +1684,12 @@ function notices(): array {
 		if ( '' !== $txt ) {
 			$novo    = cat_by_name( '노보' );
 			$brief   = function_exists( '\\Duckhoo\\Redesign\\Novo\\price_brief' ) ? \Duckhoo\Redesign\Novo\price_brief() : '';
+			$dl      = function_exists( '\\Duckhoo\\Redesign\\Novo\\deal' ) ? \Duckhoo\Redesign\Novo\deal() : array();
 			$items[] = array(
 				'id'    => 'novo-price',
 				'icon'  => 'tag',
 				'eb'    => '노보 액상',
-				'k'     => '가격 인상 안내',
+				'k'     => $dl ? $dl['head'] : '가격 인상 안내',
 				's'     => '' !== $brief ? '· 지금 판매가 ' . $brief : '· 지금 판매가는 상품 페이지에서 확인해 주세요',
 				't'     => $txt,
 				'url'   => $novo && is_string( get_term_link( $novo ) ) ? (string) get_term_link( $novo ) : brand_url( '노보' ),
@@ -1799,6 +1800,10 @@ function novo_announce(): string {
 		return '';   // 낱병이 하나도 없으면 재고 띠를 내린다
 	}
 	$b = $s['bundles'] > 0 ? ' · 10+1 묶음' : '';
+	// 2026-10-14 — 손님이 「도매가」라고 한 값. 입고가 어려워 지금 재고에 한한다고 첫 줄에서 말한다.
+	if ( function_exists( '\\Duckhoo\\Redesign\\Novo\\deal' ) && \Duckhoo\Redesign\Novo\deal() ) {
+		return '노보 액상 도매가 수준 판매 · 현재 재고 한정';
+	}
 	return $s['all']
 		? '노보 액상 전 라인 재고 있음 · 낱병 ' . (int) $s['in'] . '종' . $b
 		: '노보 액상 낱병 ' . (int) $s['in'] . '종' . $b . ' 재고 있음';

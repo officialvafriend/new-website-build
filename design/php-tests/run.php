@@ -1,6 +1,8 @@
 <?php
 /* 워드프레스 없이 회원탈퇴 로직만 돌려 본다: php design/php-tests/run.php */
 require __DIR__.'/stubs.php';
+// 2026-10-14 — 노보 「도매가 수준 · 현재 재고 한정」 문구는 꺼 둔 채로 옛 테스트를 돌린다 (켠 쪽은 노보 재고 테스트 끝에서 따로 본다)
+$GLOBALS['__filters']['duckhoo_novo_deal'] = [fn($v = null) => []];
 require dirname(__DIR__, 2) . '/includes/membership-cancel.php';
 use function Duckhoo\Redesign\MembershipCancel as _;
 
@@ -2638,6 +2640,27 @@ $st = ($N0.'stock_state')();
 $ok($st['all'] === true && $st['out'] === [] && ($N0.'stock_phrase')('noun') === '전 라인' && \Duckhoo\Redesign\Front\novo_announce() === '노보 액상 전 라인 재고 있음 · 낱병 4종 · 10+1 묶음' && \Duckhoo\Redesign\Seo\brand_notes()['노보']['title'] === '전 라인 재고 보유 · 바로 주문', '다 들어오면 저절로 「전 라인」으로 돌아간다');
 ob_start(); ($N0.'banner')(); $bn2 = ob_get_clean();
 $ok(str_contains($bn2, '전 라인 재고 있습니다') && !str_contains($bn2, '지금 품절'), '배너도 「전 라인」으로');
+// 2026-10-14 — 도매가 수준 · 현재 재고 한정 (사장님: 손님이 전화로 「도매가」라고 했다 · 입고가 어렵다)
+unset($GLOBALS['__filters']['duckhoo_novo_deal']);
+$dl = ($N0.'deal')();
+$ok($dl['head'] === '도매가 수준 · 현재 재고 한정' && str_contains($dl['line'], '지금 있는 재고에 한합니다') && str_contains($dl['end'], '소진'), '문구는 Novo\\deal() 한 곳');
+$ok(\Duckhoo\Redesign\Front\novo_announce() === '노보 액상 도매가 수준 판매 · 현재 재고 한정', '홈 띠가 도매가 수준 · 현재 재고 한정을 말한다');
+ob_start(); ($N0.'banner')(); $bn3 = ob_get_clean();
+$ok(str_contains($bn3, '도매가 수준 · 현재 재고 한정') && str_contains($bn3, '지금 있는 재고에 한합니다') && str_contains($bn3, '13,000') && !str_contains($bn3, '가격 인상'), '분류 배너 가격 상자 — 도매가 수준 · 현재 재고 한정 + 지금 판매가, 「가격 인상」 없음');
+ob_start(); ($N0.'product_notice')($GLOBALS['__products'][7101]); $pn3 = ob_get_clean();
+$ok(str_contains($pn3, '현재 재고 한정') && str_contains($pn3, '도매가 수준') && !str_contains($pn3, 'dhp-novo__rows'), '상품 상세 — 노보 낱병에 한 상자, 빈 줄 칸 없음');
+ob_start(); ($N0.'product_notice')(new WC_Product(7104, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, false)); $pn4 = ob_get_clean();
+$ok('' === trim($pn4), '품절 상품에는 「재고 한정」을 말하지 않는다');
+ob_start(); ($N0.'product_notice')($GLOBALS['__products'][7106]); $pn5 = ob_get_clean();
+$ok('' === trim($pn5), '노보가 아닌 상품에는 안 나온다');
+$fa3 = ($NS.'faq')();
+$ok(str_contains($fa3[2]['a'], '도매가 수준') && str_contains($fa3[2]['a'], '지금 판매가는') && str_contains($fa3[2]['a'], '소진'), 'FAQ 가격 답이 도매가 수준 · 재고 한정을 말한다');
+$nz = array_values(array_filter(\Duckhoo\Redesign\Front\notices(), fn($i) => ($i['id'] ?? '') === 'novo-price'));
+$ok($nz && $nz[0]['k'] === '도매가 수준 · 현재 재고 한정' && str_contains($nz[0]['s'], '13,000원'), '안내 띠 노보 줄 — 도매가 수준 · 현재 재고 한정 + 지금 판매가');
+$pt = ($N0.'price_notice_text')();
+$ok(str_starts_with($pt, '노보 액상을 도매가 수준으로') && !str_contains($pt, '인상'), '안내 글도 같은 말');
+$GLOBALS['__filters']['duckhoo_novo_deal'] = [fn($v = null) => []];
+$ok(\Duckhoo\Redesign\Front\novo_announce() === '노보 액상 전 라인 재고 있음 · 낱병 4종 · 10+1 묶음', '끄면 옛 재고 문구로 돌아간다');
 $GLOBALS['__products'][7104] = new WC_Product(7104, '[노보 블랙] 데저트 (9.8mg / 30ml)', 13500.0, false);   // 도로 품절 (아래 테스트 전제)
 $GLOBALS['__is_tax'] = false;
 $me  = $GLOBALS['__products'][7101];
