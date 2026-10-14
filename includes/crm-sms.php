@@ -463,8 +463,10 @@ function xls(): void {
 	$inc = 'all' === $seg ? chosen_parts() : array();
 	$rows = export_rows( $seg, $opt, $inc );
 	$mode = isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ? 'all' : 'yes';
-	$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
-	[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
+	if ( ! everyone( $seg ) ) { // 미입금은 동의 · 보낸 기록과 상관없이 전부
+		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
+		[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
+	}
 	[ $rows ] = apply_exclude( $rows, $seg ); // 제외 명단
 	$grp  = isset( $_GET['grp'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['grp'] ) ) : '';
 	if ( 'all' === $seg ) {

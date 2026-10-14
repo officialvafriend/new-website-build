@@ -50,6 +50,14 @@ function pending_statuses(): array {
 	return (array) apply_filters( 'duckhoo_crm_pending_statuses', array( 'on-hold', 'pending', '입금전', 'need-check' ) );
 }
 
+/**
+ * 동의 · 보낸 기록과 상관없이 전부 나오는 명단 — 미입금 안내는 광고가 아니라 그 사람의 주문 이야기다 (사장님 2026-10-15 「그냥 다 나오게」).
+ * 필터 `duckhoo_crm_all_segs`.
+ */
+function everyone( string $seg ): bool {
+	return in_array( $seg, (array) apply_filters( 'duckhoo_crm_all_segs', array( 'unpaid' ) ), true );
+}
+
 /** 죽은 주문 — 취소 · 환불 · 실패. 「살아 있는 주문」을 셀 때 뺀다. @return string[] */
 function dead_statuses(): array {
 	return (array) apply_filters( 'duckhoo_crm_dead_statuses', array( 'cancelled', 'refunded', 'failed', 'checkout-draft', 'trash', 'auto-draft' ) );
@@ -771,13 +779,13 @@ function screen(): void {
 		return;
 	}
 	$rows    = export_rows( $seg, $opt, $inc, false ); // 캐시는 바로 위 data()/combined() 가 채웠다
-	$smsmode = isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ? 'all' : 'yes'; // phpcs:ignore WordPress.Security.NonceVerification
+	$smsmode = everyone( $seg ) || ( isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ) ? 'all' : 'yes'; // phpcs:ignore WordPress.Security.NonceVerification
 	$smsc    = sms_counts( $rows );
 	$all_n   = count( $rows );
 	if ( 'yes' === $smsmode ) {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
-	[ $rows, $skipped ] = apply_skip( $rows ); // 최근 21일 안에 양식으로 내려받은(= 문자 받은) 사람은 뺀다
+	[ $rows, $skipped ] = everyone( $seg ) ? array( $rows, 0 ) : apply_skip( $rows ); // 최근 21일 안에 양식으로 내려받은(= 문자 받은) 사람은 뺀다
 	[ $rows, $gone ]    = apply_exclude( $rows, $seg ); // 제외 명단 (미입금은 안 뺀다)
 	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
 	$dt   = fn( $ts ) => $ts ? wp_date( 'Y.m.d', (int) $ts ) : '—';
@@ -851,8 +859,8 @@ function screen(): void {
 	}
 	sms_box( $back );
 	echo '<div class="dhr-crm-adv">SMS 수신 동의: <b>동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</b> · 거부 ' . esc_html( $w( $smsc['no'] ) ) . '명 · 기록 없음 ' . esc_html( $w( $smsc['unknown'] ) ) . '명 (명단 ' . esc_html( $w( $all_n ) ) . '명). '
-		. ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' )
-		. ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
+		. ( everyone( $seg ) ? '<b>미입금 안내는 주문 안내라 동의 · 보낸 기록과 상관없이 전부 나옵니다</b> (파일에도 전부). 빠지는 것은 위의 「이미 결제된 중복 주문」뿐입니다.' : ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' )
+		. ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' ) . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
 	echo '<form method="get" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="dhr-crm-bar" style="margin:0 0 14px">';
 	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' . ( skip_on() ? '' : '<input type="hidden" name="skip" value="0">' ) . ( 'all' === $smsmode ? '<input type="hidden" name="sms" value="all">' : '' );
 	foreach ( $inc as $k ) {
@@ -863,8 +871,8 @@ function screen(): void {
 	} else {
 		echo '<span class="dhr-sl-note">그룹명 = 그 사람의 주 명단 (한 파일에 여러 그룹)</span>';
 	}
-	$file_n = count( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
-	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — 동의 ' . esc_html( $w( $file_n ) ) . '명</button>';
+	$file_n = everyone( $seg ) ? count( array_filter( $rows, fn( $r ) => '' !== (string) $r['phone'] ) ) : count( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
+	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — ' . ( everyone( $seg ) ? '전부 ' : '동의 ' ) . esc_html( $w( $file_n ) ) . '명</button>';
 	echo '<span class="dhr-sl-note" style="margin:0">NO · 그룹명 · 이름 · 전화번호 · 메모 다섯 칸, 올려 주신 tothemoon 양식 그대로 (EUC-KR)</span></form>';
 	if ( ! $rows ) {
 		echo '<p class="dhr-sl-empty">' . ( 'yes' === $smsmode && $all_n ? 'SMS 수신에 동의한 사람이 없습니다 (명단 ' . esc_html( $w( $all_n ) ) . '명).' : '해당하는 사람이 없습니다.' ) . '</p></div>';
@@ -910,10 +918,12 @@ function csv(): void {
 	$seg  = isset( $_GET['seg'] ) && isset( segs()[ $_GET['seg'] ] ) ? (string) $_GET['seg'] : 'abandon';
 	$opt  = opts( $seg );
 	$rows = export_rows( $seg, $opt, 'all' === $seg ? chosen_parts() : array() );
-	if ( ! ( isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ) ) {
+	if ( ! everyone( $seg ) && ! ( isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ) ) {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] ) );
 	}
-	[ $rows ] = apply_skip( $rows );
+	if ( ! everyone( $seg ) ) {
+		[ $rows ] = apply_skip( $rows );
+	}
 	[ $rows ] = apply_exclude( $rows, $seg );
 	$smsw = array( 'yes' => '동의', 'no' => '거부', '' => '기록 없음' );
 	nocache_headers();
