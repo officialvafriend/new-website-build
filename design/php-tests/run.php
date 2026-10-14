@@ -3078,5 +3078,24 @@ $ok($T['users']===2 && $T['used']===10000 && $T['before']===1 && $T['given']===2
 $ok($pp['이탈 방지(1회)']['n']===2 && $pp['이탈 방지(1회)']['buyers']===1 && $pp['이탈 방지(단골)']['buyers']===0 && isset($pp['(종류 없음)']), '참여: 문자종류별로 나눈다');
 $xf = getenv('DHR_PTS_XLSX');
 if ($xf && is_file($xf)) { $xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $ok(count($xt['rows'])===913 && array_sum(array_column($xt['rows'],'amount'))===4827200, '적립금: 사장님 엑셀 913명 · 4,827,200원'); }
+
+// ── 재고 수량보다 많이 담기 막기 (2026-10-14, 그린펀치 1병) ─────────────────
+require_once dirname(__DIR__, 2).'/includes/stock-cap.php';
+$SC = 'Duckhoo\\Redesign\\StockCap\\';
+$ok(($SC.'builder_required')('[{"group_key":"required_main","qty":3,"type":"required"},{"group_key":"addon_pod_0","qty":2,"type":"addon"}]') === 3, '빌더 「기본 상품」 줄 수량만 센다 (팟 추가는 안 셈)');
+$ok(($SC.'units')(1, '[{"group_key":"required_main","qty":3}]') === 3 && ($SC.'units')(2, [['group_key'=>'required_main','qty'=>3]]) === 6 && ($SC.'units')(4, null) === 4, '실제 개수 = 장바구니 수량 × 빌더 기본 상품 수량 (빌더 없으면 수량 그대로)');
+$gp = new WC_Product(8801, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, true, true, 1);
+$free = new WC_Product(8802, '[노보] 데저트 (9.8mg / 30ml)', 13000.0, true, false, null);
+$ok(($SC.'cap')($gp) === 1 && ($SC.'cap')($free) === null, '재고 관리를 켠 상품만 상한이 있다');
+$cart1 = [['product_id'=>8801,'quantity'=>1,'data'=>$gp,'wd_option_builder'=>[['group_key'=>'required_main','qty'=>3]]]];
+$ov = ($SC.'over')($cart1);
+$ok(isset($ov[8801]) && str_contains($ov[8801], '1개까지만') && str_contains($ov[8801], '지금 3개') && str_contains($ov[8801], '노보] 그린펀치') && !str_contains($ov[8801], '9.8mg'), '빌더로 3병 담으면 재고 1 에 걸린다 · 문구에 상한과 지금 개수');
+$ok(($SC.'over')([['product_id'=>8801,'quantity'=>1,'data'=>$gp,'wd_option_builder'=>[['group_key'=>'required_main','qty'=>1]]]]) === [], '1병이면 그대로 통과');
+$ok(($SC.'over')([['product_id'=>8802,'quantity'=>1,'data'=>$free,'wd_option_builder'=>[['group_key'=>'required_main','qty'=>20]]]]) === [], '재고 관리를 안 켠 상품은 손대지 않는다');
+$ok(($SC.'over')([['product_id'=>8801,'quantity'=>1,'data'=>$gp],['product_id'=>8801,'quantity'=>1,'data'=>$gp]]) !== [], '같은 상품이 두 줄이면 합쳐서 센다');
+$gp0 = new WC_Product(8803, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, false, true, 0);
+$ov0 = ($SC.'over')([['product_id'=>8803,'quantity'=>1,'data'=>$gp0]]);
+$ok(isset($ov0[8803]) && str_contains($ov0[8803], '품절'), '재고 0 이면 품절이라고 말한다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
