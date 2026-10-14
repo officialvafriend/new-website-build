@@ -309,7 +309,7 @@ function rfm( array $orders, int $now ): array {
  * @return array<int,array{id:int,u:int,days:int,t:float,ts:int}>
  */
 function seg_unpaid( array $orders, int $now, int $min_days = 1 ): array {
-	$pend = pending_statuses();
+	$pend = array_values( array_diff( pending_statuses(), unpaid_skip_statuses() ) );
 	$out  = array();
 	foreach ( $orders as $o ) {
 		if ( ! in_array( $o['s'], $pend, true ) ) {
@@ -327,8 +327,8 @@ function seg_unpaid( array $orders, int $now, int $min_days = 1 ): array {
 
 /**
  * 두 번 주문해 하나는 돈이 들어오고 하나는 입금전으로 남은 사람 — 미입금 안내를 보내면 안 된다 (2026-10-14, 사장님).
- * 「같은 사람」= 같은 회원 번호이거나 같은 연락처 (쌍둥이 계정 · 비회원 주문). 두 주문이 ±N일 안에 있어야 한다
- * (필터 `duckhoo_crm_unpaid_dup_days`, 기본 7) — 몇 달 전에 산 단골이 이번 주문을 잊은 것은 그대로 안내한다.
+ * 「같은 사람」= 같은 회원 번호이거나 같은 연락처 (쌍둥이 계정 · 비회원 주문). 입금전 주문 **뒤에** 결제된 주문이 있으면 언제든 빼고,
+ * **앞에** 결제된 주문은 N일 안일 때만 뺀다 (필터 `duckhoo_crm_unpaid_dup_days`, 기본 7) — 몇 달 전에 산 단골이 이번 주문을 잊은 것은 그대로 안내한다.
  *
  * @param array<int,array{id:int,ts:int,keys:string[]}> $unpaid 미입금 주문.
  * @param array<int,array{id:int,ts:int,keys:string[]}> $paid   돈 들어온 주문.
@@ -349,7 +349,7 @@ function paid_dups( array $unpaid, array $paid, int $window_days ): array {
 		$hit = 0;
 		foreach ( (array) $u['keys'] as $k ) {
 			foreach ( $by[ (string) $k ] ?? array() as $p ) {
-				if ( (int) $p['id'] !== (int) $u['id'] && abs( (int) $p['ts'] - (int) $u['ts'] ) <= $window_days * D ) {
+				if ( (int) $p['id'] !== (int) $u['id'] && (int) $p['ts'] >= (int) $u['ts'] - $window_days * D ) { // 그 뒤에 결제된 주문은 언제든 · 그 앞은 N일까지
 					$hit = (int) $p['id'];
 					break 2;
 				}
@@ -362,6 +362,68 @@ function paid_dups( array $unpaid, array $paid, int $window_days ): array {
 		}
 	}
 	return array( $keep, $drop );
+}
+
+/**
+ * 입금 문자는 왔는데 키플이 주문에 못 붙인 것 (입금자명이 달라서) — 이미 돈을 낸 사람에게 「입금해 주세요」가 가면 안 된다.
+ * 같은 금액 · 주문 뒤에 온 문자이고 이름이 맞으면(`name`) 뺀다, 금액만 맞으면(`amount`) 남기되 메모에 적는다. 순수 함수.
+ *
+ * @param array{t:float,ts:int,names:string[]}            $order 미입금 주문.
+ * @param array<int,array{amount:int,ts:int,name:string}> $sms   못 붙인 입금 문자.
+ * @param callable|null                                   $tail  입금자명 끝 일치 (Bank\Second\tail_match).
+ * @return array{0:string,1:string} [name|amount|'', 입금자명]
+ */
+function deposit_hit( array $order, array $sms, ?callable $tail = null ): array {
+	$amt  = (int) round( (float) $order['t'] );
+	$best = array( '', '' );
+	foreach ( $sms as $m ) {
+		if ( $amt <= 0 || (int) $m['amount'] !== $amt || ( (int) $m['ts'] > 0 && (int) $m['ts'] < (int) $order['ts'] - D ) ) {
+			continue;
+		}
+		$dep   = (string) $m['name'];
+		$names = array_values( array_filter( array_map( fn( $n ) => preg_replace( '/\s+/u', '', (string) $n ), (array) $order['names'] ) ) );
+		$plain = preg_replace( '/\s+/u', '', $dep );
+		$named = false;
+		foreach ( $names as $n ) {
+			if ( '' !== $n && ( str_contains( $plain, $n ) || ( mb_strlen( $n ) >= 3 && str_contains( $plain, mb_substr( $n, 1 ) ) ) ) ) {
+				$named = true;
+			}
+		}
+		if ( ! $named && $tail && $names && '' !== (string) $tail( $dep, $names ) ) {
+			$named = true;
+		}
+		if ( $named ) {
+			return array( 'name', $dep );
+		}
+		$best = array( 'amount', $dep );
+	}
+	return $best;
+}
+
+/** 키플 문자 표에서 최근 N일 못 붙인 입금 문자 — 금액 · 시각 · 입금자명. */
+function unmatched_deposits( int $days = 40 ): array {
+	$f = '\\Duckhoo\\Redesign\\Bank2\\';
+	if ( ! function_exists( $f . 'rows' ) || ! function_exists( $f . 'cols' ) ) {
+		return array();
+	}
+	try {
+		$rows = (array) call_user_func( $f . 'rows', $days, 500 );
+		$time = (string) ( call_user_func( $f . 'cols' )['time'] ?? '' );
+	} catch ( \Throwable $e ) {
+		return array();
+	}
+	$off = (int) ( (float) get_option( 'gmt_offset', 9 ) * HOUR_IN_SECONDS );
+	$out = array();
+	foreach ( $rows as $r ) {
+		$t     = '' !== $time ? strtotime( (string) ( $r[ $time ] ?? '' ) . ' UTC' ) : 0;
+		$out[] = array( 'amount' => (int) round( (float) ( $r['amount'] ?? 0 ) ), 'ts' => $t ? $t + $off : 0, 'name' => (string) ( $r['depositor_name'] ?? '' ) );
+	}
+	return $out;
+}
+
+/** 미입금 안내에서 아예 빼는 상태 — 확인필요는 입금은 들어왔고 사람이 볼 일이다. 필터 `duckhoo_crm_unpaid_skip_statuses`. */
+function unpaid_skip_statuses(): array {
+	return (array) apply_filters( 'duckhoo_crm_unpaid_skip_statuses', array( 'need-check', '확인필요' ) );
 }
 
 /** 짝 결제 주문이 있으면 미입금에서 뺄지 — 필터 `duckhoo_crm_unpaid_skip_paid_dup`. */
@@ -654,15 +716,27 @@ function build( string $seg, array $opt, int $now ): array {
 			$dups = array_values( array_filter( $list, fn( $r ) => isset( $pair[ (int) $r['id'] ] ) ) );
 			$list = array_values( array_filter( $list, fn( $r ) => ! isset( $pair[ (int) $r['id'] ] ) ) );
 		}
+		$sms  = $list ? unmatched_deposits() : array();
+		$tail = function_exists( '\\Duckhoo\\Redesign\\Bank2\\tail_match' ) ? '\\Duckhoo\\Redesign\\Bank2\\tail_match' : null;
+		$paidsms = array();
 		foreach ( $list as $r ) {
 			$c = $ct[ $r['u'] ] ?? $oc[ $r['id'] ] ?? array( 'name' => '', 'phone' => '', 'email' => '' );
 			if ( '' === $c['phone'] && isset( $oc[ $r['id'] ] ) ) {
 				$c['phone'] = $oc[ $r['id'] ]['phone'];
 				if ( '' === $c['name'] ) { $c['name'] = $oc[ $r['id'] ]['name']; }
 			}
-			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => '입금전 ' . $r['days'] . '일째 · 주문 #' . $r['id'], 'amount' => $r['t'], 'when' => $r['ts'], 'note' => $r['u'] ? '' : '비회원' );
+			[ $hit, $dep ] = $sms ? deposit_hit( array( 't' => $r['t'], 'ts' => $r['ts'], 'names' => array( $c['name'], $oc[ $r['id'] ]['name'] ?? '' ) ), $sms, $tail ) : array( '', '' );
+			if ( 'name' === $hit ) {
+				$paidsms[] = array( 'id' => (int) $r['id'], 't' => (float) $r['t'], 'days' => (int) $r['days'], 'dep' => $dep );
+				continue;
+			}
+			$note = $r['u'] ? '' : '비회원';
+			if ( 'amount' === $hit ) {
+				$note = trim( $note . ' 같은 금액 입금 문자 있음(입금자 ' . $dep . ') — 보내기 전 확인' );
+			}
+			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => '입금전 ' . $r['days'] . '일째 · 주문 #' . $r['id'], 'amount' => $r['t'], 'when' => $r['ts'], 'note' => $note );
 		}
-		$meta = array( 'dups' => array_map( fn( $r ) => array( 'id' => (int) $r['id'], 'paid' => (int) $pair[ (int) $r['id'] ], 't' => (float) $r['t'], 'days' => (int) $r['days'] ), $dups ), 'dup_days' => $win );
+		$meta = array( 'dups' => array_map( fn( $r ) => array( 'id' => (int) $r['id'], 'paid' => (int) $pair[ (int) $r['id'] ], 't' => (float) $r['t'], 'days' => (int) $r['days'] ), $dups ), 'dup_days' => $win, 'paidsms' => $paidsms );
 	}
 	return array( 'rows' => $rows, 'meta' => $meta, 'at' => $now );
 }
@@ -834,16 +908,25 @@ function screen(): void {
 	}
 
 	if ( 'unpaid' === $seg && isset( $d['meta']['dups'] ) ) {
-		$dl = (array) $d['meta']['dups'];
+		$dl    = (array) $d['meta']['dups'];
+		$hp2   = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
+		$eurl2 = fn( int $id ) => admin_url( $hp2 ? 'admin.php?page=wc-orders&action=edit&id=' . $id : 'post.php?post=' . $id . '&action=edit' );
 		echo '<div class="dhr-crm-adv">' . ( (int) ( $d['meta']['dup_days'] ?? -1 ) < 0
 			? '짝 결제 주문 빼기가 꺼져 있습니다 (duckhoo_crm_unpaid_skip_paid_dup).'
-			: '<b>두 번 주문해 하나는 이미 결제된 사람 ' . esc_html( $w( count( $dl ) ) ) . '건은 뺐습니다</b> — 같은 회원 또는 같은 연락처로 앞뒤 ' . (int) $d['meta']['dup_days'] . '일 안에 돈 들어온 주문이 있는 입금전 주문입니다. 이 주문들은 안내 대신 관리자에서 취소하면 됩니다.' );
+			: '<b>두 번 주문해 하나는 이미 결제된 사람 ' . esc_html( $w( count( $dl ) ) ) . '건은 뺐습니다</b> — 같은 회원 또는 같은 연락처로 그 뒤에(또는 ' . (int) $d['meta']['dup_days'] . '일 앞까지) 돈 들어온 주문이 있는 입금전 주문입니다. 이 주문들은 안내 대신 관리자에서 취소하면 됩니다.' );
 		if ( $dl ) {
 			$hp  = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\hpos' ) && \Duckhoo\Redesign\Anatomy\hpos();
 			$eurl = fn( int $id ) => admin_url( $hp ? 'admin.php?page=wc-orders&action=edit&id=' . $id : 'post.php?post=' . $id . '&action=edit' );
 			echo '<br>';
 			foreach ( array_slice( $dl, 0, 60 ) as $x ) {
 				echo '<a href="' . esc_url( $eurl( (int) $x['id'] ) ) . '">#' . (int) $x['id'] . '</a> (' . esc_html( $w( $x['t'] ) ) . '원 · 입금전 ' . (int) $x['days'] . '일) ↔ 결제됨 <a href="' . esc_url( $eurl( (int) $x['paid'] ) ) . '">#' . (int) $x['paid'] . '</a> · ';
+			}
+		}
+		$ps = (array) ( $d['meta']['paidsms'] ?? array() );
+		if ( $ps ) {
+			echo '<br><b>입금 문자가 이미 와 있는 ' . esc_html( $w( count( $ps ) ) ) . '건도 뺐습니다</b> — 같은 금액 · 비슷한 이름으로 입금됐는데 키플이 주문에 못 붙인 것. 입금 확인을 손으로 눌러 주세요: ';
+			foreach ( $ps as $x ) {
+				echo '<a href="' . esc_url( $eurl2( (int) $x['id'] ) ) . '">#' . (int) $x['id'] . '</a> (' . esc_html( $w( $x['t'] ) ) . '원 · 입금자 ' . esc_html( $x['dep'] ) . ') · ';
 			}
 		}
 		echo '</div>';
