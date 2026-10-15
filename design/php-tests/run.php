@@ -3114,5 +3114,12 @@ $gp0 = new WC_Product(8803, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, fal
 $ov0 = ($SC.'over')([['product_id'=>8803,'quantity'=>1,'data'=>$gp0]]);
 $ok(isset($ov0[8803]) && str_contains($ov0[8803], '품절'), '재고 0 이면 품절이라고 말한다');
 
+// 1:1 문의 꼬리표 (2026-10-15)
+require_once __DIR__ . '/../../includes/inquiry-who.php';
+$IW = '\\Duckhoo\\Redesign\\InquiryWho\\';
+$ok(($IW.'dash')('01012345678') === '010-1234-5678' && ($IW.'dash')('+82 10-1234-5678') === '010-1234-5678', '문의 꼬리표: 번호를 하이픈으로');
+$ok(($IW.'label')(['u'=>279209536,'phone'=>'01012345678','orders'=>3]) === '회원 #279209536 · 010-1234-5678 · 주문 3건', '문의 꼬리표: 회원 번호 · 연락처 · 주문 수');
+$ok(($IW.'label')(['u'=>5,'phone'=>'','orders'=>0]) === '회원 #5 · 주문 0건' && ($IW.'label')(['u'=>0,'phone'=>'','orders'=>0]) === '비회원', '문의 꼬리표: 번호 없으면 빼고 · 비회원');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
