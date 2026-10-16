@@ -32,8 +32,30 @@ defined( 'ABSPATH' ) || exit;
 const SLUG   = 'duckhoo-points';
 const OPT    = 'duckhoo_points_batches';
 const META   = '_dhr_pts_';
+const RUN    = '_r'; // META . 묶음 . RUN = 그 손님에게 넣은 파일(업로드) 표시.
 const MAX    = 3000;
 const AMT_HI = 100000;
+const AMT_LO = 100; // 이보다 적은 숫자는 금액이 아니라 날짜 · 병 수일 가능성이 크다 (10/16 「10월 23일까지」의 23 이 23원으로 들어갔다).
+
+/**
+ * 머리줄 없는 줄에서 금액을 고른다. 순수.
+ *
+ * 「5000원」 · 「8,800 원」처럼 원이 붙은 숫자가 있으면 그것(여럿이면 마지막). 없으면
+ * 날짜 · 개수 단위(월 · 일 · 병 · 개 · 시 · 분 · % …)가 붙지 않은 마지막 숫자. 「6만9천원」 ·
+ * 「10만원」처럼 한글 단위가 끼면 원이 붙은 숫자로 보지 않는다 (문구 속 상품 값이다).
+ */
+function guess_amount( string $line ): int {
+	if ( preg_match_all( '/(\d[\d,]*)\s*원/u', $line, $mm ) ) {
+		return (int) str_replace( ',', '', (string) end( $mm[1] ) );
+	}
+	if ( preg_match_all( '/(\d[\d,]*)(?!\s*(?:월|일|병|개|시|분|초|%|종|세|명|가지|ml|mg|옴|\d|[.,]\d))/iu', $line, $mm ) ) {
+		$n = array_filter( $mm[1], fn( $v ) => '' !== $v );
+		if ( $n ) {
+			return (int) str_replace( ',', '', (string) end( $n ) );
+		}
+	}
+	return 0;
+}
 
 /** 이 화면을 볼 수 있는가. */
 function may(): bool {
@@ -118,17 +140,14 @@ function read_table( array $table ): array {
 				$phone = pnorm( $m[0] );
 				$line  = str_replace( $m[0], ' ', $line );
 			}
-			$amount = 0;
-			if ( preg_match_all( '/\d[\d,]*/', $line, $mm ) ) {
-				$amount = (int) str_replace( ',', '', (string) end( $mm[0] ) );
-			}
+			$amount = guess_amount( $line );
 			$name = '';
 			$kind = '';
 			if ( preg_match( '/[가-힣]{2,5}/u', $line, $nm ) ) {
 				$name = $nm[0];
 			}
 		}
-		if ( '' === $phone || $amount <= 0 || $amount > AMT_HI ) {
+		if ( '' === $phone || $amount < AMT_LO || $amount > AMT_HI ) {
 			$bad[] = mb_substr( implode( ' · ', array_filter( $cells, 'strlen' ) ), 0, 80 );
 			continue;
 		}
@@ -408,7 +427,7 @@ function status_label( string $s ): string {
 }
 
 /** 넣기 — 시간이 모자라면 멈추고 남은 수를 돌려준다. */
-function run_grant( array $plan, string $label, bool $with_name, float $budget = 20.0, array $picks = array() ): array {
+function run_grant( array $plan, string $label, bool $with_name, float $budget = 20.0, array $picks = array(), string $run = '', string $file = '' ): array {
 	$key   = bkey( $label );
 	$t0    = microtime( true );
 	$n     = 0;
@@ -437,6 +456,9 @@ function run_grant( array $plan, string $label, bool $with_name, float $budget =
 		// 원장 사유는 손님의 적립금 내역에 그대로 보인다 — 「이탈 방지」 같은 내부 그룹 이름은 넣지 않는다.
 		if ( \Duckhoo\Redesign\Points\grant( $uid, (int) $r['amount'], $label ) ) {
 			update_user_meta( $uid, META . $key, (int) $r['amount'] );
+			if ( '' !== $run ) {
+				update_user_meta( $uid, META . $key . RUN, $run ); // 어느 파일로 넣었는지 — 파일마다 거둘 수 있게.
+			}
 			++$n;
 			$sum += (int) $r['amount'];
 		} else {
@@ -449,13 +471,25 @@ function run_grant( array $plan, string $label, bool $with_name, float $budget =
 	$b['sum']     = (int) $b['sum'] + $sum;
 	$b['updated'] = time();
 	unset( $b['revoked'] );
+	if ( '' !== $run && $n > 0 ) {
+		$rr = (array) ( $b['runs'][ $run ] ?? array( 'at' => time(), 'n' => 0, 'sum' => 0, 'file' => $file ) );
+		$rr['n']   = (int) $rr['n'] + $n;
+		$rr['sum'] = (int) $rr['sum'] + $sum;
+		$b['runs'][ $run ] = $rr;
+	}
 	$all[ $key ] = $b;
 	update_option( OPT, $all, false );
 	return array( 'n' => $n, 'sum' => $sum, 'left' => $left, 'fail' => $fail );
 }
 
-/** 거두기 — 그 묶음으로 넣은 만큼 뺀다. */
-function run_revoke( string $key, float $budget = 20.0 ): array {
+/**
+ * 거두기 — 그 묶음으로 넣은 만큼 뺀다.
+ *
+ * $only 를 주면 그 일부만: `array( 'amt' => 23 )` 은 23원을 받은 사람만,
+ * `array( 'run' => '…' )` 은 그 파일로 넣은 사람만. 같은 사유로 여러 번 넣었을 때
+ * 한 번 넣은 것만 거두는 길이다.
+ */
+function run_revoke( string $key, float $budget = 20.0, array $only = array() ): array {
 	global $wpdb;
 	$all = (array) get_option( OPT, array() );
 	if ( ! isset( $all[ $key ] ) ) {
@@ -474,6 +508,12 @@ function run_revoke( string $key, float $budget = 20.0 ): array {
 		}
 		$uid = (int) $r['user_id'];
 		$amt = (int) $r['meta_value'];
+		if ( isset( $only['amt'] ) && $amt !== (int) $only['amt'] ) {
+			continue;
+		}
+		if ( isset( $only['run'] ) && (string) get_user_meta( $uid, META . $key . RUN, true ) !== (string) $only['run'] ) {
+			continue;
+		}
 		$bal = (int) get_user_meta( $uid, '_keyple_points', true );
 		$take = min( $amt, max( 0, $bal ) );
 		if ( $take > 0 ) {
@@ -481,15 +521,38 @@ function run_revoke( string $key, float $budget = 20.0 ): array {
 			$sum += $take;
 		}
 		delete_user_meta( $uid, META . $key );
+		delete_user_meta( $uid, META . $key . RUN );
 		++$n;
 	}
-	$all[ $key ]['n']       = max( 0, (int) $all[ $key ]['n'] - $n );
-	$all[ $key ]['sum']     = max( 0, (int) $all[ $key ]['sum'] - $sum );
-	$all[ $key ]['revoked'] = time();
+	$all[ $key ]['n']   = max( 0, (int) $all[ $key ]['n'] - $n );
+	$all[ $key ]['sum'] = max( 0, (int) $all[ $key ]['sum'] - $sum );
+	if ( isset( $only['run'] ) ) {
+		unset( $all[ $key ]['runs'][ (string) $only['run'] ] );
+	}
+	if ( $only && $all[ $key ]['n'] > 0 ) {
+		$all[ $key ]['part_revoked'] = time(); // 일부만 거뒀다 — 묶음은 살아 있다.
+	} else {
+		$all[ $key ]['revoked'] = time();
+	}
 	update_option( OPT, $all, false );
 	return array( 'n' => $n, 'sum' => $sum, 'left' => $left );
 }
 
+
+/**
+ * 묶음 안에서 받은 금액별 인원 — 같은 사유로 여러 번 넣었을 때 잘못 넣은 한 번을 가려 거두려고.
+ *
+ * @return array<int,int> 금액 => 인원 (많은 금액부터).
+ */
+function amount_groups( string $key ): array {
+	global $wpdb;
+	$out = array();
+	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT meta_value AS a, COUNT(*) AS n FROM {$wpdb->usermeta} WHERE meta_key = %s GROUP BY meta_value", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$out[ (int) $r['a'] ] = (int) $r['n'];
+	}
+	krsort( $out );
+	return $out;
+}
 
 /* ── 넣었다 거둔 묶음 — 손님 적립금 내역에서 그 줄 지우기 ───────────────── */
 
@@ -563,20 +626,45 @@ function cleanup_pick( array $rows, string $label ): array {
 		$amt = $amt < 0 ? $amt : $sign * $amt; // 크기만 적는 원장이면 사유로 부호를 정한다.
 		$by[ (int) $r['user'] ][] = array( (int) $r['id'], $amt );
 	}
+	// 같은 크기의 넣은 줄 · 거둔 줄을 짝지어 지운다 — 짝의 합은 0 이라 잔액이 안 바뀐다.
+	// 그래서 23원을 넣었다 거두고 5,000원을 다시 넣은 손님도 23원 두 줄만 지워진다.
 	$del  = array();
 	$left = array();
 	$n    = 0;
 	foreach ( $by as $uid => $list ) {
-		$sum = array_sum( array_column( $list, 1 ) );
-		$pos = count( array_filter( $list, fn( $x ) => $x[1] > 0 ) );
-		$neg = count( array_filter( $list, fn( $x ) => $x[1] < 0 ) );
-		if ( 0 === $sum && $pos > 0 && $neg > 0 ) {
-			$del = array_merge( $del, array_column( $list, 0 ) );
+		$pos  = array_values( array_filter( $list, fn( $x ) => $x[1] > 0 ) );
+		$gone = array();
+		$hit  = false;
+		foreach ( $list as $x ) {
+			if ( $x[1] >= 0 ) {
+				continue;
+			}
+			foreach ( $pos as $j => $y ) {
+				if ( ! isset( $gone[ $j ] ) && $y[1] === -$x[1] ) {
+					$gone[ $j ] = true;
+					$del[]      = $y[0];
+					$del[]      = $x[0];
+					$hit        = true;
+					continue 2;
+				}
+			}
+		}
+		if ( $hit ) {
 			++$n;
-		} else {
-			$left[ $uid ] = $sum;
+		}
+		$rest = 0;
+		foreach ( $list as $x ) {
+			if ( ! in_array( $x[0], $del, true ) ) {
+				$rest += $x[1];
+			}
+		}
+		if ( ! $hit || 0 !== $rest ) {
+			if ( ! $hit || $rest < 0 ) {
+				$left[ $uid ] = $rest;
+			}
 		}
 	}
+	sort( $del );
 	return array( 'del' => $del, 'users' => $n, 'rows' => count( $del ), 'left' => $left );
 }
 
@@ -862,7 +950,7 @@ function screen(): void {
 				$read = read_table( $table );
 				$plan = build( $read['rows'], $label );
 				remember_kinds( $label, $plan );
-				set_transient( $tkey, array( 'label' => $label, 'rows' => $read['rows'], 'bad' => $read['bad'] ), HOUR_IN_SECONDS );
+				set_transient( $tkey, array( 'label' => $label, 'rows' => $read['rows'], 'bad' => $read['bad'], 'file' => isset( $_FILES['f']['name'] ) ? sanitize_file_name( (string) wp_unslash( $_FILES['f']['name'] ) ) : '' ), HOUR_IN_SECONDS ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				if ( $read['bad'] ) {
 					$msg = '번호나 금액을 못 읽은 줄 ' . count( $read['bad'] ) . '개는 뺐습니다: ' . implode( ' / ', array_slice( $read['bad'], 0, 3 ) );
 				}
@@ -879,7 +967,8 @@ function screen(): void {
 				$label = (string) $saved['label'];
 				$plan  = build( $saved['rows'], $label );
 				$picks = isset( $_POST['pick'] ) && is_array( $_POST['pick'] ) ? array_map( 'intval', wp_unslash( $_POST['pick'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$res   = run_grant( $plan, $label, ! empty( $_POST['with_name'] ), 20.0, $picks );
+				$run   = substr( md5( wp_json_encode( $saved['rows'] ) ), 0, 10 ); // 같은 파일 = 같은 표시 (이어서 넣어도 하나로)
+				$res   = run_grant( $plan, $label, ! empty( $_POST['with_name'] ), 20.0, $picks, $run, (string) ( $saved['file'] ?? '' ) );
 				$msg   = number_format( $res['n'] ) . '명에게 ' . number_format( $res['sum'] ) . '원을 넣었습니다.'
 					. ( $res['left'] ? ' 시간이 모자라 ' . number_format( $res['left'] ) . '명이 남았습니다 — 「넣기」를 한 번 더 누르면 이어서 넣습니다.' : '' )
 					. ( $res['fail'] ? ' 넣지 못한 ' . $res['fail'] . '명이 있습니다.' : '' );
@@ -895,7 +984,13 @@ function screen(): void {
 			$res = run_cleanup( sanitize_key( wp_unslash( $_POST['key'] ) ) );
 			$msg = number_format( $res['users'] ) . '명의 적립금 내역에서 ' . number_format( $res['rows'] ) . '줄을 지웠습니다. 잔액은 그대로입니다.';
 		} elseif ( 'revoke' === $act && ! empty( $_POST['key'] ) ) {
-			$res = run_revoke( sanitize_key( wp_unslash( $_POST['key'] ) ) );
+			$only = array();
+			if ( isset( $_POST['amt'] ) && '' !== $_POST['amt'] ) {
+				$only['amt'] = (int) $_POST['amt'];
+			} elseif ( ! empty( $_POST['run'] ) ) {
+				$only['run'] = sanitize_key( wp_unslash( $_POST['run'] ) );
+			}
+			$res = run_revoke( sanitize_key( wp_unslash( $_POST['key'] ) ), 20.0, $only );
 			$msg = number_format( $res['n'] ) . '명에게서 ' . number_format( $res['sum'] ) . '원을 거뒀습니다.' . ( $res['left'] ? ' ' . $res['left'] . '명 남음 — 한 번 더 누르세요.' : '' );
 		}
 	} elseif ( isset( $_GET['again'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -1017,7 +1112,29 @@ function screen(): void {
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button button-primary" name="dhr_pts" value="part">참여 보기</button></form>';
 			}
-			if ( ! empty( $b['revoked'] ) && empty( $b['cleaned'] ) ) {
+			// 같은 사유로 여러 번 넣었으면 금액별 · 파일별로 따로 거둔다 (10/16 — 23원으로 잘못 들어간 102명만 거두려고).
+			$groups = (int) $b['n'] > 0 ? amount_groups( (string) $k ) : array();
+			$runs   = (array) ( $b['runs'] ?? array() );
+			if ( count( $groups ) > 1 || count( $runs ) > 1 ) {
+				echo '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
+				foreach ( $runs as $rid => $rr ) {
+					echo '<form method="post" style="display:inline">';
+					wp_nonce_field( 'dhr-pts' );
+					$nm = (string) ( $rr['file'] ?? '' );
+					echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><input type="hidden" name="run" value="' . esc_attr( (string) $rid ) . '"><button class="button button-small" name="dhr_pts" value="revoke" onclick="return confirm(\'이 파일로 넣은 적립금만 거둘까요?\')">'
+						. esc_html( wp_date( 'n/j H:i', (int) $rr['at'] ) . ( '' !== $nm ? ' ' . $nm : '' ) . ' · ' . number_format( (int) $rr['n'] ) . '명 · ' . number_format( (int) $rr['sum'] ) . '원 거두기' ) . '</button></form>';
+				}
+				if ( count( $groups ) > 1 ) {
+					foreach ( $groups as $amt => $cnt ) {
+						echo '<form method="post" style="display:inline">';
+						wp_nonce_field( 'dhr-pts' );
+						echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><input type="hidden" name="amt" value="' . (int) $amt . '"><button class="button button-small" name="dhr_pts" value="revoke" onclick="return confirm(\'' . esc_js( number_format( $amt ) . '원을 받은 ' . number_format( $cnt ) . '명에게서만 거둘까요?' ) . '\')">'
+							. esc_html( number_format( $amt ) . '원 받은 ' . number_format( $cnt ) . '명만 거두기' ) . '</button></form>';
+					}
+				}
+				echo '</div>';
+			}
+			if ( ( ! empty( $b['revoked'] ) || ! empty( $b['part_revoked'] ) ) && ( empty( $b['cleaned'] ) || (int) $b['cleaned'] < (int) max( (int) ( $b['revoked'] ?? 0 ), (int) ( $b['part_revoked'] ?? 0 ) ) ) ) {
 				echo ' <form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="cleanup_preview">손님 내역에서 지우기</button></form>';
