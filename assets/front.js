@@ -2600,6 +2600,14 @@
   }, true);
 })();
 
+/* 친구 추천 링크(`?ref=코드`) — 쿠키 `dhr_ref` 에 30일 적어 둔다. 비로그인 화면은 페이지 캐시라 서버가 이 주소를 못 본다.
+   가입 3단계의 추천 코드 칸이 이 값을 미리 채우고, 칸이 없을 때(스크립트 실패)는 가입 순간 서버가 쿠키를 읽는다. */
+(function(){
+  var name = window.DHR && window.DHR.refCookie; if (!name) return;
+  var m = /[?&]ref=([A-Za-z0-9]{6})(?:&|$)/.exec(location.search); if (!m) return;
+  try { document.cookie = name + '=' + m[1].toUpperCase() + '; path=/; max-age=' + (30 * 86400) + '; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (err) {}
+})();
+
 /* 도움말 화면의 **지금 상태** (2026-10-09) — 「지금 상담 가능 · 18:00까지」 · 「오늘 16:00까지 입금 확인되면 당일 출고」.
    서버(`Help\state()`)가 한 번 그리고, 같은 셈을 여기서 1분마다 다시 한다 — 비로그인 화면은 페이지 캐시가 몇 분 낡은
    글을 내주므로 서버 글만 믿으면 「남은 시간」이 틀린다. 시각은 한국 시간(UTC+9)으로 센다. */

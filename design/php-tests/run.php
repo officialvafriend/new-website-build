@@ -3131,5 +3131,24 @@ $ok(($IW.'dash')('01012345678') === '010-1234-5678' && ($IW.'dash')('+82 10-1234
 $ok(($IW.'label')(['u'=>279209536,'phone'=>'01012345678','orders'=>3]) === '회원 #279209536 · 010-1234-5678 · 주문 3건', '문의 꼬리표: 회원 번호 · 연락처 · 주문 수');
 $ok(($IW.'label')(['u'=>5,'phone'=>'','orders'=>0]) === '회원 #5 · 주문 0건' && ($IW.'label')(['u'=>0,'phone'=>'','orders'=>0]) === '비회원', '문의 꼬리표: 번호 없으면 빼고 · 비회원');
 
+
+// 친구 추천 (2026-10-16)
+require_once __DIR__ . '/../../includes/referral.php';
+$RF = '\\Duckhoo\\Redesign\\Referral\\';
+$i=0; $code=($RF.'make_code')(function() use (&$i){ return $i++; });
+$ok($code==='ABCDEF' && ($RF.'clean_code')(' dh7-k3p ')==='DH7K3P' && ($RF.'clean_code')('DH0K3P')==='' && ($RF.'clean_code')('ABCDE')==='', '추천: 6자 코드 · 헷갈리는 0 O 1 I L 없음 · 빈칸 하이픈 무시');
+$ok(($RF.'parse_input')('010-1234-5678')===['kind'=>'phone','value'=>'01012345678'] && ($RF.'parse_input')('dh7k3p')===['kind'=>'code','value'=>'DH7K3P'] && ($RF.'parse_input')('홍길동')['kind']==='', '추천: 번호 · 코드 · 이름(무시)을 가른다');
+$C=['on'=>true,'ref_amt'=>3000,'new_amt'=>3000,'min'=>30000,'cap'=>10,'days'=>60,'until'=>''];
+$X=['ref'=>5,'new'=>9,'same'=>'','ref_staff'=>false,'ref_gone'=>false,'total'=>45000,'since'=>3,'today'=>'2026-10-20','ref_month'=>0];
+$V=$RF.'verdict';
+$ok($V($C,$X)===['new'=>3000,'ref'=>3000,'why'=>''], '추천: 조건을 다 채우면 두 사람 모두');
+$ok($V($C,['same'=>'본인인증']+$X)['why']==='same:본인인증' && $V($C,['ref'=>9]+$X)['why']==='self' && $V($C,['ref_staff'=>true]+$X)['why']==='staff' && $V($C,['ref_gone'=>true]+$X)['why']==='gone', '추천: 같은 사람 · 자기 자신 · 직원 · 탈퇴는 안 준다');
+$ok($V($C,['total'=>29999]+$X)['why']==='min' && $V($C,['since'=>61]+$X)['why']==='late' && $V(['on'=>false]+$C,$X)['why']==='off' && $V(['until'=>'2026-10-19']+$C,$X)['why']==='off', '추천: 금액 미달 · 기한 지남 · 꺼짐 · 행사 끝');
+$cp=$V($C,['ref_month'=>10]+$X);
+$ok($cp['new']===3000 && $cp['ref']===0 && $cp['why']==='cap' && $V(['cap'=>0]+$C,['ref_month'=>99]+$X)['ref']===3000, '추천: 추천인 월 상한이면 추천받은 사람만 · 상한 0 은 제한 없음');
+$SP=$RF.'same_person';
+$ok($SP(['email'=>'A@x.com','ci'=>'','phones'=>[]],['email'=>'a@x.com','ci'=>'','phones'=>[]])==='이메일' && $SP(['email'=>'a','ci'=>'CI1','phones'=>[]],['email'=>'b','ci'=>'CI1','phones'=>[]])==='본인인증' && $SP(['email'=>'a','ci'=>'','phones'=>['01011112222']],['email'=>'b','ci'=>'','phones'=>['01011112222']])==='휴대폰' && $SP(['email'=>'a','ci'=>'','phones'=>[]],['email'=>'b','ci'=>'','phones'=>[]])==='', '추천: 같은 사람 — 이메일(쌍둥이) · 본인인증 CI · 휴대폰');
+$ok(!($RF.'live')(($RF.'defaults')(),'2026-10-20'), '추천: 기본값은 꺼짐 (켜기 전에는 칸 · 카드 · 지급 없음)');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

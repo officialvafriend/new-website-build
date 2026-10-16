@@ -72,6 +72,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/broad-seo.php'; // 「전�
 require_once plugin_dir_path( __FILE__ ) . 'includes/help.php';       // 도움말 화면 — 배송 · 고객센터 · 자주 묻는 질문 · 공지 · 1:1 문의 머리판과 본문 (2026-10-09)
 require_once plugin_dir_path( __FILE__ ) . 'includes/pricelist.php';  // /price/ 가격표 숏코드 (값을 묻는 검색에 답한다) // 네이버 진단 — 페이지 설명 · noindex · 사이트맵 · 이미지 alt
 require_once plugin_dir_path( __FILE__ ) . 'includes/mail.php';       // 메일 발신자 이름 · 비밀번호 찾기 (워드프레스 기본 화면으로 새지 않게)
+require_once plugin_dir_path( __FILE__ ) . 'includes/referral.php';   // 친구 추천 — 개인 코드 · 링크 · 첫 주문 입금확인 뒤 두 사람에게 적립금 (마케팅 → 친구 추천에서 켠다)
 
 // 목록 정렬 — 가격 낮은 순 · 높은 순. 검색 결과는 워드커머스가 정렬하지 않아 우리가 한다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/sort.php';

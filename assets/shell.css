@@ -2902,3 +2902,15 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-card--form.is-sheet .dhpk__tile, html body.
 }
 /* 장바구니 서랍 발(footer 요소) — 테마가 폰에서 footer 에 흰 배경을 못 박아 유리 서랍 아래가 종이처럼 보였다 (2026-10-08) */
 html body.dhr.dhr-wrap.dhr-wrap footer.dhc__foot{ background: transparent !important; border-top: 1px solid var(--dh-glass-line) !important; }
+
+/* 친구 추천 카드 — 마이페이지 첫 화면 (includes/referral.php). 흰 카드 · 코드는 크게, 복사 버튼은 알약 */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard{background:var(--dh-surface) !important;border:1px solid var(--dh-line) !important;border-radius:20px !important;padding:1.1rem 1.1rem 1rem !important;margin:0 0 1rem !important;box-shadow:0 1px 2px rgba(17,17,17,.04)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__t{font-size:1.05rem !important;font-weight:800 !important;margin:0 0 .3rem !important;color:var(--dh-ink) !important}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__s{font-size:.875rem !important;line-height:1.55 !important;color:var(--dh-ink-2) !important;margin:0 0 .8rem !important;word-break:keep-all}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__row{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-top:1px solid var(--dh-line);min-width:0}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__k{flex:0 0 3.2rem;font-size:.8125rem;color:var(--dh-ink-3);font-weight:600}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__code{flex:1 1 auto;font-size:1.35rem;font-weight:800;letter-spacing:.12em !important;color:var(--dh-ink);font-variant-numeric:tabular-nums}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__link{flex:1 1 auto;min-width:0;font-size:.8125rem;color:var(--dh-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy{flex:0 0 auto;min-height:40px !important;padding:0 .95rem !important;border-radius:999px !important;border:0 !important;background:var(--dh-ink) !important;color:var(--dh-surface) !important;font-size:.8125rem !important;font-weight:700 !important;cursor:pointer;transition:transform 160ms ease-out}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy:active{transform:scale(.97)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy.is-done{background:var(--dh-accent) !important;color:var(--dh-accent-ink) !important}
