@@ -3150,5 +3150,11 @@ $SP=$RF.'same_person';
 $ok($SP(['email'=>'A@x.com','ci'=>'','phones'=>[]],['email'=>'a@x.com','ci'=>'','phones'=>[]])==='이메일' && $SP(['email'=>'a','ci'=>'CI1','phones'=>[]],['email'=>'b','ci'=>'CI1','phones'=>[]])==='본인인증' && $SP(['email'=>'a','ci'=>'','phones'=>['01011112222']],['email'=>'b','ci'=>'','phones'=>['01011112222']])==='휴대폰' && $SP(['email'=>'a','ci'=>'','phones'=>[]],['email'=>'b','ci'=>'','phones'=>[]])==='', '추천: 같은 사람 — 이메일(쌍둥이) · 본인인증 CI · 휴대폰');
 $ok(!($RF.'live')(($RF.'defaults')(),'2026-10-20'), '추천: 기본값은 꺼짐 (켜기 전에는 칸 · 카드 · 지급 없음)');
 
+
+// 흑염룡 · 멘솔쨩 「0.98MG」 오기 → 「9.8mg」 (2026-10-19)
+require_once __DIR__ . '/../../includes/cost.php';
+$lc = '\\Duckhoo\\Redesign\\Cost\\line_cost';
+$ok(($lc)('[액상덕후] 레몬 흑염룡 시리즈 (9.8mg / 30ml) (멘솔 없음)', 2, 0, null, '2026-10-19')['cost'] == 4400 && ($lc)('[액상덕후] 레몬 흑염룡 시리즈 (0.98MG / 30ml) (멘솔 없음)', 1, 0, null, '2026-10-19')['cost'] == 2200, '원가: 흑염룡 이름을 9.8mg 로 고쳐도 같은 원가');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

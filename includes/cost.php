@@ -128,8 +128,11 @@ function line_cost( string $name, int $qty, int $pid = 0, ?array $t = null, stri
 		return array( 'cost' => at( $t['pid'][ $pid ], $date ) * $qty, 'src' => '번호' );
 	}
 	$k = norm( $name );
-	if ( '' !== $k && isset( $t['name'][ $k ] ) && at( $t['name'][ $k ], $date ) > 0 ) {
-		return array( 'cost' => at( $t['name'][ $k ], $date ) * $qty, 'src' => '이름' );
+	// 흑염룡 · 멘솔쨩은 「0.98MG」(오기)로 적혀 있다가 「9.8mg」(1%)로 고쳐진다 — 옛 이름 · 새 이름 둘 다 같은 원가.
+	foreach ( array( $k, str_replace( '(9.8mg/', '(0.98mg/', $k ), str_replace( '(0.98mg/', '(9.8mg/', $k ) ) as $kk ) {
+		if ( '' !== $kk && isset( $t['name'][ $kk ] ) && at( $t['name'][ $kk ], $date ) > 0 ) {
+			return array( 'cost' => at( $t['name'][ $kk ], $date ) * $qty, 'src' => '이름' );
+		}
 	}
 	$b = brand_of( $name );
 	$n = bottles( $name );
