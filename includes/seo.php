@@ -354,7 +354,7 @@ function robots_brands( $txt ): string {
 	}
 	return $txt;
 }
-add_filter( 'robots_txt', __NAMESPACE__ . '\\robots_brands', 99 );
+add_filter( 'robots_txt', __NAMESPACE__ . '\\robots_brands', 10010 );   // AIOSEO 가 10000 에서 규칙을 다시 짓는다 — 그 뒤에
 
 /* ── 3. 메타 설명 · 제목 ─────────────────────────────────────────────────── */
 
