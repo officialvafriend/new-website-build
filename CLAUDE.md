@@ -4478,3 +4478,14 @@ kboard 목록 · 장바구니(폰 순서 표 → 합계 → 추천, 옵션 칸 �
   robots.txt 에 `Sitemap: …/brands.xml` 한 줄 (`robots_brands()`). **노보 맛 검색어(블랙멘솔 · 엠에스블랜드 · 코코넛커피 · 아메리카노)는 섞인 웹 탭에서
   블로그 · 노보액상.com · 브이몬스터 상품 페이지가 위를 차지한다** — 같은 맛이 두 라인([노보] 블랙멘솔 #238 · [노보 블랙] 블랙멘솔 #249, 엠에스블랜드 ·
   코코넛커피도 둘씩)이라 우리 두 페이지가 같은 말을 나눠 갖는다. 이름을 가를지는 사장님 판단
+
+## 그린펀치 판매 중지 — 묶음 맛 옵션은 재고를 따로 센다 (2026-10-19, 사장님 「아무도 구매 못하게」)
+
+낱병 #245 를 비공개로 내렸는데도 팔린 길: **노보 10+1(#4327) 의 PPOM 맛 옵션 「노보 그린펀치」는 낱병 재고와 별개의 옵션 재고**를 가진다
+(그 상품 HTML 의 `ppom_input_vars` 에 `"stock":"0"`). 낱병에 품절을 걸어도 묶음 쪽 숫자가 남아 있으면 계속 골라졌다.
+`includes/blocked.php` — 막은 낱말(필터 `duckhoo_blocked_items`, 기본 `그린펀치`, 빈칸 무시)을 **상품 이름 · 손님이 고른 빌더 줄 `label`(수량 > 0) ·
+PPOM `fields` 값**에서 찾아 담기(`woocommerce_add_to_cart_validation` 26) · 장바구니(`woocommerce_check_cart_items`) · 결제 직전
+(`woocommerce_checkout_create_order` 3)에서 막고, 낱병은 `woocommerce_is_purchasable` false. **`ppom_option_price` 같은 값 표 · 옵션 목록 전체는 안 본다** —
+보면 그린펀치를 안 고른 묶음까지 막힌다. 화면은 front.js 가 `window.DHR.blocked` 로 상품 폼의 그 `<option>` · 맛 칸을 감춘다 (이미 고른 줄의 ×는 남긴다).
+다시 팔려면 `add_filter( 'duckhoo_blocked_items', '__return_empty_array' );`. 상품 카드 목록(`Front\products()` · 상세 추천)은 10분 캐시 번호를 다시 걸러
+비공개 상품을 뺀다 — 내린 직후 다른 상품 8곳에 그린펀치 카드가 남아 있었다.

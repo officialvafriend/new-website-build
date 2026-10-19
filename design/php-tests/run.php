@@ -3181,5 +3181,22 @@ require_once __DIR__ . '/../../includes/cost.php';
 $lc = '\\Duckhoo\\Redesign\\Cost\\line_cost';
 $ok(($lc)('[액상덕후] 레몬 흑염룡 시리즈 (9.8mg / 30ml) (멘솔 없음)', 2, 0, null, '2026-10-19')['cost'] == 4400 && ($lc)('[액상덕후] 레몬 흑염룡 시리즈 (0.98MG / 30ml) (멘솔 없음)', 1, 0, null, '2026-10-19')['cost'] == 2200, '원가: 흑염룡 이름을 9.8mg 로 고쳐도 같은 원가');
 
+
+// 팔지 않는 맛 — 그린펀치 (2026-10-19)
+require_once __DIR__ . '/../../includes/blocked.php';
+$BL = '\\Duckhoo\\Redesign\\Blocked\\';
+$BW = ($BL.'words')();
+$ok($BW === ['그린펀치'], '판매 중지: 기본 낱말은 그린펀치');
+$ok(($BL.'hit_text')('노보 그린 펀치', $BW) === '그린펀치' && ($BL.'hit_text')('노보 데저트', $BW) === '', '판매 중지: 띄어 적어도 걸린다 · 다른 맛은 안 걸린다');
+$bundle = new WC_Product(8810, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true, false, null);
+$withGp = [['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['group_key'=>'required_main','label'=>'노보 리퀴드 10+1 묶음 이벤트 (11병)','qty'=>1],['group_key'=>'addon_1','label'=>'노보 그린펀치','qty'=>2],['group_key'=>'addon_1','label'=>'노보 데저트','qty'=>9]]]];
+$ok(($BL.'hits')($withGp) === ['그린펀치'], '판매 중지: 묶음 안에서 고른 그린펀치를 잡는다');
+$noGp = [['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['group_key'=>'addon_1','label'=>'노보 데저트','qty'=>11]],'ppom'=>['fields'=>['f_____'=>'노보 리퀴드 10+1 묶음 이벤트 (11병)'],'ppom_option_price'=>'[{"option":"노보 그린펀치","price":""}]']]];
+$ok(($BL.'hits')($noGp) === [], '판매 중지: 그린펀치를 안 고른 묶음은 지나간다 (값 표 · 옵션 목록은 안 본다)');
+$ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['label'=>'노보 그린펀치','qty'=>0]]]]) === [], '판매 중지: 수량 0 으로 뺀 줄은 안 센다');
+$ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'ppom'=>['fields'=>['f_____'=>'노보 그린펀치']]]]) === ['그린펀치'], '판매 중지: PPOM 칸으로 고른 것도 잡는다');
+$ok(($BL.'purchasable')(true, new WC_Product(8811, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, true, false, null)) === false && ($BL.'purchasable')(true, $bundle) === true, '판매 중지: 그린펀치 낱병은 구매 불가 · 묶음은 그대로');
+$ok(str_contains(($BL.'message')('그린펀치'), '다른 맛'), '판매 중지: 안내는 할 일(다른 맛으로)을 말한다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

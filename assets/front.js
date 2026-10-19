@@ -2663,3 +2663,22 @@
     empty.appendChild(a);
   }
 })();
+
+/* 팔지 않는 맛 (2026-10-19, 그린펀치) — 상품 폼에서 그 맛 칸을 감춘다. 막는 것은 서버(includes/blocked.php)다.
+   선택칸의 <option> 은 비활성 + 감춤, 옛 옵션 UI · 맛 고르기 타일은 감춤. 글자를 폼에 더하지 않는다 (구매 게이트가 읽는다). */
+(function(){
+  var W = (window.DHR && window.DHR.blocked) || []; if(!W.length) return;
+  function sq(s){ return String(s || '').replace(/\s+/g, ''); }
+  function hit(s){ s = sq(s); for(var i = 0; i < W.length; i++){ if(W[i] && s.indexOf(W[i]) > -1) return true; } return false; }
+  function run(){
+    document.querySelectorAll('form.cart option').forEach(function(o){
+      if(!o.disabled && hit(o.textContent)){ o.disabled = true; o.hidden = true; }
+    });
+    document.querySelectorAll('form.cart [data-label], form.cart [data-name], .dhpk [data-name]').forEach(function(el){
+      if(el.closest('.wd-option-item') || el.classList.contains('wd-option-remove')) return;   // 이미 고른 줄은 뺄 수 있어야 한다
+      if(el.style.display !== 'none' && hit(el.getAttribute('data-label') || el.getAttribute('data-name'))) el.style.display = 'none';
+    });
+  }
+  run(); document.addEventListener('DOMContentLoaded', run); window.addEventListener('load', run);
+  var n = 0, t = setInterval(function(){ run(); if(++n > 20) clearInterval(t); }, 300);
+})();

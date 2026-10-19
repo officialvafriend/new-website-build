@@ -30,7 +30,7 @@ $dhp_gated  = ! is_user_logged_in();
 $dhp_images = $dhp_gated ? array() : array_values( array_filter( array_merge( array( $product->get_image_id() ), $product->get_gallery_image_ids() ) ) );
 $dhp_desc   = trim( (string) $product->get_description() );
 $dhp_short  = trim( (string) $product->get_short_description() );
-$dhp_rel    = array_filter( array_map( 'wc_get_product', wc_get_related_products( $product->get_id(), 8 ) ) );
+$dhp_rel    = array_filter( array_map( 'wc_get_product', wc_get_related_products( $product->get_id(), 8 ) ), fn( $p ) => $p && 'publish' === $p->get_status() );
 $dhp_shop   = wc_get_page_permalink( 'shop' );
 $dhp_cats   = get_the_terms( $product->get_id(), 'product_cat' );
 $dhp_cat    = ( $dhp_cats && ! is_wp_error( $dhp_cats ) ) ? $dhp_cats[0] : null;
