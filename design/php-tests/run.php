@@ -3196,7 +3196,7 @@ $ok(($BL.'hits')($noGp) === [], '판매 중지: 그린펀치를 안 고른 묶�
 $ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['label'=>'노보 그린펀치','qty'=>0]]]]) === [], '판매 중지: 수량 0 으로 뺀 줄은 안 센다');
 $ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'ppom'=>['fields'=>['f_____'=>'노보 그린펀치']]]]) === ['그린펀치'], '판매 중지: PPOM 칸으로 고른 것도 잡는다');
 $ok(($BL.'purchasable')(true, new WC_Product(8811, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, true, false, null)) === false && ($BL.'purchasable')(true, $bundle) === true, '판매 중지: 그린펀치 낱병은 구매 불가 · 묶음은 그대로');
-$ok(str_contains(($BL.'message')('그린펀치'), '다른 맛'), '판매 중지: 안내는 할 일(다른 맛으로)을 말한다');
+$ok(str_starts_with(($BL.'message')('그린펀치'), '그린펀치는 지금') && str_starts_with(($BL.'message')('블랙멘솔'), '블랙멘솔은 지금') && str_contains(($BL.'message')('그린펀치'), '다른 맛'), '판매 중지: 안내는 할 일(다른 맛으로)을 말한다 · 은/는 을 받침으로 고른다');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

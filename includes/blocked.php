@@ -153,7 +153,10 @@ function hit_picks( $builder, $fields, array $words ): string {
  * @return string
  */
 function message( string $word ): string {
-	$msg = sprintf( '%s은(는) 지금 판매하지 않습니다. 다른 맛으로 바꿔 담아 주세요.', $word );
+	$last = function_exists( 'mb_substr' ) ? mb_substr( $word, -1 ) : '';
+	$code = function_exists( 'mb_ord' ) && '' !== $last ? mb_ord( $last ) : 0;
+	$josa = ( $code >= 0xAC00 && $code <= 0xD7A3 && 0 === ( $code - 0xAC00 ) % 28 ) ? '는' : '은';   // 받침이 없으면 「는」
+	$msg  = sprintf( '%s%s 지금 판매하지 않습니다. 다른 맛으로 바꿔 담아 주세요.', $word, $josa );
 	return (string) apply_filters( 'duckhoo_blocked_message', $msg, $word );
 }
 
