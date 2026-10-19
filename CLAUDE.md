@@ -4473,3 +4473,8 @@ kboard 목록 · 장바구니(폰 순서 표 → 합계 → 추천, 옵션 칸 �
   ②영문 페이지 제목 event · News · notice · tip · 「전체 리뷰 모아보기」 → `Seo\Pages\page_title()`(필터 `duckhoo_page_title_map`), 짧은 설명 네 개를 늘림
   ③이미지 alt 11장의 「(0.98MG / 30ml)」 → 9.8mg (MCP `media.update`, Store API `images[].alt` 로 찾음 — media.list 검색은 제목만 본다)
 - 남은 것: `/login/` h1 없음(키플 페이지) · `/contact-us/` 빈 alt 2(테마 샘플)
+- 이어서 (같은 날): 상품 JSON-LD 오퍼에 `shippingDetails`(배송비 2,500 · 3만원↑ 0 · 출고 0~1일 · 배송 1~2일 · KR) · `hasMerchantReturnPolicy`(7일 · 우편 · 고객 부담)
+  를 붙였다 — `Seo\schema_shipping()`, 값은 /shipping/ 글 그대로, 이미 있으면 안 덮음 (끄기 `duckhoo_schema_shipping`, 배송비 `duckhoo_ship_fee`).
+  robots.txt 에 `Sitemap: …/brands.xml` 한 줄 (`robots_brands()`). **노보 맛 검색어(블랙멘솔 · 엠에스블랜드 · 코코넛커피 · 아메리카노)는 섞인 웹 탭에서
+  블로그 · 노보액상.com · 브이몬스터 상품 페이지가 위를 차지한다** — 같은 맛이 두 라인([노보] 블랙멘솔 #238 · [노보 블랙] 블랙멘솔 #249, 엠에스블랜드 ·
+  코코넛커피도 둘씩)이라 우리 두 페이지가 같은 말을 나눠 갖는다. 이름을 가를지는 사장님 판단

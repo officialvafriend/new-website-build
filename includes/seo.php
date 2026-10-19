@@ -283,6 +283,79 @@ function schema_desc( $data, $product = null ): array {
 }
 add_filter( 'woocommerce_structured_data_product', __NAMESPACE__ . '\\schema_desc', 11, 2 );
 
+/**
+ * JSON-LD 오퍼에 배송 · 반품 정보 (2026-10-19 점검 — 구글이 「shippingDetails · hasMerchantReturnPolicy 없음」으로
+ * 상품 리치 결과를 덜 보여 준다). 값은 안내 페이지(/shipping/)에 적힌 것 그대로다: 배송비 2,500원 · 3만원 이상 무료 ·
+ * 평일 오후 4시 이전 입금 확인 시 당일 출고 · 받은 뒤 7일 안 미개봉 반품(고객 부담). 이미 있는 칸은 안 덮는다.
+ * 끄기: `duckhoo_schema_shipping` → false.
+ *
+ * @param array            $data    워드커머스가 만든 상품 데이터.
+ * @param \WC_Product|null $product 상품.
+ * @return array
+ */
+function schema_shipping( $data, $product = null ): array {
+	$data = (array) $data;
+	if ( ! apply_filters( 'duckhoo_schema_shipping', true ) || empty( $data['offers'] ) || ! is_array( $data['offers'] ) ) {
+		return $data;
+	}
+	$fee  = (int) apply_filters( 'duckhoo_ship_fee', 2500 );
+	$free = free_ship();
+	$one  = isset( $data['offers']['@type'] );
+	$list = $one ? array( $data['offers'] ) : $data['offers'];
+	foreach ( $list as $i => $o ) {
+		if ( ! is_array( $o ) ) {
+			continue;
+		}
+		$price = (float) ( $o['price'] ?? ( $o['priceSpecification'][0]['price'] ?? ( $o['priceSpecification']['price'] ?? 0 ) ) );
+		if ( empty( $o['shippingDetails'] ) ) {
+			$o['shippingDetails'] = array(
+				'@type'               => 'OfferShippingDetails',
+				'shippingRate'        => array(
+					'@type'    => 'MonetaryAmount',
+					'value'    => ( $free > 0 && $price >= $free ) ? 0 : $fee,
+					'currency' => 'KRW',
+				),
+				'shippingDestination' => array( '@type' => 'DefinedRegion', 'addressCountry' => 'KR' ),
+				'deliveryTime'        => array(
+					'@type'        => 'ShippingDeliveryTime',
+					'handlingTime' => array( '@type' => 'QuantitativeValue', 'minValue' => 0, 'maxValue' => 1, 'unitCode' => 'DAY' ),
+					'transitTime'  => array( '@type' => 'QuantitativeValue', 'minValue' => 1, 'maxValue' => 2, 'unitCode' => 'DAY' ),
+				),
+			);
+		}
+		if ( empty( $o['hasMerchantReturnPolicy'] ) ) {
+			$o['hasMerchantReturnPolicy'] = array(
+				'@type'                => 'MerchantReturnPolicy',
+				'applicableCountry'    => 'KR',
+				'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+				'merchantReturnDays'   => 7,
+				'returnMethod'         => 'https://schema.org/ReturnByMail',
+				'returnFees'           => 'https://schema.org/ReturnShippingFees',
+			);
+		}
+		$list[ $i ] = $o;
+	}
+	$data['offers'] = $one ? $list[0] : $list;
+	return $data;
+}
+add_filter( 'woocommerce_structured_data_product', __NAMESPACE__ . '\\schema_shipping', 12, 2 );
+
+/**
+ * robots.txt 에 브랜드 사이트맵도 적는다 — AIOSEO 사이트맵에 안 실리는 /brands.xml 을 검색엔진이 혼자 찾게.
+ *
+ * @param string $txt 지금 글.
+ * @return string
+ */
+function robots_brands( $txt ): string {
+	$txt = (string) $txt;
+	$u   = home_url( '/brands.xml' );
+	if ( false === strpos( $txt, $u ) && apply_filters( 'duckhoo_robots_brands', true ) ) {
+		$txt = rtrim( $txt ) . "\nSitemap: " . $u . "\n";
+	}
+	return $txt;
+}
+add_filter( 'robots_txt', __NAMESPACE__ . '\\robots_brands', 99 );
+
 /* ── 3. 메타 설명 · 제목 ─────────────────────────────────────────────────── */
 
 /**

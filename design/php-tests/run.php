@@ -1196,6 +1196,15 @@ $d = ($S.'schema_desc')(['name'=>'x','description'=>''], $GLOBALS['__products'][
 $ok(str_starts_with($d['description'], '라임 두 겹'), 'JSON-LD 설명이 비어 있으면 채운다');
 $d = ($S.'schema_desc')(['description'=>'이미 있음'], $GLOBALS['__products'][901]);
 $ok($d['description'] === '이미 있음', 'JSON-LD 설명이 있으면 그대로');
+$sh = ($S.'schema_shipping')(['offers'=>[['@type'=>'Offer','price'=>'13000']]], $GLOBALS['__products'][901]);
+$o = $sh['offers'][0];
+$ok(($o['shippingDetails']['shippingRate']['value'] ?? null) === 2500 && ($o['hasMerchantReturnPolicy']['merchantReturnDays'] ?? 0) === 7, 'JSON-LD 오퍼에 배송비 2,500 · 반품 7일 (2026-10-19)');
+$sh = ($S.'schema_shipping')(['offers'=>[['@type'=>'Offer','price'=>'120000']]], null);
+$ok(($sh['offers'][0]['shippingDetails']['shippingRate']['value'] ?? null) === 0, '3만원 이상이면 배송비 0');
+$sh = ($S.'schema_shipping')(['offers'=>[['@type'=>'Offer','price'=>'1','shippingDetails'=>['x'=>1]]]], null);
+$ok($sh['offers'][0]['shippingDetails'] === ['x'=>1], '이미 있는 배송 정보는 안 덮는다');
+$rb = ($S.'robots_brands')("User-agent: *\nSitemap: x\n");
+$ok(str_contains($rb, 'brands.xml') && substr_count(($S.'robots_brands')($rb), 'brands.xml') === 1, 'robots.txt 에 브랜드 사이트맵 한 줄 (두 번 안 붙음)');
 $c = ($S.'cat_text')((object)['name'=>'폐호흡 액상','count'=>22]);
 $ok(str_contains($c, '폐호흡(DL)') && str_contains($c, '22종'), '분류 글은 종류 · 개수를 말한다');
 $ok(str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '니코틴 없는') && !str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '0종'), '무니코틴 · 0종은 숫자를 뺀다');
