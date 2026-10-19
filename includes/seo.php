@@ -337,8 +337,10 @@ function cat_text( $term ): string {
 		$b = function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\top_brands' ) ? Broad\top_brands( $term, 3 ) : array();
 		$extra = ( $b ? ' — ' . implode( ' · ', $b ) . ' 등' : '' );
 		$price = array();
+		// 「낱병」은 액상 분류에서만 — 랭킹 · 기기 분류의 가장 싼 값은 기기 세트(69,000원)일 수 있다 (2026-10-19)
+		$liquid = (bool) preg_match( '/입호흡|폐호흡|무니코틴|노보/u', $name );
 		if ( $c['single'] > 0 ) {
-			$price[] = '낱병 ' . number_format( $c['single'] ) . '원부터';
+			$price[] = ( $liquid ? '낱병 ' : '' ) . number_format( $c['single'] ) . '원부터';
 		}
 		if ( $c['bundle'] > 0 && $c['bundle_n'] > 0 && ! preg_match( '/기기|팟|코일/u', $name ) ) {
 			$price[] = '묶음 병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원';
