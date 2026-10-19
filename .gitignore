@@ -12,3 +12,7 @@ scratchpad/**/*.jpg
 scratchpad/audit*/
 scratchpad/pop/
 scratchpad/live/package-lock.json
+scratchpad/**/*.xml
+scratchpad/**/*.jsonl
+scratchpad/**/*.log
+scratchpad/**/*.txt
