@@ -1201,6 +1201,17 @@ $ok(str_contains($c, '폐호흡(DL)') && str_contains($c, '22종'), '분류 글�
 $ok(str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '니코틴 없는') && !str_contains(($S.'cat_text')((object)['name'=>'무니코틴','count'=>0]), '0종'), '무니코틴 · 0종은 숫자를 뺀다');
 foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($c.$t, $bad), "글에 「{$bad}」이 없다 (담배사업법)"); }
 $ok(($S.'description')('사장님이 쓴 것') === '사장님이 쓴 것', 'AIOSEO 에 값이 있으면 그대로');
+// 나머지 분류의 제목 · 설명 (2026-10-19 점검 — 「타격감 - 액상덕후」 · 랭킹/적립금 같은 설명)
+$ok(($S.'cat_label')((object)['name'=>'타격감']) === '타격감 액상', '분류 이름에 「액상」을 붙인다');
+$ok(($S.'cat_label')((object)['name'=>'기기 / 팟 / 코일']) === '기기 · 팟 · 코일', '빗금은 가운뎃점으로 · 기기에는 「액상」을 안 붙인다');
+$ok(($S.'cat_label')((object)['name'=>'액상 랭킹']) === '액상 랭킹', '이미 액상이 든 이름은 그대로');
+$site = get_bloginfo('name');
+$ok(($S.'default_cat_title')('타격감 - '.$site, (object)['name'=>'타격감']) && ($S.'default_cat_title')('', (object)['name'=>'타격감']), 'AIOSEO 기본 제목을 알아본다');
+$ok(!($S.'default_cat_title')('타격감 센 액상 모음 | '.$site, (object)['name'=>'타격감']), '손으로 쓴 제목은 기본이 아니다');
+$pt = ($S.'plain_cat_title')((object)['name'=>'타격감','count'=>28]);
+$ok(str_starts_with($pt, '타격감 액상 28종') && str_contains($pt, '전자담배 액상 사이트'), '나머지 분류 제목: 이름 · 종수 · 사이트');
+$r1 = ($S.'cat_text')((object)['name'=>'액상 랭킹','count'=>18]); $r2 = ($S.'cat_text')((object)['name'=>'8,800 적립금 상품','count'=>18]);
+$ok($r1 !== $r2 && str_starts_with($r2, '8,800 적립금 상품 18종'), '종수가 같은 두 분류도 설명이 다르다');
 // 메타 설명 길이 자르기 (2026-09-11 — 입호흡 분류가 230자였다)
 $cap = $S.'cap';
 $ok($cap('짧은 설명입니다.') === '짧은 설명입니다.', '짧은 글은 손대지 않는다');
@@ -2259,6 +2270,11 @@ $d = ($SP.'shop_desc')(184, ['노보', '펠릭스']);
 $ok(str_starts_with($d, '전자담배 액상(전담 액상) 전문 사이트. 노보 · 펠릭스 등 입호흡 · 폐호흡 액상 184종') && str_contains($d, '30,000원 이상 무료배송') && str_contains($d, '8,800원 적립') && str_contains($d, '19세 이상') && mb_strlen($d) <= 160, '전체 상품 설명 — 브랜드 · 종수 · 혜택 · 19세, 160자 이내');
 foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($d, $bad), "전체 상품 설명에 「{$bad}」 없음"); }
 $ok(str_contains(($SP.'page_desc')('login', 'login'), '로그인') && str_contains(($SP.'page_desc')('register', 'Sign In'), '본인확인'), '로그인 · 가입 페이지는 슬러그 글 (영문 제목을 안 쓴다)');
+$sn = ($SP.'shop_name')();
+$ok(($SP.'page_title')('event', 'event - '.$sn, 'event') === '이벤트 · 할인 행사 | '.$sn, '영문 기본 제목 「event - 가게」를 한글로 (2026-10-19)');
+$ok(($SP.'page_title')('notice', '공지 모음 | 직접 씀', 'notice') === '공지 모음 | 직접 씀', '손으로 쓴 페이지 제목은 그대로');
+$ok(($SP.'page_title')('faq', 'faq - '.$sn, 'faq') === 'faq - '.$sn, '목록에 없는 페이지는 손대지 않는다');
+$ok(mb_strlen(($SP.'page_desc')('event', 'event')) >= 50 && mb_strlen(($SP.'page_desc')('news', 'News')) >= 50, '이벤트 · 새 소식 설명이 50자를 넘는다');
 $g = ($SP.'page_desc')('unknown-page', '<b>어떤</b> 페이지');
 $ok($g === '어떤 페이지 — 액상덕후, 전자담배 액상 전문몰. 30,000원 이상 무료배송 · 가입 즉시 8,800원 적립.', '모르는 페이지는 제목으로 엮는다 (태그는 뗀다)');
 foreach (($SP.'page_texts')() as $slug => $txt) { $ok(mb_strlen($txt) <= 160, "페이지 설명 160자 이내: {$slug}"); foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "페이지 설명에 「{$bad}」 없음: {$slug}"); } }

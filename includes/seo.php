@@ -123,6 +123,26 @@ function head(): void {
 		}
 		return;
 	}
+	$pc = plain_cat();
+	if ( $pc ) {
+		// 나머지 분류도 og 가 0개였다 (2026-10-19 점검 — 타격감 · 무니코틴 · 기기 · 랭킹 · 적립금 · 특가).
+		// 카카오톡에 붙이면 미리보기가 비어 나온다. 노보 · 입호흡 · 폐호흡과 같은 꼴로.
+		$d = cap( description( '' ) );
+		echo '<meta property="og:type" content="website">' . "\n";
+		echo '<meta property="og:title" content="' . esc_attr( title( '' ) ) . '">' . "\n";
+		if ( '' !== $d ) {
+			echo '<meta property="og:description" content="' . esc_attr( $d ) . '">' . "\n";
+		}
+		if ( function_exists( 'get_term_link' ) ) {
+			$u = get_term_link( $pc );
+			if ( is_string( $u ) ) {
+				echo '<meta property="og:url" content="' . esc_url( $u ) . '">' . "\n";
+			}
+		}
+		if ( function_exists( 'get_site_icon_url' ) && '' !== (string) get_site_icon_url( 512 ) ) {
+			echo '<meta property="og:image" content="' . esc_url( (string) get_site_icon_url( 512 ) ) . '">' . "\n";
+		}
+	}
 	// AIOSEO 가 없을 때만 우리가 설명을 찍는다. 있으면 필터로 그쪽 값을 채운다.
 	if ( ! has_aioseo() ) {
 		$d = description( '' );
@@ -303,10 +323,93 @@ function cat_text( $term ): string {
 		$kind = '전자담배 기기 · 팟 · 코일';
 	} elseif ( false !== mb_strpos( $name, '노보' ) ) {
 		$kind = '노보 · 노보 블랙 액상';
+	} elseif ( '' !== $name ) {
+		// 2026-10-19 점검: 「액상 랭킹」 「8,800 적립금 상품」이 둘 다 「액상 18종. …」으로 같은 설명이었다 — 이름을 앞에
+		$kind = cat_label( $term );
 	}
-	$t = $kind . ( $count ? ' ' . $count . '종' : '' ) . '. 브랜드별 묶음 할인, 병당 가격 표시. '
+	// 값 · 브랜드는 상품에서 (슬러그가 있을 때만 — 없으면 셀 분류가 없다)
+	$extra = '';
+	if ( ! empty( $term->slug ) ) {
+		$c = cat_prices( $term );
+		if ( $c['n'] ) {
+			$count = $c['n'];
+		}
+		$b = function_exists( '\\Duckhoo\\Redesign\\Seo\\Broad\\top_brands' ) ? Broad\top_brands( $term, 3 ) : array();
+		$extra = ( $b ? ' — ' . implode( ' · ', $b ) . ' 등' : '' );
+		$price = array();
+		if ( $c['single'] > 0 ) {
+			$price[] = '낱병 ' . number_format( $c['single'] ) . '원부터';
+		}
+		if ( $c['bundle'] > 0 && $c['bundle_n'] > 0 && ! preg_match( '/기기|팟|코일/u', $name ) ) {
+			$price[] = '묶음 병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원';
+		}
+		$extra .= '.' . ( $price ? ' ' . implode( ', ', $price ) . '.' : '' );
+	} else {
+		$extra = '. 브랜드별 묶음 할인, 병당 가격 표시.';
+	}
+	$t = $kind . ( $count ? ' ' . $count . '종' : '' ) . $extra . ' '
 		. '액상덕후 — 가입 즉시 ' . number_format( signup_points() ) . '원 적립, ' . number_format( free_ship() ) . '원 이상 무료배송.';
 	return (string) apply_filters( 'duckhoo_cat_text', $t, $term );
+}
+
+/**
+ * 분류 이름을 검색어 꼴로 — 「기기 / 팟 / 코일」 → 「기기 · 팟 · 코일」, 「타격감」 → 「타격감 액상」.
+ * 이미 액상 · 특가 · 상품 · 랭킹 · 기기 가 든 이름은 그대로.
+ *
+ * @param object $term 분류.
+ * @return string
+ */
+function cat_label( $term ): string {
+	$n = trim( (string) preg_replace( '/\s*\/\s*/u', ' · ', (string) ( $term->name ?? '' ) ) );
+	if ( '' !== $n && ! preg_match( '/액상|특가|상품|랭킹|기기|팟|코일/u', $n ) ) {
+		$n .= ' 액상';
+	}
+	return $n;
+}
+
+/**
+ * 우리가 따로 안 쓰는 분류의 제목 — 「타격감 액상 28종 가격 8,000원~ | 전자담배 액상 사이트 액상덕후」.
+ * AIOSEO 기본(「타격감 - 액상덕후」)일 때만 쓴다 — 손으로 쓴 제목은 그대로.
+ *
+ * @param object $term 분류.
+ * @return string
+ */
+function plain_cat_title( $term ): string {
+	$c = ! empty( $term->slug ) ? cat_prices( $term ) : array( 'n' => (int) ( $term->count ?? 0 ), 'single' => 0.0 );
+	$n = $c['n'] ? $c['n'] : (int) ( $term->count ?? 0 );
+	return cat_label( $term ) . ( $n ? ' ' . $n . '종' : '' )
+		. ( $c['single'] > 0 ? ' 가격 ' . number_format( $c['single'] ) . '원~' : '' )
+		. ' | 전자담배 액상 사이트 ' . get_bloginfo( 'name' );
+}
+
+/**
+ * 지금 화면이 「우리가 따로 안 쓰는」 상품 분류인가. 맞으면 그 term.
+ *
+ * @return object|null
+ */
+function plain_cat() {
+	if ( ! function_exists( 'is_product_taxonomy' ) || ! is_product_taxonomy() || noted_cat() ) {
+		return null;
+	}
+	$t = get_queried_object();
+	return is_object( $t ) && ! empty( $t->name ) ? $t : null;
+}
+
+/**
+ * AIOSEO 가 찍은 분류 제목이 기본 꼴인가 (비었거나 「이름 - 가게」).
+ *
+ * @param string $t    지금 제목.
+ * @param object $term 분류.
+ * @return bool
+ */
+function default_cat_title( string $t, $term ): bool {
+	$t = trim( html_entity_decode( $t, ENT_QUOTES, 'UTF-8' ) );
+	if ( '' === $t ) {
+		return true;
+	}
+	$name = trim( (string) ( $term->name ?? '' ) );
+	$site = (string) get_bloginfo( 'name' );
+	return (bool) preg_match( '/^' . preg_quote( $name, '/' ) . '\s*[-–|·]\s*' . preg_quote( $site, '/' ) . '$/u', $t ) || $t === $name;
 }
 
 /**
@@ -476,6 +579,10 @@ function title( $t ): string {
 	$nc = noted_cat();
 	if ( $nc ) {
 		return cat_title( $nc );
+	}
+	$pc = plain_cat();
+	if ( $pc && apply_filters( 'duckhoo_plain_cat_titles', true ) && default_cat_title( (string) $t, $pc ) ) {
+		return plain_cat_title( $pc );   // 2026-10-19 점검: 「타격감 - 액상덕후」 같은 기본 제목 여섯 개
 	}
 	$pt = product_title_here();
 	if ( '' !== $pt ) {

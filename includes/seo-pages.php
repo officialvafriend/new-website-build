@@ -390,11 +390,11 @@ function page_texts(): array {
 		array(
 			'login'    => '액상덕후 로그인 — 주문내역 · 적립금 · 배송지를 한곳에서 확인합니다. 회원이 아니면 가입 즉시 ' . $p['points'] . '원 적립.',
 			'register' => '액상덕후 회원가입 — 휴대폰 본인확인(19세 이상) 1분, 가입 즉시 ' . $p['points'] . '원 적립. 전자담배 액상 전문몰.',
-			'notice'   => '액상덕후 공지사항 — 출고 · 배송 일정, 상품 입고와 가격 변동 안내.',
-			'news'     => '액상덕후 새 소식 — 신상품 입고와 진행 중인 이벤트.',
+			'notice'   => '액상덕후 공지사항 — 출고 · 배송 일정, 연휴 출고 안내, 상품 입고와 가격 변동을 이곳에 먼저 올립니다.',
+			'news'     => '액상덕후 새 소식 — 새로 들어온 전자담배 액상 · 기기와 진행 중인 할인 · 적립 이벤트를 모았습니다.',
 			'tip'      => '액상덕후 신상 소식 · 팁 — 매주 들어오는 새 액상과 기기, 보관 · 사용 안내.',
-			'event'    => '액상덕후 이벤트 — 진행 중인 할인 · 적립 행사.',
-			'reviews'  => '액상덕후 상품 후기 — 구매 고객이 남긴 액상 · 기기 후기.',
+			'event'    => '액상덕후 이벤트 — 진행 중인 묶음 할인 · 적립금 행사. 가입 즉시 ' . $p['points'] . '원 적립, ' . $p['ship'] . '원 이상 무료배송.',
+			'reviews'  => '액상덕후 상품 후기 — 실제로 구매하고 받아 본 고객만 남긴 전자담배 액상 · 기기 후기 모아보기.',
 			'faq'      => '액상덕후 자주 묻는 질문 — 주문 · 입금 · 배송 · 교환 · 회원가입.',
 			'shipping' => '액상덕후 배송 · 교환 · 환불 안내 — 출고 시간, 배송비, 교환 · 환불 조건.',
 			'contact-us' => '액상덕후 고객센터 — 카카오톡 오픈채팅 · 전화 010-5133-5852 · 1:1 문의. 평일 11:00–18:00, 입금 계좌와 입금자명 안내.',
@@ -464,9 +464,49 @@ add_filter( 'aioseo_twitter_description', __NAMESPACE__ . '\\description', 25 );
  * @param mixed $t 지금 값.
  * @return string
  */
+function page_titles(): array {
+	return (array) apply_filters(
+		'duckhoo_page_title_map',
+		array(
+			'event'   => '이벤트 · 할인 행사',
+			'news'    => '새 소식 · 신상품 입고',
+			'notice'  => '공지사항 · 출고 일정',
+			'tip'     => '신상 소식 · 액상 사용 팁',
+			'reviews' => '상품 후기 모아보기',
+		)
+	);
+}
+
+/**
+ * 페이지 제목 — 순수 함수. AIOSEO 기본(「event - 액상덕후」처럼 영문 슬러그가 그대로 나온 것)일 때만
+ * 한글 제목으로. 손으로 쓴 제목은 그대로 (2026-10-19 점검).
+ *
+ * @param string $slug  슬러그.
+ * @param string $t     지금 제목.
+ * @param string $ptitle 페이지 글 제목.
+ * @return string
+ */
+function page_title( string $slug, string $t, string $ptitle ): string {
+	$map = page_titles();
+	$slug = rawurldecode( $slug );
+	if ( empty( $map[ $slug ] ) ) {
+		return $t;
+	}
+	$plain = trim( html_entity_decode( $t, ENT_QUOTES, 'UTF-8' ) );
+	$site  = shop_name();
+	$def   = '' === $plain || $plain === $ptitle
+		|| (bool) preg_match( '/^' . preg_quote( trim( $ptitle ), '/' ) . '\s*[-–|]\s*' . preg_quote( $site, '/' ) . '$/u', $plain );
+	return $def ? $map[ $slug ] . ' | ' . $site : $t;
+}
+
 function title( $t ): string {
 	if ( function_exists( 'is_shop' ) && is_shop() && ! ( function_exists( 'is_search' ) && is_search() ) ) {
 		return shop_title( product_count() );
+	}
+	$slug = page_slug();
+	if ( '' !== $slug && isset( page_titles()[ rawurldecode( $slug ) ] ) ) {
+		$o = get_queried_object();
+		return page_title( $slug, (string) $t, (string) ( $o->post_title ?? '' ) );
 	}
 	if ( 'price' === page_slug() && function_exists( 'Duckhoo\\Redesign\\PriceList\\seo' ) ) {
 		return \Duckhoo\Redesign\PriceList\seo( product_count() )['title'];
