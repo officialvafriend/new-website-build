@@ -2851,6 +2851,8 @@ $ok(($CR.'deposit_hit')(['t'=>12400,'ts'=>$now-2*$D,'names'=>['임서영']], $sm
 $ok(($CR.'deposit_hit')(['t'=>69000,'ts'=>$now,'names'=>['홍길동']], [['amount'=>69000,'ts'=>$now-5*$D,'name'=>'홍길동']])[0] === '', '미입금: 주문보다 한참 전에 온 문자는 그 주문의 입금이 아니다');
 $ok(($CR.'deposit_hit')(['t'=>50000,'ts'=>$now,'names'=>['홍길동']], $smsl)[0] === '', '미입금: 금액이 다르면 상관없다');
 $ok(($CR.'everyone')('unpaid') && !($CR.'everyone')('rfm') && !($CR.'everyone')('abandon'), '미입금만 동의 · 보낸 기록과 상관없이 전부 나온다');
+$ok(($CR.'view_all')('brand') && !($CR.'view_all')('rfm') && !($CR.'view_all')('unpaid'), '노보 · 디오 구매 손님은 화면에 전부');
+$_GET['view'] = 'send'; $ok(!($CR.'view_all')('brand'), '&view=send 면 노보 · 디오도 보낼 사람만'); unset($_GET['view']);
 $ok(($CR.'skip_paid_dup_days')() === 7, '미입금: 짝 결제 빼기 기본 켜짐 · 7일');
 $dd = ($CR.'dedupe')([['name'=>'a','phone'=>'010-1111-2222'],['name'=>'b','phone'=>'01011112222'],['name'=>'c','phone'=>''],['name'=>'d','phone'=>'']]);
 $ok(count($dd) === 3 && $dd[0]['phone'] === '01011112222' && $dd[0]['name'] === 'a', '같은 연락처는 앞 줄만 · 번호는 숫자만 · 연락처 없는 줄은 그대로');
@@ -2917,6 +2919,8 @@ $ok($na(true,false,'POST',false,false)===false && $na(true,true,'GET',false,fals
 
 /* ── 주차 플랜 · 보상 라벨 · 한 사람에 한 보상 (includes/crm-plan.php) ─────────────── */
 require_once dirname(__DIR__, 2).'/includes/crm-plan.php';
+$fr = ($CR.'file_rows')([['name'=>'가','phone'=>'01011112222','sms'=>'yes'],['name'=>'나','phone'=>'01033334444','sms'=>''],['name'=>'다','phone'=>'01055556666','sms'=>'no']], 'brand', 'yes');
+$ok(array_column($fr,'name') === ['가'], '양식 파일은 화면이 전부여도 동의한 사람만 '.json_encode(array_column($fr,'name')));
 $rk=$CR.'reward_key';
 $ok($rk('abandon')==='abandon' && $rk('rfm','챔피언')==='rfm:챔피언' && $rk('rfm')==='rfm' && $rk('brand','x')==='brand', '보상 열쇠: 명단 그대로, RFM 은 갈래를 붙인다');
 $wr=$CR.'with_reward'; $RW=['abandon'=>'적립금 3,000원 · 7일','brand'=>'쿠폰 2,000원 · 7일','rfm:챔피언'=>'적립금 5,000원 · 2주','rfm'=>'RFM 공통'];

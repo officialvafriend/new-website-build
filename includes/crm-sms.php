@@ -452,6 +452,19 @@ function export_rows( string $seg, array $opt, array $inc = array(), bool $fresh
 	return with_sms( with_reward( $rows, rewards() ) );
 }
 
+/**
+ * 문자 사이트 양식에 실제로 들어갈 줄 — 동의한 사람만(`all` 이면 거부만 뺀다) · 최근 받은 사람 빼기 · 제외 명단. 미입금은 동의 · 보낸 기록과 상관없이.
+ * 화면이 전부를 보여 줄 때(노보 · 디오)도 파일은 이것을 따른다.
+ */
+function file_rows( array $rows, string $seg, string $mode ): array {
+	if ( ! everyone( $seg ) ) {
+		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
+		[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
+	}
+	[ $rows ] = apply_exclude( $rows, $seg ); // 제외 명단
+	return everyone( $seg ) ? array_values( array_filter( $rows, fn( $r ) => '' !== (string) $r['phone'] ) ) : $rows;
+}
+
 /** `.xls` 내보내기 — 동의한 사람만 (`sms=all` 이면 전원 · 거부는 그래도 뺀다). 그룹명은 `grp` 로 덮을 수 있다. */
 function xls(): void {
 	if ( ! may() ) {
@@ -463,11 +476,7 @@ function xls(): void {
 	$inc = 'all' === $seg ? chosen_parts() : array();
 	$rows = export_rows( $seg, $opt, $inc );
 	$mode = isset( $_GET['sms'] ) && 'all' === $_GET['sms'] ? 'all' : 'yes';
-	if ( ! everyone( $seg ) ) { // 미입금은 동의 · 보낸 기록과 상관없이 전부
-		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
-		[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
-	}
-	[ $rows ] = apply_exclude( $rows, $seg ); // 제외 명단
+	$rows = file_rows( $rows, $seg, $mode );
 	$grp  = isset( $_GET['grp'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['grp'] ) ) : '';
 	if ( 'all' === $seg ) {
 		$grp = ''; // 줄마다 주 명단이 그룹명
