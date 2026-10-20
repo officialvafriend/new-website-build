@@ -320,7 +320,7 @@ function sent_box( string $back, int $skipped ): void {
 	echo '</tbody></table></details>';
 }
 
-/* ── 제외 명단 — 쿠폰 · 적립금을 보내지 않을 사람 (사장님 2026-10-08 「쿠폰 제외 대상은 왕한빈, 진선영, 유지민」) ──
+/* ── 제외 명단 — 쿠폰 · 적립금을 보내지 않을 사람 (사장님 2026-10-08 「쿠폰 제외 대상은 왕한빈, 진선영, 유지민」 → 2026-10-20 진선영 · 유지민은 다시 넣음) ──
  * 이름 또는 전화번호 한 줄에 하나. 마케팅 명단(담고 나간 · 노보·디오 · RFM · 한 사람에 한 통)에서 뺀다.
  * **미입금 안내는 빼지 않는다** — 그건 광고가 아니라 그 사람의 주문 이야기다. 이름은 똑같을 때만(빈칸 무시) · 번호는 정규화해 견준다.
  * 동명이인이 걸릴 수 있어 화면에 「빠진 사람」을 그대로 적는다 — 틀리면 번호로 바꿔 적으면 그 사람만 빠진다. */
@@ -329,7 +329,7 @@ const EXCL_OPT = 'duckhoo_crm_exclude';
 
 /** 기본 제외 명단 — 옵션이 비어 있을 때. 필터 `duckhoo_crm_exclude_default`. */
 function exclude_default(): array {
-	return (array) apply_filters( 'duckhoo_crm_exclude_default', array( '왕한빈', '진선영', '유지민' ) );
+	return (array) apply_filters( 'duckhoo_crm_exclude_default', array( '왕한빈' ) );
 }
 
 /** 글(한 줄에 하나)을 항목으로. 번호는 숫자만 남기고, 이름은 빈칸을 뺀다. 순수. @return string[] */
