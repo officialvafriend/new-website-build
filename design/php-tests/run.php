@@ -2826,6 +2826,8 @@ $ok($ab[0]['paid_n'] === 0 && $ab[0]['last'] === 0 && $ab[0]['names'] === ['a','
 $br = ($CR.'seg_brand')($orders, $items, ['노보','디오리퀴드'], $now, 180);
 $ok(array_column($br,'u') === [4,2], '브랜드 손님: 최근 순 (4 노보 열흘 전 · 2 디오 한 달 전), 창 밖 옛 노보 · 펠릭스는 안 센다 '.json_encode(array_column($br,'u')));
 $ok($br[1]['brands'] === ['디오리퀴드'] && $br[1]['bottles'] === 3 && str_contains($br[1]['fav'], '디오리퀴드') && $br[1]['n'] === 1, '브랜드 손님: 브랜드 · 병 수 · 자주 산 것');
+$brA = ($CR.'seg_brand')($orders, $items, ['노보','디오리퀴드'], $now, 0);
+$ok(count($brA) >= count($br) && array_slice(array_column($brA,'u'),0,2) === [4,2], '브랜드 손님: 0일 = 전체 기간 — 창 밖 옛 주문까지 센다 '.json_encode(array_column($brA,'u')));
 $rf = ($CR.'rfm')($orders, $now);
 $ok(count($rf['rows']) === 3 && array_sum($rf['counts']) === 3, 'RFM: 돈 들어온 회원 셋(2 · 4 · 6)만, 비회원 · 입금전 · 취소 제외');
 $r6 = array_values(array_filter($rf['rows'], fn($r)=>$r['u']===6))[0];

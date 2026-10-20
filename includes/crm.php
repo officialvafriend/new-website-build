@@ -7,7 +7,7 @@
  *
  *  1. 장바구니 담고 나간 손님 — 회원의 저장 장바구니(`_woocommerce_persistent_cart_N`)가 비어 있지 않은데
  *     최근 N일(기본 7) 안에 살아 있는 주문이 없는 사람. 장바구니에는 시각이 없어 「주문이 없다」로 가른다
- *  2. 노보 · 디오리퀴드 구매 손님 — 최근 N일(기본 180) 돈 들어온 주문에 그 브랜드 상품이 든 회원. 브랜드는 주문 해부의 `brand()`
+ *  2. 노보 · 디오리퀴드 구매 손님 — 최근 N일(기본 0 = 전체 기간) 돈 들어온 주문에 그 브랜드 상품이 든 회원. 브랜드는 주문 해부의 `brand()`
  *  3. RFM — 돈 들어온 주문으로 회원마다 R(마지막 구매 뒤 며칠) · F(주문 수) · M(누적 금액)을 1~5점(5분위)으로 매기고 일곱 갈래로 묶는다
  *  4. 미입금 고객 — 입금전(on-hold · pending)으로 N일(기본 1) 넘게 서 있는 주문. 비회원도 주문의 청구 연락처로 잡는다
  *
@@ -137,8 +137,8 @@ function seg_abandon( array $carts, array $orders, int $now, int $days = 7 ): ar
  * @param array<int,array<int,array{pid:int,name:string,qty:int,total:float}>> $items 주문 번호 => 상품 줄.
  * @return array<int,array{u:int,brands:string[],n:int,last:int,total:float,fav:string,bottles:int}>
  */
-function seg_brand( array $orders, array $items, array $brands, int $now, int $days = 180 ): array {
-	$since = $now - $days * D;
+function seg_brand( array $orders, array $items, array $brands, int $now, int $days = 0 ): array {
+	$since = $days > 0 ? $now - $days * D : 0; // 0 = 전체 기간
 	$paid  = paid_statuses();
 	$acc   = array();
 	$bf    = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\brand' ) ? '\\Duckhoo\\Redesign\\Anatomy\\brand' : fn( $n ) => preg_match( '/^\s*\[([^\]]+)\]/u', $n, $m ) ? trim( $m[1] ) : '기타';
@@ -656,7 +656,7 @@ function build( string $seg, array $opt, int $now ): array {
 	} elseif ( 'brand' === $seg ) {
 		$paid = paid_statuses();
 		$ids  = array();
-		$since = $now - (int) $opt['days'] * D;
+		$since = (int) $opt['days'] > 0 ? $now - (int) $opt['days'] * D : 0;
 		foreach ( $orders as $o ) {
 			if ( $o['u'] > 0 && $o['ts'] >= $since && in_array( $o['s'], $paid, true ) ) {
 				$ids[] = $o['id'];
@@ -742,7 +742,7 @@ function build( string $seg, array $opt, int $now ): array {
 }
 
 function opts( string $seg ): array {
-	$d = array( 'abandon' => 7, 'brand' => 180, 'rfm' => 0, 'unpaid' => 1 );
+	$d = array( 'abandon' => 7, 'brand' => 0, 'rfm' => 0, 'unpaid' => 1 );
 	$days = isset( $_GET['days'] ) ? max( 0, min( 730, (int) $_GET['days'] ) ) : $d[ $seg ]; // phpcs:ignore WordPress.Security.NonceVerification
 	$only = isset( $_GET['only'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['only'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	return array( 'days' => $days, 'only' => $only );
@@ -882,7 +882,7 @@ function screen(): void {
 
 	$explain = array(
 		'abandon' => '회원의 저장 장바구니에 상품이 있는데 최근 <b>%d일</b> 안에 살아 있는 주문이 없는 사람. 장바구니에는 담은 시각이 없어 「최근 주문이 없다」로 가릅니다. 담은 것이 오래된 것일 수 있으니 문구는 「담아 두신 상품 아직 있어요」 정도로.',
-		'brand'   => '최근 <b>%d일</b> 돈 들어온 주문에 노보 · 디오리퀴드 상품이 든 회원. 같은 브랜드 다른 맛 · 10+1 · 5+5 묶음 안내가 맞는 명단. 브랜드는 필터 duckhoo_crm_brands.',
+		'brand'   => '%s 돈 들어온 주문에 노보 · 디오리퀴드 상품이 든 회원. 같은 브랜드 다른 맛 · 10+1 · 5+5 묶음 안내가 맞는 명단. 브랜드는 필터 duckhoo_crm_brands.',
 		'rfm'     => '돈 들어온 주문 전체로 회원마다 R(마지막 구매 뒤 며칠 — 가까울수록 5점) · F(주문 수) · M(누적 금액)을 5분위로 매깁니다. 갈래를 누르면 그 명단만 남습니다.',
 		'unpaid'  => '입금전으로 <b>%d일</b> 넘게 서 있는 주문. 입금 안내 문자 한 통이 가장 돈이 되는 명단 — 입금자명을 주문자명과 같게 보내 달라는 말을 꼭 넣습니다. 비회원 주문은 주문서의 연락처.',
 		'all'     => '네 명단을 연락처로 합쳐 <b>한 사람에 안내 하나</b>. 여러 명단에 든 사람은 급한 순서(미입금 → 담고 나간 → 노보 · 디오 → RFM)로 하나만 남기고, 다른 명단 이름은 메모에 적습니다. 어느 조각을 넣을지 아래에서 고릅니다 — RFM 전체를 넣으면 산 적 있는 회원이 전부 들어오니 갈래를 고르세요.',
@@ -895,13 +895,13 @@ function screen(): void {
 		}
 		echo '<button class="button">다시 보기</button>';
 	} elseif ( 'rfm' !== $seg ) {
-		echo ( '' !== $opt['only'] ? '<input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' : '' ) . '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '"></label> <button class="button">다시 보기</button>';
+		echo ( '' !== $opt['only'] ? '<input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' : '' ) . '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '">' . ( 'brand' === $seg ? ' (0 = 전체 기간)' : '' ) . '</label> <button class="button">다시 보기</button>';
 	}
 	echo '</form>';
 	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
 	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
 	echo '<span class="dhr-sl-note" style="margin:0">읽은 시각 ' . esc_html( wp_date( 'm.d H:i', (int) $d['at'] ) ) . '</span></div>';
-	echo '<p class="dhr-sl-note">' . wp_kses( sprintf( $explain[ $seg ], (int) $opt['days'] ), array( 'b' => array() ) ) . '</p>';
+	echo '<p class="dhr-sl-note">' . wp_kses( 'brand' === $seg ? sprintf( $explain[ $seg ], (int) $opt['days'] > 0 ? '최근 <b>' . (int) $opt['days'] . '일</b>' : '<b>전체 기간</b>(가게 첫 주문부터)' ) : sprintf( $explain[ $seg ], (int) $opt['days'] ), array( 'b' => array() ) ) . '</p>';
 
 	if ( 'brand' === $seg ) {
 		$cnt = array();
