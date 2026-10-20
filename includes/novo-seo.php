@@ -165,6 +165,13 @@ function faq(): array {
 				. ( $n ? ' — 낱병 ' . $n . '종과 10+1 묶음' : '' ) . '. ' . ( out_note() ? out_note() . '. ' : '' ) . '품절되는 맛이 생기면 이 페이지의 상품에 「품절」로 표시되고, 그 전까지는 지금 바로 주문하실 수 있습니다.',
 		),
 		array(
+			// 2026-10-20 — 노보 단종 (사장님이 손님 문자로 알림). 「노보 단종 · 노보 액상 단종」은 손님이 치는 말 그대로.
+			// 답은 우리 재고 이야기뿐 — 다른 가게 · 품절 소식은 적지 않는다. 끄기 `duckhoo_novo_discontinued` → false
+			'q' => '노보 액상 단종됐나요? 다시 입고되나요?',
+			'a' => '네, 노보(NOVO) 액상은 단종되어 더 이상 입고되지 않습니다. 액상덕후에 지금 남아 있는 재고가 마지막이며, '
+				. ( $n ? '낱병 ' . $n . '종과 10+1 묶음을 ' : '' ) . '재고가 있는 동안 주문하실 수 있습니다. 품절된 맛은 이 페이지의 상품에 「품절」로 표시됩니다.',
+		),
+		array(
 			'q' => '노보 액상 어디서 살 수 있나요? 사는 곳을 찾고 있어요.',
 			'a' => '이 페이지에서 바로 주문하실 수 있습니다. 최근 노보 액상 품절 · 단종 문의가 늘어 재고 상황을 여기에 적어 둡니다 — 액상덕후 재고는 실시간으로 반영됩니다. '
 				. '19세 이상 본인확인 회원만 구매할 수 있고, 가입 즉시 ' . number_format_i18n( signup_points() ) . '원이 적립됩니다.',
@@ -189,6 +196,9 @@ function faq(): array {
 				. number_format_i18n( free_ship() ) . '원 이상 무료배송입니다.',
 		),
 	);
+	if ( ! apply_filters( 'duckhoo_novo_discontinued', true ) ) {
+		$items = array_values( array_filter( $items, fn( $i ) => ! str_contains( (string) $i['q'], '단종' ) ) );
+	}
 	return (array) apply_filters( 'duckhoo_novo_faq', $items );
 }
 

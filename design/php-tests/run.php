@@ -2680,7 +2680,8 @@ $ok('' === trim($pn4), '품절 상품에는 「재고 한정」을 말하지 않
 ob_start(); ($N0.'product_notice')($GLOBALS['__products'][7106]); $pn5 = ob_get_clean();
 $ok('' === trim($pn5), '노보가 아닌 상품에는 안 나온다');
 $fa3 = ($NS.'faq')();
-$ok(str_contains($fa3[2]['a'], '도매가 수준') && str_contains($fa3[2]['a'], '지금 판매가는') && str_contains($fa3[2]['a'], '소진'), 'FAQ 가격 답이 도매가 수준 · 재고 한정을 말한다');
+$fp3 = array_values(array_filter($fa3, fn($i) => str_contains($i['q'], '가격')))[0]['a'] ?? '';
+$ok(str_contains($fp3, '도매가 수준') && str_contains($fp3, '지금 판매가는') && str_contains($fp3, '소진'), 'FAQ 가격 답이 도매가 수준 · 재고 한정을 말한다');
 $nz = array_values(array_filter(\Duckhoo\Redesign\Front\notices(), fn($i) => ($i['id'] ?? '') === 'novo-price'));
 $ok($nz && $nz[0]['k'] === '도매가 수준 · 현재 재고 한정' && str_contains($nz[0]['s'], '13,000원'), '안내 띠 노보 줄 — 도매가 수준 · 현재 재고 한정 + 지금 판매가');
 $pt = ($N0.'price_notice_text')();
@@ -2698,6 +2699,12 @@ $fl = ($NS.'flavors_by_line')();
 $ok(($fl['노보'] ?? []) === ['블랙멘솔','타박멘솔'] && ($fl['노보 블랙'] ?? []) === ['쿠바시가'], '라인별 맛 목록은 재고 있는 낱병만 (품절 데저트 제외)');
 $faq = ($NS.'faq')();
 $faqtxt = implode(' ', array_map(fn($i) => $i['q'].' '.$i['a'], $faq));
+// 2026-10-20 — 노보 단종 질문: 손님이 치는 말 그대로 · 우리 재고 이야기만 · 끄면 빠진다
+$fd = array_values(array_filter($faq, fn($i) => str_contains($i['q'], '단종')));
+$ok(count($fd) === 1 && $faq[1]['q'] === $fd[0]['q'] && str_contains($fd[0]['a'], '더 이상 입고되지 않습니다') && str_contains($fd[0]['a'], '낱병 3종') && !preg_match('/노보마트|브이몬스터|겨울마을|다른 (곳|가게|사이트)/u', $fd[0]['a']), 'FAQ 둘째 질문이 노보 단종 — 재고 종수는 상품에서, 다른 가게 얘기 없음');
+add_filter('duckhoo_novo_discontinued', fn($v = null) => false);
+$ok(!array_filter(($NS.'faq')(), fn($i) => str_contains($i['q'], '단종')), '단종 질문은 필터로 끈다');
+$GLOBALS['__filters']['duckhoo_novo_discontinued'] = [];
 $ok(count($faq) >= 5 && str_contains($faqtxt, '품절') && str_contains($faqtxt, '어디서') && str_contains($faqtxt, '13,000원') && str_contains($faqtxt, '낱병 3종'), 'FAQ 는 손님이 치는 말(품절 · 어디서)을 질문에 두고 값 · 종수는 상품에서 읽는다');
 $ok(!preg_match('/건강|금연|순하다|해롭지/u', $faqtxt) && !preg_match('/노보마트|브이몬스터|겨울마을|다른 (곳|가게|사이트)/u', $faqtxt), 'FAQ 에 금지 낱말 · 다른 가게 얘기가 없다');
 $ok(str_contains($faqtxt, '노보 액상 종류는 노보 2종 · 노보 블랙 1종') && !str_contains($faqtxt, '쿠바시가') && !str_contains($faqtxt, '타박멘솔'), 'FAQ 「노보 액상 종류」는 라인별 종수만 — 맛 이름은 그 상품 한 장에만 (10/6 교훈)');
