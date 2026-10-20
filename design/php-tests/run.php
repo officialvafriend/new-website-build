@@ -1824,13 +1824,14 @@ $GLOBALS['__products'] = [
   9 => new WC_Product(9, '[노보] 품절맛 (9.8mg / 30ml)', 9000.0, false),
 ];
 $GLOBALS['__is_ptax'] = true; $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
-$ok(($S2.'title')('노보 액상 가격 8종 | 10병 특가 병당7,000원') === '노보 액상 3종 전 라인 재고 보유 · 바로 주문 | 액상덕후', '노보 분류 제목은 우리가 쓴다 — 종수는 재고 있는 상품만 센다 (품절 1개 제외)');
+add_filter('duckhoo_seo_asof', fn($v = null) => '10월 20일');
+$ok(($S2.'title')('노보 액상 가격 8종 | 10병 특가 병당7,000원') === '노보 액상 종류 · 가격 3종 — 전 라인 재고 보유 (10월 20일 기준) | 액상덕후', '노보 분류 제목은 우리가 쓴다 — 「종류 · 가격」이 앞, 「재고 보유」 · 기준 날짜, 종수는 재고 있는 상품만 (2026-10-20)');
 $d = ($S2.'description')('노보(NOVO) 액상 가격 안내: 10병 묶음 특가 병당 7,000원');
 $ok(str_contains($d, '재고를 보유') && str_contains($d, '낱병 13,000원부터') && str_contains($d, '10+1 묶음(11병) 120,000원') && str_contains($d, '병당 약 10,900원'), '설명의 값은 상품에서 읽는다 — 낱병 최저가 · 묶음 · 병당');
 $ok(!str_contains($d, '7,000'), '손으로 쓴 옛 값(7,000원)은 검색 결과로 나가지 않는다');
 $ok(!preg_match('/건강|금연|순하|해롭지/u', $d), '광고 제한 낱말이 없다');
 ob_start(); ($S2.'head')(); $hh = ob_get_clean();
-$ok(str_contains($hh, 'og:title" content="노보 액상 3종 전 라인 재고 보유 · 바로 주문 | 액상덕후"') && str_contains($hh, 'og:description" content="액상덕후는 노보'), '노보 분류에는 og 를 우리가 찍는다 — 카카오톡 미리보기용 (AIOSEO 가 분류에는 안 찍는다)');
+$ok(str_contains($hh, 'og:title" content="노보 액상 종류 · 가격 3종 — 전 라인 재고 보유 (10월 20일 기준) | 액상덕후"') && str_contains($hh, 'og:description" content="노보 액상 가격은 낱병'), '노보 분류에는 og 를 우리가 찍는다 — 카카오톡 미리보기용 (AIOSEO 가 분류에는 안 찍는다)');
 $GLOBALS['__qobj'] = (object) ['slug' => 'other-cat', 'name' => '기기 / 팟 / 코일', 'description' => ''];   // 2026-10-01: 입호흡 · 폐호흡은 이제 우리가 쓴다 — 다른 분류로 본다
 $ok(($S2.'title')('그대로') === '그대로' && str_contains(($S2.'description')('사장님 글'), '사장님 글'), '다른 분류는 손대지 않는다');
 $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
@@ -2705,6 +2706,19 @@ $ok(str_contains($nt['title'], '2026년 10월') && str_contains($nt['content'], 
 $GLOBALS['__inserted'] = []; unset($GLOBALS['__options']['duckhoo_novo_notice_post']);
 ($NS.'ensure_notice')(); ($NS.'ensure_notice')();
 $ok(count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_status'] === 'draft' && $GLOBALS['__inserted'][0]['post_type'] === 'post', '안내 글은 초안(draft)으로 딱 한 번만 만든다 — 공개는 사장님이 누른다');
+// 2026-10-20 — 「노보 액상 종류 · 가격」 표: 라인마다 종수 · 낱병 · 묶음 · 병당, 재고 있는 것만, 맛 이름 없음
+$lu = ($NS.'lineup')();
+$ok(count($lu) === 2 && $lu[0]['line'] === '노보' && $lu[0]['n'] === 2 && $lu[0]['single'] === 13000.0 && $lu[0]['bundle'] === 120000.0 && $lu[0]['bottles'] === 11 && $lu[1]['line'] === '노보 블랙' && $lu[1]['n'] === 1, '종류 표: 노보 2종 · 블랙 1종(품절 데저트 제외) · 묶음 11병');
+$GLOBALS['__is_ptax'] = true; $GLOBALS['__qobj'] = (object) ['slug' => 'novo-liquid', 'name' => '노보 액상', 'description' => ''];
+add_filter('duckhoo_cat_notes', fn($v = null) => ['novo-liquid' => true]);
+ob_start(); ($NS.'lineup_html')(); $lh = ob_get_clean();
+$ok(str_contains($lh, '노보 액상 종류와 가격') && str_contains($lh, '10월 20일 기준') && str_contains($lh, '노보 2종 · 노보 블랙 1종') && str_contains($lh, '120,000원') && str_contains($lh, '약 10,900원') && !str_contains($lh, '쿠바시가') && !str_contains($lh, '타박멘솔'), '종류 표 HTML — 제목에 그 말 · 기준 날짜 · 값, 맛 이름은 안 쓴다 (10/6 교훈)');
+$ok(!preg_match('/건강|금연|순하|해롭지/u', $lh), '종류 표에 광고 제한 낱말이 없다');
+$d2 = \Duckhoo\Redesign\Seo\description('x');
+$ok(str_starts_with($d2, '노보 액상 종류는 노보 2종 · 노보 블랙 1종(10월 20일 기준). 노보 액상 가격은 낱병 13,000원부터'), '노보 분류 검색 설명이 종류 · 가격으로 시작한다');
+$GLOBALS['__qobj'] = (object) ['slug' => 'other', 'name' => '기기', 'description' => ''];
+ob_start(); ($NS.'lineup_html')(); $ok('' === ob_get_clean(), '다른 분류에는 표를 안 그린다');
+$GLOBALS['__filters']['duckhoo_cat_notes'] = []; $GLOBALS['__is_ptax'] = false; unset($GLOBALS['__qobj']);
 $GLOBALS['__products'] = [];
 
 /* ── 넓은 말 SEO — 「전담 액상」 목표 (includes/broad-seo.php · pages.php v4, 2026-10-01) ─── */

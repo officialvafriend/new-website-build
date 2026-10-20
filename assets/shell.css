@@ -2756,6 +2756,15 @@ html body.dhr.dhr-wrap.dhr-wrap .dhp-flav__more{ display: inline-block; margin-t
 html body.dhr.dhr-wrap.dhr-wrap .dha-intro{ margin: 2rem 0 0; padding: clamp(1rem, .8rem + 1.2vw, 1.6rem); background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: 20px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-intro__t{ margin: 0 0 .5rem !important; font-size: clamp(18px, 16px + .8vw, 22px); font-weight: 900; color: var(--dh-ink); letter-spacing: 0; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-intro p{ margin: 0 !important; font-size: 15px; line-height: 1.7; color: var(--dh-ink-2); word-break: keep-all; }
+/* 노보 분류 「종류와 가격」 표 (2026-10-20) — FAQ 위, 표는 /price/ 와 같은 모양 */
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup{ margin: 2rem 0 1rem; padding: clamp(1rem, .8rem + 1.2vw, 1.6rem); background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: 20px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup h2{ margin: 0 0 .5rem !important; font-size: clamp(18px, 16px + .8vw, 22px); font-weight: 900; color: var(--dh-ink); letter-spacing: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup h2 small{ font-size: 14px; font-weight: 700; color: var(--dh-accent-deep); margin-left: .35rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup p{ margin: 0 0 .9rem !important; font-size: 15px; line-height: 1.65; color: var(--dh-ink-2); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup .dhr-pl__scroll{ margin: 0 0 .8rem; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup table.dhr-pl__t{ min-width: 460px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup .dha-lineup__s{ margin: 0 !important; font-size: 14px; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lineup .dha-lineup__s a{ color: var(--dh-accent-deep); font-weight: 700; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq{ margin: 2rem 0 1rem; padding: clamp(1rem, .8rem + 1.2vw, 1.6rem); background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: 20px; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq h2{ margin: 0 0 .6rem !important; font-size: clamp(18px, 16px + .8vw, 22px); font-weight: 900; color: var(--dh-ink); letter-spacing: 0; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-faq__i{ border-top: 1px solid var(--dh-line); padding: .55rem 0; }

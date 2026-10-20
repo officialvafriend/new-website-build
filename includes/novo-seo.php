@@ -193,6 +193,84 @@ function faq(): array {
 }
 
 /**
+ * 노보 액상 종류와 가격 — 라인마다 종수 · 낱병 최저가 · 묶음 값 · 병당 (2026-10-20, 「노보 액상 종류 · 가격」 1등).
+ * 그 검색의 1등 페이지는 「라인업 · 라인별 구성 · 단가」를 표로 보여 준다. 우리는 맛 이름 대신 **종수**로 — 맛 이름은
+ * 그 상품 페이지 한 장이 말한다 (10/6 교훈). 재고 있는 상품만, 값은 그때 읽는다.
+ *
+ * @return array<int,array{line:string,n:int,single:float,bundle:float,bottles:int,per:float}>
+ */
+function lineup(): array {
+	$rows = array();
+	foreach ( products( array( 'limit' => -1 ) ) as $p ) {
+		if ( ! $p instanceof \WC_Product || ! is_novo( $p ) || ! $p->is_in_stock() ) {
+			continue;
+		}
+		if ( preg_match( '/결제|드립팁|첨가제|코일|팟\b/u', (string) $p->get_name() ) ) {
+			continue;
+		}
+		$k = line_label( $p );
+		if ( ! isset( $rows[ $k ] ) ) {
+			$rows[ $k ] = array( 'line' => $k, 'n' => 0, 'single' => 0.0, 'bundle' => 0.0, 'bottles' => 0, 'per' => 0.0 );
+		}
+		$price = (float) $p->get_price();
+		$b     = max( 1, bottles( $p ) );
+		if ( $b > 1 ) {
+			if ( $price > 0 && ( 0.0 === $rows[ $k ]['bundle'] || $price < $rows[ $k ]['bundle'] ) ) {
+				$rows[ $k ]['bundle']  = $price;
+				$rows[ $k ]['bottles'] = $b;
+				$rows[ $k ]['per']     = $price / $b;
+			}
+			continue;
+		}
+		++$rows[ $k ]['n'];
+		if ( $price > 0 && ( 0.0 === $rows[ $k ]['single'] || $price < $rows[ $k ]['single'] ) ) {
+			$rows[ $k ]['single'] = $price;
+		}
+	}
+	$order = array( '노보' => 0, '노보 블랙' => 1 );
+	uksort( $rows, fn( $a, $b ) => ( $order[ $a ] ?? 9 ) <=> ( $order[ $b ] ?? 9 ) );
+	return array_values( $rows );
+}
+
+/**
+ * 「노보 액상 종류와 가격」 표 — 격자 **아래**, FAQ 위. 표 모양은 /price/ 가격표와 같다.
+ *
+ * @return void
+ */
+function lineup_html(): void {
+	if ( ! on_novo_cat() ) {
+		return;
+	}
+	$rows = lineup();
+	if ( ! $rows ) {
+		return;
+	}
+	$asof = function_exists( '\\Duckhoo\\Redesign\\Seo\\asof' ) ? \Duckhoo\Redesign\Seo\asof() : '';
+	$n    = array_sum( array_column( $rows, 'n' ) );
+	$won  = fn( float $v ) => number_format_i18n( round( $v ) ) . '원';
+	echo '<section class="dha-lineup" aria-labelledby="dha-lineup-h"><h2 id="dha-lineup-h">노보 액상 종류와 가격'
+		. ( '' !== $asof ? ' <small>' . esc_html( $asof ) . ' 기준</small>' : '' ) . '</h2>';
+	$kinds = array();
+	foreach ( $rows as $r ) {
+		$kinds[] = $r['line'] . ' ' . (int) $r['n'] . '종';
+	}
+	echo '<p>노보 액상 종류는 ' . esc_html( implode( ' · ', $kinds ) ) . ', 낱병 ' . (int) $n . '종과 10+1 묶음입니다. '
+		. '모두 30ml · 니코틴 9.8mg · 입호흡(MTL) 기기용이고, 노보 블랙은 같은 맛 이름이라도 타격감과 풍미가 더 진한 라인입니다. 값은 지금 판매가 그대로입니다.</p>';
+	echo '<div class="dhr-pl__scroll"><table class="dhr-pl__t"><thead><tr><th scope="col">라인</th><th scope="col" class="num">종류</th><th scope="col" class="num">낱병</th><th scope="col" class="num">10+1 묶음</th><th scope="col" class="num">병당</th></tr></thead><tbody>';
+	foreach ( $rows as $r ) {
+		echo '<tr><td><b>' . esc_html( $r['line'] ) . '</b></td>'
+			. '<td class="num">' . (int) $r['n'] . '종</td>'
+			. '<td class="num">' . ( $r['single'] > 0 ? esc_html( $won( $r['single'] ) ) : '—' ) . '</td>'
+			. '<td class="num">' . ( $r['bundle'] > 0 ? esc_html( $won( $r['bundle'] ) ) . ' <small>' . (int) $r['bottles'] . '병</small>' : '—' ) . '</td>'
+			. '<td class="num">' . ( $r['per'] > 0 ? esc_html( '약 ' . $won( floor( $r['per'] / 100 ) * 100 ) ) : '—' ) . '</td></tr>';
+	}
+	echo '</tbody></table></div>';
+	echo '<p class="dha-lineup__s">맛별 상품은 위 목록에서 고르시면 됩니다. 10+1 묶음은 맛을 묶음 안에서 골라 담습니다. 전 상품 값은 <a href="' . esc_url( home_url( '/price/' ) ) . '">전자담배 액상 가격표</a>에 있습니다.</p>';
+	echo '</section>';
+}
+add_action( 'duckhoo_archive_after_grid', __NAMESPACE__ . '\\lineup_html', 8 );
+
+/**
  * 노보 분류 페이지인가 (FAQ 를 그리는 자리).
  *
  * @return bool

@@ -163,7 +163,8 @@ function table_html( array $groups ): string {
 	$n    = array_sum( array_map( 'count', $groups ) );
 	$p    = function_exists( 'Duckhoo\\Redesign\\Seo\\Pages\\perks' ) ? \Duckhoo\Redesign\Seo\Pages\perks() : array( 'points' => '8,800', 'ship' => '30,000' );
 	$h    = '<div class="dhr-pl">';
-	$h   .= '<p class="dhr-pl__lead">액상덕후에서 파는 전 상품 <b>' . (int) $n . '종</b>의 판매가입니다. 실제 판매가를 그대로 읽어 오므로 이 표와 상품 화면의 값은 같습니다. '
+	$asof = function_exists( 'Duckhoo\\Redesign\\Seo\\asof' ) ? \Duckhoo\Redesign\Seo\asof() : '';
+	$h   .= '<p class="dhr-pl__lead">' . ( '' !== $asof ? '<b>' . esc_html( $asof ) . ' 기준</b> · ' : '' ) . '액상덕후에서 파는 전 상품 <b>' . (int) $n . '종</b>의 판매가입니다. 실제 판매가를 그대로 읽어 오므로 이 표와 상품 화면의 값은 같습니다. '
 		. '묶음은 병당 가격을 함께 적었고, 품절은 품절로 표시했습니다. ' . esc_html( $p['ship'] ) . '원 이상 무료배송, 가입 즉시 ' . esc_html( $p['points'] ) . '원 적립. 19세 이상 본인확인 회원만 구매할 수 있습니다.</p>';
 	$h   .= '<nav class="dhr-pl__nav" aria-label="가격표 묶음">';
 	foreach ( $groups as $k => $list ) {
@@ -197,7 +198,7 @@ function table_html( array $groups ): string {
  * @return string
  */
 function shortcode(): string {
-	$key  = 'dhr_pricelist';
+	$key  = 'dhr_pricelist_' . ( function_exists( 'wp_date' ) ? wp_date( 'md' ) : date( 'md' ) );   // 기준 날짜가 들어 있다
 	$html = get_transient( $key );
 	if ( is_string( $html ) && '' !== $html ) {
 		return $html;

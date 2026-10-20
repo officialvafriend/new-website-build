@@ -1148,7 +1148,19 @@ function cat_title( $t ): string {
 		return Broad\cat_title( $t );   // 입호흡 · 폐호흡 (broad-seo.php)
 	}
 	$c = cat_prices( $t );
-	return '노보 액상' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ( '전 라인' === novo_words() ? ' 전 라인' : '' ) . ' 재고 보유 · 바로 주문 | ' . get_bloginfo( 'name' );
+	// 2026-10-20 — 「노보 액상 종류」 · 「노보 액상 가격」에서 2등. 1등 페이지들은 그 말이 제목에 있고 날짜가 붙어 있다.
+	// 「재고 보유」는 남긴다 — 「노보 액상 재고 · 품절」은 이 제목으로 이미 1등이다.
+	return '노보 액상 종류 · 가격' . ( $c['n'] ? ' ' . $c['n'] . '종' : '' ) . ' — ' . ( '전 라인' === novo_words() ? '전 라인 ' : '' ) . '재고 보유 (' . asof() . ' 기준) | ' . get_bloginfo( 'name' );
+}
+
+/**
+ * 「10월 20일」 — 값 · 종수를 상품에서 그때 읽는 페이지에 붙이는 기준 날짜 (사이트 시간).
+ * 네이버는 값을 묻는 검색에서 날짜가 있는 글을 올린다. 값을 그날 읽으니 그날 날짜는 사실 그대로다.
+ *
+ * @return string
+ */
+function asof(): string {
+	return (string) apply_filters( 'duckhoo_seo_asof', function_exists( 'wp_date' ) ? wp_date( 'n월 j일' ) : date( 'n월 j일' ) );
 }
 
 /**
@@ -1170,8 +1182,14 @@ function cat_note_text( $t ): string {
 		$price[] = '10+1 묶음(' . (int) $c['bundle_n'] . '병) ' . number_format( $c['bundle'] ) . '원'
 			. ( $c['bundle_n'] > 0 ? ' (병당 약 ' . number_format( floor( $c['bundle'] / $c['bundle_n'] / 100 ) * 100 ) . '원)' : '' );
 	}
-	$t = '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 ' . novo_words() . ' 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.'
-		. ( $price ? ' ' . implode( ' · ', $price ) . '.' : '' )
+	$kinds = function_exists( '\\Duckhoo\\Redesign\\Novo\\Seo\\flavors_by_line' ) ? \Duckhoo\Redesign\Novo\Seo\flavors_by_line() : array();
+	$kind  = array();
+	foreach ( $kinds as $k => $v ) {
+		$kind[] = $k . ' ' . count( $v ) . '종';
+	}
+	$t = ( $kind ? '노보 액상 종류는 ' . implode( ' · ', $kind ) . '(' . asof() . ' 기준). ' : '' )
+		. ( $price ? '노보 액상 가격은 ' . implode( ' · ', $price ) . '. ' : '' )
+		. '액상덕후는 노보(NOVO) · 노보 블랙 전자담배 액상 ' . novo_words() . ' 재고를 보유하고 있어 노보 리퀴드를 지금 바로 주문하실 수 있습니다.'
 		. ' 30ml · 니코틴 9.8mg · 입호흡(MTL). 평일 오후 4시 이전 입금 확인 시 당일 출고, '
 		. number_format( free_ship() ) . '원 이상 무료배송.';
 	return (string) apply_filters( 'duckhoo_cat_note_text', $t );
