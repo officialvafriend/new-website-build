@@ -443,7 +443,7 @@ function export_rows( string $seg, array $opt, array $inc = array(), bool $fresh
 	}
 	$d    = data( $seg, $opt, $fresh );
 	$rows = dedupe( filter_only( $d['rows'], $opt['only'] ) );
-	$g    = $name( $seg ) . ( 'rfm' === $seg && '' !== $opt['only'] ? ' ' . $opt['only'] : '' );
+	$g    = group_name( $seg, (string) $opt['only'] );
 	foreach ( $rows as &$r ) {
 		$r['group'] = $g;
 		$r['part']  = reward_key( $seg, (string) $opt['only'] );

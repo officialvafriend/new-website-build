@@ -21,7 +21,7 @@ namespace Duckhoo\Redesign\Crm;
 defined( 'ABSPATH' ) || exit;
 
 const SLUG  = 'duckhoo-crm';
-const CACHE = 'dhr_crm_v2_';
+const CACHE = 'dhr_crm_v3_'; // v3: 브랜드 줄에 brands 를 싣는다 (2026-10-20 노보만 고르기)
 const D     = 86400;
 
 function may(): bool {
@@ -667,7 +667,7 @@ function build( string $seg, array $opt, int $now ): array {
 		$ct    = contacts( array_column( $list, 'u' ) );
 		foreach ( $list as $r ) {
 			$c = $ct[ $r['u'] ] ?? array( 'name' => '#' . $r['u'], 'phone' => '', 'email' => '' );
-			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => implode( ' · ', $r['brands'] ) . ' ' . $r['n'] . '번 · ' . $r['bottles'] . '병', 'amount' => $r['total'], 'when' => $r['last'], 'note' => '자주 산 것: ' . $r['fav'] );
+			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => implode( ' · ', $r['brands'] ) . ' ' . $r['n'] . '번 · ' . $r['bottles'] . '병', 'amount' => $r['total'], 'when' => $r['last'], 'note' => '자주 산 것: ' . $r['fav'], 'brands' => $r['brands'] );
 		}
 	} elseif ( 'rfm' === $seg ) {
 		$x    = rfm( $orders, $now );
@@ -762,12 +762,27 @@ function data( string $seg, array $opt, bool $fresh = false ): array {
 	return $d;
 }
 
-/** 화면 줄에서 RFM 갈래 하나만 남긴다 (캐시는 전체를 들고 있다). */
+/**
+ * 화면 줄에서 하나만 남긴다 (캐시는 전체를 들고 있다) — RFM 은 갈래, 브랜드 탭은 브랜드
+ * (2026-10-20 「노보 구매한 고객만」). 브랜드는 그 브랜드를 산 적이 있으면 남는다 — 노보와 디오를 둘 다 산 사람도 노보에 든다.
+ */
 function filter_only( array $rows, string $only ): array {
 	if ( '' === $only ) {
 		return $rows;
 	}
-	return array_values( array_filter( $rows, fn( $r ) => str_starts_with( (string) $r['why'], $only . ' ' ) ) );
+	return array_values( array_filter( $rows, fn( $r ) => isset( $r['brands'] ) && is_array( $r['brands'] ) ? in_array( $only, $r['brands'], true ) : str_starts_with( (string) $r['why'], $only . ' ' ) ) );
+}
+
+/** 그룹명 — 브랜드 하나를 고르면 「노보 구매 손님」, RFM 갈래면 「RFM 이탈 위험」. */
+function group_name( string $seg, string $only ): string {
+	$base = segs()[ $seg ] ?? $seg;
+	if ( '' === $only ) {
+		return $base;
+	}
+	if ( 'brand' === $seg ) {
+		return $only . ' 구매 손님';
+	}
+	return 'rfm' === $seg ? $base . ' ' . $only : $base;
 }
 
 /* ── 화면 ─────────────────────────────────────────────────────────────── */
@@ -880,14 +895,28 @@ function screen(): void {
 		}
 		echo '<button class="button">다시 보기</button>';
 	} elseif ( 'rfm' !== $seg ) {
-		echo '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '"></label> <button class="button">다시 보기</button>';
+		echo ( '' !== $opt['only'] ? '<input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' : '' ) . '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '"></label> <button class="button">다시 보기</button>';
 	}
 	echo '</form>';
-	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . $incq . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
+	echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . '&dhr_fresh=1' ), 'dhr-crm-fresh' ) ) . '">지금 다시 읽기</a>';
 	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=dhr_crm_csv&seg=' . $seg . '&days=' . (int) $opt['days'] . '&only=' . rawurlencode( $opt['only'] ) . $incq . ( 'all' === $smsmode ? '&sms=all' : '' ) ), 'dhr-crm-csv' ) ) . '">CSV 내려받기 (' . count( $rows ) . '명)</a>';
 	echo '<span class="dhr-sl-note" style="margin:0">읽은 시각 ' . esc_html( wp_date( 'm.d H:i', (int) $d['at'] ) ) . '</span></div>';
 	echo '<p class="dhr-sl-note">' . wp_kses( sprintf( $explain[ $seg ], (int) $opt['days'] ), array( 'b' => array() ) ) . '</p>';
 
+	if ( 'brand' === $seg ) {
+		$cnt = array();
+		foreach ( (array) $d['rows'] as $r ) {
+			foreach ( (array) ( $r['brands'] ?? array() ) as $b ) {
+				$cnt[ $b ] = ( $cnt[ $b ] ?? 0 ) + 1;
+			}
+		}
+		$dq = '&days=' . (int) $opt['days'];
+		echo '<div class="dhr-crm-segs"><a class="' . ( '' === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=brand' . $dq ) ) . '">전체 ' . count( (array) $d['rows'] ) . '</a>';
+		foreach ( brands() as $b ) {
+			echo '<a class="' . ( $b === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=brand&only=' . rawurlencode( $b ) . $dq ) ) . '">' . esc_html( $b ) . '만 ' . (int) ( $cnt[ $b ] ?? 0 ) . '</a>';
+		}
+		echo '</div>';
+	}
 	if ( 'rfm' === $seg ) {
 		$adv = rfm_advice();
 		echo '<div class="dhr-crm-segs"><a class="' . ( '' === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=rfm' ) ) . '">전체 ' . (int) ( $d['meta']['total'] ?? 0 ) . '</a>';
@@ -950,7 +979,7 @@ function screen(): void {
 		echo '<input type="hidden" name="inc[]" value="' . esc_attr( $k ) . '">';
 	}
 	if ( 'all' !== $seg ) {
-		echo '<label>그룹명 <input type="text" name="grp" value="' . esc_attr( $rows ? (string) $rows[0]['group'] : ( segs()[ $seg ] . ( 'rfm' === $seg && $opt['only'] ? ' ' . $opt['only'] : '' ) ) ) . '" style="width:220px"></label>';
+		echo '<label>그룹명 <input type="text" name="grp" value="' . esc_attr( $rows ? (string) $rows[0]['group'] : group_name( $seg, (string) $opt['only'] ) ) . '" style="width:220px"></label>';
 	} else {
 		echo '<span class="dhr-sl-note">그룹명 = 그 사람의 주 명단 (한 파일에 여러 그룹)</span>';
 	}

@@ -4489,3 +4489,10 @@ PPOM `fields` 값**에서 찾아 담기(`woocommerce_add_to_cart_validation` 26)
 보면 그린펀치를 안 고른 묶음까지 막힌다. 화면은 front.js 가 `window.DHR.blocked` 로 상품 폼의 그 `<option>` · 맛 칸을 감춘다 (이미 고른 줄의 ×는 남긴다).
 다시 팔려면 `add_filter( 'duckhoo_blocked_items', '__return_empty_array' );`. 상품 카드 목록(`Front\products()` · 상세 추천)은 10분 캐시 번호를 다시 걸러
 비공개 상품을 뺀다 — 내린 직후 다른 상품 8곳에 그린펀치 카드가 남아 있었다.
+
+### 노보 구매 손님만 고르기 (2026-10-20, 사장님 「노보 구매한 고객만 뽑아서」)
+
+마케팅 → 고객 세그먼트 → 「노보 · 디오리퀴드 구매 손님」 탭에 칩 셋(`전체 · 노보만 · 디오리퀴드만`, 숫자 포함). 주소 `?seg=brand&only=노보`.
+`filter_only()` 가 줄의 `brands` 로 거른다 — 노보와 디오를 둘 다 산 사람은 두 칩에 다 든다. 노보 블랙 · 10+1 묶음도 `Anatomy\brand()` 가 노보로 센다.
+그룹명은 `group_name()` → 「노보 구매 손님」 (문자 사이트 양식 · CSV 둘 다). 기준 일수(기본 180) · SMS 동의 · 보낸 기록 · 제외 명단은 다른 탭과 같다.
+캐시 열쇠는 `dhr_crm_v3_` (줄에 brands 를 실으며 올렸다).
