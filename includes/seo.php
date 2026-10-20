@@ -667,6 +667,9 @@ function title( $t ): string {
 		return (string) $t;
 	}
 	$b    = current_brand();
+	if ( function_exists( __NAMESPACE__ . '\\Brand\\on' ) && Brand\on( $b ) ) {
+		return Brand\title( $b );   // 2026-10-20 — 「디오리퀴드 액상 종류 · 가격 11종 (10월 20일 기준)」 (brand-seo.php)
+	}
 	$n    = brands()[ $b ] ?? 0;
 	$note = (string) ( brand_notes()[ $b ]['title'] ?? '' );
 	// 2026-10-02 — 품절이 있어 note 가 「낱병 N종 …」이면 종수를 두 번 적지 않는다 (「노보 액상 15종 낱병 12종」 ✗)

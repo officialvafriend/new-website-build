@@ -3244,5 +3244,39 @@ $ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'ppom'=>['fi
 $ok(($BL.'purchasable')(true, new WC_Product(8811, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, true, false, null)) === false && ($BL.'purchasable')(true, $bundle) === true, '판매 중지: 그린펀치 낱병은 구매 불가 · 묶음은 그대로');
 $ok(str_starts_with(($BL.'message')('그린펀치'), '그린펀치는 지금') && str_starts_with(($BL.'message')('블랙멘솔'), '블랙멘솔은 지금') && str_contains(($BL.'message')('그린펀치'), '다른 맛'), '판매 중지: 안내는 할 일(다른 맛으로)을 말한다 · 은/는 을 받침으로 고른다');
 
+// 브랜드 페이지 「종류 · 가격」 표 · FAQ · 날짜 제목 (2026-10-20)
+require_once dirname(__DIR__, 2).'/includes/brand-seo.php';
+$BS = '\\Duckhoo\\Redesign\\Seo\\Brand\\';
+foreach ([9101=>['[디오리퀴드] 멜론 (9.8mg / 30ml)',14900,true],9102=>['[디오리퀴드] 로젤하트 (9.8mg / 30ml)',14900,true],9103=>['[디오리퀴드] 샤인머스캣 (9.8mg / 30ml)',14900,false],9104=>['[디오리퀴드] 5+5 묶음 이벤트',75000,true],9105=>['[톡톡] 레몬 (9.8mg / 30ml)',9900,true]] as $id=>$r) {
+  $GLOBALS['__products'][$id] = new WC_Product($id, $r[0], (float)$r[1], $r[2]);
+  $GLOBALS['__pterms'][$id] = [(object)['name'=>'입호흡 액상']];
+}
+foreach (array_keys($GLOBALS['__transients'] ?? []) as $tk) { if (str_starts_with($tk, 'dhr_')) unset($GLOBALS['__transients'][$tk]); }
+add_filter('duckhoo_seo_asof', fn($v = null) => '10월 20일');
+$GLOBALS['__qv'] = ['dhr_brand' => ($S.'brand_slug')('디오리퀴드')];
+$ok(($BS.'here')() === '디오리퀴드', '브랜드 SEO: 디오리퀴드 페이지에서 켜진다');
+$ok(($S.'title')('x') === '디오리퀴드 액상 종류 · 가격 4종 (10월 20일 기준) | 액상덕후', '브랜드 SEO: 제목에 「종류 · 가격」 · 종수 · 날짜');
+$rw = ($BS.'rows')('디오리퀴드');
+$ok(count($rw) === 2 && $rw[0]['label'] === '낱병 2종' && $rw[0]['price'] === '14,900원' && $rw[1]['label'] === '5+5 묶음' && $rw[1]['n'] === 10 && $rw[1]['per'] === '약 7,500원', '브랜드 SEO: 표는 재고 있는 낱병 한 줄 + 묶음(병 수 · 병당)');
+$fq = ($BS.'faq')('디오리퀴드');
+$fa = implode(' ', array_column($fq, 'a'));
+$ok(count($fq) === 3 && str_contains($fq[0]['q'], '가격') && str_contains($fq[0]['a'], '75,000원') && str_contains($fq[1]['a'], '4종') && str_contains($fq[1]['a'], '2종입니다') && str_contains($fq[2]['q'], '액상은 언제'), '브랜드 SEO: FAQ 셋 — 가격 · 종류(품절 빼고 몇 종) · 언제 받나');
+$ok(!preg_match('/건강|금연|순하|해롭지|공식/u', $fa) && !str_contains($fa, '멜론') && !str_contains($fa, '로젤하트'), '브랜드 SEO: 금지 낱말 없음 · FAQ 에 맛 이름을 늘어놓지 않는다');
+ob_start(); ($BS.'render')(); $bh = ob_get_clean();
+ob_start(); ($BS.'jsonld')(); $bj = ob_get_clean();
+$ok(str_contains($bh, 'dha-lineup') && str_contains($bh, '10월 20일 기준') && substr_count($bh, '<details') === 3 && str_contains($bh, '/price/'), '브랜드 SEO: 격자 아래 표 + FAQ 셋 + 가격표 링크');
+$ok(str_contains($bj, '"FAQPage"') && substr_count($bj, '"Question"') === 3, '브랜드 SEO: FAQPage 구조화 데이터는 화면 FAQ 와 같은 셋');
+$GLOBALS['__qv'] = ['dhr_brand' => 'novo'];
+ob_start(); ($BS.'render')(); ($BS.'jsonld')(); $nb = ob_get_clean();
+$ok(($BS.'here')() === '' && '' === $nb && !str_contains(($S.'title')('x'), '종류 · 가격'), '브랜드 SEO: 노보는 뺀다 — 노보 분류 한 장이 그 말을 받는다');
+$GLOBALS['__qv'] = ['dhr_brand' => ($S.'brand_slug')('톡톡')];
+$ok(($BS.'here')() === '', '브랜드 SEO: 상품 하나짜리(noindex) 브랜드는 뺀다');
+add_filter('duckhoo_brand_seo', fn($v = null) => false);
+$GLOBALS['__qv'] = ['dhr_brand' => ($S.'brand_slug')('디오리퀴드')];
+$ok(($BS.'here')() === '' && !str_contains(($S.'title')('x'), '종류 · 가격'), '브랜드 SEO: 필터 하나로 끈다');
+$GLOBALS['__filters']['duckhoo_brand_seo'] = []; $GLOBALS['__filters']['duckhoo_seo_asof'] = [];
+foreach ([9101,9102,9103,9104,9105] as $id) { unset($GLOBALS['__products'][$id], $GLOBALS['__pterms'][$id]); }
+foreach (array_keys($GLOBALS['__transients'] ?? []) as $tk) { if (str_starts_with($tk, 'dhr_')) unset($GLOBALS['__transients'][$tk]); } $GLOBALS['__qv'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
