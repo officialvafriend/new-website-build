@@ -958,7 +958,15 @@ function brand_sitemap_xml(): string {
 		if ( $n < brand_min_n() ) {
 			continue;   // 상품 하나짜리는 noindex 라 사이트맵에도 안 싣는다 (2026-10-02)
 		}
-		$out .= "\t<url><loc>" . esc_url( brand_url( (string) $b ) ) . "</loc><changefreq>weekly</changefreq></url>\n";
+		// 2026-10-20 — 그 브랜드 상품이 마지막으로 바뀐 날을 lastmod 로 (값 · 재고가 바뀌면 페이지 표도 바뀐다)
+		$mod = 0;
+		foreach ( brand_items( (string) $b ) as $bp ) {
+			$dm = method_exists( $bp, 'get_date_modified' ) ? $bp->get_date_modified() : null;
+			if ( $dm && method_exists( $dm, 'getTimestamp' ) ) {
+				$mod = max( $mod, (int) $dm->getTimestamp() );
+			}
+		}
+		$out .= "\t<url><loc>" . esc_url( brand_url( (string) $b ) ) . '</loc>' . ( $mod > 0 ? '<lastmod>' . gmdate( 'Y-m-d', $mod ) . '</lastmod>' : '' ) . "<changefreq>weekly</changefreq></url>\n";
 	}
 	return $out . '</urlset>' . "\n";
 }

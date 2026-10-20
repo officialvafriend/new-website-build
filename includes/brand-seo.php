@@ -170,7 +170,7 @@ function faq( string $b ): array {
 	if ( $rows ) {
 		$bits = array();
 		foreach ( array_slice( $rows, 0, 4 ) as $r ) {
-			$bits[] = $r['label'] . ' ' . $r['price'] . ( $r['n'] > 1 ? '(' . $r['n'] . '병, 병당 ' . $r['per'] . ')' : '' );
+			$bits[] = $r['label'] . ' ' . $r['price'] . ( $r['n'] > 1 ? '(' . ( str_starts_with( $r['label'], $r['n'] . '병' ) ? '' : $r['n'] . '병, ' ) . '병당 ' . $r['per'] . ')' : '' );
 		}
 		$out[] = array(
 			'q' => $b . ' ' . ( $dev ? '기기 · 팟' : '액상' ) . ' 가격은 얼마인가요?',
@@ -216,7 +216,8 @@ function render(): void {
 		echo '<div class="dhr-pl__scroll"><table class="dhr-pl__t"><thead><tr><th scope="col">구성</th><th scope="col" class="num">가격</th>'
 			. ( $dev ? '' : '<th scope="col" class="num">병당</th>' ) . '</tr></thead><tbody>';
 		foreach ( $rows as $r ) {
-			echo '<tr><td><b>' . esc_html( $r['label'] ) . '</b>' . ( $r['n'] > 1 ? ' <small>' . (int) $r['n'] . '병</small>' : '' ) . '</td>'
+			$tag = $r['n'] > 1 && ! str_starts_with( $r['label'], $r['n'] . '병' ) ? ' <small>' . (int) $r['n'] . '병</small>' : '';   // 「33병 묶음 33병」 ✗
+			echo '<tr><td><b>' . esc_html( $r['label'] ) . '</b>' . $tag . '</td>'
 				. '<td class="num">' . esc_html( $r['price'] ) . '</td>'
 				. ( $dev ? '' : '<td class="num">' . esc_html( $r['per'] ) . '</td>' ) . '</tr>';
 		}
