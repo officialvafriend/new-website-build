@@ -2168,6 +2168,12 @@ html body.dhr.dhr-wrap.dhr-wrap .dhsearch__cats a{ color: var(--dh-ink) !importa
 html body.dhr.dhr-wrap.dhr-wrap h1.dhp-title .dhp-title__b{
   color: var(--dh-ink-2); font-weight:700; white-space: nowrap;
 }
+/* 제목 아래 「디오리퀴드 액상 전체 9종 보기」 — 브랜드 페이지로 가는 길 (2026-10-20) */
+html body.dhr.dhr-wrap.dhr-wrap a.dhp-brandlink{
+  display: inline-flex; align-items: center; gap: .25rem; min-height: 32px; margin: .2rem 0 .1rem;
+  font-size: 14px; font-weight: 700; color: var(--dh-accent-deep) !important; text-decoration: none !important;
+}
+@media (hover:hover){ html body.dhr.dhr-wrap.dhr-wrap a.dhp-brandlink:hover{ text-decoration: underline !important; text-underline-offset: 3px; } }
 
 /* ══ 노보 물량 이벤트 — 하루 한도 · 남은 수량 ══════════════════════════════
    가격 바로 아래, `form.cart` 바깥이다. 폼 안에 글자를 더하면 구매 게이트가 읽는

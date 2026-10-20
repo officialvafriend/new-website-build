@@ -3266,6 +3266,12 @@ ob_start(); ($BS.'render')(); $bh = ob_get_clean();
 ob_start(); ($BS.'jsonld')(); $bj = ob_get_clean();
 $ok(str_contains($bh, 'dha-lineup') && str_contains($bh, '10월 20일 기준') && substr_count($bh, '<details') === 3 && str_contains($bh, '/price/'), '브랜드 SEO: 격자 아래 표 + FAQ 셋 + 가격표 링크');
 $ok(str_contains($bj, '"FAQPage"') && substr_count($bj, '"Question"') === 3, '브랜드 SEO: FAQPage 구조화 데이터는 화면 FAQ 와 같은 셋');
+$PB = '\\Duckhoo\\Redesign\\Product\\brand_link';
+if (function_exists($PB)) {
+  ob_start(); ($PB)('디오리퀴드'); $pl = ob_get_clean();
+  ob_start(); ($PB)('노보'); ($PB)('톡톡'); ($PB)(''); $pl2 = ob_get_clean();
+  $ok(str_contains($pl, 'dhp-brandlink') && str_contains($pl, '디오리퀴드 액상 전체 4종 보기') && str_contains($pl, '/brand/') && '' === $pl2, '상품 상세: 제목 아래 브랜드 페이지 링크 — 노보 · 상품 하나짜리 · 브랜드 없음은 안 그린다');
+}
 $GLOBALS['__qv'] = ['dhr_brand' => 'novo'];
 ob_start(); ($BS.'render')(); ($BS.'jsonld')(); $nb = ob_get_clean();
 $ok(($BS.'here')() === '' && '' === $nb && !str_contains(($S.'title')('x'), '종류 · 가격'), '브랜드 SEO: 노보는 뺀다 — 노보 분류 한 장이 그 말을 받는다');

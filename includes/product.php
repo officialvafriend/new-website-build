@@ -59,6 +59,35 @@ function head(): void {
 		echo '<span class="dhp-title__b">' . esc_html( $n['brand'] ) . '</span> ';
 	}
 	echo esc_html( $n['title'] ) . '</h1>';
+	brand_link( $n['brand'] );
+}
+
+/**
+ * 제목 아래 「디오리퀴드 액상 전체 9종 보기」 — 브랜드 페이지로 가는 길 (2026-10-20).
+ *
+ * 브랜드 페이지가 「디오리퀴드 액상 종류 · 가격」을 받는 한 장인데, 상품 상세 어디에서도
+ * 그리로 가는 링크가 없었다 (푸터 브랜드 줄 넷과 홈 카드뿐). 상품마다 한 줄씩 이으면
+ * 손님은 같은 브랜드를 한 번에 보고, 검색엔진은 그 페이지가 이 브랜드의 대표라는 것을 안다.
+ * 노보는 뺀다 — 노보 상품에는 이미 「노보 다른 맛 · 전체 보기」(분류로)가 있다.
+ * 상품 하나짜리 브랜드(noindex)도 뺀다.
+ *
+ * @param string $brand 상품 이름 앞 [브랜드].
+ * @return void
+ */
+function brand_link( string $brand ): void {
+	if ( '' === $brand || ! apply_filters( 'duckhoo_product_brand_link', true ) ) {
+		return;
+	}
+	$b = \Duckhoo\Redesign\Front\brand_aliases()[ $brand ] ?? $brand;
+	if ( in_array( $b, array( '노보' ), true ) || ! function_exists( '\\Duckhoo\\Redesign\\Seo\\brand_slug' ) ) {
+		return;
+	}
+	$n = \Duckhoo\Redesign\Front\brands()[ $b ] ?? 0;
+	if ( $n < \Duckhoo\Redesign\Seo\brand_min_n() ) {
+		return;
+	}
+	$noun = \Duckhoo\Redesign\Seo\brand_noun( $b );
+	echo '<a class="dhp-brandlink" href="' . esc_url( \Duckhoo\Redesign\Seo\brand_url( $b ) ) . '">' . esc_html( $b . ' ' . $noun . ' 전체 ' . $n . '종 보기' ) . ' <span aria-hidden="true">›</span></a>';
 }
 
 /**
