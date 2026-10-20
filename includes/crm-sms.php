@@ -457,7 +457,9 @@ function export_rows( string $seg, array $opt, array $inc = array(), bool $fresh
  * 화면이 전부를 보여 줄 때(노보 · 디오)도 파일은 이것을 따른다.
  */
 function file_rows( array $rows, string $seg, string $mode ): array {
-	if ( ! everyone( $seg ) ) {
+	if ( view_all( $seg ) ) { // 노보 · 디오: 수신 거부만 뺀 전부 (사장님 2026-10-20 「거부 제외 모두」) — 최근 받은 사람도 넣는다 · 제외 명단은 뺀다
+		$rows = array_values( array_filter( $rows, fn( $r ) => 'no' !== $r['sms'] ) );
+	} elseif ( ! everyone( $seg ) ) {
 		$rows = array_values( array_filter( $rows, fn( $r ) => 'yes' === $r['sms'] || ( 'all' === $mode && 'no' !== $r['sms'] ) ) );
 		[ $rows ] = apply_skip( $rows ); // 최근에 받은 사람은 파일에도 안 들어간다
 	}

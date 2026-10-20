@@ -991,10 +991,10 @@ function screen(): void {
 	}
 	sms_box( $back );
 	echo '<div class="dhr-crm-adv">SMS 수신 동의: <b>동의 ' . esc_html( $w( $smsc['yes'] ) ) . '명</b> · 거부 ' . esc_html( $w( $smsc['no'] ) ) . '명 · 기록 없음 ' . esc_html( $w( $smsc['unknown'] ) ) . '명 (명단 ' . esc_html( $w( $all_n ) ) . '명). '
-		. ( $look ? '지금은 <b>산 적 있는 회원 전부</b>가 보입니다 — 동의 여부 · 최근에 문자 받은 사람 · 제외 명단과 상관없이. <a href="' . esc_url( add_query_arg( 'view', 'send', $back ) ) . '">보낼 사람만 보기</a>' : ( everyone( $seg ) ? '<b>미입금 안내는 주문 안내라 동의 · 보낸 기록과 상관없이 전부 나옵니다</b> (파일에도 전부). 빠지는 것은 위의 「이미 결제된 중복 주문」뿐입니다.' : ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' ) )
-		. ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' ) . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
+		. ( $look ? '지금은 <b>산 적 있는 회원 전부</b>가 보입니다 — 동의 여부 · 최근에 문자 받은 사람 · 제외 명단과 상관없이. <a href="' . esc_url( add_query_arg( 'view', 'send', $back ) ) . '">보낼 사람만 보기</a>' : ( everyone( $seg ) ? '<b>미입금 안내는 주문 안내라 동의 · 보낸 기록과 상관없이 전부 나옵니다</b> (파일에도 전부). 빠지는 것은 위의 「이미 결제된 중복 주문」뿐입니다.' : ( 'yes' === $smsmode ? '지금은 <b>동의한 사람만</b> 보입니다. <a href="' . esc_url( add_query_arg( 'sms', 'all', $back ) ) . '">전부 보기</a>' : '지금은 <b>전부</b> 보입니다 (거부 · 기록 없음 포함). <a href="' . esc_url( remove_query_arg( 'sms', $back ) ) . '">동의한 사람만</a>' ) ) )
+		. ( everyone( $seg ) ? '' : ( $look ? ' · 문자 사이트 양식 파일에는 <b>수신 거부 ' . esc_html( $w( $smsc['no'] ) ) . '명만 빼고 전부</b> 들어갑니다 (제외 명단은 뺍니다 · 동의 기록이 없는 사람도 들어갑니다).' : ' · 문자 사이트 양식 파일에는 <b>동의한 사람만</b> 들어갑니다.' ) ) . ( sms_source_ok() ? '' : ' <b>동의 자료가 아직 없습니다</b> — 위 상자에서 키를 고르거나 명단을 붙여 넣으세요.' ) . '</div>';
 	echo '<form method="get" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="dhr-crm-bar" style="margin:0 0 14px">';
-	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' . ( skip_on() ? '' : '<input type="hidden" name="skip" value="0">' ) . ( $smsq && ! everyone( $seg ) ? '<input type="hidden" name="sms" value="all">' : '' );
+	echo '<input type="hidden" name="action" value="dhr_crm_xls"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'dhr-crm-xls' ) ) . '"><input type="hidden" name="seg" value="' . esc_attr( $seg ) . '"><input type="hidden" name="days" value="' . (int) $opt['days'] . '"><input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' . ( skip_on() ? '' : '<input type="hidden" name="skip" value="0">' ) . ( $smsq && ! everyone( $seg ) ? '<input type="hidden" name="sms" value="all">' : '' ) . ( isset( $_GET['view'] ) && 'send' === $_GET['view'] ? '<input type="hidden" name="view" value="send">' : '' ); // phpcs:ignore WordPress.Security.NonceVerification
 	foreach ( $inc as $k ) {
 		echo '<input type="hidden" name="inc[]" value="' . esc_attr( $k ) . '">';
 	}
@@ -1003,7 +1003,7 @@ function screen(): void {
 	} else {
 		echo '<span class="dhr-sl-note">그룹명 = 그 사람의 주 명단 (한 파일에 여러 그룹)</span>';
 	}
-	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — ' . ( everyone( $seg ) ? '전부 ' : '동의 ' ) . esc_html( $w( $file_n ) ) . '명</button>';
+	echo '<button class="button button-primary">문자 사이트 양식 (.xls) 내려받기 — ' . ( everyone( $seg ) ? '전부 ' : ( $look ? '수신 거부 뺀 전부 ' : '동의 ' ) ) . esc_html( $w( $file_n ) ) . '명</button>';
 	echo '<span class="dhr-sl-note" style="margin:0">NO · 그룹명 · 이름 · 전화번호 · 메모 다섯 칸, 올려 주신 tothemoon 양식 그대로 (EUC-KR)</span></form>';
 	if ( ! $rows ) {
 		echo '<p class="dhr-sl-empty">' . ( 'yes' === $smsmode && $all_n ? 'SMS 수신에 동의한 사람이 없습니다 (명단 ' . esc_html( $w( $all_n ) ) . '명).' : '해당하는 사람이 없습니다.' ) . '</p></div>';

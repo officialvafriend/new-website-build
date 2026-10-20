@@ -2920,7 +2920,9 @@ $ok($na(true,false,'POST',false,false)===false && $na(true,true,'GET',false,fals
 /* ── 주차 플랜 · 보상 라벨 · 한 사람에 한 보상 (includes/crm-plan.php) ─────────────── */
 require_once dirname(__DIR__, 2).'/includes/crm-plan.php';
 $fr = ($CR.'file_rows')([['name'=>'가','phone'=>'01011112222','sms'=>'yes'],['name'=>'나','phone'=>'01033334444','sms'=>''],['name'=>'다','phone'=>'01055556666','sms'=>'no']], 'brand', 'yes');
-$ok(array_column($fr,'name') === ['가'], '양식 파일은 화면이 전부여도 동의한 사람만 '.json_encode(array_column($fr,'name')));
+$ok(array_column($fr,'name') === ['가','나'], '노보 · 디오 양식 파일은 수신 거부만 뺀 전부 '.json_encode(array_column($fr,'name')));
+$_GET['view'] = 'send'; $fr = ($CR.'file_rows')([['name'=>'가','phone'=>'01011112222','sms'=>'yes'],['name'=>'나','phone'=>'01033334444','sms'=>''],['name'=>'다','phone'=>'01055556666','sms'=>'no']], 'brand', 'yes'); unset($_GET['view']);
+$ok(array_column($fr,'name') === ['가'], '&view=send 면 양식 파일도 동의한 사람만');
 $rk=$CR.'reward_key';
 $ok($rk('abandon')==='abandon' && $rk('rfm','챔피언')==='rfm:챔피언' && $rk('rfm')==='rfm' && $rk('brand','x')==='brand', '보상 열쇠: 명단 그대로, RFM 은 갈래를 붙인다');
 $wr=$CR.'with_reward'; $RW=['abandon'=>'적립금 3,000원 · 7일','brand'=>'쿠폰 2,000원 · 7일','rfm:챔피언'=>'적립금 5,000원 · 2주','rfm'=>'RFM 공통'];
