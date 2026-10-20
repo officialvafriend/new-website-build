@@ -68,7 +68,7 @@ function delete_transient($k){ unset($GLOBALS['__transients'][$k]); }
 function is_page(){ return true; }
 function in_the_loop(){ return true; }
 function is_main_query(){ return true; }
-function get_post(){ $p=new stdClass; $p->post_name='membership-cancel'; $p->post_content=$GLOBALS['__page_content'] ?? '/'; return $p; }
+function get_post($id = null){ if (isset($GLOBALS['__get_post'])) { return $GLOBALS['__get_post']; } $p=new stdClass; $p->post_name='membership-cancel'; $p->post_content=$GLOBALS['__page_content'] ?? '/'; return $p; }
 function has_shortcode($c,$t){ return str_contains((string)$c,'['.$t); }
 function wc_get_account_endpoint_url($e){ return 'https://duck-hoo.com/my-account/'.$e.'/'; }
 function wc_get_order_statuses(){

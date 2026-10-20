@@ -358,17 +358,16 @@ function notice_text( string $ym = '' ): array {
 	$cat   = function_exists( '\\Duckhoo\\Redesign\\Front\\cat_by_name' ) ? cat_by_name( '노보' ) : null;
 	$url   = $cat && function_exists( 'get_term_link' ) && is_string( get_term_link( $cat ) ) ? get_term_link( $cat ) : home_url( '/product-category/novo-liquid/' );
 
-	$title = sprintf( '노보(NOVO) 액상 재고 · 가격 · 구매 안내 (%d년 %d월)', $year, $month );
+	// 2026-10-20 — 노보 단종. 「노보 단종 · 노보 액상 단종」 검색에 날짜 있는 글로 답한다.
+	// 맛 이름은 늘어놓지 않는다 (10/6 교훈 — 맛 검색은 그 상품 페이지 한 장이 받는다). 라인별 종수만.
+	$title = sprintf( '노보(NOVO) 액상 단종 — 남은 재고 · 종류 · 가격 (%d년 %d월)', $year, $month );
 	$h     = array();
-	$h[]   = '<p>최근 노보 액상 품절 · 단종 문의가 많아 액상덕후의 재고 상황을 안내드립니다.</p>';
-	$h[]   = '<p><strong>액상덕후는 노보 · 노보 블랙 ' . esc_html( stock_phrase( 'noun' ) ) . '을 재고로 보유하고 있습니다' . ( $n ? ' — 낱병 ' . $n . '종과 10+1 묶음' : '' ) . '.</strong> 지금 바로 주문하실 수 있습니다.' . ( out_note() ? ' ' . esc_html( out_note() ) . '.' : '' ) . '</p>';
-	if ( $lines ) {
-		$h[] = '<ul>';
-		foreach ( $lines as $k => $v ) {
-			$h[] = '<li><strong>' . esc_html( $k ) . '</strong> (9.8mg / 30ml) — ' . esc_html( implode( ' · ', $v ) ) . '</li>';
-		}
-		$h[] = '</ul>';
+	$h[]   = '<p><strong>노보(NOVO) 액상은 단종되어 더 이상 입고되지 않습니다.</strong> 액상덕후에 지금 남아 있는 재고가 마지막이라, 재고 상황을 날짜와 함께 정리해 둡니다.</p>';
+	$kinds = array();
+	foreach ( $lines as $k => $v ) {
+		$kinds[] = esc_html( $k ) . ' ' . count( $v ) . '종';
 	}
+	$h[] = '<p><strong>남은 재고</strong>: ' . ( $kinds ? implode( ' · ', $kinds ) . ' — 낱병 ' . $n . '종과 10+1 묶음' : '노보 · 노보 블랙' ) . '. 모두 30ml · 니코틴 9.8mg · 입호흡(MTL) 기기용입니다.' . ( out_note() ? ' ' . esc_html( out_note() ) . '.' : '' ) . ' 맛별 상품은 노보 분류 페이지에 있습니다.</p>';
 	$prices = array();
 	foreach ( price_lines() as $r ) {
 		$prices[] = esc_html( $r['label'] ) . ' ' . number_format_i18n( (float) $r['price'] ) . '원';
@@ -379,7 +378,7 @@ function notice_text( string $ym = '' ): array {
 	$h[] = '<p><strong>출고</strong>: 평일 오후 4시 이전에 입금이 확인된 주문은 당일 출고합니다. ' . esc_html( ship_rule_short() ) . '. 입금자명을 주문자명과 같게 넣어 주시면 자동으로 확인됩니다. ' . number_format_i18n( free_ship() ) . '원 이상 무료배송.</p>';
 	$h[] = '<p><strong>구매 조건</strong>: 19세 이상 본인확인 회원만 구매할 수 있습니다. 가입 즉시 ' . number_format_i18n( signup_points() ) . '원이 적립됩니다.</p>';
 	$h[] = '<p><a href="' . esc_url( $url ) . '">노보 전체 보기 →</a></p>';
-	$h[] = '<p>재고는 실시간으로 바뀝니다. 품절되는 맛이 생기면 이 글 맨 위에 날짜와 함께 적겠습니다.</p>';
+	$h[] = '<p>재고는 실시간으로 바뀌며 다시 채워지지 않습니다. 품절된 맛은 노보 분류 페이지의 상품에 「품절」로 표시됩니다.</p>';
 
 	return array( 'title' => $title, 'content' => implode( "\n", $h ) );
 }
@@ -396,8 +395,19 @@ function ensure_notice(): void {
 	}
 	$have = (int) get_option( NOTICE_OPTION, 0 );
 	if ( $have > 0 ) {
+		// 2026-10-20 — 글이 단종판으로 바뀌었다. **사람이 손대지 않은 초안**만 새 글로 다시 쓴다
+		// (공개했거나 고친 글은 덮지 않는다). 판 번호 옵션으로 한 번만.
+		$ver = 2;
+		$p   = function_exists( 'get_post' ) ? get_post( $have ) : null;
+		if ( (int) get_option( NOTICE_OPTION . '_ver', 1 ) < $ver && $p && 'draft' === $p->post_status
+			&& (string) $p->post_modified_gmt === (string) $p->post_date_gmt && function_exists( 'wp_update_post' ) ) {
+			$t = notice_text();
+			wp_update_post( array( 'ID' => $have, 'post_title' => $t['title'], 'post_content' => $t['content'] ) );
+			update_option( NOTICE_OPTION . '_ver', $ver, false );
+		}
 		return;
 	}
+	update_option( NOTICE_OPTION . '_ver', 2, false );
 	$t  = notice_text();
 	$id = wp_insert_post(
 		array(

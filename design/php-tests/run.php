@@ -2710,6 +2710,7 @@ $ok(!preg_match('/건강|금연|순하다|해롭지/u', $faqtxt) && !preg_match(
 $ok(str_contains($faqtxt, '노보 액상 종류는 노보 2종 · 노보 블랙 1종') && !str_contains($faqtxt, '쿠바시가') && !str_contains($faqtxt, '타박멘솔'), 'FAQ 「노보 액상 종류」는 라인별 종수만 — 맛 이름은 그 상품 한 장에만 (10/6 교훈)');
 $nt = ($NS.'notice_text')('2026-10');
 $ok(str_contains($nt['title'], '2026년 10월') && str_contains($nt['content'], '낱병 3종') && str_contains($nt['content'], '120,000원') && !preg_match('/건강|금연|순하다|해롭지/u', $nt['content']), '안내 글: 달이 제목에, 종수 · 값은 상품에서, 금지 낱말 없음');
+$ok(str_contains($nt['title'], '노보(NOVO) 액상 단종') && str_contains($nt['content'], '더 이상 입고되지 않습니다') && !str_contains($nt['content'], '타박멘솔') && !str_contains($nt['content'], '쿠바시가') && str_contains($nt['content'], '노보 2종 · 노보 블랙 1종'), '안내 글은 단종 글 — 라인별 종수만, 맛 이름은 안 늘어놓는다 (10/6 교훈)');
 $GLOBALS['__inserted'] = []; unset($GLOBALS['__options']['duckhoo_novo_notice_post']);
 ($NS.'ensure_notice')(); ($NS.'ensure_notice')();
 $ok(count($GLOBALS['__inserted']) === 1 && $GLOBALS['__inserted'][0]['post_status'] === 'draft' && $GLOBALS['__inserted'][0]['post_type'] === 'post', '안내 글은 초안(draft)으로 딱 한 번만 만든다 — 공개는 사장님이 누른다');
@@ -2726,6 +2727,19 @@ $ok(str_starts_with($d2, '노보 액상 종류는 노보 2종 · 노보 블랙 1
 $GLOBALS['__qobj'] = (object) ['slug' => 'other', 'name' => '기기', 'description' => ''];
 ob_start(); ($NS.'lineup_html')(); $ok('' === ob_get_clean(), '다른 분류에는 표를 안 그린다');
 $GLOBALS['__filters']['duckhoo_cat_notes'] = []; $GLOBALS['__is_ptax'] = false; unset($GLOBALS['__qobj']);
+// 2026-10-20 — 손대지 않은 옛 초안은 단종판으로 한 번 다시 쓴다 · 고친 초안 · 공개 글은 안 덮는다
+$GLOBALS['__options']['duckhoo_novo_notice_post'] = 5165; unset($GLOBALS['__options']['duckhoo_novo_notice_post_ver']);
+$GLOBALS['__updated'] = [];
+$GLOBALS['__get_post'] = (object)['post_status'=>'draft','post_modified_gmt'=>'2026-10-01 08:22:30','post_date_gmt'=>'2026-10-01 08:22:30'];
+($NS.'ensure_notice')(); ($NS.'ensure_notice')();
+$ok(count($GLOBALS['__updated']) === 1 && str_contains($GLOBALS['__updated'][0]['post_title'], '단종'), '손대지 않은 초안은 단종판으로 딱 한 번 다시 쓴다');
+unset($GLOBALS['__options']['duckhoo_novo_notice_post_ver']); $GLOBALS['__updated'] = [];
+$GLOBALS['__get_post'] = (object)['post_status'=>'draft','post_modified_gmt'=>'2026-10-05 01:00:00','post_date_gmt'=>'2026-10-01 08:22:30'];
+($NS.'ensure_notice')();
+$GLOBALS['__get_post'] = (object)['post_status'=>'publish','post_modified_gmt'=>'2026-10-01 08:22:30','post_date_gmt'=>'2026-10-01 08:22:30'];
+($NS.'ensure_notice')();
+$ok($GLOBALS['__updated'] === [], '사람이 고친 초안 · 공개한 글은 덮지 않는다');
+unset($GLOBALS['__get_post']);
 $GLOBALS['__products'] = [];
 
 /* ── 넓은 말 SEO — 「전담 액상」 목표 (includes/broad-seo.php · pages.php v4, 2026-10-01) ─── */
