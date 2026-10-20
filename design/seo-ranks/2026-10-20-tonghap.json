@@ -1,0 +1,534 @@
+{
+ "m|노보 액상 가격": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "duck-hoo.com",
+   "winter24.kr"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "winter24.kr",
+   "m.blog.naver.com",
+   "juiceshop.kr",
+   "abc9121.cafe24.com",
+   "m.cafe.naver.com",
+   "novomart.kr",
+   "xn--9k3b23iurev8b81u.kr"
+  ],
+  "first": 176,
+  "screens": 0.2,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "AI 브리핑"
+  ],
+  "docH": 10434
+ },
+ "m|노보 액상 재고": {
+  "aiHas": true,
+  "aiTop": 181,
+  "aiSrc": [],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "xn--9k3b23iurev8b81u.kr",
+   "m.blog.naver.com",
+   "xn--o80bv1to3ck4f.com",
+   "winter24.kr",
+   "zec9.co.kr",
+   "navercorp.com"
+  ],
+  "first": 455,
+  "screens": 0.5,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠"
+  ],
+  "docH": 9060
+ },
+ "m|노보 액상": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 6,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "novokorea.com",
+   "abc9121.cafe24.com",
+   "m.cafe.naver.com",
+   "m.blog.naver.com",
+   "duck-hoo.com",
+   "winter24.kr",
+   "navercorp.com"
+  ],
+  "first": 5567,
+  "screens": 6.6,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "네이버 쇼핑 인기상품",
+   "함께 많이 찾는",
+   "노보마트",
+   "노보리퀴드ㅣNOVO LIQUID",
+   "노보마트 | 노보액상 공식몰 - 입호흡 전자담배 액상 "
+  ],
+  "docH": 9419
+ },
+ "m|전자담배 액상 가격표": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "jdinside.co.kr",
+   "duck-hoo.com"
+  ],
+  "ourRank": 5,
+  "order": [
+   "nonicolab.com",
+   "m.cafe.naver.com",
+   "m.blog.naver.com",
+   "jdinside.co.kr",
+   "duck-hoo.com",
+   "xn--jk1b48o0kjogtuhcy37i.com",
+   "m.kin.naver.com",
+   "newvapeworld.com"
+  ],
+  "first": 1287,
+  "screens": 1.5,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "AI 브리핑",
+   "구매처별 가격 및 특징 비교",
+   "유형별 가격 정보",
+   "전자담배 액상 가격표 — 입호흡 · 폐호흡 · 무니코틴",
+   "가격표 말고 한 달 비용으로 다시 세운 전자담배 추천순"
+  ],
+  "docH": 9826
+ },
+ "m|노보 액상 종류": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "winter24.kr",
+   "vapemonster.co.kr",
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "skyvape.co.kr"
+  ],
+  "ourRank": 4,
+  "order": [
+   "m.blog.naver.com",
+   "winter24.kr",
+   "vapemonster.co.kr",
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "skyvape.co.kr",
+   "zec9.co.kr",
+   "m.cafe.naver.com"
+  ],
+  "first": 176,
+  "screens": 0.2,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "AI 브리핑"
+  ],
+  "docH": 7504
+ },
+ "m|입호흡 액상 가격": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "duck-hoo.com",
+   "winter24.kr"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "winter24.kr",
+   "m.cafe.naver.com",
+   "xn--2s2bo1j12atz9aa.kr",
+   "m.xn--2s2bo1j12atz9aa.kr",
+   "xn--hz2bn1kq3dztm.com",
+   "laonvape.co.kr"
+  ],
+  "first": 176,
+  "screens": 0.2,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "AI 브리핑"
+  ],
+  "docH": 10839
+ },
+ "m|폐호흡 액상 가격": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "m.cafe.naver.com",
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "m.kin.naver.com",
+   "skyvape.co.kr",
+   "xn--hg4bud84l.kr",
+   "xn--hz2bn1kq3dmqr.kr",
+   "winter24.kr"
+  ],
+  "first": 416,
+  "screens": 0.5,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠"
+  ],
+  "docH": 9498
+ },
+ "m|전담 액상": {
+  "aiHas": true,
+  "aiTop": 1032,
+  "aiSrc": [],
+  "ourRank": 0,
+  "order": [
+   "m.blog.naver.com",
+   "juice24.kr",
+   "thevapor.kr",
+   "namu.wiki",
+   "loungevape.co.kr",
+   "xn--jk1bo8sa06werixle.com",
+   "vapingdo.kr",
+   "m.cafe.naver.com"
+  ],
+  "first": -1,
+  "screens": null,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "AI 브리핑",
+   "액상 선택 시 고려사항",
+   "액상 카테고리별 특징",
+   "액상 구매 시 팁",
+   "함께 많이 찾는",
+   "액상24 - 전자담배 액상 사이트 | 솔트 니코틴 cs",
+   "'전자담배 액상 사이트' 더베이퍼 - 전담액상 CSV ",
+   "액상형 전자담배 - 나무위키",
+   "베이프월드 - 전담액상 | 전자담배액상 | 전자담배액상"
+  ],
+  "docH": 10547
+ },
+ "m|노보 쿠바시가": {
+  "aiHas": true,
+  "aiTop": 181,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "m.cafe.naver.com",
+   "zec9.co.kr",
+   "juicebox.kr",
+   "winter24.kr",
+   "navercorp.com"
+  ],
+  "first": 432,
+  "screens": 0.5,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "노보 쿠바시가 액상 30ml > 노보액상"
+  ],
+  "docH": 6605
+ },
+ "m|노보 10+1": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "m.blog.naver.com",
+   "duck-hoo.com",
+   "m.cafe.naver.com",
+   "m.youtube.com",
+   "youtube.com",
+   "dailypharm.com",
+   "ko.wikipedia.org",
+   "medicopharma.co.kr"
+  ],
+  "first": 1820,
+  "screens": 2.2,
+  "above": [
+   "최근 검색어",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠"
+  ],
+  "docH": 9869
+ },
+ "pc|노보 액상 가격": {
+  "aiHas": true,
+  "aiTop": 802,
+  "aiSrc": [
+   "duck-hoo.com",
+   "winter24.kr"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "winter24.kr",
+   "blog.naver.com",
+   "juiceshop.kr",
+   "novomart.kr",
+   "elecshop.co.kr",
+   "abc9121.cafe24.com",
+   "xn--9m1bw6pq2an64c.net"
+  ],
+  "first": 261,
+  "screens": 0.3,
+  "above": [
+   "AI 브리핑"
+  ],
+  "docH": 8835
+ },
+ "pc|노보 액상 재고": {
+  "aiHas": true,
+  "aiTop": 262,
+  "aiSrc": [],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "xn--9k3b23iurev8b81u.kr",
+   "blog.naver.com",
+   "xn--o80bv1to3ck4f.com",
+   "winter24.kr",
+   "zec9.co.kr",
+   "navercorp.com"
+  ],
+  "first": 573,
+  "screens": 0.6,
+  "above": [
+   "노보액상재고"
+  ],
+  "docH": 7816
+ },
+ "pc|노보 액상": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 6,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "novokorea.com",
+   "abc9121.cafe24.com",
+   "cafe.naver.com",
+   "blog.naver.com",
+   "duck-hoo.com",
+   "winter24.kr",
+   "navercorp.com"
+  ],
+  "first": 4736,
+  "screens": 5.3,
+  "above": [
+   "노보액상",
+   "네이버 가격비교",
+   "네이버플러스 스토어",
+   "함께 많이 찾는",
+   "노보마트",
+   "노보리퀴드ㅣNOVO LIQUID",
+   "노보마트 | 노보액상 공식몰 - 입호흡 전자담배 액상 "
+  ],
+  "docH": 7698
+ },
+ "pc|전자담배 액상 가격표": {
+  "aiHas": true,
+  "aiTop": 762,
+  "aiSrc": [
+   "jdinside.co.kr",
+   "duck-hoo.com"
+  ],
+  "ourRank": 4,
+  "order": [
+   "nonicolab.com",
+   "blog.naver.com",
+   "jdinside.co.kr",
+   "duck-hoo.com",
+   "cafe.naver.com",
+   "xn--jk1b48o0kjogtuhcy37i.com",
+   "kin.naver.com",
+   "newvapeworld.com"
+  ],
+  "first": 1019,
+  "screens": 1.1,
+  "above": [
+   "AI 브리핑",
+   "구매처별 가격 및 특징 비교",
+   "유형별 가격 정보",
+   "전자담배 액상 가격표 — 입호흡 · 폐호흡 · 무니코틴"
+  ],
+  "docH": 8376
+ },
+ "pc|노보 액상 종류": {
+  "aiHas": true,
+  "aiTop": 762,
+  "aiSrc": [
+   "winter24.kr",
+   "vapemonster.co.kr",
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "skyvape.co.kr"
+  ],
+  "ourRank": 4,
+  "order": [
+   "blog.naver.com",
+   "winter24.kr",
+   "vapemonster.co.kr",
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "skyvape.co.kr",
+   "zec9.co.kr",
+   "cafe.naver.com"
+  ],
+  "first": 221,
+  "screens": 0.2,
+  "above": [
+   "AI 브리핑"
+  ],
+  "docH": 7135
+ },
+ "pc|입호흡 액상 가격": {
+  "aiHas": true,
+  "aiTop": 762,
+  "aiSrc": [
+   "duck-hoo.com",
+   "winter24.kr"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "blog.naver.com",
+   "winter24.kr",
+   "cafe.naver.com",
+   "xn--2s2bo1j12atz9aa.kr",
+   "xn--hz2bn1kq3dztm.com",
+   "laonvape.co.kr",
+   "xn--v52b19lp1l.com"
+  ],
+  "first": 221,
+  "screens": 0.2,
+  "above": [
+   "AI 브리핑"
+  ],
+  "docH": 9424
+ },
+ "pc|폐호흡 액상 가격": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "cafe.naver.com",
+   "duck-hoo.com",
+   "blog.naver.com",
+   "kin.naver.com",
+   "skyvape.co.kr",
+   "xn--hg4bud84l.kr",
+   "xn--hz2bn1kq3dmqr.kr",
+   "winter24.kr"
+  ],
+  "first": 773,
+  "screens": 0.9,
+  "above": [
+   "폐호흡액상가격"
+  ],
+  "docH": 7996
+ },
+ "pc|전담 액상": {
+  "aiHas": true,
+  "aiTop": 1173,
+  "aiSrc": [],
+  "ourRank": 0,
+  "order": [
+   "blog.naver.com",
+   "juice24.kr",
+   "thevapor.kr",
+   "namu.wiki",
+   "loungevape.co.kr",
+   "xn--jk1bo8sa06werixle.com",
+   "vapingdo.kr",
+   "cafe.naver.com"
+  ],
+  "first": -1,
+  "screens": null,
+  "above": [
+   "전담액상",
+   "AI 브리핑",
+   "액상 선택 시 고려사항",
+   "액상 카테고리별 특징",
+   "액상 구매 시 팁",
+   "함께 많이 찾는",
+   "액상24 - 전자담배 액상 사이트 | 솔트 니코틴 cs",
+   "'전자담배 액상 사이트' 더베이퍼 - 전담액상 CSV ",
+   "액상형 전자담배 - 나무위키",
+   "베이프월드 - 전담액상 | 전자담배액상 | 전자담배액상",
+   "비비빈스ㅣ전자담배 액상 최저가 사이트ㅣ전담 액상 추천",
+   "베이핑두 - 전자담배 액상 사이트 | 전담액상 | 입호"
+  ],
+  "docH": 9036
+ },
+ "pc|노보 쿠바시가": {
+  "aiHas": true,
+  "aiTop": 675,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "duck-hoo.com",
+   "blog.naver.com",
+   "cafe.naver.com",
+   "zec9.co.kr",
+   "juicebox.kr",
+   "winter24.kr",
+   "navercorp.com"
+  ],
+  "first": 935,
+  "screens": 1,
+  "above": [
+   "노보쿠바시가",
+   "노보 쿠바시가 액상 30ml > 노보액상"
+  ],
+  "docH": 6367
+ },
+ "pc|노보 10+1": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 2,
+  "order": [
+   "blog.naver.com",
+   "duck-hoo.com",
+   "cafe.naver.com",
+   "youtube.com",
+   "dailypharm.com",
+   "ko.wikipedia.org",
+   "medicopharma.co.kr",
+   "kin.naver.com"
+  ],
+  "first": 2114,
+  "screens": 2.3,
+  "above": [
+   "노보10+1"
+  ],
+  "docH": 7611
+ }
+}
