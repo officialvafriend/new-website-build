@@ -4563,3 +4563,11 @@ duck-hoo.com · 스테이징 · 정적 파일(robots.txt · CSS)까지 전부 `H
 - `design/seo-study-2026-10.md` — 네이버 공식 vs 짐작. AI 브리핑 재료의 70% 는 네이버 UGC(2026-05 발표), 바깥 웹 18%(조사). 자사몰이 이길 수 있는 것은
   **구매 · 비교 질문(값 · 재고 · 종류 · 묶음)** 이고 정의 · 추천 질문은 천장이 낮다. SEO 는 매출 엔진이 아니라 광고비 없이 남는 바닥(검색 손님 ≈ 15%)
 - `design/seo-progress.md` — 목표 · 지금 자리 · 해 둔 것 · 사장님 몫 · 다음 재측정 날짜를 한 장에. **SEO 를 이어 갈 때 이 파일부터 연다**
+
+### 네이버 · 구글 SEO 정복 — 1차: 브랜드 페이지 (2026-10-20 저녁, 사장님 「네이버 구글 seo 정복하는 걸 목표로」)
+
+- 구매 검색어 36개(`design/seo-ranks/buy-queries.json` → `2026-10-20-buy.json`)를 먼저 쟀다. 브랜드 이름 검색은 브랜드 페이지가 받는데 「종류 · 가격」이 붙으면 비었다
+- `includes/brand-seo.php`: 노보 · 상품 하나짜리를 뺀 브랜드 페이지에 날짜 제목(`Brand\title()`, seo.php `title()` 이 부른다) · 종류 · 가격 표(`rows()`, 재고 있는 낱병 한 줄 + 묶음 이름별 가장 싼 것, 기기는 상품별) ·
+  FAQ 셋(가격 · 종류 · 언제 받나) + FAQPage. 맛 이름은 FAQ 에 안 쓴다. 끄기 `duckhoo_brand_seo` · 뺄 브랜드 `duckhoo_brand_seo_skip`
+- 상품 상세 `Product\brand_link()` — 제목 아래 「브랜드 액상 전체 N종 보기」(노보 · 상품 하나짜리 제외). `brands.xml` 에 lastmod
+- 배포 확인은 WebFetch(다른 IP)로 했다 — 이 환경은 아직 429. 재측정은 3~5일 뒤 같은 36개로. **진행 현황은 `design/seo-progress.md` 한 장**
