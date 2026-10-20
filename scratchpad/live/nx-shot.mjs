@@ -3,7 +3,7 @@ const qs = JSON.parse(process.argv[2]);
 const out = process.argv[3];
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const res = {};
-for (const [mode, vp] of [['m', { width: 390, height: 844 }], ['pc', { width: 1280, height: 900 }]]) {
+for (const [mode, vp] of (process.env.MOBILE_ONLY ? [['m', { width: 390, height: 844 }]] : [['m', { width: 390, height: 844 }], ['pc', { width: 1280, height: 900 }]])) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mode === 'm', locale: 'ko-KR',
     userAgent: mode === 'm' ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
                             : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' });
@@ -31,10 +31,10 @@ for (const [mode, vp] of [['m', { width: 390, height: 844 }], ['pc', { width: 12
       blocks.sort((a, b) => a.y - b.y);
       const order = blocks.map(b => b.h); const ourRank = order.indexOf('duck-hoo.com') + 1;
       const aiHas = !!root, aiTop = root ? Math.round(root.getBoundingClientRect().bottom + scrollY) : 0;
-      return { aiHas, aiTop, aiSrc, ourRank, order: order.slice(0, 8), first: Math.round(first), screens: first > 0 ? +(first / innerHeight).toFixed(1) : null, above: heads.map(h => h.t).filter((v, i, a) => a.indexOf(v) === i).slice(0, 12), docH: document.documentElement.scrollHeight };
+      return { aiHas, aiTop, aiSrc, ourRank, order: order.slice(0, 8), ys: blocks.slice(0, 8).map(b => b.h.slice(0,14) + '@' + b.y), first: Math.round(first), screens: first > 0 ? +(first / innerHeight).toFixed(1) : null, above: heads.map(h => h.t).filter((v, i, a) => a.indexOf(v) === i).slice(0, 12), docH: document.documentElement.scrollHeight };
     });
     res[`${mode}|${q}`] = r;
-    console.log(mode, q, '| AI', r.aiHas ? '있음' : '없음', '출처:', r.aiSrc.join(',') || '-', '| 우리 AI안', r.aiSrc.indexOf('duck-hoo.com') + 1, '|', '| 사이트순서', r.ourRank, r.order.slice(0,6).join(' > '), '| y', r.first);
+    console.log(mode, q, '| AI', r.aiHas ? '있음' : '없음', '출처:', r.aiSrc.join(',') || '-', '| 우리 AI안', r.aiSrc.indexOf('duck-hoo.com') + 1, '|', '| 사이트순서', r.ourRank, r.order.slice(0,6).join(' > '), '| y', r.first, '|', (r.ys||[]).join(' '));
     if (process.env.SHOT && r.first > 0) await p.screenshot({ path: `${out}-${mode}-${qs.indexOf(q)}.png`, clip: { x: 0, y: Math.max(0, r.first - vp.height + 200), width: vp.width, height: vp.height } });
     await p.waitForTimeout(1500);
   }
