@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const q = process.argv[2];
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, locale: 'ko-KR', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' });
+await ctx.route('**/*', async r => { const u = r.request().url(); if (!/^https?:/.test(u) || /\.(mp4|woff2?)(\?|$)/.test(u)) return r.abort();
+  try { const f = await fetch(u, { method: r.request().method(), headers: { ...r.request().headers() }, body: r.request().postData() || undefined, redirect: 'manual' }); const body = Buffer.from(await f.arrayBuffer()); const h = {}; f.headers.forEach((v, k) => { if (!/content-encoding|content-length|transfer-encoding/.test(k)) h[k] = v; }); await r.fulfill({ status: f.status, headers: h, body }); } catch { r.abort(); } });
+const p = await ctx.newPage();
+await p.goto('https://m.search.naver.com/search.naver?query=' + encodeURIComponent(q), { waitUntil: 'domcontentloaded', timeout: 30000 }); await p.waitForTimeout(8000);
+console.log(await p.evaluate(() => { const a = document.querySelector('a[href*="duck-hoo.com"]'); const chain = []; let e = a; for (let i = 0; i < 12 && e; i++) { chain.push(e.tagName + '.' + [...e.classList].join('.') + (e.dataset && Object.keys(e.dataset).length ? JSON.stringify(e.dataset).slice(0,80) : '')); e = e.parentElement; } return chain.join('\n'); }));
+await b.close();
