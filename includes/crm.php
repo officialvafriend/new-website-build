@@ -984,6 +984,9 @@ function screen(): void {
 	$back  = admin_url( 'admin.php?page=' . SLUG . '&seg=' . $seg . '&days=' . (int) $opt['days'] . ( $opt['only'] ? '&only=' . rawurlencode( $opt['only'] ) : '' ) . $incq . ( $smsq && ! everyone( $seg ) ? '&sms=all' : '' ) . ( skip_on() ? '' : '&skip=0' ) . ( isset( $_GET['view'] ) && 'send' === $_GET['view'] ? '&view=send' : '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
 	sms_saved_notice();
 	impact_box( $back );
+	if ( function_exists( '\\Duckhoo\\Redesign\\CrmReport\\box' ) ) {
+		\Duckhoo\Redesign\CrmReport\box();
+	}
 	sent_box( $back, $skipped );
 	exclude_box( $back, $gone, $seg );
 	if ( 'all' === $seg ) {

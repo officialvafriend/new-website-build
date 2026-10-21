@@ -3284,5 +3284,28 @@ $GLOBALS['__filters']['duckhoo_brand_seo'] = []; $GLOBALS['__filters']['duckhoo_
 foreach ([9101,9102,9103,9104,9105] as $id) { unset($GLOBALS['__products'][$id], $GLOBALS['__pterms'][$id]); }
 foreach (array_keys($GLOBALS['__transients'] ?? []) as $tk) { if (str_starts_with($tk, 'dhr_')) unset($GLOBALS['__transients'][$tk]); } $GLOBALS['__qv'] = [];
 
+// ── CRM 기간 성과 ─────────────────────────────────────────────
+require_once dirname(__DIR__, 2).'/includes/crm-report.php';
+$CR = '\\Duckhoo\\Redesign\\CrmReport\\';
+$PD = ['payment-confirmed','delivered'];
+$od = [
+  ['id'=>1,'ts'=>100,'s'=>'delivered','t'=>10000,'u'=>7],        // 기간 전 — 7번은 다시 산 손님이 된다
+  ['id'=>2,'ts'=>1000,'s'=>'delivered','t'=>20000,'u'=>7],
+  ['id'=>3,'ts'=>1100,'s'=>'payment-confirmed','t'=>30000,'u'=>8],
+  ['id'=>4,'ts'=>1200,'s'=>'delivered','t'=>5000,'u'=>8],
+  ['id'=>5,'ts'=>1300,'s'=>'on-hold','t'=>99000,'u'=>9],         // 입금 전은 안 센다
+  ['id'=>6,'ts'=>1400,'s'=>'delivered','t'=>7000,'u'=>0],        // 비회원
+  ['id'=>7,'ts'=>5000,'s'=>'delivered','t'=>1,'u'=>9],           // 기간 뒤
+];
+$sp = ($CR.'split_sales')($od, 900, 2000, $PD);
+$ok($sp['all']['n'] === 4 && (int) $sp['all']['sales'] === 62000 && $sp['first']['n'] === 1 && $sp['repeat']['n'] === 2 && $sp['guest']['n'] === 1 && $sp['buyers'] === 2, 'CRM 기간 성과: 처음/다시/비회원 — 기간 전에 산 적 있으면 다시 산 손님, 입금 전 · 기간 밖은 안 센다');
+$PA = '\\Duckhoo\\Redesign\\Points\\Admin\\participation';
+$po = [['id'=>11,'ts'=>3*86400+10,'s'=>'delivered','t'=>40000,'u'=>21]];
+$pp = ($PA)([21 => [5000, '이탈 방지', 3*86400]], $po, [], 0, 6*86400, $PD, ['on-hold']);
+$pq = ($PA)([21 => [5000, '이탈 방지', 4*86400]], $po, [], 0, 6*86400, $PD, ['on-hold']);
+$ok($pp['']['buyers'] === 1 && $pq['']['buyers'] === 0 && $pq['']['before'] === 1, '적립금 참여: 같은 사유의 둘째 파일은 그 파일을 넣은 시각부터 센다 (앞 주문은 「넣기 전」)');
+$tx = ($CR.'text')(['from'=>'2026-10-13','to'=>'2026-10-30','built'=>'x','until'=>'y','done'=>false,'days'=>8,'sales'=>$sp,'base'=>['from'=>'a','to'=>'b']+$sp,'points'=>[],'sent'=>[]]);
+$ok(str_contains($tx, '2026-10-13 ~ 2026-10-30') && str_contains($tx, '진행 중') && str_contains($tx, '처음 산 손님') && !preg_match('/010|@/', $tx), 'CRM 기간 성과: 붙여 넣기 글 — 기간 · 진행 중 표시 · 숫자만');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

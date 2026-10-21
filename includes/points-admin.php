@@ -768,15 +768,18 @@ function participation( array $recips, array $orders, array $used, int $at, int 
 	foreach ( $recips as $uid => $rv ) {
 		$kind = '' !== (string) ( $rv[1] ?? '' ) ? (string) $rv[1] : '(종류 없음)';
 		$out[ $kind ] = $out[ $kind ] ?? $blank();
-		$after = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] >= $at && $o['ts'] <= $now );
-		$prev  = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] < $at && $o['ts'] >= $at - $len && in_array( $o['s'], $paid, true ) );
+		// 같은 사유로 여러 파일을 넣었으면 그 사람이 받은 파일의 시각부터 센다 (셋째 칸, 없으면 묶음 시각).
+		$ua    = (int) ( $rv[2] ?? 0 ) > 0 ? (int) $rv[2] : $at;
+		$ulen  = max( DAY_IN_SECONDS, $now - $ua );
+		$after = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] >= $ua && $o['ts'] <= $now );
+		$prev  = array_filter( (array) ( $by[ $uid ] ?? array() ), fn( $o ) => $o['ts'] < $ua && $o['ts'] >= $ua - $ulen && in_array( $o['s'], $paid, true ) );
 		$ok    = array_filter( $after, fn( $o ) => in_array( $o['s'], $paid, true ) );
 		$wait  = array_filter( $after, fn( $o ) => in_array( $o['s'], $pend, true ) );
 		$spent = 0;
 		foreach ( array_merge( $ok, $wait ) as $o ) {
 			$spent += (int) ( $used[ (int) $o['id'] ] ?? 0 );
 		}
-		$first = $ok ? min( array_column( $ok, 'ts' ) ) : 0;
+		$first = $ok ? min( array_column( $ok, 'ts' ) ) - $ua + $at : 0;
 		foreach ( array( '', $kind ) as $k ) {
 			$r = &$out[ $k ];
 			++$r['n'];
@@ -831,24 +834,31 @@ function used_points( int $since ): array {
 }
 
 /** 묶음의 참여 — DB 를 읽어 센다 (10분 캐시). */
-function participation_for( string $key ): ?array {
+function participation_for( string $key, int $until = 0 ): ?array {
 	global $wpdb;
 	$all = (array) get_option( OPT, array() );
 	if ( ! isset( $all[ $key ] ) ) {
 		return null;
 	}
-	$tk = 'dhr_pts_part_' . $key;
-	$c  = get_transient( $tk );
+	$now = $until > 0 ? min( $until, time() ) : time();
+	$tk  = 'dhr_pts_part_' . $key . ( $until > 0 ? '_' . gmdate( 'YmdH', $now ) : '' );
+	$c   = get_transient( $tk );
 	if ( is_array( $c ) ) {
 		return $c;
 	}
 	$b      = $all[ $key ];
 	$at     = (int) ( $b['created'] ?? time() );
 	$kinds  = (array) ( $b['kinds'] ?? array() );
+	$runs   = (array) ( $b['runs'] ?? array() );
+	$urun   = array();
+	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key . RUN ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$urun[ (int) $r['user_id'] ] = (string) $r['meta_value'];
+	}
 	$recips = array();
 	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
 		$uid            = (int) $r['user_id'];
-		$recips[ $uid ] = array( (int) $r['meta_value'], (string) ( $kinds[ $uid ] ?? '' ) );
+		$ua             = (int) ( $runs[ $urun[ $uid ] ?? '' ]['at'] ?? 0 );
+		$recips[ $uid ] = array( (int) $r['meta_value'], (string) ( $kinds[ $uid ] ?? '' ), $ua );
 	}
 	$off    = (int) ( function_exists( 'wp_timezone' ) ? ( new \DateTime( 'now', wp_timezone() ) )->getOffset() : 9 * 3600 );
 	$orders = array();
@@ -860,7 +870,7 @@ function participation_for( string $key ): ?array {
 	}
 	$paid = function_exists( '\\Duckhoo\\Redesign\\Crm\\paid_statuses' ) ? \Duckhoo\Redesign\Crm\paid_statuses() : array( 'payment-confirmed', 'ready-to-ship', 'shipping', 'delivered', 'completed', 'processing' );
 	$pend = function_exists( '\\Duckhoo\\Redesign\\Crm\\pending_statuses' ) ? \Duckhoo\Redesign\Crm\pending_statuses() : array( 'on-hold', 'pending' );
-	$res  = array( 'label' => (string) $b['label'], 'at' => $at, 'kinds' => count( $kinds ), 'p' => participation( $recips, $orders, used_points( $at ), $at, time(), $paid, $pend ) );
+	$res  = array( 'label' => (string) $b['label'], 'at' => $at, 'kinds' => count( $kinds ), 'p' => participation( $recips, $orders, used_points( $at ), $at, $now, $paid, $pend ) );
 	set_transient( $tk, $res, 10 * MINUTE_IN_SECONDS );
 	return $res;
 }

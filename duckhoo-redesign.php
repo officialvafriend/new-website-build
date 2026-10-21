@@ -105,6 +105,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/parcels.php';     // 우체
 require_once plugin_dir_path( __FILE__ ) . 'includes/cost.php';        // 상품 원가표 → 순이익 (옵션만 쓴다 · 월말 결산이 부른다)
 require_once plugin_dir_path( __FILE__ ) . 'includes/monthly.php';     // 매출 → 월말 결산 (읽기 전용 · CSV · 디스코드 · 매달 1일 크론이라 admin 밖)
 require_once plugin_dir_path( __FILE__ ) . 'includes/market.php';      // 도구 → 시장가 대조 (읽기 전용) — 경쟁 값을 크론이 받는다 (크론이라 admin 밖)
+require_once plugin_dir_path( __FILE__ ) . 'includes/crm-report.php';  // CRM 기간 성과 — 고객 세그먼트 상자 + 열쇠로 닫힌 REST (집계만 · REST 라 admin 밖)
 
 // 성과 분석(관리자 · 읽기 전용) — 리디자인 전후를 숫자로 견주기 위해.
 // 보고서를 쓰고 나면 이 줄과 파일을 지운다.
