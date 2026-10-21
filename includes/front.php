@@ -1376,7 +1376,8 @@ function js_config( array $extra = array() ): string {
 		'soldout' => ( function_exists( '\\Duckhoo\\Redesign\\Blocked\\soldout' ) && function_exists( 'is_product' ) && is_product() )
 			? ( function () {
 				$so = \Duckhoo\Redesign\Blocked\soldout();
-				return $so['keys'] ? array( 'k' => array_keys( $so['keys'] ), 'b' => $so['brands'], 'ctx' => (string) get_the_title() ) : null;
+				$op = function_exists( '\\Duckhoo\\Redesign\\Blocked\\option_soldout' ) ? array_keys( \Duckhoo\Redesign\Blocked\option_soldout( (int) get_the_ID() ) ) : array();
+				return ( $so['keys'] || $op ) ? array( 'k' => array_keys( $so['keys'] ), 'b' => $so['brands'], 'ctx' => (string) get_the_title(), 'o' => $op ) : null;
 			} )()
 			: null,
 

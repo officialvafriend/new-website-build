@@ -4593,3 +4593,20 @@ duck-hoo.com · 스테이징 · 정적 파일(robots.txt · CSS)까지 전부 `H
 - 브랜드 다른 꼴: `duckhoo_soldout_brand_forms` (디오리퀴드 → 디오).
 
 검증: `php design/php-tests/run.php` (품절 맛 7개) · `scratchpad/live/so-test.mjs`(선택칸에서 자몽 · 노보 블랙멘솔만 감추고 노보 블랙 블랙멘솔 · 팟은 그대로).
+
+### 옵션 재고 0 도 지킨다 — 흑염룡 머스켓도 (2026-10-21, 사장님 「stock 을 0 으로 했는데도 담겼다」)
+
+PPOM 은 옵션마다 재고 칸(`stock`)을 두고, 0 이하면 **자기가 그리는 선택칸에서만** 그 옵션을 뺀다. 공개 소스로 확인했다
+(`PPOM\Support\Helpers::option_has_stock`, `ppom_hide_if_out_of_stock`). 그런데 이 사이트의 맛 고르기는 옛 옵션 UI · 테마 빌더가
+`ppom_input_vars`(stock 이 그대로 들어 있다)로 다시 그린다. 그래서 0 이어도 골라지고 담긴다. 담기 · 결제에서도 PPOM 은 옵션 재고를 안 본다.
+그린펀치(10/19)도 이 길이었다.
+
+`Blocked\option_soldout( $pid )` 는 `new PPOM_Meta( $pid )->fields` 의 옵션 중 stock 이 비어 있지 않고 0 이하인 것을 모은다
+(순수 함수 `option_soldout_from_fields()`). 손님이 고른 글과 `clean()` 이 같으면 담기 · 장바구니 · 결제 직전에 막는다.
+화면은 front.js 가 같은 칸을 감춘다(`DHR.soldout.o`).
+- 값이 붙은 팟 칸도 사장님이 0 을 적었으면 막는다.
+- 빈 칸은 재고를 안 센다는 뜻이라 그대로 팔린다.
+- PPOM 은 팔린 만큼 재고를 줄이지 않는다. 숫자는 사장님이 손으로 맞춘다.
+- 시험용 필터: `duckhoo_soldout_option_fields`.
+
+검증: `php design/php-tests/run.php` (옵션 재고 4개 · 1,683개) · `scratchpad/live/so-test.mjs`.

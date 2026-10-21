@@ -182,6 +182,9 @@ function hits( array $cart ): array {
 		$p    = $item['data'] ?? null;
 		$name = is_object( $p ) && method_exists( $p, 'get_name' ) ? (string) $p->get_name() : '';
 		$s    = soldout_pick( $item['wd_option_builder'] ?? null, $item['ppom']['fields'] ?? null, $name, $so );
+		if ( '' === $s ) {
+			$s = option_pick( $item['wd_option_builder'] ?? null, $item['ppom']['fields'] ?? null, option_soldout( (int) ( $item['product_id'] ?? 0 ) ) );
+		}
 		if ( '' !== $s ) {
 			$out[ $s ] = soldout_message( $s );
 		}
@@ -230,7 +233,10 @@ function validate_add( $passed, $pid = 0 ): bool {
 		$msg = '' !== $h ? message( $h ) : '';
 	}
 	if ( '' === $msg ) {
-		$s   = soldout_pick( $json, $fields, $name, soldout() );
+		$s = soldout_pick( $json, $fields, $name, soldout() );
+		if ( '' === $s ) {
+			$s = option_pick( $json, $fields, option_soldout( (int) $pid ) );
+		}
 		$msg = '' !== $s ? soldout_message( $s ) : '';
 	}
 	if ( '' === $msg ) {
@@ -425,6 +431,24 @@ function soldout_pick( $builder, $fields, string $ctx, array $so ): string {
 	if ( ! $keys ) {
 		return '';
 	}
+	foreach ( pick_labels( $builder, $fields ) as $l ) {
+		foreach ( pick_keys( $l, $ctx, (array) ( $so['brands'] ?? array() ) ) as $k ) {
+			if ( isset( $keys[ $k ] ) ) {
+				return $keys[ $k ];
+			}
+		}
+	}
+	return '';
+}
+
+/**
+ * 손님이 고른 글들 — 빌더 줄(수량 > 0, 구성 줄 제외)의 label 과 PPOM 칸 값. 순수 함수.
+ *
+ * @param mixed $builder 빌더 줄.
+ * @param mixed $fields  PPOM 칸 값.
+ * @return string[]
+ */
+function pick_labels( $builder, $fields ): array {
 	$labels = array();
 	if ( is_string( $builder ) ) {
 		$builder = json_decode( function_exists( 'wp_unslash' ) ? wp_unslash( $builder ) : $builder, true );
@@ -441,11 +465,93 @@ function soldout_pick( $builder, $fields, string $ctx, array $so ): string {
 			}
 		} );
 	}
-	foreach ( $labels as $l ) {
-		foreach ( pick_keys( $l, $ctx, (array) ( $so['brands'] ?? array() ) ) as $k ) {
-			if ( isset( $keys[ $k ] ) ) {
-				return $keys[ $k ];
+	return $labels;
+}
+
+/* ── 옵션 재고 0 인 맛 (2026-10-21) ──────────────────────────────────────────────────────────────
+ *
+ * 사장님: 「흑염룡 머스켓도를 stock 0 으로 했는데도 담겼다」. PPOM 은 옵션마다 재고 칸(`stock`)을 두고, 0 이하면
+ * **자기가 그리는 선택칸에서만** 그 옵션을 뺀다 (`PPOM\Support\Helpers::option_has_stock` — 공개 소스로 확인).
+ * 그런데 이 사이트의 맛 고르기는 옛 옵션 UI · 테마 빌더가 상품 페이지에 실린 옵션 목록(`ppom_input_vars`, stock 이
+ * 그대로 들어 있다)으로 다시 그린다 — 그래서 0 이어도 골라지고 담겼다. 담기 · 결제에서도 PPOM 은 옵션 재고를 안 본다.
+ *
+ * 여기서 그 숫자를 지킨다: 상품의 PPOM 칸 옵션 중 `stock` 이 비어 있지 않고 0 이하인 것을 모아, 손님이 고른 글과
+ * clean() 이 같으면 담기 · 장바구니 · 결제 직전에서 막는다. 화면은 front.js 가 같은 글의 칸을 감춘다.
+ * 재고 칸을 비우면(빈 값 = 재고를 안 센다) 그대로 팔린다. PPOM 이 재고를 줄여 주지는 않으므로 숫자는 사장님이 손으로 맞춘다.
+ */
+
+/**
+ * PPOM 칸 설정들 → 재고 0 이하 옵션표 (clean 꼴 => 보여 줄 글). 순수 함수.
+ *
+ * @param mixed $fields PPOM_Meta::fields (칸 설정 배열).
+ * @return array<string,string>
+ */
+function option_soldout_from_fields( $fields ): array {
+	$out = array();
+	foreach ( (array) $fields as $f ) {
+		if ( ! is_array( $f ) ) {
+			continue;
+		}
+		$opts = $f['options'] ?? array();
+		if ( is_string( $opts ) ) {
+			$opts = json_decode( $opts, true );
+		}
+		foreach ( (array) $opts as $o ) {
+			if ( ! is_array( $o ) || ! isset( $o['stock'] ) || '' === trim( (string) $o['stock'] ) || ! is_numeric( $o['stock'] ) || (float) $o['stock'] > 0 ) {
+				continue;
 			}
+			$label = trim( stripslashes( (string) ( $o['option'] ?? ( $o['title'] ?? '' ) ) ) );
+			$c     = clean( $label );
+			if ( mb_strlen( $c ) >= 2 ) {
+				$out[ $c ] = $label;
+			}
+		}
+	}
+	return $out;
+}
+
+/**
+ * 상품 하나의 재고 0 이하 옵션표 (한 요청에 상품마다 한 번 읽는다).
+ *
+ * @param int $pid 상품 번호.
+ * @return array<string,string>
+ */
+function option_soldout( int $pid ): array {
+	static $mem = array();
+	if ( $pid <= 0 || ! apply_filters( 'duckhoo_soldout_auto', true ) ) {
+		return array();
+	}
+	if ( isset( $mem[ $pid ] ) ) {
+		return $mem[ $pid ];
+	}
+	$fields = array();
+	if ( class_exists( '\PPOM_Meta' ) ) {
+		try {
+			$m      = new \PPOM_Meta( $pid );
+			$fields = is_array( $m->fields ?? null ) ? $m->fields : array();
+		} catch ( \Throwable $e ) {
+			$fields = array();
+		}
+	}
+	return $mem[ $pid ] = option_soldout_from_fields( (array) apply_filters( 'duckhoo_soldout_option_fields', $fields, $pid ) );
+}
+
+/**
+ * 고른 것 중 재고 0 이하 옵션이 있으면 그 글. 순수 함수.
+ *
+ * @param mixed $builder 빌더 줄.
+ * @param mixed $fields  PPOM 칸 값.
+ * @param array $map     option_soldout() 표.
+ * @return string
+ */
+function option_pick( $builder, $fields, array $map ): string {
+	if ( ! $map ) {
+		return '';
+	}
+	foreach ( pick_labels( $builder, $fields ) as $l ) {
+		$c = clean( $l );
+		if ( isset( $map[ $c ] ) ) {
+			return $map[ $c ];
 		}
 	}
 	return '';

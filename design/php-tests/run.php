@@ -3263,6 +3263,21 @@ $hs = ($BL.'hits')($cartSO);
 $ok(count($hs) === 1 && str_contains((string) reset($hs), '품절') && str_contains((string) reset($hs), '다른 맛'), '품절 맛: 장바구니 · 결제 빗장이 안내와 함께 잡는다');
 ($BL.'soldout_flush')();
 
+
+// 옵션 재고 0 (PPOM stock) — 흑염룡 머스켓도 (2026-10-21)
+$OF = [['type'=>'select','options'=>[['option'=>'흑염룡 머스켓도','price'=>'','stock'=>'0'],['option'=>'흑염룡 소다','price'=>'','stock'=>''],['option'=>'흑염룡 레몬 ⭐BEST','price'=>'','stock'=>'5']]],
+       ['type'=>'select','options'=>json_encode([['option'=>'말론 0.6옴팟(2EA)','price'=>'10000','stock'=>'-1']])]];
+$OM = ($BL.'option_soldout_from_fields')($OF);
+$ok(array_values($OM) === ['흑염룡 머스켓도','말론 0.6옴팟(2EA)'], '옵션 재고: stock 0 이하만 품절 — 빈 칸(재고 안 셈) · 5 는 그대로, JSON 꼴 옵션도 읽는다');
+$ok(($BL.'option_pick')([['label'=>'흑염룡 머스켓도','qty'=>2,'type'=>'addon']], null, $OM) === '흑염룡 머스켓도' && ($BL.'option_pick')([['label'=>'흑염룡 소다','qty'=>10]], null, $OM) === '' && ($BL.'option_pick')([['label'=>'흑염룡 머스켓도','qty'=>0]], null, $OM) === '', '옵션 재고: 고른 머스켓도는 잡고 소다 · 수량 0 줄은 지나간다');
+$ok(($BL.'option_pick')(null, ['f_____'=>'말론 0.6옴팟(2EA) [+10,000원]'], $OM) === '말론 0.6옴팟(2EA)', '옵션 재고: 값이 붙은 팟 칸도 사장님이 0 을 적었으면 막는다');
+add_filter('duckhoo_soldout_option_fields', fn($f = null, $pid = 0) => 119 === (int) $pid ? $GLOBALS['__OF'] : $f, 10, 2);
+$GLOBALS['__OF'] = $OF;
+($BL.'soldout_flush')(); $GLOBALS['__transients']['dhr_soldout_v1'] = ['keys'=>[], 'brands'=>[]];
+$hs2 = ($BL.'hits')([['product_id'=>119,'quantity'=>1,'data'=>new WC_Product(119, '[10병 묶음 할인 이벤트] 덕후 액상 흑염룡 10병 할인 ! (멘솔 없음)', 35000.0, true),'wd_option_builder'=>[['label'=>'흑염룡 머스켓도','qty'=>1,'type'=>'addon']]]]);
+$ok(count($hs2) === 1 && str_contains((string) reset($hs2), '머스켓도') && str_contains((string) reset($hs2), '품절'), '옵션 재고: 장바구니 · 결제 빗장이 그 상품의 옵션 재고로 막는다');
+($BL.'soldout_flush')(); $GLOBALS['__filters']['duckhoo_soldout_option_fields'] = [];
+
 // 브랜드 페이지 「종류 · 가격」 표 · FAQ · 날짜 제목 (2026-10-20)
 require_once dirname(__DIR__, 2).'/includes/brand-seo.php';
 $BS = '\\Duckhoo\\Redesign\\Seo\\Brand\\';

@@ -2668,18 +2668,20 @@
    선택칸의 <option> 은 비활성 + 감춤, 옛 옵션 UI · 맛 고르기 타일은 감춤. 글자를 폼에 더하지 않는다 (구매 게이트가 읽는다). */
 (function(){
   var W = (window.DHR && window.DHR.blocked) || [], SO = (window.DHR && window.DHR.soldout) || null;
-  if(!W.length && !(SO && SO.k && SO.k.length)) return;
+  if(!W.length && !(SO && ((SO.k && SO.k.length) || (SO.o && SO.o.length)))) return;
   function sq(s){ return String(s || '').replace(/[\s\u00A0\u3000]+/g, ''); }
   /* 품절 낱병의 맛 (2026-10-21) — includes/blocked.php 의 clean() · pick_keys() 와 같은 셈 */
-  var KEYS = {}; if(SO && SO.k) SO.k.forEach(function(k){ KEYS[k] = 1; });
+  var KEYS = {}, OPTS = {}; if(SO && SO.k) SO.k.forEach(function(k){ KEYS[k] = 1; }); if(SO && SO.o) SO.o.forEach(function(k){ OPTS[k] = 1; });
   function clean(s){
     s = String(s || '').replace(/\[\s*\+[^\]]*\]/g, '').replace(/\([^)]*\d[^)]*\)/g, '').replace(/[⭐★☆✨!]|BEST/g, '');
     return sq(s).replace(/[\[\]()]/g, '').replace(/시리즈|입호흡|폐호흡/g, '').replace(/액상$/, '');
   }
   function after(c, b){ var i = c.lastIndexOf(b); return i < 0 ? c : c.slice(i + b.length); }
   function sold(label){
-    if(!SO || !SO.k || /\[\s*\+/.test(label)) return false;
+    if(!SO) return false;
     var c = clean(label); if(c.length < 2) return false;
+    if(OPTS[c]) return true;                                   /* 옵션 재고 0 (PPOM stock) */
+    if(!SO.k || /\[\s*\+/.test(label)) return false;
     var B = (SO.b || []).filter(function(b){ return b && c.indexOf(b) > -1; });
     if(!B.length){ var cx = clean(SO.ctx); B = (SO.b || []).filter(function(b){ return b && cx.indexOf(b) > -1; }); }
     for(var i = 0; i < B.length; i++){ var f = after(c, B[i]); if(f.length >= 2 && KEYS[B[i] + '|' + f]) return true; }
