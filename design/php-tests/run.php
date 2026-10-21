@@ -3236,13 +3236,32 @@ $ok($BW === ['그린펀치'], '판매 중지: 기본 낱말은 그린펀치');
 $ok(($BL.'hit_text')('노보 그린 펀치', $BW) === '그린펀치' && ($BL.'hit_text')('노보 데저트', $BW) === '', '판매 중지: 띄어 적어도 걸린다 · 다른 맛은 안 걸린다');
 $bundle = new WC_Product(8810, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, true, false, null);
 $withGp = [['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['group_key'=>'required_main','label'=>'노보 리퀴드 10+1 묶음 이벤트 (11병)','qty'=>1],['group_key'=>'addon_1','label'=>'노보 그린펀치','qty'=>2],['group_key'=>'addon_1','label'=>'노보 데저트','qty'=>9]]]];
-$ok(($BL.'hits')($withGp) === ['그린펀치'], '판매 중지: 묶음 안에서 고른 그린펀치를 잡는다');
+$ok(array_keys(($BL.'hits')($withGp)) === ['그린펀치'], '판매 중지: 묶음 안에서 고른 그린펀치를 잡는다');
 $noGp = [['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['group_key'=>'addon_1','label'=>'노보 데저트','qty'=>11]],'ppom'=>['fields'=>['f_____'=>'노보 리퀴드 10+1 묶음 이벤트 (11병)'],'ppom_option_price'=>'[{"option":"노보 그린펀치","price":""}]']]];
 $ok(($BL.'hits')($noGp) === [], '판매 중지: 그린펀치를 안 고른 묶음은 지나간다 (값 표 · 옵션 목록은 안 본다)');
 $ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'wd_option_builder'=>[['label'=>'노보 그린펀치','qty'=>0]]]]) === [], '판매 중지: 수량 0 으로 뺀 줄은 안 센다');
-$ok(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'ppom'=>['fields'=>['f_____'=>'노보 그린펀치']]]]) === ['그린펀치'], '판매 중지: PPOM 칸으로 고른 것도 잡는다');
+$ok(array_keys(($BL.'hits')([['product_id'=>8810,'quantity'=>1,'data'=>$bundle,'ppom'=>['fields'=>['f_____'=>'노보 그린펀치']]]])) === ['그린펀치'], '판매 중지: PPOM 칸으로 고른 것도 잡는다');
 $ok(($BL.'purchasable')(true, new WC_Product(8811, '[노보] 그린펀치 (9.8mg / 30ml)', 13000.0, true, false, null)) === false && ($BL.'purchasable')(true, $bundle) === true, '판매 중지: 그린펀치 낱병은 구매 불가 · 묶음은 그대로');
 $ok(str_starts_with(($BL.'message')('그린펀치'), '그린펀치는 지금') && str_starts_with(($BL.'message')('블랙멘솔'), '블랙멘솔은 지금') && str_contains(($BL.'message')('그린펀치'), '다른 맛'), '판매 중지: 안내는 할 일(다른 맛으로)을 말한다 · 은/는 을 받침으로 고른다');
+
+
+// 품절 낱병의 맛은 묶음에서도 막는다 (2026-10-21)
+$SK = ($BL.'soldout_keys')(['[화이트아웃] 자몽 (NTSC SALT / 30ml)', '[빌런] 아이스빌런청사과 (9.8mg / 30ml)', '[노보] 블랙멘솔 (9.8mg / 30ml)', '[액상덕후] 머스케또 흑염룡 시리즈 (9.8mg / 30ml) (멘솔 없음)', '[빌런] ★ 맛돌이 액상 ★ 빌런 5병 EVENT', '[디오리퀴드] 로젤하트 (9.8mg / 30ml)']);
+$SB = ['노보블랙리퀴드','디오리퀴드','노보리퀴드','화이트아웃','노보블랙','액상덕후','빌런','노보','디오'];
+$SO = ['keys'=>$SK, 'brands'=>$SB];
+$ok(isset($SK['화이트아웃|자몽'], $SK['빌런|청사과'], $SK['노보|블랙멘솔'], $SK['디오|로젤하트']) && !preg_grep('/맛돌이/u', array_keys($SK)), '품절 맛: 열쇠는 브랜드|맛 — 「아이스빌런청사과」는 청사과, 디오리퀴드는 디오로도, 묶음 상품은 열쇠를 안 만든다');
+$WO = '[10병 묶음 할인 이벤트] 화이트아웃 액상 10병 할인 !';
+$ok(($BL.'soldout_pick')([['label'=>'화이트 아웃 자몽 ⭐BEST','qty'=>2,'type'=>'addon']], null, $WO, $SO) === '화이트아웃 자몽', '품절 맛: 화이트아웃 10병에서 고른 「화이트 아웃 자몽」을 잡는다');
+$ok(($BL.'soldout_pick')([['label'=>'화이트 아웃 피치 ⭐BEST','qty'=>10,'type'=>'addon'],['label'=>'화이트 아웃 자몽','qty'=>0]], null, $WO, $SO) === '', '품절 맛: 다른 맛 · 수량 0 으로 뺀 줄은 지나간다');
+$ok(($BL.'soldout_pick')([['label'=>'빌런 청사과','qty'=>1]], null, '[빌런] ★ 맛돌이 액상 ★ 빌런 5병 EVENT', $SO) === '빌런 아이스빌런청사과' && ($BL.'soldout_pick')([['label'=>'빌런 적사과','qty'=>1]], null, '[빌런] 5병', $SO) === '', '품절 맛: 빌런 청사과는 잡고 적사과는 지나간다');
+$ok(($BL.'soldout_pick')([['label'=>'노보 블랙 블랙멘솔','qty'=>1]], null, '[노보 블랙 리퀴드] 10+1', $SO) === '' && ($BL.'soldout_pick')([['label'=>'노보 블랙멘솔','qty'=>1]], null, '[노보 리퀴드] 10+1', $SO) === '노보 블랙멘솔', '품절 맛: 노보 블랙멘솔이 품절이어도 노보 블랙 라인의 블랙멘솔은 안 막는다');
+$ok(($BL.'soldout_pick')([['label'=>'머스케또 흑염룡','qty'=>1]], null, '[액상덕후] 흑염룡 10병', $SO) === '' && ($BL.'soldout_pick')([['label'=>'머스케또 흑염룡 (멘솔 없음)','qty'=>1]], null, '[액상덕후] 흑염룡 10병', $SO) !== '', '품절 맛: 글에 브랜드가 없으면 묶음 이름의 브랜드로 · 「(멘솔 없음)」판만 품절이면 보통판은 지나간다');
+$ok(($BL.'soldout_pick')(null, ['f_____'=>'디오리퀴드 로젤하트'], '[디오리퀴드] 5+5', $SO) !== '' && ($BL.'soldout_pick')([['label'=>'자몽팟 [+12,000원]','qty'=>1]], null, $WO, $SO) === '', '품절 맛: PPOM 칸도 본다 · 값이 붙은 추가 구매 칸은 안 본다');
+($BL.'soldout_flush')(); $GLOBALS['__transients']['dhr_soldout_v1'] = $SO;
+$cartSO = [['product_id'=>139,'quantity'=>1,'data'=>new WC_Product(139, $WO, 149000.0, true),'wd_option_builder'=>[['label'=>'화이트 아웃 자몽','qty'=>3,'type'=>'addon']]]];
+$hs = ($BL.'hits')($cartSO);
+$ok(count($hs) === 1 && str_contains((string) reset($hs), '품절') && str_contains((string) reset($hs), '다른 맛'), '품절 맛: 장바구니 · 결제 빗장이 안내와 함께 잡는다');
+($BL.'soldout_flush')();
 
 // 브랜드 페이지 「종류 · 가격」 표 · FAQ · 날짜 제목 (2026-10-20)
 require_once dirname(__DIR__, 2).'/includes/brand-seo.php';

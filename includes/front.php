@@ -1372,6 +1372,13 @@ function js_config( array $extra = array() ): string {
 
 		// 팔지 않는 맛 (Blocked\words(), 2026-10-19 그린펀치) — front.js 가 상품 폼의 그 맛 칸을 감춘다. 막는 것은 서버다.
 		'blocked' => function_exists( '\\Duckhoo\\Redesign\\Blocked\\words' ) ? \Duckhoo\Redesign\Blocked\words() : array(),
+		// 품절 낱병의 맛 (Blocked\soldout(), 2026-10-21) — 상품 화면에서만. front.js 가 묶음의 그 맛 칸을 감춘다. 막는 것은 서버다.
+		'soldout' => ( function_exists( '\\Duckhoo\\Redesign\\Blocked\\soldout' ) && function_exists( 'is_product' ) && is_product() )
+			? ( function () {
+				$so = \Duckhoo\Redesign\Blocked\soldout();
+				return $so['keys'] ? array( 'k' => array_keys( $so['keys'] ), 'b' => $so['brands'], 'ctx' => (string) get_the_title() ) : null;
+			} )()
+			: null,
 
 		// 사장님 스니펫이 홈 맨 위에 그리는 검은 공지 띠(#wd-top-announce).
 		// 그 스니펫은 건드리지 않고 **글자만** 우리가 정한다 — 이벤트가 끝났는데
