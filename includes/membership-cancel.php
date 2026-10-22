@@ -224,11 +224,61 @@ function withdraw( int $user_id ): void {
 	// 아무도 모르는 비밀번호로 바꿔 로그인을 끊습니다. 세션도 함께 정리됩니다.
 	wp_set_password( wp_generate_password( 64, true, true ), $user_id );
 
+	free_identity( $user_id );
+
 	remove_filter( 'send_email_change_email', '__return_false', 99 );
 	remove_filter( 'send_password_change_email', '__return_false', 99 );
 
 	do_action( 'duckhoo_member_withdrawn', $user_id );
 }
+
+/**
+ * 다시 가입할 수 있게 옛 계정이 쥔 자리를 비웁니다.
+ *
+ * 테마 가입은 아이디를 이메일로 만든다 (`user_login => $email`). 이메일만 바꾸면
+ * 아이디가 그 이메일로 남아 같은 이메일로 다시 가입할 때 「이미 있는 아이디」로 막힌다.
+ * 본인인증 CI · DI · 휴대폰도 옛 계정에 남아 있으면 같은 사람의 새 가입을 중복으로 볼 수 있어
+ * 지우지 않고 `_dhr_old_` 이름으로 옮겨 둔다 (기록은 남는다).
+ *
+ * @param int $user_id 회원 ID.
+ * @return void
+ */
+function free_identity( int $user_id ): void {
+	global $wpdb;
+	if ( ! isset( $wpdb ) || $user_id <= 0 ) {
+		return;
+	}
+	$free = 'withdrawn-' . $user_id;
+	$user = get_userdata( $user_id );
+	if ( $user && $free !== $user->user_login ) {
+		update_user_meta( $user_id, '_dhr_old_login', $user->user_login );
+		$wpdb->update( $wpdb->users, array( 'user_login' => $free, 'user_nicename' => $free ), array( 'ID' => $user_id ) ); // phpcs:ignore WordPress.DB
+	}
+	foreach ( array( 'wd_verified_ci', 'wd_verified_di', 'wd_verified_phone', 'wd_phone' ) as $k ) {
+		$v = (string) get_user_meta( $user_id, $k, true );
+		if ( '' !== $v ) {
+			update_user_meta( $user_id, '_dhr_old_' . $k, $v );
+			delete_user_meta( $user_id, $k );
+		}
+	}
+	clean_user_cache( $user_id );
+}
+
+/**
+ * 이 기능 전에 탈퇴한 회원도 한 번 비워 둡니다.
+ *
+ * @return void
+ */
+function free_old_withdrawn(): void {
+	if ( get_option( 'duckhoo_withdraw_free_v1' ) ) {
+		return;
+	}
+	update_option( 'duckhoo_withdraw_free_v1', current_time( 'mysql' ), false );
+	foreach ( get_users( array( 'meta_key' => WITHDRAWN_META, 'fields' => 'ID', 'number' => 2000 ) ) as $id ) {
+		free_identity( (int) $id );
+	}
+}
+add_action( 'admin_init', __NAMESPACE__ . '\\free_old_withdrawn' );
 
 /**
  * 탈퇴한 계정은 로그인시키지 않습니다.
