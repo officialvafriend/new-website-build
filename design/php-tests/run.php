@@ -3399,5 +3399,14 @@ $ok('' !== $c1 && ($cp['meta']['_dhr_wc_uid'] ?? '') === '501' && ($cp['usage_li
 $ok('' === $c2 && str_starts_with((string) ($GLOBALS['__usermeta'][502]['_dhr_wc_skip'] ?? ''), 'dup:501') && '' === $c3 && ($GLOBALS['__usermeta'][503]['_dhr_wc_skip'] ?? '') === 'staff' && '' === $c1b, '가입 쿠폰: 같은 번호는 한 번만 · 직원은 안 줌 · 두 번 부르면 두 번째는 안 만든다');
 $GLOBALS['__filters']['duckhoo_welcome_coupon'] = [];
 
+/* ── 적립금 받은 사람 내려받기 (export_rows) ── */
+$ed = ['recips'=>[11=>[10000,'노보 묶음 손님'],12=>[10000,'노보 묶음 손님'],13=>[10000,'노보 묶음 손님']],
+ 'hist'=>[11=>['after'=>2,'sales'=>130000.0,'kind'=>'bundle'],12=>['after'=>0,'sales'=>0,'kind'=>'single'],13=>['after'=>0,'sales'=>0,'kind'=>'none']],
+ 'contacts'=>[11=>['name'=>'나다','phone'=>'010-1111-2222'],12=>['name'=>'가나','phone'=>'01033334444'],13=>['name'=>'다라','phone'=>'']],
+ 'after'=>[11=>[501,502]]];
+$er = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [501=>10000, 502=>3000, 999=>5000], 'all');
+$ok(count($er)===3 && $er[0][0]==='가나' && $er[1][1]==='01011112222' && $er[1][4]===2 && $er[1][5]===130000 && $er[1][6]===13000, '내려받기: 전부 · 이름순 · 번호 숫자만 · 넣은 뒤 주문 · 실입금 · 쓴 적립금(그 사람 주문만)');
+$eo = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [], 'ordered'); $en = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [], 'not');
+$ok(count($eo)===1 && $eo[0][0]==='나다' && count($en)===2 && $en[0][0]==='가나', '내려받기: 주문한 사람만 · 아직 안 산 사람만으로 나뉜다');
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

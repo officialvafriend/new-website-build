@@ -1016,8 +1016,16 @@ function detail_data( string $key, array $extra = array() ): ?array {
 	foreach ( array_keys( $want ) as $u ) {
 		$hist[ $u ] = novo_history( (array) ( $by[ $u ] ?? array() ), $items, $at );
 	}
+	$after = array();
+	foreach ( $by as $u => $os ) {
+		foreach ( $os as $o ) {
+			if ( (int) $o['ts'] >= $at ) {
+				$after[ $u ][] = (int) $o['id'];
+			}
+		}
+	}
 	$contacts = function_exists( '\\Duckhoo\\Redesign\\Crm\\contacts' ) ? \Duckhoo\Redesign\Crm\contacts( array_keys( $want ) ) : array();
-	return array( 'at' => $at, 'label' => (string) $b['label'], 'recips' => $recips, 'hist' => $hist, 'contacts' => $contacts );
+	return array( 'at' => $at, 'label' => (string) $b['label'], 'recips' => $recips, 'hist' => $hist, 'contacts' => $contacts, 'after' => $after );
 }
 
 /** 판정별 수. 순수. */
@@ -1055,6 +1063,95 @@ function people_table( array $uids, array $d, bool $with_given ): string {
 	return $h . '</tbody></table>' . ( count( $uids ) > 500 ? '<p>500명까지만 보입니다.</p>' : '' );
 }
 
+/**
+ * 받은 사람 내려받기 줄. 순수.
+ *
+ * $only: all(전부) · ordered(넣은 뒤 주문한 사람) · not(아직 안 산 사람 — 리마인드 대상).
+ * $used: 주문 번호 => 그 주문에 쓴 적립금 (used_points()).
+ * 줄: [이름, 번호(숫자만), 받은 금액, 문자종류, 넣은 뒤 주문 수, 넣은 뒤 실입금, 넣은 뒤 쓴 적립금, 넣기 전 노보 이력].
+ */
+function export_rows( array $d, array $used, string $only ): array {
+	$out = array();
+	foreach ( (array) $d['recips'] as $u => $r ) {
+		$h  = $d['hist'][ $u ] ?? array( 'after' => 0, 'sales' => 0, 'kind' => 'none' );
+		$on = (int) $h['after'] > 0;
+		if ( ( 'ordered' === $only && ! $on ) || ( 'not' === $only && $on ) ) {
+			continue;
+		}
+		$c   = (array) ( $d['contacts'][ $u ] ?? array() );
+		$use = 0;
+		foreach ( (array) ( $d['after'][ $u ] ?? array() ) as $oid ) {
+			$use += (int) ( $used[ (int) $oid ] ?? 0 );
+		}
+		$out[] = array(
+			(string) ( $c['name'] ?? '' ),
+			pnorm( (string) ( $c['phone'] ?? '' ) ),
+			(int) ( $r[0] ?? 0 ),
+			(string) ( $r[1] ?? '' ),
+			(int) $h['after'],
+			(int) round( (float) $h['sales'] ),
+			$use,
+			novo_kind_label( (string) $h['kind'] ),
+		);
+	}
+	usort( $out, fn( $a, $b ) => strcmp( $a[0], $b[0] ) );
+	return $out;
+}
+
+/** 내려받기 주소. */
+function export_url( string $key, string $only, string $fmt ): string {
+	return wp_nonce_url( admin_url( 'admin-post.php?action=dhr_pts_csv&key=' . rawurlencode( $key ) . '&only=' . $only . '&fmt=' . $fmt ), 'dhr-pts-csv' );
+}
+
+/** 받은 사람 CSV 내려받기 — 관리자만. 문자라인용(sms)은 머리줄 없이 이름 · 번호 두 칸. */
+function export_csv(): void {
+	if ( ! may() ) {
+		wp_die( '권한이 없습니다.' );
+	}
+	check_admin_referer( 'dhr-pts-csv' );
+	$key  = isset( $_GET['key'] ) ? sanitize_key( wp_unslash( $_GET['key'] ) ) : '';
+	$only = isset( $_GET['only'] ) && in_array( $_GET['only'], array( 'all', 'ordered', 'not' ), true ) ? (string) $_GET['only'] : 'all'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$fmt  = isset( $_GET['fmt'] ) && 'sms' === $_GET['fmt'] ? 'sms' : 'full';
+	$d    = '' !== $key ? detail_data( $key ) : null;
+	if ( ! $d ) {
+		wp_die( '그 묶음을 찾지 못했습니다.' );
+	}
+	$rows = export_rows( $d, used_points( (int) $d['at'] ), $only );
+	$tag  = array( 'all' => '전체', 'ordered' => '주문한사람', 'not' => '안산사람' )[ $only ];
+	$name = sanitize_file_name( $d['label'] . '_' . $tag . '_' . count( $rows ) . '명' . ( 'sms' === $fmt ? '_문자양식' : '' ) . '.csv' );
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=UTF-8' );
+	header( "Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode( $name ) );
+	$fh = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+	fwrite( $fh, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+	if ( 'sms' === $fmt ) {
+		foreach ( $rows as $r ) {
+			if ( '' !== $r[1] ) {
+				fputcsv( $fh, array( $r[0], $r[1] ) );
+			}
+		}
+	} else {
+		fputcsv( $fh, array( '이름', '전화번호', '받은 금액', '문자종류', '넣은 뒤 주문', '넣은 뒤 실입금', '넣은 뒤 쓴 적립금', '넣기 전 노보 이력' ) );
+		foreach ( $rows as $r ) {
+			fputcsv( $fh, $r );
+		}
+	}
+	fclose( $fh ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+	exit;
+}
+add_action( 'admin_post_dhr_pts_csv', __NAMESPACE__ . '\\export_csv' );
+
+/** 내려받기 버튼 줄. */
+function export_bar( string $key ): string {
+	$b = fn( string $only, string $fmt, string $txt, bool $main = false ) => '<a class="button' . ( $main ? ' button-primary' : '' ) . '" style="margin:0 6px 6px 0" href="' . esc_url( export_url( $key, $only, $fmt ) ) . '">' . esc_html( $txt ) . '</a>';
+	return '<p style="margin:10px 0 4px"><b>내려받기</b> — 번호가 가려지지 않은 CSV 입니다.</p><p>'
+		. $b( 'not', 'sms', '아직 안 산 사람 · 문자 양식', true )
+		. $b( 'ordered', 'full', '주문한 사람' )
+		. $b( 'not', 'full', '아직 안 산 사람' )
+		. $b( 'all', 'full', '받은 사람 전부' )
+		. '</p><p style="color:#646970;margin-top:0">「문자 양식」은 머리줄 없이 이름 · 번호 두 칸이라 문자라인에 바로 올릴 수 있습니다. 「주문」은 넣은 뒤 돈이 들어온 주문이고, 입금 확인이 이어지므로 내려받는 시각에 따라 달라집니다.</p>';
+}
+
 /** 받은 사람 자세히 상자 (+ 다른 파일과 견주기). */
 function detail_box( string $key, array $cmp_phones = array(), string $cmp_name = '' ): string {
 	$map   = $cmp_phones ? phones_map( $cmp_phones ) : array();
@@ -1075,6 +1172,7 @@ function detail_box( string $key, array $cmp_phones = array(), string $cmp_name 
 		. '<b style="color:#b45309">노보 낱병만 ' . number_format( $kc['single'] ) . '명</b> · '
 		. '<b style="color:#b42318">노보 산 적 없음 ' . number_format( $kc['none'] ) . '명</b></p>';
 	$h  .= '<p style="color:#646970">묶음 = 이름에 「10+1 · 10병 · 5+5」처럼 병 수가 둘 이상인 노보 상품. 돈이 들어온 주문만 셉니다 (취소 · 입금 전 제외). 산 적 없음 · 낱병만이 위에 옵니다.</p>';
+	$h  .= export_bar( $key );
 
 	if ( $cmp_phones ) {
 		$in_file  = array_values( array_unique( $extra ) );
