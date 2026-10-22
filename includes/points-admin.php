@@ -1137,6 +1137,8 @@ function screen(): void {
 	$clean = '';
 	$part  = '';
 	$det   = '';
+	$rsn   = '';
+	$rmsg  = '';
 	$det_ph = array();
 	$det_nm = '';
 	$ready = function_exists( 'Duckhoo\\Redesign\\Points\\grant' ) && \Duckhoo\Redesign\Points\can_return();
@@ -1200,6 +1202,15 @@ function screen(): void {
 					$msg = '그 파일에서 휴대폰 번호를 하나도 못 읽었습니다.';
 				}
 			}
+		} elseif ( 'reason_scan' === $act ) {
+			$rsn = isset( $_POST['reason'] ) ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
+		} elseif ( 'reason_take' === $act ) {
+			$rsn = isset( $_POST['reason'] ) ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
+			$res = reason_take( $rsn, ! empty( $_POST['with_other'] ) );
+			$rmsg = number_format( $res['n'] ) . '명에게서 안 쓴 적립금 ' . number_format( $res['sum'] ) . '원을 거뒀습니다.'
+				. ( $res['skip'] ? ' 다른 사유로 빠진 기록이 있는 ' . $res['skip'] . '명은 건너뛰었습니다.' : '' )
+				. ( $res['left'] ? ' 시간이 모자라 ' . $res['left'] . '명이 남았습니다 — 한 번 더 누르세요.' : '' )
+				. ( '' !== $res['msg'] ? ' ' . $res['msg'] : '' );
 		} elseif ( 'part' === $act && ! empty( $_POST['key'] ) ) {
 			$part = sanitize_key( wp_unslash( $_POST['key'] ) );
 		} elseif ( 'cleanup_preview' === $act && ! empty( $_POST['key'] ) ) {
@@ -1324,6 +1335,7 @@ function screen(): void {
 	if ( '' !== $det ) {
 		echo detail_box( $det, $det_ph, $det_nm ); // phpcs:ignore WordPress.Security.EscapeOutput
 	}
+	echo reason_box( $rsn, $rmsg ); // phpcs:ignore WordPress.Security.EscapeOutput
 	$all = (array) get_option( OPT, array() );
 	if ( $all ) {
 		echo '<h2 style="margin-top:28px">넣은 묶음</h2><table class="widefat striped" style="max-width:860px"><thead><tr><th>묶음</th><th>인원</th><th>금액</th><th>마지막</th><th></th></tr></thead><tbody>';
@@ -1377,3 +1389,5 @@ function screen(): void {
 	}
 	echo '</div>';
 }
+
+require_once __DIR__ . '/points-reason.php';
