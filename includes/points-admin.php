@@ -904,6 +904,205 @@ function participation_box( string $key ): string {
 	return $h . '</div>';
 }
 
+/* ── 받은 사람 자세히 (사장님 2026-10-22 「낱병 엑셀을 줬는지 헷갈려서」) ── */
+
+/**
+ * 노보 줄의 구성 — 'b' 묶음 · 's' 낱병 · '' 노보 아님. 순수.
+ * 병 수를 이름에서 못 세는 노보 줄(「노보 타박멘솔2000 … 결제」 같은 수동 결제)은 묶음으로 본다.
+ */
+function novo_part( string $name ): string {
+	$brand = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\brand' ) ? \Duckhoo\Redesign\Anatomy\brand( $name ) : ( preg_match( '/노보/u', $name ) ? '노보' : '' );
+	if ( '노보' !== $brand ) {
+		return '';
+	}
+	$n = function_exists( '\\Duckhoo\\Redesign\\Cost\\bottles' ) ? \Duckhoo\Redesign\Cost\bottles( $name ) : ( preg_match( '/(\d+)\s*(?:\+|병)/u', $name ) ? 10 : 1 );
+	return 1 === $n ? 's' : 'b';
+}
+
+/**
+ * 한 사람의 노보 이력. 순수.
+ *
+ * @param array $orders 그 사람의 돈 들어온 주문 [ {id,ts,t} ].
+ * @param array $items  주문 번호 => 줄들.
+ * @param int   $at     넣은 시각 — 이 전의 이력이 「왜 이 명단에 들었나」다.
+ * @return array{b:int,s:int,last:int,after:int,sales:float,kind:string}
+ */
+function novo_history( array $orders, array $items, int $at ): array {
+	$h = array( 'b' => 0, 's' => 0, 'last' => 0, 'after' => 0, 'sales' => 0.0, 'kind' => 'none' );
+	foreach ( $orders as $o ) {
+		if ( (int) $o['ts'] >= $at ) {
+			++$h['after'];
+			$h['sales'] += (float) $o['t'];
+			continue;
+		}
+		$parts = array();
+		foreach ( (array) ( $items[ (int) $o['id'] ] ?? array() ) as $it ) {
+			$k = novo_part( (string) $it['name'] );
+			if ( '' !== $k ) {
+				$parts[ $k ] = true;
+			}
+		}
+		if ( isset( $parts['b'] ) ) {
+			++$h['b'];
+		}
+		if ( isset( $parts['s'] ) ) {
+			++$h['s'];
+		}
+		if ( $parts ) {
+			$h['last'] = max( $h['last'], (int) $o['ts'] );
+		}
+	}
+	$h['kind'] = $h['b'] > 0 ? 'bundle' : ( $h['s'] > 0 ? 'single' : 'none' );
+	return $h;
+}
+
+/** 판정 이름. */
+function novo_kind_label( string $k ): string {
+	return array( 'bundle' => '노보 묶음 산 적 있음', 'single' => '노보 낱병만', 'none' => '노보 산 적 없음' )[ $k ] ?? $k;
+}
+
+/** 파일 · 붙여 넣은 글에서 휴대폰 번호만 (칸 이름 없이도). 순수. @return string[] */
+function file_phones( array $table ): array {
+	$out = array();
+	foreach ( $table as $cells ) {
+		foreach ( (array) $cells as $c ) {
+			if ( preg_match_all( '/(?:\+?82[\s-]?)?0?1[016789][\s-]?\d{3,4}[\s-]?\d{4}/', (string) $c, $m ) ) {
+				foreach ( $m[0] as $raw ) {
+					$p = pnorm( $raw );
+					if ( '' !== $p ) {
+						$out[ $p ] = $p;
+					}
+				}
+			}
+		}
+	}
+	return array_values( $out );
+}
+
+/**
+ * 받은 사람 + (견줄 파일의) 다른 회원의 이력을 한 번에 읽는다.
+ *
+ * @param int[] $extra 견줄 파일에서 찾은 회원.
+ * @return array{at:int,label:string,recips:array,hist:array,contacts:array}|null
+ */
+function detail_data( string $key, array $extra = array() ): ?array {
+	global $wpdb;
+	$all = (array) get_option( OPT, array() );
+	if ( ! isset( $all[ $key ] ) ) {
+		return null;
+	}
+	$b      = $all[ $key ];
+	$at     = (int) ( $b['created'] ?? time() );
+	$kinds  = (array) ( $b['kinds'] ?? array() );
+	$recips = array();
+	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$recips[ (int) $r['user_id'] ] = array( (int) $r['meta_value'], (string) ( $kinds[ (int) $r['user_id'] ] ?? '' ) );
+	}
+	$want = array_fill_keys( array_merge( array_keys( $recips ), array_map( 'intval', $extra ) ), true );
+	$off  = (int) ( function_exists( 'wp_timezone' ) ? ( new \DateTime( 'now', wp_timezone() ) )->getOffset() : 9 * 3600 );
+	$paid = function_exists( '\\Duckhoo\\Redesign\\Crm\\paid_statuses' ) ? \Duckhoo\Redesign\Crm\paid_statuses() : array( 'payment-confirmed', 'ready-to-ship', 'shipping', 'delivered', 'completed', 'processing' );
+	$by   = array();
+	$ids  = array();
+	foreach ( ( function_exists( '\\Duckhoo\\Redesign\\Anatomy\\orders' ) ? \Duckhoo\Redesign\Anatomy\orders() : array() ) as $o ) {
+		$u = (int) $o['u'];
+		if ( $u > 0 && isset( $want[ $u ] ) && in_array( $o['s'], $paid, true ) ) {
+			$o['ts']    = (int) $o['ts'] - $off;
+			$by[ $u ][] = $o;
+			$ids[]      = (int) $o['id'];
+		}
+	}
+	$items = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\items' ) ? \Duckhoo\Redesign\Anatomy\items( $ids ) : array();
+	$hist  = array();
+	foreach ( array_keys( $want ) as $u ) {
+		$hist[ $u ] = novo_history( (array) ( $by[ $u ] ?? array() ), $items, $at );
+	}
+	$contacts = function_exists( '\\Duckhoo\\Redesign\\Crm\\contacts' ) ? \Duckhoo\Redesign\Crm\contacts( array_keys( $want ) ) : array();
+	return array( 'at' => $at, 'label' => (string) $b['label'], 'recips' => $recips, 'hist' => $hist, 'contacts' => $contacts );
+}
+
+/** 판정별 수. 순수. */
+function kind_counts( array $uids, array $hist ): array {
+	$c = array( 'bundle' => 0, 'single' => 0, 'none' => 0 );
+	foreach ( $uids as $u ) {
+		++$c[ $hist[ $u ]['kind'] ?? 'none' ];
+	}
+	return $c;
+}
+
+/** 번호 가림. */
+function mask( string $p ): string {
+	return '' === $p ? '—' : substr( $p, 0, 3 ) . '-****-' . substr( $p, -4 );
+}
+
+/** 사람 표 한 장. */
+function people_table( array $uids, array $d, bool $with_given ): string {
+	$order = array( 'none' => 0, 'single' => 1, 'bundle' => 2 );
+	usort( $uids, function ( $a, $b ) use ( $d, $order ) {
+		$ka = $order[ $d['hist'][ $a ]['kind'] ?? 'none' ];
+		$kb = $order[ $d['hist'][ $b ]['kind'] ?? 'none' ];
+		return $ka <=> $kb ?: strcmp( (string) ( $d['contacts'][ $a ]['name'] ?? '' ), (string) ( $d['contacts'][ $b ]['name'] ?? '' ) );
+	} );
+	$h = '<table class="widefat striped"><thead><tr><th>이름</th><th>번호</th><th>회원</th>' . ( $with_given ? '<th>문자종류</th><th>받은 금액</th>' : '' ) . '<th>판정</th><th>노보 묶음 주문</th><th>노보 낱병 주문</th><th>마지막 노보 구매</th><th>넣은 뒤 주문</th></tr></thead><tbody>';
+	$col = array( 'bundle' => '#1a7f37', 'single' => '#b45309', 'none' => '#b42318' );
+	foreach ( array_slice( $uids, 0, 500 ) as $u ) {
+		$c  = (array) ( $d['contacts'][ $u ] ?? array() );
+		$hh = $d['hist'][ $u ] ?? novo_history( array(), array(), 0 );
+		$h .= '<tr><td>' . esc_html( (string) ( $c['name'] ?? '' ) ) . '</td><td>' . esc_html( mask( (string) ( $c['phone'] ?? '' ) ) ) . '</td><td><a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . (int) $u ) ) . '">#' . (int) $u . '</a></td>'
+			. ( $with_given ? '<td>' . esc_html( (string) ( $d['recips'][ $u ][1] ?? '' ) ) . '</td><td>' . number_format( (int) ( $d['recips'][ $u ][0] ?? 0 ) ) . '원</td>' : '' )
+			. '<td style="color:' . $col[ $hh['kind'] ] . ';font-weight:600">' . esc_html( novo_kind_label( $hh['kind'] ) ) . '</td><td>' . (int) $hh['b'] . '</td><td>' . (int) $hh['s'] . '</td><td>' . ( $hh['last'] ? esc_html( wp_date( 'Y.m.d', $hh['last'] ) ) : '—' ) . '</td>'
+			. '<td>' . ( $hh['after'] ? (int) $hh['after'] . '건 · ' . number_format( (int) $hh['sales'] ) . '원' : '—' ) . '</td></tr>';
+	}
+	return $h . '</tbody></table>' . ( count( $uids ) > 500 ? '<p>500명까지만 보입니다.</p>' : '' );
+}
+
+/** 받은 사람 자세히 상자 (+ 다른 파일과 견주기). */
+function detail_box( string $key, array $cmp_phones = array(), string $cmp_name = '' ): string {
+	$map   = $cmp_phones ? phones_map( $cmp_phones ) : array();
+	$extra = array();
+	foreach ( $map as $l ) {
+		$extra = array_merge( $extra, $l );
+	}
+	$d = detail_data( $key, $extra );
+	if ( ! $d ) {
+		return '';
+	}
+	$rec = array_keys( $d['recips'] );
+	$kc  = kind_counts( $rec, $d['hist'] );
+	$h   = '<div style="margin:16px 0;padding:16px;border:2px solid #1a5cff;border-radius:8px;background:#fff">';
+	$h  .= '<h3 style="margin-top:0">받은 사람 자세히 — ' . esc_html( $d['label'] ) . ' <span style="font-weight:400;color:#646970">(' . esc_html( wp_date( 'n월 j일 H:i', $d['at'] ) ) . ' 넣음)</span></h3>';
+	$h  .= '<p style="font-size:15px">받은 <b>' . number_format( count( $rec ) ) . '명</b>을 넣기 전 구매 이력으로 나누면: '
+		. '<b style="color:#1a7f37">노보 묶음 산 적 있음 ' . number_format( $kc['bundle'] ) . '명</b> · '
+		. '<b style="color:#b45309">노보 낱병만 ' . number_format( $kc['single'] ) . '명</b> · '
+		. '<b style="color:#b42318">노보 산 적 없음 ' . number_format( $kc['none'] ) . '명</b></p>';
+	$h  .= '<p style="color:#646970">묶음 = 이름에 「10+1 · 10병 · 5+5」처럼 병 수가 둘 이상인 노보 상품. 돈이 들어온 주문만 셉니다 (취소 · 입금 전 제외). 산 적 없음 · 낱병만이 위에 옵니다.</p>';
+
+	if ( $cmp_phones ) {
+		$in_file  = array_values( array_unique( $extra ) );
+		$got      = array_values( array_filter( $in_file, fn( $u ) => isset( $d['recips'][ $u ] ) ) );
+		$not      = array_values( array_diff( $in_file, $got ) );
+		$missing  = array_values( array_diff( $rec, $in_file ) );
+		$nomember = count( $cmp_phones ) - count( $map );
+		$nk       = kind_counts( $not, $d['hist'] );
+		$h .= '<div style="margin:12px 0;padding:12px;background:#f6f7f7;border-radius:6px">';
+		$h .= '<h4 style="margin:0 0 6px">견준 파일' . ( '' !== $cmp_name ? ' — ' . esc_html( $cmp_name ) : '' ) . '</h4>';
+		$h .= '<p style="margin:0">번호 <b>' . number_format( count( $cmp_phones ) ) . '개</b> · 회원으로 찾음 ' . number_format( count( $map ) ) . '개' . ( $nomember ? ' (회원이 아닌 번호 ' . number_format( $nomember ) . '개)' : '' ) . '</p>';
+		$h .= '<p style="margin:4px 0 0">이 중 <b>적립금을 받은 사람 ' . number_format( count( $got ) ) . '명</b> · <b>못 받은 사람 ' . number_format( count( $not ) ) . '명</b>'
+			. ( $not ? ' (못 받은 사람의 이력: 묶음 ' . number_format( $nk['bundle'] ) . ' · 낱병만 ' . number_format( $nk['single'] ) . ' · 산 적 없음 ' . number_format( $nk['none'] ) . ')' : '' ) . '</p>';
+		$h .= '<p style="margin:4px 0 0">받았는데 이 파일에는 없는 사람 ' . number_format( count( $missing ) ) . '명</p></div>';
+		if ( $not ) {
+			$h .= '<h4>이 파일에 있는데 적립금을 못 받은 사람 (' . count( $not ) . ')</h4>' . people_table( $not, $d, false );
+		}
+	}
+
+	$h .= '<form method="post" enctype="multipart/form-data" style="margin:14px 0;padding:12px;border:1px dashed #c3c4c7;border-radius:6px">';
+	$h .= wp_nonce_field( 'dhr-pts', '_wpnonce', true, false );
+	$h .= '<input type="hidden" name="key" value="' . esc_attr( $key ) . '"><b>다른 파일과 견주기</b> — 문자 보낸 엑셀 · CSV 를 올리면 그 사람들이 이 적립금을 받았는지, 무엇을 산 사람들인지 봅니다. 번호만 읽고 저장하지 않습니다.<br>'
+		. '<input type="file" name="f" accept=".xlsx,.csv,.txt" style="margin-top:8px"> <button class="button" name="dhr_pts" value="detail">견주기</button></form>';
+
+	$h .= '<h4>받은 사람 (' . count( $rec ) . ')</h4>' . people_table( $rec, $d, true );
+	return $h . '</div>';
+}
+
 /** 미리 보기 · 넣기 때 회원마다 문자종류를 묶음에 적는다 (참여를 종류별로 나눠 보려고). */
 function remember_kinds( string $label, array $plan ): void {
 	$key = bkey( $label );
@@ -937,6 +1136,9 @@ function screen(): void {
 	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : wp_date( 'n월' ) . ' 감사 적립금'; // phpcs:ignore WordPress.Security.NonceVerification
 	$clean = '';
 	$part  = '';
+	$det   = '';
+	$det_ph = array();
+	$det_nm = '';
 	$ready = function_exists( 'Duckhoo\\Redesign\\Points\\grant' ) && \Duckhoo\Redesign\Points\can_return();
 
 	if ( isset( $_POST['dhr_pts'] ) && check_admin_referer( 'dhr-pts' ) ) {
@@ -985,6 +1187,18 @@ function screen(): void {
 				$plan  = build( $saved['rows'], $label );
 				remember_kinds( $label, $plan );
 				delete_transient( 'dhr_pts_part_' . bkey( $label ) );
+			}
+		} elseif ( 'detail' === $act && ! empty( $_POST['key'] ) ) {
+			$det = sanitize_key( wp_unslash( $_POST['key'] ) );
+			if ( ! empty( $_FILES['f']['tmp_name'] ) && is_uploaded_file( $_FILES['f']['tmp_name'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+				$nm      = (string) ( $_FILES['f']['name'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+				$tmp     = (string) $_FILES['f']['tmp_name']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+				$table   = str_ends_with( strtolower( $nm ), '.xlsx' ) ? xlsx_table( $tmp ) : paste_table( (string) file_get_contents( $tmp ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+				$det_ph  = file_phones( $table );
+				$det_nm  = sanitize_file_name( $nm );
+				if ( ! $det_ph ) {
+					$msg = '그 파일에서 휴대폰 번호를 하나도 못 읽었습니다.';
+				}
 			}
 		} elseif ( 'part' === $act && ! empty( $_POST['key'] ) ) {
 			$part = sanitize_key( wp_unslash( $_POST['key'] ) );
@@ -1107,6 +1321,9 @@ function screen(): void {
 	if ( '' !== $part ) {
 		echo participation_box( $part ); // phpcs:ignore WordPress.Security.EscapeOutput
 	}
+	if ( '' !== $det ) {
+		echo detail_box( $det, $det_ph, $det_nm ); // phpcs:ignore WordPress.Security.EscapeOutput
+	}
 	$all = (array) get_option( OPT, array() );
 	if ( $all ) {
 		echo '<h2 style="margin-top:28px">넣은 묶음</h2><table class="widefat striped" style="max-width:860px"><thead><tr><th>묶음</th><th>인원</th><th>금액</th><th>마지막</th><th></th></tr></thead><tbody>';
@@ -1121,6 +1338,9 @@ function screen(): void {
 				echo ' <form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button button-primary" name="dhr_pts" value="part">참여 보기</button></form>';
+				echo ' <form method="post" style="display:inline">';
+				wp_nonce_field( 'dhr-pts' );
+				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="detail">받은 사람 자세히</button></form>';
 			}
 			// 같은 사유로 여러 번 넣었으면 금액별 · 파일별로 따로 거둔다 (10/16 — 23원으로 잘못 들어간 102명만 거두려고).
 			$groups = (int) $b['n'] > 0 ? amount_groups( (string) $k ) : array();
