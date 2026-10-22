@@ -1175,9 +1175,22 @@ function detail_box( string $key, array $cmp_phones = array(), string $cmp_name 
 	$h  .= export_bar( $key );
 
 	if ( $cmp_phones ) {
-		$in_file  = array_values( array_unique( $extra ) );
-		$got      = array_values( array_filter( $in_file, fn( $u ) => isset( $d['recips'][ $u ] ) ) );
-		$not      = array_values( array_diff( $in_file, $got ) );
+		// 번호 하나가 한 사람이다 — 같은 번호의 계정 중 하나라도 받았으면 「받음」 (이메일을 바꿔 두 번 가입한 사람의 빈 계정을 「못 받음」으로 세지 않는다).
+		$in_file = array_values( array_unique( $extra ) );
+		$got     = array();
+		$not     = array();
+		$twins   = 0;
+		foreach ( $map as $ids ) {
+			$hit = array_values( array_filter( (array) $ids, fn( $u ) => isset( $d['recips'][ $u ] ) ) );
+			if ( $hit ) {
+				$got[] = $hit[0];
+				$twins += count( $ids ) > 1 ? 1 : 0;
+			} else {
+				$not = array_merge( $not, (array) $ids );
+			}
+		}
+		$got      = array_values( array_unique( $got ) );
+		$not      = array_values( array_unique( $not ) );
 		$missing  = array_values( array_diff( $rec, $in_file ) );
 		$nomember = count( $cmp_phones ) - count( $map );
 		$nk       = kind_counts( $not, $d['hist'] );
@@ -1186,6 +1199,7 @@ function detail_box( string $key, array $cmp_phones = array(), string $cmp_name 
 		$h .= '<p style="margin:0">번호 <b>' . number_format( count( $cmp_phones ) ) . '개</b> · 회원으로 찾음 ' . number_format( count( $map ) ) . '개' . ( $nomember ? ' (회원이 아닌 번호 ' . number_format( $nomember ) . '개)' : '' ) . '</p>';
 		$h .= '<p style="margin:4px 0 0">이 중 <b>적립금을 받은 사람 ' . number_format( count( $got ) ) . '명</b> · <b>못 받은 사람 ' . number_format( count( $not ) ) . '명</b>'
 			. ( $not ? ' (못 받은 사람의 이력: 묶음 ' . number_format( $nk['bundle'] ) . ' · 낱병만 ' . number_format( $nk['single'] ) . ' · 산 적 없음 ' . number_format( $nk['none'] ) . ')' : '' ) . '</p>';
+		$h .= ( $twins ? '<p style="margin:4px 0 0;color:#646970">같은 번호로 계정이 둘 이상인 사람 ' . number_format( $twins ) . '명은 받은 계정 하나로 셉니다.</p>' : '' );
 		$h .= '<p style="margin:4px 0 0">받았는데 이 파일에는 없는 사람 ' . number_format( count( $missing ) ) . '명</p></div>';
 		if ( $not ) {
 			$h .= '<h4>이 파일에 있는데 적립금을 못 받은 사람 (' . count( $not ) . ')</h4>' . people_table( $not, $d, false );
