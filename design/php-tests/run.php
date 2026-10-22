@@ -3366,5 +3366,38 @@ $ok($pp['']['buyers'] === 1 && $pq['']['buyers'] === 0 && $pq['']['before'] === 
 $tx = ($CR.'text')(['from'=>'2026-10-13','to'=>'2026-10-30','built'=>'x','until'=>'y','done'=>false,'days'=>8,'sales'=>$sp,'base'=>['from'=>'a','to'=>'b']+$sp,'points'=>[],'sent'=>[]]);
 $ok(str_contains($tx, '2026-10-13 ~ 2026-10-30') && str_contains($tx, '진행 중') && str_contains($tx, '처음 산 손님') && !preg_match('/010|@/', $tx), 'CRM 기간 성과: 붙여 넣기 글 — 기간 · 진행 중 표시 · 숫자만');
 
+// ── 가입 쿠폰 · 자동 문자 (2026-10-22) ─────────────────────────
+require_once dirname(__DIR__, 2).'/includes/welcome-coupon.php';
+require_once dirname(__DIR__, 2).'/includes/sms.php';
+$WC = '\\Duckhoo\\Redesign\\Welcome\\';
+$SM = '\\Duckhoo\\Redesign\\Sms\\';
+$cd = ($WC.'make_code')(fn() => 0);
+$ok($cd === 'DHAAAAAA' && preg_match('/^DH[A-Z2-9]{6}$/', ($WC.'make_code')()) && !preg_match('/[01OIL]/', substr(($WC.'make_code')(), 2)), '가입 쿠폰: 코드는 DH + 헷갈리는 글자 없는 6자');
+$ok(($WC.'last_day')('2026-10-22', 7) === '2026-10-28' && ($WC.'stored_expiry')('2026-10-28') === '2026-10-29' && ($WC.'last_day')('2026-10-31', 1) === '2026-10-31', '가입 쿠폰: 7일 = 가입한 날 포함 · 저장은 다음 날 00:00 (마지막 날 밤까지)');
+$ok(($WC.'terms_text')(3000, 30000, '2026-10-28') === '3만원 이상 주문 시 3,000원 할인 · 10월 28일까지' && ($WC.'terms_text')(2000, 0, '') === '2,000원 할인' && ($WC.'terms_text')(3000, 25000, '') === '25,000원 이상 주문 시 3,000원 할인', '가입 쿠폰: 안내 한 줄');
+$ok(($WC.'clean_phone')('+82 10-1234-5678') === '01012345678' && ($WC.'clean_phone')('02-123-4567') === '', '가입 쿠폰: 번호 정리 (휴대폰만)');
+$ok(!($WC.'live')(['on'=>false,'amount'=>3000,'min'=>0,'days'=>7]) && !($WC.'live')(['on'=>true,'amount'=>0,'min'=>0,'days'=>7]) && ($WC.'live')(['on'=>true,'amount'=>3000,'min'=>0,'days'=>7]) && !($WC.'conf')()['on'], '가입 쿠폰: 기본은 꺼짐 · 금액 0 이면 안 줌');
+$ok(($SM.'test_numbers')("010-1111-2222, 01033334444\n02-111-2222") === ['01011112222','01033334444'], '자동 문자: 시험 번호 목록 (휴대폰만 · 겹침 없이)');
+$ok(($SM.'clean_phone')('1588-0000', true) === '15880000' && ($SM.'clean_phone')('1588-0000') === '', '자동 문자: 발신번호는 대표번호도 받는다');
+$vv = ($SM.'order_vars')(['name'=>'홍길동','number'=>'202610220001','total'=>39000,'payer'=>''], ['bank'=>'국민','account'=>'123-45','holder'=>'액상덕후']);
+$tt = ($SM.'fill')(($SM.'default_order_tpl')(), $vv);
+$ok(str_contains($tt, '홍길동님') && str_contains($tt, '39,000원') && str_contains($tt, '국민 123-45 (예금주 액상덕후)') && str_contains($tt, '「홍길동」') && !str_contains($tt, '{'), '자동 문자: 주문 안내 — 자리가 다 채워지고 입금자명은 주문자명');
+$ok(($SM.'fill')('{이름} {모름}', ['이름'=>'a']) === 'a {모름}' && ($SM.'order_vars')(['name'=>'','number'=>'1','total'=>0,'payer'=>'김입금'], ['bank'=>'','account'=>'','holder'=>''])['입금자명'] === '김입금', '자동 문자: 모르는 자리는 그대로 · 입금자명 메타가 있으면 그것');
+$ok(($SM.'msg_type')('안녕하세요') === 'SMS' && ($SM.'msg_type')($tt) === 'LMS' && ($SM.'bytes')('가a') === 3, '자동 문자: 90바이트 넘으면 장문 (한글 2바이트)');
+$ok(($SM.'mask')('01012345678') === '010-****-5678' && !($SM.'ready')(['vendor'=>'solapi','key'=>'k','secret'=>'','user'=>'','sender'=>'0212345678']) && ($SM.'ready')(['vendor'=>'aligo','key'=>'k','secret'=>'','user'=>'u','sender'=>'0212345678']) && ($SM.'conf')()['mode'] === 'off', '자동 문자: 기본은 꺼짐 · 업체마다 필요한 칸이 다 차야 준비됨');
+
+if (!function_exists('get_users')) {
+  function get_users($a = []) { $out = []; foreach ($GLOBALS['__usermeta'] ?? [] as $id => $m) { if (isset($a['meta_key']) && !array_key_exists($a['meta_key'], $m)) continue; if (isset($a['meta_value']) && (string) ($m[$a['meta_key']] ?? '') !== (string) $a['meta_value']) continue; $out[] = $id; } return $out; }
+}
+$GLOBALS['__filters']['duckhoo_welcome_coupon'] = [fn($c) => ['on'=>true,'amount'=>3000,'min'=>30000,'days'=>7]];
+$GLOBALS['__usermeta'][501] = ['wd_verified_phone' => '010-5555-0001'];
+$GLOBALS['__usermeta'][502] = ['billing_phone' => '01055550001'];
+$GLOBALS['__usermeta'][503] = ['wd_verified_phone' => '010-5555-0003']; $GLOBALS['__userroles'][503] = ['shop_manager'];
+$c1 = ($WC.'issue')(501); $c2 = ($WC.'issue')(502); $c3 = ($WC.'issue')(503); $c1b = ($WC.'issue')(501);
+$cp = $GLOBALS['__coupons'][$c1] ?? [];
+$ok('' !== $c1 && ($cp['meta']['_dhr_wc_uid'] ?? '') === '501' && ($cp['usage_limit'] ?? 0) === 1 && ($cp['minimum_amount'] ?? '') === '30000' && ($cp['amount'] ?? '') === '3000' && empty($cp['email_restrictions']), '가입 쿠폰: 그 회원만 쓰는 쿠폰 한 장 (사용 1회 · 최소 금액 · 이메일 제한 대신 회원 번호)');
+$ok('' === $c2 && str_starts_with((string) ($GLOBALS['__usermeta'][502]['_dhr_wc_skip'] ?? ''), 'dup:501') && '' === $c3 && ($GLOBALS['__usermeta'][503]['_dhr_wc_skip'] ?? '') === 'staff' && '' === $c1b, '가입 쿠폰: 같은 번호는 한 번만 · 직원은 안 줌 · 두 번 부르면 두 번째는 안 만든다');
+$GLOBALS['__filters']['duckhoo_welcome_coupon'] = [];
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

@@ -74,6 +74,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/help.php';       // 도움�
 require_once plugin_dir_path( __FILE__ ) . 'includes/pricelist.php';  // /price/ 가격표 숏코드 (값을 묻는 검색에 답한다) // 네이버 진단 — 페이지 설명 · noindex · 사이트맵 · 이미지 alt
 require_once plugin_dir_path( __FILE__ ) . 'includes/mail.php';       // 메일 발신자 이름 · 비밀번호 찾기 (워드프레스 기본 화면으로 새지 않게)
 require_once plugin_dir_path( __FILE__ ) . 'includes/referral.php';   // 친구 추천 — 개인 코드 · 링크 · 첫 주문 입금확인 뒤 두 사람에게 적립금 (마케팅 → 친구 추천에서 켠다)
+require_once plugin_dir_path( __FILE__ ) . 'includes/welcome-coupon.php'; // 가입 쿠폰 — 새 회원에게 그 사람만 쓰는 쿠폰 한 장 (마케팅 → 가입 쿠폰에서 켠다)
+require_once plugin_dir_path( __FILE__ ) . 'includes/sms.php';            // 자동 문자 — 주문 입금 안내 (마케팅 → 자동 문자 · 끔/시험/켬) · 장바구니 담은 시각
 
 // 목록 정렬 — 가격 낮은 순 · 높은 순. 검색 결과는 워드커머스가 정렬하지 않아 우리가 한다.
 require_once plugin_dir_path( __FILE__ ) . 'includes/sort.php';

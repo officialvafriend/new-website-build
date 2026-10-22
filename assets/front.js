@@ -2700,3 +2700,88 @@
   run(); document.addEventListener('DOMContentLoaded', run); window.addEventListener('load', run);
   var n = 0, t = setInterval(function(){ run(); if(++n > 20) clearInterval(t); }, 300);
 })();
+
+/* ── 가입 쿠폰 (2026-10-22) ──────────────────────────────────────────
+   `window.DHR.welcome` 은 서버가 장바구니 · 결제 화면에서 **쓸 수 있는 가입 쿠폰이 있을 때만** 준다
+   (includes/welcome-coupon.php). 우리는 안내 한 줄과 「넣기」만 그린다 — 넣는 길은 이미 있는 쿠폰칸이다.
+   장바구니: 우리 쿠폰칸(`.dhr-cpn`)에 코드를 채우고 그 「적용」을 누른다 (그쪽이 Store API 로 넣고 새로 고친다).
+   결제: 「쿠폰」 상자의 글자칸에 채우고 옆 「적용」을 누른다 (결제 화면 쿠폰 블록이 받는다).
+   최소 금액에 못 미치면 버튼 대신 「N원 더 담으면」을 말한다 — 눌러서 오류를 보게 하지 않는다. */
+(function(){
+  var W = window.DHR && window.DHR.welcome; if(!W || !W.code) return;
+  var cl = document.body.classList;
+  var isCart = cl.contains('woocommerce-cart'), isCheckout = cl.contains('woocommerce-checkout');
+  if(!isCart && !isCheckout) return;
+  function won(n){ return Number(n).toLocaleString('ko-KR') + '원'; }
+  function esc(v){ return String(v).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+
+  function box(){
+    var gap = W.min > 0 ? W.min - (W.sub || 0) : 0;
+    var d = document.createElement('div');
+    d.className = 'dhr-wc' + (W.applied ? ' is-on' : '');
+    var act;
+    if(W.applied) act = '<span class="dhr-wc__ok">적용됨 · ' + esc(won(W.amount)) + ' 할인</span>';
+    else if(gap > 0) act = '<span class="dhr-wc__gap">' + esc(won(gap)) + ' 더 담으면 쓸 수 있어요</span>';
+    else act = '<span class="dhr-wc__b" role="button" tabindex="0">쿠폰 넣기</span>';
+    d.innerHTML = '<span class="dhr-wc__t"><b>가입 쿠폰 ' + esc(won(W.amount)) + '</b><span>' + esc(W.text) + '</span></span>' + act;
+    return d;
+  }
+
+  function cartPut(){
+    var i = document.getElementById('dhr-cpn-i'), b = document.querySelector('.dhr-cpn__b');
+    if(!i || !b) return false;
+    i.value = W.code; b.click(); return true;
+  }
+  function checkoutInput(){
+    var list = document.querySelectorAll('input[type="text"]');
+    for(var k = 0; k < list.length; k++){
+      var el = list[k], nm = (el.name || '') + (el.id || '');
+      if(/billing|shipping|order_comments|address|phone|postcode|email|name/i.test(nm)) continue;
+      if(!(el.offsetParent || el.getClientRects().length)) continue;
+      var p = el.parentElement, hops = 0;
+      while(p && hops++ < 5){
+        var t = (p.textContent || '');
+        if(t.indexOf('상품권') > -1) break;
+        if(t.indexOf('쿠폰') > -1){
+          var btn = null;
+          p.querySelectorAll('button, input[type="submit"], a').forEach(function(x){ if(!btn && /적용/.test(x.textContent || x.value || '')) btn = x; });
+          return { i: el, b: btn };
+        }
+        p = p.parentElement;
+      }
+    }
+    return null;
+  }
+  function checkoutPut(){
+    var s = checkoutInput(); if(!s) return false;
+    s.i.value = W.code;
+    s.i.dispatchEvent(new Event('input', {bubbles:true}));
+    if(s.b) s.b.click(); else s.i.focus();
+    return true;
+  }
+
+  function place(){
+    if(document.querySelector('.dhr-wc')) return true;
+    var el = box(), at = null;
+    if(isCart){
+      at = document.querySelector('.dhr-cpn');
+      if(!at) return false;
+      at.parentNode.insertBefore(el, at);
+    } else {
+      var s = checkoutInput();
+      at = s && (s.i.closest('.dhr-cpnx, .wd-checkout-coupon, .checkout_coupon') || s.i.parentElement);
+      if(at && at.parentNode) at.parentNode.insertBefore(el, at);
+      else { var f = document.querySelector('form.checkout, form.woocommerce-checkout'); if(!f) return false; f.insertBefore(el, f.firstChild); }
+    }
+    var b = el.querySelector('.dhr-wc__b');
+    if(b){
+      var go = function(){ b.textContent = '넣는 중…'; if(!(isCart ? cartPut() : checkoutPut())){ b.textContent = '코드 ' + W.code; } };
+      b.addEventListener('click', go);
+      b.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
+    }
+    return true;
+  }
+  if(!place()){
+    var n = 0, t = setInterval(function(){ if(place() || ++n > 25) clearInterval(t); }, 200);
+  }
+})();

@@ -2929,3 +2929,21 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__link{flex:1 1 auto;min-width:0;fon
 html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy{flex:0 0 auto;min-height:40px !important;padding:0 .95rem !important;border-radius:999px !important;border:0 !important;background:var(--dh-ink) !important;color:var(--dh-surface) !important;font-size:.8125rem !important;font-weight:700 !important;cursor:pointer;transition:transform 160ms ease-out}
 html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy:active{transform:scale(.97)}
 html body.dhr.dhr-wrap.dhr-wrap .dhr-refcard__copy.is-done{background:var(--dh-accent) !important;color:var(--dh-accent-ink) !important}
+
+/* ── 가입 쿠폰 (2026-10-22) — 장바구니 · 결제의 안내 한 줄과 마이페이지 카드 ───────── */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .75rem;padding:.8rem 1rem;border-radius:16px;background:var(--dh-accent-soft);color:var(--dh-ink);min-width:0}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__t{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__t b{font-size:.95rem;font-weight:800;color:var(--dh-ink)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__t span{font-size:.8125rem;line-height:1.45;color:var(--dh-ink-2);word-break:keep-all}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__b{flex:0 0 auto;display:inline-flex;align-items:center;min-height:44px;padding:0 1.1rem;border-radius:999px;background:var(--dh-accent);color:var(--dh-accent-ink);font-size:.875rem;font-weight:800;cursor:pointer;white-space:nowrap;transition:transform .16s ease-out}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__b:active{transform:scale(.97)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__b:focus-visible{outline:none;box-shadow:0 0 0 4px var(--dh-ring)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__gap,html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__ok{flex:0 0 auto;font-size:.8125rem;font-weight:700;color:var(--dh-accent-deep);white-space:nowrap}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard{display:flex;flex-direction:column;gap:.35rem;background:var(--dh-surface) !important;border:1px solid var(--dh-line) !important;border-radius:20px !important;padding:1.1rem !important;margin:0 0 1rem !important}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__eb{font-size:.8125rem;font-weight:700;color:var(--dh-accent-deep)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__amt{font-size:1.6rem;font-weight:900;color:var(--dh-ink);line-height:1.1}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__s{font-size:.875rem;line-height:1.5;color:var(--dh-ink-2);word-break:keep-all}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.25rem 0}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__code{font-size:1.05rem;font-weight:800;letter-spacing:.08em !important;padding:.35rem .7rem;border-radius:10px;background:var(--dh-surface-2);color:var(--dh-ink)}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__copy{min-height:40px;padding:0 1rem;border-radius:999px;border:1px solid var(--dh-line-strong);background:transparent;color:var(--dh-ink);font-weight:700;font-size:.8125rem;cursor:pointer}
+@media (max-width:479px){html body.dhr.dhr-wrap.dhr-wrap .dhr-wc{flex-direction:column;align-items:stretch}html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__b{justify-content:center}}
