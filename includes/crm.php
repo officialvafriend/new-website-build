@@ -593,7 +593,7 @@ function contacts( array $uids ): array {
 		foreach ( $rows as $r ) {
 			$out[ (int) $r['ID'] ] = array( 'name' => (string) $r['display_name'], 'phone' => '', 'email' => (string) $r['user_email'] );
 		}
-		$meta = (array) $wpdb->get_results( "SELECT user_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE user_id IN ({$in}) AND meta_key IN ('wd_verified_name','first_name','last_name','billing_first_name','billing_last_name','wd_verified_phone','wd_phone','billing_phone')", ARRAY_A ); // phpcs:ignore WordPress.DB
+		$meta = (array) $wpdb->get_results( "SELECT user_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE user_id IN ({$in}) AND meta_key IN ('wd_verified_name','first_name','last_name','billing_first_name','billing_last_name','wd_verified_phone','wd_phone','billing_phone','_duckhoo_withdrawn_at')", ARRAY_A ); // phpcs:ignore WordPress.DB
 		$m    = array();
 		foreach ( $meta as $r ) {
 			$m[ (int) $r['user_id'] ][ (string) $r['meta_key'] ] = trim( (string) $r['meta_value'] );
@@ -608,6 +608,10 @@ function contacts( array $uids ): array {
 			}
 			if ( '' !== $name ) {
 				$out[ $u ]['name'] = $name;
+			}
+			// 탈퇴한 회원에게는 문자를 보내지 않는다 — 번호를 비워 두면 어느 명단에도 안 실린다.
+			if ( '' !== ( $k['_duckhoo_withdrawn_at'] ?? '' ) ) {
+				continue;
 			}
 			foreach ( array( 'wd_verified_phone', 'wd_phone', 'billing_phone' ) as $pk ) {
 				if ( '' !== phone_norm( $k[ $pk ] ?? '' ) ) {

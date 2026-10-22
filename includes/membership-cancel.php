@@ -454,3 +454,127 @@ function fill_empty_page( string $content ): string {
 	return render();
 }
 add_filter( 'the_content', __NAMESPACE__ . '\\fill_empty_page' );
+
+/*
+ * ── 관리자가 대신 탈퇴 처리 (2026-10-22) ──────────────────────────────
+ * 손님이 전화 · 문의로 탈퇴를 부탁할 때. 사용자 → 편집 화면 맨 아래에 상자를 둔다.
+ * 하는 일은 손님 스스로 탈퇴할 때와 똑같은 withdraw() — 계정 · 주문은 남기고
+ * 이름 · 연락처 · 주소를 지우고 로그인을 막는다. 프로필 폼 안에 있지만 버튼의
+ * formaction 이 admin-post 로 보내므로 「업데이트」 저장과 섞이지 않는다
+ * (프로필 저장 경로로 처리하면 edit_user() 가 지운 이름 · 이메일을 폼 값으로 되돌린다).
+ */
+
+const ADMIN_ACTION = 'dhr_admin_withdraw';
+
+/**
+ * 관리자가 대신 탈퇴시킬 수 있는 회원인가. 직원 · 나 자신은 안 된다.
+ *
+ * @param int $user_id 회원 ID.
+ * @return bool
+ */
+function admin_can_withdraw( int $user_id ): bool {
+	$user = get_userdata( $user_id );
+	if ( ! $user || get_current_user_id() === $user_id ) {
+		return false;
+	}
+	return ! array_intersect( (array) $user->roles, array( 'administrator', 'shop_manager', 'editor' ) );
+}
+
+/**
+ * 남은 적립금 — 키플 잔액 칸을 먼저 본다.
+ *
+ * @param int $user_id 회원 ID.
+ * @return int
+ */
+function admin_points( int $user_id ): int {
+	$v = get_user_meta( $user_id, '_keyple_points', true );
+	if ( '' !== (string) $v && is_numeric( $v ) ) {
+		return (int) $v;
+	}
+	return (int) ( point_balance( $user_id ) ?? 0 );
+}
+
+/**
+ * 사용자 편집 화면의 상자.
+ *
+ * @param \WP_User $user 회원.
+ * @return void
+ */
+function admin_box( $user ): void {
+	if ( ! current_user_can( 'edit_users' ) || ! $user instanceof \WP_User ) {
+		return;
+	}
+	$id   = (int) $user->ID;
+	$done = (string) get_user_meta( $id, WITHDRAWN_META, true );
+
+	echo '<h2 id="dhr-withdraw">' . esc_html__( '회원 탈퇴 처리', 'duckhoo-redesign' ) . '</h2>';
+	echo '<div style="max-width:720px;padding:14px 16px;border:1px solid #f0c2bd;border-radius:10px;background:#fff8f7">';
+
+	if ( '' !== $done ) {
+		echo '<p style="margin:0"><strong>' . esc_html__( '이미 탈퇴 처리된 회원입니다.', 'duckhoo-redesign' ) . '</strong> ' . esc_html( $done ) . '</p></div>';
+		return;
+	}
+	if ( ! admin_can_withdraw( $id ) ) {
+		echo '<p style="margin:0">' . esc_html__( '직원 계정이나 지금 로그인한 계정은 여기서 탈퇴시킬 수 없습니다.', 'duckhoo-redesign' ) . '</p></div>';
+		return;
+	}
+
+	$open   = open_order_count( $id );
+	$points = admin_points( $id );
+
+	echo '<p style="margin:0 0 8px">' . esc_html__( '손님이 직접 탈퇴할 때와 같은 처리입니다: 이름 · 연락처 · 주소를 지우고 로그인을 막습니다. 계정과 주문 기록은 남습니다(거래기록 5년 보존). 되돌릴 수 없습니다.', 'duckhoo-redesign' ) . '</p>';
+	echo '<ul style="margin:0 0 10px 18px;list-style:disc">';
+	echo '<li>' . esc_html( sprintf( '끝나지 않은 주문: %d건', $open ) ) . ( $open ? ' — <strong>' . esc_html__( '탈퇴 뒤에도 주문은 그대로 진행됩니다', 'duckhoo-redesign' ) . '</strong>' : '' ) . '</li>';
+	echo '<li>' . esc_html( sprintf( '남은 적립금: %s원', number_format_i18n( $points ) ) ) . ( $points > 0 ? ' — <strong>' . esc_html__( '탈퇴하면 쓸 수 없게 됩니다', 'duckhoo-redesign' ) . '</strong>' : '' ) . '</li>';
+	echo '</ul>';
+
+	wp_nonce_field( ADMIN_ACTION . '_' . $id, 'dhr_wd_nonce', false );
+	echo '<input type="hidden" name="dhr_wd_user" value="' . esc_attr( (string) $id ) . '">';
+	echo '<label style="display:block;margin:0 0 10px"><input type="checkbox" name="dhr_wd_ok" value="1"> ' . esc_html__( '손님이 탈퇴를 요청했고, 위 내용을 확인했습니다.', 'duckhoo-redesign' ) . '</label>';
+	echo '<button type="submit" class="button" style="border-color:#b42318;color:#b42318" formaction="' . esc_url( admin_url( 'admin-post.php?action=' . ADMIN_ACTION ) ) . '" formnovalidate onclick="return this.form.dhr_wd_ok.checked ? confirm(\'이 회원을 탈퇴 처리합니다. 되돌릴 수 없습니다.\') : (alert(\'확인 칸에 체크해 주세요.\'), false);">' . esc_html__( '이 회원 탈퇴 처리', 'duckhoo-redesign' ) . '</button>';
+	echo '</div>';
+}
+add_action( 'edit_user_profile', __NAMESPACE__ . '\\admin_box', 99 );
+
+/**
+ * 탈퇴 처리.
+ *
+ * @return void
+ */
+function admin_handle(): void {
+	$id = isset( $_POST['dhr_wd_user'] ) ? (int) $_POST['dhr_wd_user'] : 0;
+	if ( ! $id || ! current_user_can( 'edit_users' ) || ! current_user_can( 'edit_user', $id ) ) {
+		wp_die( esc_html__( '권한이 없습니다.', 'duckhoo-redesign' ) );
+	}
+	check_admin_referer( ADMIN_ACTION . '_' . $id, 'dhr_wd_nonce' );
+
+	$back = add_query_arg( 'user_id', $id, admin_url( 'user-edit.php' ) );
+
+	if ( empty( $_POST['dhr_wd_ok'] ) || ! admin_can_withdraw( $id ) || '' !== (string) get_user_meta( $id, WITHDRAWN_META, true ) ) {
+		wp_safe_redirect( add_query_arg( 'dhr_wd', 'no', $back ) . '#dhr-withdraw' );
+		exit;
+	}
+
+	withdraw( $id );
+	update_user_meta( $id, '_duckhoo_withdrawn_by', get_current_user_id() );
+	\WP_Session_Tokens::get_instance( $id )->destroy_all();
+
+	wp_safe_redirect( add_query_arg( 'dhr_wd', 'done', $back ) . '#dhr-withdraw' );
+	exit;
+}
+add_action( 'admin_post_' . ADMIN_ACTION, __NAMESPACE__ . '\\admin_handle' );
+
+/**
+ * 처리 뒤 알림.
+ *
+ * @return void
+ */
+function admin_notice(): void {
+	$s = isset( $_GET['dhr_wd'] ) ? sanitize_key( wp_unslash( $_GET['dhr_wd'] ) ) : '';
+	if ( 'done' === $s ) {
+		echo '<div class="notice notice-success"><p>' . esc_html__( '탈퇴 처리했습니다. 이 계정으로는 더 이상 로그인할 수 없습니다.', 'duckhoo-redesign' ) . '</p></div>';
+	} elseif ( 'no' === $s ) {
+		echo '<div class="notice notice-error"><p>' . esc_html__( '탈퇴 처리하지 않았습니다. 확인 칸에 체크했는지, 직원 계정이 아닌지 확인해 주세요.', 'duckhoo-redesign' ) . '</p></div>';
+	}
+}
+add_action( 'admin_notices', __NAMESPACE__ . '\\admin_notice' );
