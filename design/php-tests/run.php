@@ -2786,9 +2786,9 @@ $GLOBALS['__is_shop'] = false;
 $ok(($BR.'ctx')() === '' && ($BR.'faq_html')() === null, '검색도 분류도 전체 상품도 아니면 FAQ 를 안 그린다');
 // 홈
 $ht = ($BR.'home_title')();
-$ok($ht === '전자담배 액상 · 전담 액상 사이트 액상덕후 | 입호흡 · 폐호흡 6종 · 노보 재고 있음', "홈 제목: 손님이 치는 말 둘 앞에 · 종수 · 노보 재고(재고 있을 때만) → {$ht}");
+$ok($ht === '액상덕후 | 입호흡 액상 · 폐호흡 액상 전문 쇼핑몰 6종 · 노보 재고 있음', "홈 제목: 「입호흡 액상」을 붙여 쓴다 · 종수 · 노보 재고(재고 있을 때만) → {$ht}");
 $hd = ($BR.'home_desc')();
-$ok(str_starts_with($hd, '전자담배 액상(전담 액상) 전문 사이트 액상덕후.') && str_contains($hd, '낱병 8,000원부터') && str_contains($hd, '노보 전 라인 재고 있음') && str_contains($hd, '19세'), '홈 설명: 전담 액상 · 브랜드 · 최저가 · 노보 · 19세');
+$ok(str_starts_with($hd, '입호흡 액상 · 폐호흡 액상 전문 쇼핑몰 액상덕후.') && str_contains($hd, '전자담배 액상(전담 액상) 6종') && str_contains($hd, '낱병 8,000원부터') && str_contains($hd, '노보 전 라인 재고 있음') && str_contains($hd, '19세'), '홈 설명: 전담 액상 · 브랜드 · 최저가 · 노보 · 19세');
 $ok(str_contains(($BR.'home_h1')(), '전담 액상 사이트'), '홈 숨은 h1 에도 전담 액상');
 $GLOBALS['__products'][8101] = new WC_Product(8101, '[노보] 타박멘솔 (9.8mg / 30ml)', 13000.0, false); $GLOBALS['__products'][8104] = new WC_Product(8104, '[노보 리퀴드] 10+1 | 금액 120,000원', 120000.0, false); $GLOBALS['__transients'] = [];
 $ok(!str_contains(($BR.'home_title')(), '노보 재고 있음'), '노보가 전부 품절이면 제목에서 「노보 재고 있음」이 빠진다');

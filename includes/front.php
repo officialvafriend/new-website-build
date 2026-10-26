@@ -660,7 +660,7 @@ function header_html(): void {
 		<a href="<?php echo esc_url( home_url( '/notice/' ) ); ?>">공지사항</a>
 		<a href="<?php echo esc_url( home_url( '/tip/' ) ); ?>">Tip</a>
 		<a href="<?php echo esc_url( inquiry_url() ); ?>">1:1 문의</a>
-		<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">배송조회</a>
+		<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>" rel="nofollow">배송조회</a>
 		<span class="r">19세 미만 판매 금지</span>
 	</div></div>
 	<header class="gnb"><div class="wrap gnb-in">
@@ -763,7 +763,9 @@ function tabbar_html(): void {
 	);
 	echo '<nav class="tabs" aria-label="주요 메뉴">';
 	foreach ( $tabs as $t ) {
-		echo '<a href="' . esc_url( $t[1] ) . '" class="' . ( $t[0] === $k ? 'on' : '' ) . '">' . icon( $t[2] ) . esc_html( $t[3] ) . '</a>'; // phpcs:ignore
+		// 주문내역 · 마이는 로그인해야 열린다 — 네이버가 하위 링크로 집지 않게 nofollow (2026-10-26 사이트 결과에 「주문내역」이 떴다).
+		$rel = in_array( $t[0], array( 'orders', 'my' ), true ) ? ' rel="nofollow"' : '';
+		echo '<a href="' . esc_url( $t[1] ) . '" class="' . ( $t[0] === $k ? 'on' : '' ) . '"' . $rel . '>' . icon( $t[2] ) . esc_html( $t[3] ) . '</a>'; // phpcs:ignore
 	}
 	echo '</nav>';
 }
@@ -1158,7 +1160,7 @@ function footer_html(): void {
 					<a href="<?php echo esc_url( home_url( '/liquid-guide/' ) ); ?>">액상 고르는 법</a>
 					<a href="<?php echo esc_url( home_url( '/mtl-vs-dl/' ) ); ?>">입호흡 vs 폐호흡</a>
 					<a href="<?php echo esc_url( home_url( '/register/' ) ); ?>">회원가입</a>
-					<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>">주문조회</a>
+					<a href="<?php echo esc_url( trailingslashit( $account ) . 'orders/' ); ?>" rel="nofollow">주문조회</a>
 					<a href="<?php echo esc_url( home_url( '/membership-cancel/' ) ); ?>">회원탈퇴</a></div></div>
 			<?php // 고객센터는 접지 않는다 — 전화번호와 영업시간은 찾으러 온 사람이 바로 봐야 한다 ?>
 			<div class="fcol fcol--open"><b>고객센터</b>
