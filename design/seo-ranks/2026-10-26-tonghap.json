@@ -1,0 +1,82 @@
+{
+ "m|노보 액상 종류": {
+  "aiHas": true,
+  "aiTop": 181,
+  "aiSrc": [],
+  "ourRank": 3,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "winter24.kr",
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "skyvape.co.kr",
+   "xn--lg3b70gqves9bgxb.com",
+   "m.cafe.naver.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "xn--o80bv1to3c@205",
+   "winter24.kr@431",
+   "duck-hoo.com@685",
+   "m.blog.naver.c@1694",
+   "skyvape.co.kr@2693",
+   "xn--lg3b70gqve@2924",
+   "m.cafe.naver.c@3306",
+   "navercorp.com@7072"
+  ],
+  "first": 685,
+  "screens": 0.8,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "노보마트",
+   "노보 액상 단종 - 합성니코틴 마지막 물량 정리"
+  ],
+  "docH": 7155
+ },
+ "m|노보 액상": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 6,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "novokorea.com",
+   "abc9121.cafe24.com",
+   "m.cafe.naver.com",
+   "m.blog.naver.com",
+   "duck-hoo.com",
+   "winter24.kr",
+   "navercorp.com"
+  ],
+  "ys": [
+   "xn--o80bv1to3c@3807",
+   "novokorea.com@4085",
+   "abc9121.cafe24@4263",
+   "m.cafe.naver.c@4467",
+   "m.blog.naver.c@5025",
+   "duck-hoo.com@5917",
+   "winter24.kr@6171",
+   "navercorp.com@9308"
+  ],
+  "first": 5917,
+  "screens": 7,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "숏텐츠",
+   "네이버 쇼핑 인기상품",
+   "함께 많이 찾는",
+   "관련질문",
+   "노보액상 타박멘솔과 블랙멘솔의 차이는 무엇인가요?",
+   "노보액상 고를 때 확인할 기준이 무엇인가요?",
+   "노보액상 입호흡용으로 사용할 때 관리 방법이 궁금해요",
+   "노보마트",
+   "노보리퀴드ㅣNOVO LIQUID"
+  ],
+  "docH": 9391
+ }
+}
