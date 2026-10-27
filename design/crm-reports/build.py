@@ -98,7 +98,7 @@ def chart():
 
 def send_table():
     head = ('<table class="st"><tr><th>보낸 날</th><th>무엇을</th><th class="n">받은</th><th class="n">산</th>'
-            '<th class="n">받기 전</th><th class="n">늘어난</th><th class="n">늘어난 돈<small>어림</small></th><th class="n">쓴 적립금</th></tr>')
+            '<th class="n">전환율</th><th class="n">받기 전<small>전환율</small></th><th class="n">차이</th><th class="n">쓴 적립금</th></tr>')
     rows = []
     for s in SENDS:
         lf = lift(s)
@@ -107,8 +107,8 @@ def send_table():
         note = f'<small>{s[8]}</small>' if s[8] else ''
         days = f'<small class="g">{s[9]}일째</small>' if s[9] < 14 else ''
         rows.append(f'<tr><td>{s[0]}{days}</td><td>{tag} {s[2]}{note}</td><td class="n">{s[3]}</td>'
-                    f'<td class="n"><b>{s[4]}</b> <small>{pct(s[4], s[3])}</small></td><td class="n">{s[5]}</td>'
-                    f'<td class="n {cls}"><b>{lf:+d}</b></td><td class="n">{"(위 안)" if s[2] == "노보 지원금 다시 알림" else ("약 " + man(gain(s)) if lf > 0 else "없음")}</td>'
+                    f'<td class="n">{s[4]}</td><td class="n"><b>{pct(s[4], s[3])}</b></td><td class="n">{pct(s[5], s[3])}</td>'
+                    f'<td class="n {cls}"><b>{(s[4] - s[5]) / s[3] * 100:+.1f}%p</b></td>'
                     f'<td class="n">{man(s[7]) if s[7] else "-"}</td></tr>')
     for d, nm, n, amt in TODAY:
         rows.append(f'<tr class="td"><td>{d}</td><td><i class="tg p">적립금</i> {nm}<small>오늘 넣음 · 결과는 11월 보고</small></td>'
@@ -244,12 +244,11 @@ p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   </div>''')
 
 p2 = frame(2, '보낸 것마다', f'''  <div class="eb">2 · 보낸 것마다</div>
-  <h2>15일 동안 {len(SENDS) + len(TODAY)}번 보냈습니다</h2>
-  <p class="lead">「늘어난」이 클수록 효과가 있었던 것입니다. 「N일째」는 14일이 덜 찬 줄입니다.</p>
+  <h2>보낸 것마다 전환율</h2>
+  <p class="lead"><b>전환율</b> = 받은 사람 중 받은 뒤 14일 안에 입금한 사람. <b>받기 전</b>은 같은 사람들이 받기 전 같은 날수 동안 산 비율이라, <b>차이</b>가 곧 문자 · 적립금 효과입니다. 「N일째」는 14일이 덜 찬 줄입니다.</p>
   {send_table()}
   <div class="box"><div class="t">읽는 법</div>
-    <p>· <b>「늘어난 돈」은 더 산 사람 몫만 어림한 값입니다</b> (더 산 사람 × 산 사람 한 명당 낸 돈). 원래 샀을 사람(받기 전)이 낸 돈은 넣지 않았습니다. 늘어난 사람이 없으면 「없음」입니다.</p>
-    <p>· 한 사람이 여러 줄에 들 수 있어 줄끼리 더하지 않습니다. 10/14 신상품 문자의 +10명 중 일부는 전날 감사 적립금을 받은 사람일 수 있습니다 (겹침은 아직 확인 못 함).</p>
+    <p>· 한 사람이 여러 줄에 들 수 있어 줄끼리 더하지 않습니다. 10/14 신상품 문자의 +1.0%p 중 일부는 전날 감사 적립금을 받은 사람일 수 있습니다 (겹침은 아직 확인 못 함).</p>
     <p>· 노보 다시 알림 뒤 산 6명은 위 14명 안에 있습니다.</p>
     <p>· 10/13 · 10/16 적립금은 기한 뒤 안 쓴 몫을 거뒀습니다. 비용은 「쓴 적립금」뿐입니다.</p>
     <p>· 미입금 안내 문자(10/14 · 17명)는 이 방식으로 잴 수 없어 뺐습니다.</p></div>''')
