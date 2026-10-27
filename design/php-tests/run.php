@@ -3432,5 +3432,7 @@ $ok($oa['people']===2 && $oa['messages']===3 && $oa['buyers']===1 && $oa['orders
 $tx = ($CS.'text')([['name'=>'1014_발송.xlsx','date'=>'2026-10-14','kw'=>['영주사과'],'im'=>['n'=>2,'buyers'=>1,'rate'=>0.5,'orders'=>1,'sales'=>50000,'before'=>['buyers'=>0],'done'=>true,'elapsed'=>14],'prod'=>$ps]], $oa, 14);
 $ok(strpos($tx, '10-14 1014_발송.xlsx') !== false && strpos($tx, '[영주사과]') !== false && !preg_match('/01[016789]\d{7,8}/', $tx), '문자 참여: 붙여 넣기 글에 번호가 없다');
 
+$ok(($CS.'guess_kind')('1014_신상품_995명.xlsx')==='신제품' && ($CS.'guess_kind')('1020_노보단종_212명.xls')==='노보' && ($CS.'guess_kind')('1016_VIP_102명.xlsx')==='적립금' && ($CS.'guess_kind')('1013_추가_1명.xlsx')==='기타', 'CRM 성과: 파일 이름으로 종류 짐작');
+$ok(($CS.'hp')('01011112222')===($CS.'hp')('01011112222') && ($CS.'hp')('01011112222')!==($CS.'hp')('01011112223') && strlen(($CS.'hp')('01011112222'))===20 && strpos(($CS.'hp')('01011112222'),'0101111')===false, 'CRM 성과: 번호는 해시로만 (같은 번호는 같은 값)');
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
