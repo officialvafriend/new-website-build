@@ -33,6 +33,7 @@ const SLUG   = 'duckhoo-points';
 const OPT    = 'duckhoo_points_batches';
 const META   = '_dhr_pts_';
 const RUN    = '_r'; // META . 묶음 . RUN = 그 손님에게 넣은 파일(업로드) 표시.
+const WAS    = '_was'; // META . 묶음 . WAS = 받았다가 거둔 금액 (받은 적 있음 기록 · 다시 넣기를 막지 않는다).
 const MAX    = 3000;
 const AMT_HI = 100000;
 const AMT_LO = 100; // 이보다 적은 숫자는 금액이 아니라 날짜 · 병 수일 가능성이 크다 (10/16 「10월 23일까지」의 23 이 23원으로 들어갔다).
@@ -520,6 +521,12 @@ function run_revoke( string $key, float $budget = 20.0, array $only = array() ):
 			\Duckhoo\Redesign\Points\grant( $uid, -$take, $label . ' 사용기간 종료' );
 			$sum += $take;
 		}
+		// 받은 적 있음은 남긴다 — 참여 · CRM 기간 성과가 거둔 뒤에도 받은 사람을 센다 (10/13 묶음이 0명으로 나왔다).
+		update_user_meta( $uid, META . $key . WAS, $amt );
+		$run = (string) get_user_meta( $uid, META . $key . RUN, true );
+		if ( '' !== $run ) {
+			update_user_meta( $uid, META . $key . WAS . RUN, $run );
+		}
 		delete_user_meta( $uid, META . $key );
 		delete_user_meta( $uid, META . $key . RUN );
 		++$n;
@@ -849,17 +856,7 @@ function participation_for( string $key, int $until = 0 ): ?array {
 	$b      = $all[ $key ];
 	$at     = (int) ( $b['created'] ?? time() );
 	$kinds  = (array) ( $b['kinds'] ?? array() );
-	$runs   = (array) ( $b['runs'] ?? array() );
-	$urun   = array();
-	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key . RUN ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
-		$urun[ (int) $r['user_id'] ] = (string) $r['meta_value'];
-	}
-	$recips = array();
-	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
-		$uid            = (int) $r['user_id'];
-		$ua             = (int) ( $runs[ $urun[ $uid ] ?? '' ]['at'] ?? 0 );
-		$recips[ $uid ] = array( (int) $r['meta_value'], (string) ( $kinds[ $uid ] ?? '' ), $ua );
-	}
+	$recips = received( $key, $b );
 	$off    = (int) ( function_exists( 'wp_timezone' ) ? ( new \DateTime( 'now', wp_timezone() ) )->getOffset() : 9 * 3600 );
 	$orders = array();
 	foreach ( ( function_exists( '\\Duckhoo\\Redesign\\Anatomy\\orders' ) ? \Duckhoo\Redesign\Anatomy\orders() : array() ) as $o ) {
@@ -873,6 +870,75 @@ function participation_for( string $key, int $until = 0 ): ?array {
 	$res  = array( 'label' => (string) $b['label'], 'at' => $at, 'kinds' => count( $kinds ), 'p' => participation( $recips, $orders, used_points( $at ), $at, $now, $paid, $pend ) );
 	set_transient( $tk, $res, 10 * MINUTE_IN_SECONDS );
 	return $res;
+}
+
+/**
+ * 원장 줄에서 그 묶음으로 받은 사람 — 거둘 때 기록을 지우던 때(2026-10-27 전)에 거둔 묶음을 되살린다. 순수.
+ *
+ * @param array<int,array{user:int|string,amount:int|string,reason:string}> $rows 원장 줄.
+ * @return array<int,int> 회원 => 받은 금액.
+ */
+function ledger_received( array $rows, string $label ): array {
+	$out = array();
+	foreach ( $rows as $r ) {
+		$uid = (int) ( $r['user'] ?? 0 );
+		$amt = abs( (int) ( $r['amount'] ?? 0 ) );
+		if ( $uid > 0 && $amt > 0 && 1 === is_batch_reason( (string) ( $r['reason'] ?? '' ), $label ) ) {
+			$out[ $uid ] = ( $out[ $uid ] ?? 0 ) + $amt;
+		}
+	}
+	return $out;
+}
+
+/** 원장 표에서 그 묶음 이름으로 찍힌 줄을 읽는다. 표 · 칸을 못 알아보면 빈 배열. */
+function ledger_rows_for( string $label ): array {
+	global $wpdb;
+	$table = log_table();
+	if ( '' === $label || (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) { // phpcs:ignore WordPress.DB
+		return array();
+	}
+	$map = guess_cols( array_map( 'strval', (array) $wpdb->get_col( 'SHOW COLUMNS FROM `' . esc_sql( $table ) . '`' ) ) ); // phpcs:ignore WordPress.DB
+	if ( ! $map ) {
+		return array();
+	}
+	$q = $wpdb->prepare(
+		'SELECT `' . esc_sql( $map['user'] ) . '` AS user, `' . esc_sql( $map['amount'] ) . '` AS amount, `' . esc_sql( $map['reason'] ) . '` AS reason FROM `' . esc_sql( $table ) . '` WHERE `' . esc_sql( $map['reason'] ) . '` LIKE %s', // phpcs:ignore WordPress.DB
+		$wpdb->esc_like( $label ) . '%'
+	);
+	return (array) $wpdb->get_results( $q, ARRAY_A ); // phpcs:ignore WordPress.DB
+}
+
+/**
+ * 그 묶음으로 받은 적 있는 사람 — 지금 갖고 있는 사람 + 받았다가 거둔 사람.
+ * 거둔 기록이 없는 옛 묶음(거둘 때 지웠다)은 원장에서 되살린다.
+ *
+ * @return array<int,array{0:int,1:string,2:int}> 회원 => [금액, 문자종류, 넣은 시각(모르면 0)].
+ */
+function received( string $key, array $b ): array {
+	global $wpdb;
+	$kinds = (array) ( $b['kinds'] ?? array() );
+	$runs  = (array) ( $b['runs'] ?? array() );
+	$out   = array();
+	foreach ( array( '', WAS ) as $suf ) {
+		$urun = array();
+		foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key . $suf . RUN ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+			$urun[ (int) $r['user_id'] ] = (string) $r['meta_value'];
+		}
+		foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key . $suf ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+			$uid = (int) $r['user_id'];
+			if ( ! isset( $out[ $uid ] ) ) {
+				$out[ $uid ] = array( (int) $r['meta_value'], (string) ( $kinds[ $uid ] ?? '' ), (int) ( $runs[ $urun[ $uid ] ?? '' ]['at'] ?? 0 ) );
+			}
+		}
+	}
+	if ( ! empty( $b['revoked'] ) || ! empty( $b['part_revoked'] ) ) {
+		foreach ( ledger_received( ledger_rows_for( (string) ( $b['label'] ?? '' ) ), (string) ( $b['label'] ?? '' ) ) as $uid => $amt ) {
+			if ( ! isset( $out[ $uid ] ) ) {
+				$out[ $uid ] = array( $amt, (string) ( $kinds[ $uid ] ?? '' ), 0 );
+			}
+		}
+	}
+	return $out;
 }
 
 /** 참여 상자. */
@@ -993,11 +1059,7 @@ function detail_data( string $key, array $extra = array() ): ?array {
 	}
 	$b      = $all[ $key ];
 	$at     = (int) ( $b['created'] ?? time() );
-	$kinds  = (array) ( $b['kinds'] ?? array() );
-	$recips = array();
-	foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = %s", META . $key ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
-		$recips[ (int) $r['user_id'] ] = array( (int) $r['meta_value'], (string) ( $kinds[ (int) $r['user_id'] ] ?? '' ) );
-	}
+	$recips = array_map( fn( $x ) => array( $x[0], $x[1] ), received( $key, $b ) );
 	$want = array_fill_keys( array_merge( array_keys( $recips ), array_map( 'intval', $extra ) ), true );
 	$off  = (int) ( function_exists( 'wp_timezone' ) ? ( new \DateTime( 'now', wp_timezone() ) )->getOffset() : 9 * 3600 );
 	$paid = function_exists( '\\Duckhoo\\Redesign\\Crm\\paid_statuses' ) ? \Duckhoo\Redesign\Crm\paid_statuses() : array( 'payment-confirmed', 'ready-to-ship', 'shipping', 'delivered', 'completed', 'processing' );

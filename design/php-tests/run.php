@@ -3431,6 +3431,17 @@ $oa = ($CS.'overall')([['phones'=>['01011111111','01022222222'],'at'=>$at],['pho
 $ok($oa['people']===2 && $oa['messages']===3 && $oa['buyers']===1 && $oa['orders']===1 && $oa['sales']==50000.0, '문자 참여: 합계는 한 사람 · 한 주문을 한 번만 (두 문자 받아도)');
 $tx = ($CS.'text')([['name'=>'1014_발송.xlsx','date'=>'2026-10-14','kw'=>['영주사과'],'im'=>['n'=>2,'buyers'=>1,'rate'=>0.5,'orders'=>1,'sales'=>50000,'before'=>['buyers'=>0],'done'=>true,'elapsed'=>14],'prod'=>$ps]], $oa, 14);
 $ok(strpos($tx, '10-14 1014_발송.xlsx') !== false && strpos($tx, '[영주사과]') !== false && !preg_match('/01[016789]\d{7,8}/', $tx), '문자 참여: 붙여 넣기 글에 번호가 없다');
+/* ── 거둔 묶음의 받은 사람 (원장에서 되살리기) ── */
+$lr = ("Duckhoo\\Redesign\\Points\\Admin\\ledger_received")([
+ ['user'=>1,'amount'=>5000,'reason'=>'10월 감사 적립금'],
+ ['user'=>1,'amount'=>-5000,'reason'=>'10월 감사 적립금 사용기간 종료'],
+ ['user'=>2,'amount'=>'8800','reason'=>'10월 감사 적립금'],
+ ['user'=>3,'amount'=>3000,'reason'=>'10월 감사 적립금 추가'],
+ ['user'=>4,'amount'=>23,'reason'=>'10월 감사 적립금'],
+ ['user'=>4,'amount'=>5000,'reason'=>'10월 감사 적립금'],
+ ['user'=>0,'amount'=>5000,'reason'=>'10월 감사 적립금'],
+], '10월 감사 적립금');
+$ok($lr===[1=>5000,2=>8800,4=>5023], '거둔 묶음: 원장의 넣은 줄만 센다 (거둔 줄 · 이름이 더 긴 다른 묶음 · 회원 없는 줄 빼고, 두 번 받으면 더한다)');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);

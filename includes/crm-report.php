@@ -200,7 +200,7 @@ function text( array $r ): string {
 		$L[] = '적립금 묶음';
 		foreach ( $r['points'] as $p ) {
 			$t   = (array) ( $p['p'][''] ?? array() );
-			$L[] = sprintf( '· %s — 넣은 날 %s · %s명 · %s원%s', $p['label'], implode( ', ', array_map( fn( $x ) => substr( $x['at'], 5, 5 ) . ' ' . $w( $x['n'] ) . '명', $p['runs'] ) ) ?: substr( $p['created'], 5, 5 ), $w( $p['n'] ), $w( $p['sum'] ), $p['revoked'] ? ' (거둠)' : '' );
+			$L[] = sprintf( '· %s — 넣은 날 %s · %s명 · %s원%s', $p['label'], implode( ', ', array_map( fn( $x ) => substr( $x['at'], 5, 5 ) . ' ' . $w( $x['n'] ) . '명', $p['runs'] ) ) ?: substr( $p['created'], 5, 5 ), $w( $p['revoked'] && $t ? $t['n'] : $p['n'] ), $w( $p['revoked'] && $t ? $t['given'] : $p['sum'] ), $p['revoked'] ? ' 넣었다가 거둠' : '' );
 			if ( $t ) {
 				$L[] = sprintf( '  받은 %s명 중 산 사람 %s명 (%s) · 적립금 쓴 사람 %s명 (%s) · 주문 %s건 · 실입금 %s원 · 쓴 적립금 %s원 · 넣기 전 같은 기간 산 사람 %s명', $w( $t['n'] ), $w( $t['buyers'] ), $pc( $t['buyers'], $t['n'] ), $w( $t['users'] ), $pc( $t['users'], $t['n'] ), $w( $t['orders'] ), $w( $t['sales'] ), $w( $t['used'] ), $w( $t['before'] ) );
 				foreach ( $p['p'] as $k => $v ) {
