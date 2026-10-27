@@ -122,6 +122,7 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/crm-sms.php';   // 고객 세그먼트 — SMS 수신 동의 · 문자 사이트 양식(.xls)
 	require_once plugin_dir_path( __FILE__ ) . 'includes/crm-plan.php';  // 고객 세그먼트 — 주차 플랜 · 보상 라벨 · 한 사람에 한 보상
 	require_once plugin_dir_path( __FILE__ ) . 'includes/crm-impact.php'; // 고객 세그먼트 — 발송 성과 (받은 사람이 샀는가)
+	require_once plugin_dir_path( __FILE__ ) . 'includes/crm-sends.php';  // 마케팅 → 문자 참여 — 보낸 파일 여러 개를 한 번에 (읽기 전용)
 	// 도구 → 코드 찾기 — 화면 문구가 테마 · 스니펫 어디서 나오는지 (읽기 전용).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/finder.php';
 	// 마케팅 → 쿠폰 한 번에 만들기 — 손님마다 다른 금액의 쿠폰을 한 번에 만들고 문자 목록을 뽑는다.

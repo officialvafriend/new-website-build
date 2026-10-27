@@ -3408,5 +3408,29 @@ $er = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [501=>10000, 502=>3
 $ok(count($er)===3 && $er[0][0]==='가나' && $er[1][1]==='01011112222' && $er[1][4]===2 && $er[1][5]===130000 && $er[1][6]===13000, '내려받기: 전부 · 이름순 · 번호 숫자만 · 넣은 뒤 주문 · 실입금 · 쓴 적립금(그 사람 주문만)');
 $eo = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [], 'ordered'); $en = ("Duckhoo\\Redesign\\Points\\Admin\\export_rows")($ed, [], 'not');
 $ok(count($eo)===1 && $eo[0][0]==='나다' && count($en)===2 && $en[0][0]==='가나', '내려받기: 주문한 사람만 · 아직 안 산 사람만으로 나뉜다');
+/* ── 문자 참여 (includes/crm-sends.php) ── */
+require_once dirname(__DIR__, 2).'/includes/crm-sends.php';
+$CS = 'Duckhoo\\Redesign\\CrmSends\\';
+$ok(($CS.'send_date')('1014_발송_995명.xlsx', 2026, 10) === '2026-10-14' && ($CS.'send_date')('액상덕후_1013_발송_954명.xlsx', 2026, 10) === '2026-10-13', '문자 참여: 파일 이름 1014_ · _1013_ → 올해 날짜');
+$ok(($CS.'send_date')('tothemoon_20261008.xls', 2026, 10) === '2026-10-08' && ($CS.'send_date')('1225_x.xlsx', 2027, 1) === '2026-12-25' && ($CS.'send_date')('노보_리마인드.xlsx', 2026, 10) === '', '문자 참여: 8자리 날짜 · 이번 달보다 뒤면 작년 · 날짜 없으면 빈칸');
+$kp = ($CS.'parse_products')("1014 = 영주사과, 고창수박\n잡음\n1019: 환타지아");
+$ok($kp === ['1014'=>['영주사과','고창수박'],'1019'=>['환타지아']], '문자 참여: 신상품 낱말 읽기');
+$at = 1_000_000_000; $D = 86400;
+$so = [
+  ['id'=>1,'ts'=>$at+1*$D,'s'=>'delivered','t'=>30000,'u'=>7,'p'=>''],
+  ['id'=>2,'ts'=>$at+2*$D,'s'=>'delivered','t'=>20000,'u'=>0,'p'=>'01099999999'], // 명단 밖 — 가게 전체 수량에만
+  ['id'=>3,'ts'=>$at+3*$D,'s'=>'on-hold','t'=>20000,'u'=>7,'p'=>''],             // 입금 전 — 안 센다
+];
+$si = [1=>[['name'=>'[액상덕후] 영주 사과 (9.8mg)','qty'=>2,'total'=>26000]], 2=>[['name'=>'영주사과','qty'=>1,'total'=>13000]], 3=>[['name'=>'영주사과','qty'=>5,'total'=>1]]];
+$ps = ($CS.'product_stats')(['01011111111'], $at, 14, $so, $si, [7=>['01011111111']], ['영주사과'], ['delivered']);
+$ok($ps['buyers']===1 && $ps['qty']===2 && $ps['store_qty']===3, '문자 참여: 신상품 — 받은 사람 1명 2개 · 가게 전체 3개 (빈칸 무시 · 입금 전 뺌)');
+$oa = ($CS.'overall')([['phones'=>['01011111111','01022222222'],'at'=>$at],['phones'=>['01011111111'],'at'=>$at+$D]], [
+  ['id'=>1,'ts'=>$at+2*$D,'s'=>'delivered','t'=>50000,'u'=>7,'p'=>''],
+  ['id'=>2,'ts'=>$at+30*$D,'s'=>'delivered','t'=>9,'u'=>7,'p'=>''],
+], [7=>['01011111111']], 14, ['delivered'], ['cancelled']);
+$ok($oa['people']===2 && $oa['messages']===3 && $oa['buyers']===1 && $oa['orders']===1 && $oa['sales']==50000.0, '문자 참여: 합계는 한 사람 · 한 주문을 한 번만 (두 문자 받아도)');
+$tx = ($CS.'text')([['name'=>'1014_발송.xlsx','date'=>'2026-10-14','kw'=>['영주사과'],'im'=>['n'=>2,'buyers'=>1,'rate'=>0.5,'orders'=>1,'sales'=>50000,'before'=>['buyers'=>0],'done'=>true,'elapsed'=>14],'prod'=>$ps]], $oa, 14);
+$ok(strpos($tx, '10-14 1014_발송.xlsx') !== false && strpos($tx, '[영주사과]') !== false && !preg_match('/01[016789]\d{7,8}/', $tx), '문자 참여: 붙여 넣기 글에 번호가 없다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
