@@ -26,6 +26,21 @@ def rk(f):
     return {q: (v.get('hits') or [[None]])[0][0] for q, v in a.items()}
 r20, r26 = rk('2026-10-20-buy.json'), rk('2026-10-26-buy.json')
 NQ = len(r26)
+# 노보: 10/19 (전수) + 10/20 (단종 말) vs 10/27
+def first_hit(v):
+    h = v.get('hits') or []
+    return (h[0][0] if isinstance(h[0], list) else h[0]) if h else None
+nb = {q: first_hit(v) for q, v in json.load(open(f'{RANKS_DIR}/2026-10-19-all.json'))['ranks'].items() if '노보' in q}
+nb.update({q: first_hit(v) for q, v in json.load(open(f'{RANKS_DIR}/2026-10-20-info.json')).items() if '노보' in q})
+na = {q: first_hit(v) for q, v in json.load(open(f'{RANKS_DIR}/2026-10-27-novo.json'))['ranks'].items()}
+NVQ = list(na)
+NV_PAGE1 = (sum(1 for q in NVQ if nb.get(q)), sum(1 for q in NVQ if na[q]))
+NV_TOP3 = (sum(1 for q in NVQ if nb.get(q) and nb[q] <= 3), sum(1 for q in NVQ if na[q] and na[q] <= 3))
+_n = lambda v: v or 99
+NV_UP = sorted([q for q in NVQ if _n(na[q]) < _n(nb.get(q))], key=lambda q: _n(na[q]))
+NV_SAME = [q for q in NVQ if _n(na[q]) == _n(nb.get(q))]
+NV_DOWN = sorted([q for q in NVQ if _n(na[q]) > _n(nb.get(q))], key=lambda q: _n(na[q]))
+G_NOVO_PAGES = 36 + 24 + 17 + 17 + 2 + 1   # 구글 페이지 표 10/1~26, 노보 페이지 클릭 합
 one20 = sum(v == 1 for v in r20.values()); one26 = sum(v == 1 for v in r26.values())
 top3_20 = sum(1 for v in r20.values() if v and v <= 3); top3_26 = sum(1 for v in r26.values() if v and v <= 3)
 ONES = [q for q, v in r26.items() if v == 1]
@@ -99,6 +114,13 @@ def down_table():
     for q in DOWN:
         h += f'<tr><td>{q}</td><td class="n g">{pos(r20.get(q))}</td><td class="ar">→</td><td class="n"><b>{pos(r26.get(q))}</b></td></tr>'
     return h + '</tbody></table>'
+def nv_table(qs, title):
+    h = f'<h3 style="margin-top:8pt">{title} {len(qs)}개</h3><table class="dn"><tbody>'
+    for q in qs:
+        a = na[q]
+        note = ' <span class="g" style="font-size:9.5pt">(판매 중지)</span>' if q == '노보 그린펀치' else ''
+        h += f'<tr><td>{q}{note}</td><td class="n g">{pos(nb.get(q))}</td><td class="ar">→</td><td class="n"><b class="{"acc" if a == 1 else ""}">{pos(a)}</b></td></tr>'
+    return h + '</tbody></table>'
 def chips(qs, cls=''):
     return f'<div class="chips {cls}">' + ''.join(f'<span>{q}</span>' for q in qs) + '</div>'
 
@@ -152,7 +174,7 @@ th {{ text-align: left; font-size: 10pt; color: #6B7280; font-weight: 700; borde
 td {{ border-bottom: 1px solid #E5E9EE; padding: 6pt 6pt; }}
 .n {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
 .ar {{ color: #94A3B8; text-align: center; width: 14pt; padding: 6pt 0; }}
-table.dn {{ margin-top: 0; }} table.dn td {{ padding: 5pt 6pt; }}
+table.dn {{ margin-top: 0; }} table.dn td {{ padding: 4pt 6pt; }}
 .chart {{ border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 12pt; }}
 .legend {{ display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }}
 .legend i {{ display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: {SKY}; margin-right: 4pt; vertical-align: -1pt; }}
@@ -178,7 +200,7 @@ def frame(no, title, body):
     return f'''<section class="page">
   <div class="run"><span>10월 네이버 검색 보고</span><span>{no} · {title}</span></div>
 {body}
-  <div class="foot"><span>10월 네이버 검색 보고</span><span><b>{no}</b> / 4</span></div>
+  <div class="foot"><span>10월 네이버 검색 보고</span><span><b>{no}</b> / 5</span></div>
 </section>'''
 
 cover = f'''<section class="page cover">
@@ -241,7 +263,24 @@ p3 = frame(3, '검색 순위', f'''  <div class="eb">3 · 검색 순위</div>
   <h3>지금 1위인 말 {len(ONES)}개</h3>
   {chips(ONES)}''')
 
-p4 = frame(4, '다음 달', f'''  <div class="eb">4 · 다음 달</div>
+pn = frame(4, '노보', f'''  <div class="eb">4 · 노보</div>
+  <h2>노보는 「단종」 검색에서 크게 올랐고,<br>{ul('「노보 액상 재고」는 1위에서 내려왔습니다')}</h2>
+  <p class="lead">노보 검색어 {len(NVQ)}개를 10월 19일(단종 말 3개는 20일)과 오늘(27일) 같은 방법으로 쟀습니다.</p>
+  <div class="goals" style="margin-top:0">
+    <div class="goal"><div class="l">첫 쪽에 나오는 노보 검색어</div><div class="v">{NV_PAGE1[0]} → {NV_PAGE1[1]}<small>개</small></div><div class="d">{len(NVQ)}개 중</div></div>
+    <div class="goal"><div class="l">3위 안</div><div class="v">{NV_TOP3[0]} → {NV_TOP3[1]}<small>개</small></div><div class="d">1위는 「노보 액상 품절」 하나</div></div>
+    <div class="goal"><div class="l">구글에서 노보 화면으로</div><div class="v">{G_NOVO_PAGES}<small>번</small></div><div class="d">구글 전체의 {G_NOVO_PAGES / G_CLK * 100:.0f}% (10/1~26)</div></div>
+  </div>
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div>{nv_table(NV_UP, '오른 말')}</div>
+    <div>{nv_table(NV_DOWN, '내려간 말')}<p class="g" style="font-size:10.5pt;margin:0"><b style="color:#111">그대로 {len(NV_SAME)}개</b> · {' · '.join(f'{q} {pos(na[q])}' for q in NV_SAME)}</p></div>
+  </div>
+  <div class="box"><div class="t">읽는 법</div>
+    <p>· 「노보 단종」 {pos(nb.get('노보 단종'))} → {pos(na['노보 단종'])}, 「노보 액상 단종」 {pos(nb.get('노보 액상 단종'))} → {pos(na['노보 액상 단종'])}. 단종 소식을 찾는 사람에게 우리 화면이 보이기 시작했습니다.</p>
+    <p>· 맛 이름 검색(블랙멘솔 · 아메리카노 · 엠에스블랜드 · 코코넛커피)은 첫 쪽 밖에서 첫 쪽 안으로 들어왔습니다.</p>
+    <p>· 큰 말 「노보 액상」은 손님이 보는 네이버 첫 화면에서 우리가 여섯째 사이트이고, 폰으로 일곱 화면쯤 내려야 나옵니다 (10/26).</p></div>''')
+
+p4 = frame(5, '다음 달', f'''  <div class="eb">5 · 다음 달</div>
   <h2>11월에 할 일 셋</h2>
   <div class="todo"><span class="no">1</span><div><h3>넓은 말 하나를 첫 쪽으로</h3><p>「입호흡 액상」을 첫 화면 제목에 넣어 두었습니다. 11월 9일에 첫 쪽에 들었는지 봅니다.</p></div></div>
   <div class="todo"><span class="no">2</span><div><h3>자주 보이는데 덜 눌리는 상품에 설명 글</h3><p>디톡스 알로에베라 · 펠릭스 더블라임 · 마르키사 라즈베리부터 붙입니다. (구글 통계에서 찾은 상품)</p></div></div>
@@ -254,12 +293,12 @@ p4 = frame(4, '다음 달', f'''  <div class="eb">4 · 다음 달</div>
   </div>
   <div class="src"><p><b>숫자 출처</b></p>
     <p>· 보인 · 들어온 횟수: 네이버 서치어드바이저 날짜별 합계, 9월 27일 ~ 10월 26일 (30일)</p>
-    <p>· 순위: 정해 둔 {NQ}개 말을 10월 20일 · 26일에 직접 검색 (블로그 · 카페 섞인 첫 쪽 20개 안 자리)</p>
+    <p>· 순위: 정해 둔 {NQ}개 말을 10월 20일 · 26일에, 노보 {len(NVQ)}개는 10월 19 · 20일과 27일에 직접 검색 (블로그 · 카페 섞인 첫 쪽 20개 안 자리)</p>
     <p>· 구글: 구글 서치콘솔 10월 1 ~ 26일 클릭 {G_CLK}번 ÷ 26일</p></div>''')
 
 html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 네이버 검색 보고</title>
 <link rel="stylesheet" href="../demo-src/pretendard.css">{CSS}</head><body>
-{cover}{p1}{p2}{p3}{p4}
+{cover}{p1}{p2}{p3}{pn}{p4}
 </body></html>'''
 open(OUT, 'w', encoding='utf-8').write(html)
-print('ok', one20, one26, top3_20, top3_26, len(UP), len(DOWN), len(NONE), round(IMP_DROP), round(CLK_DROP), W1, WL)
+print('novo', NV_PAGE1, NV_TOP3, len(NV_UP), len(NV_SAME), len(NV_DOWN)); print('ok', one20, one26, top3_20, top3_26, len(UP), len(DOWN), len(NONE), round(IMP_DROP), round(CLK_DROP), W1, WL)
