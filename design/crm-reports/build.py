@@ -61,6 +61,7 @@ NEW_LIFT = sum(lift(s) for s in NEW)
 NEW_SALES = sum(s[6] for s in NEW)
 USED = sum(s[7] or 0 for s in SENDS)
 AGAIN_X = STORE['again'] / STORE['p_again']
+AGAIN_SALES = 10428052          # 이번 15일 다시 산 손님 실입금 (처음 산 손님 10,217,540)
 SALES_UP = STORE['sales'] / STORE['p_sales'] - 1
 AOV_DN = 1 - STORE['aov'] / STORE['p_aov']
 
@@ -107,7 +108,7 @@ def send_table():
         days = f'<small class="g">{s[9]}일째</small>' if s[9] < 14 else ''
         rows.append(f'<tr><td>{s[0]}{days}</td><td>{tag} {s[2]}{note}</td><td class="n">{s[3]}</td>'
                     f'<td class="n"><b>{s[4]}</b> <small>{pct(s[4], s[3])}</small></td><td class="n">{s[5]}</td>'
-                    f'<td class="n {cls}"><b>{lf:+d}</b></td><td class="n">{man(s[6]) if s[6] else "-"}</td>'
+                    f'<td class="n {cls}"><b>{lf:+d}</b></td><td class="n">{"(위 안)" if s[2] == "노보 지원금 다시 알림" else (man(s[6]) if s[6] else "-")}</td>'
                     f'<td class="n">{man(s[7]) if s[7] else "-"}</td></tr>')
     for d, nm, n, amt in TODAY:
         rows.append(f'<tr class="td"><td>{d}</td><td><i class="tg p">적립금</i> {nm}<small>오늘 넣음 · 결과는 11월 보고</small></td>'
@@ -247,7 +248,8 @@ p2 = frame(2, '보낸 것마다', f'''  <div class="eb">2 · 보낸 것마다</d
   <p class="lead">「늘어난」이 클수록 효과가 있었던 것입니다. 「N일째」는 14일이 덜 찬 줄입니다.</p>
   {send_table()}
   <div class="box"><div class="t">읽는 법</div>
-    <p>· <b>노보 두 줄은 거의 같은 사람입니다.</b> 다시 알림 뒤 산 6명은 위 14명 안에 있어 더하지 않습니다.</p>
+    <p>· <b>줄마다 실입금을 더하지 않습니다.</b> 한 사람이 여러 줄에 듭니다 (10/13 적립금을 받고 10/14 신상품 문자도 받은 사람 등). 더하면 {man(sum(x[6] for x in SENDS if x[2] != '노보 지원금 다시 알림'))}으로, 15일 동안 다시 산 손님 실입금 {man(AGAIN_SALES)}보다 커집니다.</p>
+    <p>· 노보 다시 알림 뒤 산 6명은 위 14명 안에 있습니다.</p>
     <p>· 10/13 · 10/16 적립금은 기한 뒤 안 쓴 몫을 거뒀습니다. 비용은 「쓴 적립금」뿐입니다.</p>
     <p>· 미입금 안내 문자(10/14 · 17명)는 이 방식으로 잴 수 없어 뺐습니다.</p></div>''')
 
