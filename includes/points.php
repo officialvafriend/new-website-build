@@ -363,12 +363,19 @@ function return_points( $order ): int {
 	update_user_meta( $uid, '_keyple_points', $before + $amount );
 	wd_log_keyple_points_change( $uid, $amount, $label );
 
-	// 가입 적립금 주머니 — 비어 있는 만큼만, 지급액을 넘지 않게.
-	$grant = function_exists( 'wd_signup_point_amount' ) ? (int) wd_signup_point_amount() : 8800;
-	$pot   = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
-	$back  = max( 0, min( $amount, $grant - $pot ) );
+	// 가입 적립금 주머니 — 이 주문이 그 주머니에서 실제로 뺀 만큼만 되돌린다.
+	// 주문 때 찍어 둔 주머니 값(전 · 후)이 있어야 안다. 없으면 되돌리지 않는다 —
+	// 전에는 「비어 있는 만큼」 채웠는데, 9월에 가입 적립금을 다 쓴 손님이 10월에 일반 적립금으로
+	// 주문 · 취소하자 주머니가 8,800 으로 되살아나 그만큼이 「가입 적립금」으로 묶였다 (2026-10-27,
+	// 10,700원 중 1,900원만 쓸 수 있었다). 되돌리지 않으면 그 돈은 일반 적립금으로 남아 어디든 쓴다.
+	$back = signup_taken( $order, $amount );
 	if ( $back > 0 ) {
-		update_user_meta( $uid, '_wd_signup_point_balance', $pot + $back );
+		$pot   = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
+		$grant = function_exists( 'wd_signup_point_amount' ) ? (int) wd_signup_point_amount() : 8800;
+		$back  = max( 0, min( $back, $grant - $pot ) );
+		if ( $back > 0 ) {
+			update_user_meta( $uid, '_wd_signup_point_balance', $pot + $back );
+		}
 	}
 
 	$order->update_meta_data( '_duckhoo_points_returned', $amount );
@@ -404,5 +411,45 @@ function on_cancel( $order_id, $order = null ): void {
 	}
 	note_on_cancel( $order_id, $order );
 }
+/**
+ * 이 주문이 가입 적립금 주머니에서 뺀 금액 — 주문 때 찍어 둔 전 · 후 값의 차. 모르면 0.
+ *
+ * @param \WC_Order|mixed $order 주문.
+ */
+function signup_taken( $order, int $cap ): int {
+	$before = $order->get_meta( '_dhr_pot_before', true );
+	$after  = $order->get_meta( '_dhr_pot_after', true );
+	if ( '' === (string) $before || '' === (string) $after ) {
+		return 0;
+	}
+	return max( 0, min( $cap, (int) $before - (int) $after ) );
+}
+
+/** 주문을 만들 때 가입 적립금 주머니 값을 찍는다 (테마가 빼기 전). */
+function pot_before( $order ): void {
+	if ( ! is_object( $order ) || ! method_exists( $order, 'get_customer_id' ) || (int) $order->get_customer_id() <= 0 ) {
+		return;
+	}
+	$order->update_meta_data( '_dhr_pot_before', (int) get_user_meta( (int) $order->get_customer_id(), '_wd_signup_point_balance', true ) );
+}
+add_action( 'woocommerce_checkout_create_order', __NAMESPACE__ . '\\pot_before', 1 );
+
+/** 주문이 끝난 뒤 주머니 값을 찍는다 — 여러 자리에서 불려도 가장 낮은 값을 남긴다. */
+function pot_after( $order_id ): void {
+	$order = is_object( $order_id ) ? $order_id : ( function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null );
+	if ( ! is_object( $order ) || '' === (string) $order->get_meta( '_dhr_pot_before', true ) ) {
+		return;
+	}
+	$now  = (int) get_user_meta( (int) $order->get_customer_id(), '_wd_signup_point_balance', true );
+	$prev = $order->get_meta( '_dhr_pot_after', true );
+	if ( '' === (string) $prev || $now < (int) $prev ) {
+		$order->update_meta_data( '_dhr_pot_after', $now );
+		$order->save();
+	}
+}
+add_action( 'woocommerce_checkout_order_processed', __NAMESPACE__ . '\\pot_after', 999 );
+add_action( 'woocommerce_store_api_checkout_order_processed', __NAMESPACE__ . '\\pot_after', 999 );
+add_action( 'woocommerce_thankyou', __NAMESPACE__ . '\\pot_after', 1 );
+
 add_action( 'woocommerce_order_status_cancelled', __NAMESPACE__ . '\\on_cancel', 10, 2 );
 add_action( 'woocommerce_order_status_refunded', __NAMESPACE__ . '\\on_cancel', 10, 2 );

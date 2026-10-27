@@ -162,7 +162,7 @@ $GLOBALS['__keyple_on'] = true;
 
 // 25. 가입 적립금 8,800 을 쓴 주문 — 잔액 · 원장 · 가입 주머니가 모두 돌아온다
 $GLOBALS['__usermeta'][900] = ['_keyple_points' => '0', '_wd_signup_point_balance' => '0'];
-$r = new DhrFakeOrder(4220, ['_wd_point_discount'=>'8800','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$r = new DhrFakeOrder(4220, ['_wd_point_discount'=>'8800','_wd_point_discount_applied'=>'1','_dhr_pot_before'=>'8800','_dhr_pot_after'=>'0'], [], [], 'cancelled');
 $r->uid = 900;
 $back = ($P.'return_points')($r);
 $ok($back === 8800, '8,800원을 돌려준다');
@@ -182,6 +182,15 @@ $r2->uid = 901;
 $ok(($P.'return_points')($r2) === 5000, '5,000원을 돌려준다');
 $ok((int)$GLOBALS['__usermeta'][901]['_keyple_points'] === 13800, '잔액이 8,800 → 13,800');
 $ok((int)$GLOBALS['__usermeta'][901]['_wd_signup_point_balance'] === 8800, '가입 주머니는 지급액을 넘지 않는다 (8,800 그대로)');
+
+// 27-b. 가입 적립금을 예전에 다 쓴 손님이 일반 적립금으로 주문 · 취소 — 주머니를 되살리지 않는다 (2026-10-27)
+$GLOBALS['__usermeta'][904] = ['_keyple_points' => '0', '_wd_signup_point_balance' => '0'];
+$r6 = new DhrFakeOrder(5982, ['_wd_point_discount'=>'10700','_wd_point_discount_applied'=>'1','_dhr_pot_before'=>'0','_dhr_pot_after'=>'0'], [], [], 'cancelled');
+$r6->uid = 904;
+$ok(($P.'return_points')($r6) === 10700 && (int)$GLOBALS['__usermeta'][904]['_keyple_points'] === 10700 && (int)$GLOBALS['__usermeta'][904]['_wd_signup_point_balance'] === 0, '가입 적립금을 안 쓴 주문을 취소해도 가입 주머니는 0 그대로 (전에는 8,800 으로 되살아나 1,900원만 쓸 수 있었다)');
+$r7 = new DhrFakeOrder(5983, ['_wd_point_discount'=>'3000','_wd_point_discount_applied'=>'1'], [], [], 'cancelled');
+$r7->uid = 904;
+$ok(($P.'return_points')($r7) === 3000 && (int)$GLOBALS['__usermeta'][904]['_wd_signup_point_balance'] === 0, '주문 때 찍은 값이 없으면 가입 주머니를 건드리지 않는다');
 
 // 28. 잔액에서 빠진 적이 없는 주문은 건드리지 않는다
 $GLOBALS['__usermeta'][902] = ['_keyple_points' => '100'];

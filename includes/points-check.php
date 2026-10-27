@@ -199,6 +199,12 @@ function screen(): void {
 	$q = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	echo '<div class="wrap"><h1>적립금 확인</h1>';
 	echo '<p>손님이 「적립금이 안 써진다」고 할 때 씁니다. 이메일 · 휴대폰 · 회원 번호 중 하나를 넣으세요. <b>읽기만 합니다.</b></p>';
+	if ( isset( $_GET['dhr_pot'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		echo '<div class="notice notice-success"><p>가입 적립분을 바로잡았습니다. 보유 적립금(잔액)은 그대로입니다.</p></div>';
+	}
+	if ( '' === $q ) {
+		echo revived_box(); // phpcs:ignore WordPress.Security.EscapeOutput
+	}
 	echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( SLUG ) . '"><input type="text" name="q" value="' . esc_attr( $q ) . '" style="width:320px" placeholder="이메일 · 010-… · 회원 번호"> <button class="button button-primary">찾기</button></form>';
 	if ( '' === $q ) {
 		echo '</div>';
@@ -259,6 +265,9 @@ function screen(): void {
 			}
 			echo '</table></details>';
 		}
+		if ( (int) $sb > 0 ) {
+			echo pot_form( $uid, (int) $sb, (int) $kp, $q ); // phpcs:ignore WordPress.Security.EscapeOutput
+		}
 		$bs = batches( $uid );
 		if ( $bs ) {
 			echo '<p style="margin:8px 0 0">우리 화면으로 넣은 묶음 기록: ';
@@ -310,6 +319,7 @@ function screen(): void {
 	}
 
 	$hk = hooks();
+	echo revived_box(); // phpcs:ignore WordPress.Security.EscapeOutput
 	if ( $hk ) {
 		echo '<details style="max-width:980px"><summary>결제 화면에서 적립금 계산에 걸린 코드</summary><table class="widefat striped"><thead><tr><th>자리</th><th>순서</th><th>함수</th><th>파일</th></tr></thead>';
 		foreach ( $hk as $h ) {
@@ -320,3 +330,91 @@ function screen(): void {
 	echo '<p style="max-width:980px;color:#555">읽는 법 — ①계정이 둘이고 잔액이 로그인하지 않는 쪽에 있으면: 계정 문제. ②잔액이 0 이고 내역 마지막이 「… 사용기간 종료」 · 「회수」면: 거둔 것. ③잔액이 있는데 손님 결제 화면 칸이 0 이면: 테마 계산 문제 — 이 화면을 캡처해 주세요.</p>';
 	echo '</div>';
 }
+
+/**
+ * 가입 적립분 바로잡기 상자 — 주머니(_wd_signup_point_balance)만 고친다. 잔액 · 원장은 그대로.
+ * 주머니에 든 금액은 테마가 「가입 적립금」으로 따로 묶어 쓸 곳을 제한한다
+ * (보유 10,700 · 주머니 8,800 → 결제 화면에서 1,900 만 쓸 수 있었다).
+ */
+function pot_form( int $uid, int $pot, int $bal, string $q ): string {
+	$h  = '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin:8px 0;padding:10px 12px;background:#FFF8E6;border-radius:6px" onsubmit="return confirm(\'가입 적립분을 바꿉니다. 보유 적립금은 그대로입니다. 진행할까요?\')">';
+	$h .= wp_nonce_field( 'dhr_pot_' . $uid, '_wpnonce', true, false );
+	$h .= '<input type="hidden" name="action" value="dhr_pot_fix"><input type="hidden" name="uid" value="' . $uid . '"><input type="hidden" name="q" value="' . esc_attr( $q ) . '">';
+	$h .= sprintf( '<b>가입 적립분 %s원</b>이 보유 적립금 %s원 안에 묶여 있습니다 — 결제 화면에서는 그만큼 빼고 쓸 수 있게 보일 수 있습니다. ', number_format( $pot ), number_format( $bal ) );
+	$h .= '가입 적립금을 이미 쓴 손님인데 주문 취소로 되살아난 것이면 0 으로 바꾸세요. ';
+	$h .= '<label>새 값 <input type="number" name="pot" value="0" min="0" max="' . $pot . '" step="1" style="width:100px">원</label> ';
+	$h .= '<button class="button">가입 적립분 바꾸기</button></form>';
+	return $h;
+}
+
+add_action(
+	'admin_post_dhr_pot_fix',
+	function () {
+		$uid = isset( $_POST['uid'] ) ? (int) $_POST['uid'] : 0;
+		if ( ! may() || $uid <= 0 || ! check_admin_referer( 'dhr_pot_' . $uid ) ) {
+			wp_die( '권한이 없습니다.' );
+		}
+		$old = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
+		$new = max( 0, min( $old, isset( $_POST['pot'] ) ? (int) $_POST['pot'] : 0 ) );
+		update_user_meta( $uid, '_wd_signup_point_balance', $new );
+		$log   = (array) get_user_meta( $uid, '_dhr_pot_fix_log', true );
+		$log[] = array( 'at' => current_time( 'mysql' ), 'by' => get_current_user_id(), 'from' => $old, 'to' => $new );
+		update_user_meta( $uid, '_dhr_pot_fix_log', $log );
+		$q = isset( $_POST['q'] ) ? sanitize_text_field( wp_unslash( $_POST['q'] ) ) : '#' . $uid;
+		wp_safe_redirect( add_query_arg( array( 'page' => SLUG, 'q' => rawurlencode( $q ), 'dhr_pot' => 1 ), admin_url( 'tools.php' ) ) );
+		exit;
+	}
+);
+
+/**
+ * 취소 반환으로 가입 적립분이 되살아났을 수 있는 회원 — 가입 적립분이 남아 있고, 원장에
+ * 「취소 적립금 반환」 줄이 있고, 그보다 앞에 적립금을 쓴 줄이 있는 사람. 읽기만.
+ *
+ * @return array<int,array{pot:int,bal:int,name:string}>
+ */
+function revived(): array {
+	global $wpdb;
+	if ( ! function_exists( 'Duckhoo\\Redesign\\Points\\Admin\\log_table' ) ) {
+		return array();
+	}
+	$t = \Duckhoo\Redesign\Points\Admin\log_table();
+	if ( (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $t ) ) !== $t ) { // phpcs:ignore WordPress.DB
+		return array();
+	}
+	$map = \Duckhoo\Redesign\Points\Admin\guess_cols( array_map( 'strval', (array) $wpdb->get_col( 'SHOW COLUMNS FROM `' . esc_sql( $t ) . '`' ) ) ); // phpcs:ignore WordPress.DB
+	if ( ! $map ) {
+		return array();
+	}
+	$uids = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT `' . esc_sql( $map['user'] ) . '` FROM `' . esc_sql( $t ) . '` WHERE `' . esc_sql( $map['reason'] ) . '` LIKE %s', '%취소 적립금 반환%' ) ); // phpcs:ignore WordPress.DB
+	$out  = array();
+	foreach ( $uids as $uid ) {
+		$uid = (int) $uid;
+		$pot = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
+		if ( $pot > 0 ) {
+			$u           = get_userdata( $uid );
+			$out[ $uid ] = array(
+				'pot'  => $pot,
+				'bal'  => (int) get_user_meta( $uid, '_keyple_points', true ),
+				'name' => $u ? (string) ( get_user_meta( $uid, 'wd_verified_name', true ) ?: $u->display_name ) : '',
+			);
+		}
+	}
+	return $out;
+}
+
+/** 되살아났을 수 있는 회원 상자. */
+function revived_box(): string {
+	$rv = revived();
+	if ( ! $rv ) {
+		return '';
+	}
+	$h  = '<div style="max-width:980px;margin:14px 0;padding:10px 14px;background:#fff;border:1px solid #E8B400;border-radius:8px">';
+	$h .= '<h2 style="margin:4px 0">가입 적립분이 되살아났을 수 있는 회원 ' . count( $rv ) . '명</h2>';
+	$h .= '<p style="margin:0 0 8px">주문 취소로 적립금을 돌려받은 적이 있고 가입 적립분이 남아 있는 회원입니다. 2026-10-27 전의 취소 반환이 가입 적립금을 이미 쓴 손님에게도 가입 적립분을 다시 채웠습니다 — 그러면 결제 화면에서 그만큼 덜 쓸 수 있게 보입니다. 이름을 눌러 내역을 보고, 가입 적립금을 예전에 이미 쓴 손님이면 0 으로 바꾸세요.</p>';
+	$h .= '<table class="widefat striped" style="max-width:640px"><thead><tr><th>회원</th><th>보유 적립금</th><th>가입 적립분</th></tr></thead>';
+	foreach ( $rv as $uid => $r ) {
+		$h .= sprintf( '<tr><td><a href="%s">#%d %s</a></td><td>%s원</td><td>%s원</td></tr>', esc_url( add_query_arg( array( 'page' => SLUG, 'q' => rawurlencode( '#' . $uid ) ), admin_url( 'tools.php' ) ) ), $uid, esc_html( $r['name'] ), number_format( $r['bal'] ), number_format( $r['pot'] ) );
+	}
+	return $h . '</table></div>';
+}
+
