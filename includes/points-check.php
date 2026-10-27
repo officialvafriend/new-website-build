@@ -367,6 +367,45 @@ add_action(
 );
 
 /**
+ * 원장을 처음부터 다시 따라가 가입 적립분이 지금 얼마여야 하는지 센다. 순수.
+ *
+ * 테마는 적립금을 쓸 때 가입 적립분부터 뺀다고 본다 (9/4 이준섭 님: 8,800 을 쓰자 가입 몫이 0).
+ * 「취소 적립금 반환」은 같은 금액의 바로 앞 「적립금 사용」 줄과 짝을 지어, 그 사용이 가입 몫에서
+ * 뺀 만큼만 되돌린다. 가입 적립금 줄이 없으면(옛 사이트에서 옮겨 온 회원 등) 모른다 — null.
+ *
+ * @param array<int,array{amount:int|string,reason:string}> $rows 오래된 순.
+ */
+function pot_replay( array $rows, int $bal ): ?int {
+	$pot  = null;
+	$uses = array();
+	foreach ( $rows as $r ) {
+		$a  = (int) ( $r['amount'] ?? 0 );
+		$rs = (string) ( $r['reason'] ?? '' );
+		if ( str_contains( $rs, '신규회원가입' ) && $a > 0 ) {
+			$pot = $a;
+			continue;
+		}
+		if ( null === $pot ) {
+			continue;
+		}
+		if ( str_contains( $rs, '적립금 사용' ) && $a < 0 ) {
+			$took   = min( $pot, -$a );
+			$pot   -= $took;
+			$uses[] = array( -$a, $took );
+		} elseif ( str_contains( $rs, '취소 적립금 반환' ) && $a > 0 ) {
+			for ( $k = count( $uses ) - 1; $k >= 0; $k-- ) {
+				if ( $uses[ $k ][0] === $a ) {
+					$pot += $uses[ $k ][1];
+					array_splice( $uses, $k, 1 );
+					break;
+				}
+			}
+		}
+	}
+	return null === $pot ? null : max( 0, min( $pot, $bal ) );
+}
+
+/**
  * 취소 반환으로 가입 적립분이 되살아났을 수 있는 회원 — 가입 적립분이 남아 있고, 원장에
  * 「취소 적립금 반환」 줄이 있고, 그보다 앞에 적립금을 쓴 줄이 있는 사람. 읽기만.
  *
@@ -392,9 +431,12 @@ function revived(): array {
 		$pot = (int) get_user_meta( $uid, '_wd_signup_point_balance', true );
 		if ( $pot > 0 ) {
 			$u           = get_userdata( $uid );
+			$bal         = (int) get_user_meta( $uid, '_keyple_points', true );
+			$rows        = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT `' . esc_sql( $map['amount'] ) . '` AS amount, `' . esc_sql( $map['reason'] ) . '` AS reason FROM `' . esc_sql( $t ) . '` WHERE `' . esc_sql( $map['user'] ) . '` = %d ORDER BY `' . esc_sql( $map['id'] ) . '` ASC', $uid ), ARRAY_A ); // phpcs:ignore WordPress.DB
 			$out[ $uid ] = array(
 				'pot'  => $pot,
-				'bal'  => (int) get_user_meta( $uid, '_keyple_points', true ),
+				'fix'  => pot_replay( $rows, $bal ),
+				'bal'  => $bal,
 				'name' => $u ? (string) ( get_user_meta( $uid, 'wd_verified_name', true ) ?: $u->display_name ) : '',
 			);
 		}
@@ -410,10 +452,22 @@ function revived_box(): string {
 	}
 	$h  = '<div style="max-width:980px;margin:14px 0;padding:10px 14px;background:#fff;border:1px solid #E8B400;border-radius:8px">';
 	$h .= '<h2 style="margin:4px 0">가입 적립분이 되살아났을 수 있는 회원 ' . count( $rv ) . '명</h2>';
-	$h .= '<p style="margin:0 0 8px">주문 취소로 적립금을 돌려받은 적이 있고 가입 적립분이 남아 있는 회원입니다. 2026-10-27 전의 취소 반환이 가입 적립금을 이미 쓴 손님에게도 가입 적립분을 다시 채웠습니다 — 그러면 결제 화면에서 그만큼 덜 쓸 수 있게 보입니다. 이름을 눌러 내역을 보고, 가입 적립금을 예전에 이미 쓴 손님이면 0 으로 바꾸세요.</p>';
-	$h .= '<table class="widefat striped" style="max-width:640px"><thead><tr><th>회원</th><th>보유 적립금</th><th>가입 적립분</th></tr></thead>';
+	$wrong = count( array_filter( $rv, fn( $r ) => null !== $r['fix'] && $r['fix'] !== $r['pot'] ) );
+	$h .= '<p style="margin:0 0 8px">주문 취소로 적립금을 돌려받은 적이 있고 가입 적립분이 남아 있는 회원입니다. 적립금 내역을 처음부터 다시 따라가 <b>맞는 값</b>을 계산했습니다 — 지금 값과 다른 <b>' . $wrong . '명</b>은 「맞는 값으로」를 누르면 됩니다. 보유 적립금 · 내역은 그대로이고 가입 적립분만 바뀝니다. 「모름」은 내역에 가입 적립금 줄이 없는 회원이라 이름을 눌러 직접 보세요.</p>';
+	$h .= '<table class="widefat striped" style="max-width:820px"><thead><tr><th>회원</th><th>보유 적립금</th><th>지금 가입 적립분</th><th>맞는 값</th><th></th></tr></thead>';
 	foreach ( $rv as $uid => $r ) {
-		$h .= sprintf( '<tr><td><a href="%s">#%d %s</a></td><td>%s원</td><td>%s원</td></tr>', esc_url( add_query_arg( array( 'page' => SLUG, 'q' => rawurlencode( '#' . $uid ) ), admin_url( 'tools.php' ) ) ), $uid, esc_html( $r['name'] ), number_format( $r['bal'] ), number_format( $r['pot'] ) );
+		$fix = $r['fix'];
+		if ( null === $fix ) {
+			$act = '모름';
+			$val = '-';
+		} elseif ( $fix === $r['pot'] ) {
+			$act = '<span style="color:#067647">맞음 (아직 안 쓴 가입 적립금)</span>';
+			$val = number_format( $fix ) . '원';
+		} else {
+			$val = '<b>' . number_format( $fix ) . '원</b>';
+			$act = '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin:0">' . wp_nonce_field( 'dhr_pot_' . $uid, '_wpnonce', true, false ) . '<input type="hidden" name="action" value="dhr_pot_fix"><input type="hidden" name="uid" value="' . (int) $uid . '"><input type="hidden" name="q" value=""><input type="hidden" name="pot" value="' . (int) $fix . '"><button class="button button-small">맞는 값으로</button></form>';
+		}
+		$h .= sprintf( '<tr><td><a href="%s">#%d %s</a></td><td>%s원</td><td>%s원</td><td>%s</td><td>%s</td></tr>', esc_url( add_query_arg( array( 'page' => SLUG, 'q' => rawurlencode( '#' . $uid ) ), admin_url( 'tools.php' ) ) ), $uid, esc_html( $r['name'] ), number_format( $r['bal'] ), number_format( $r['pot'] ), $val, $act );
 	}
 	return $h . '</table></div>';
 }

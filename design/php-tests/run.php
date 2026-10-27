@@ -3440,6 +3440,15 @@ $oa = ($CS.'overall')([['phones'=>['01011111111','01022222222'],'at'=>$at],['pho
 $ok($oa['people']===2 && $oa['messages']===3 && $oa['buyers']===1 && $oa['orders']===1 && $oa['sales']==50000.0, '문자 참여: 합계는 한 사람 · 한 주문을 한 번만 (두 문자 받아도)');
 $tx = ($CS.'text')([['name'=>'1014_발송.xlsx','date'=>'2026-10-14','kw'=>['영주사과'],'im'=>['n'=>2,'buyers'=>1,'rate'=>0.5,'orders'=>1,'sales'=>50000,'before'=>['buyers'=>0],'done'=>true,'elapsed'=>14],'prod'=>$ps]], $oa, 14);
 $ok(strpos($tx, '10-14 1014_발송.xlsx') !== false && strpos($tx, '[영주사과]') !== false && !preg_match('/01[016789]\d{7,8}/', $tx), '문자 참여: 붙여 넣기 글에 번호가 없다');
+/* ── 가입 적립분 다시 세기 (pot_replay) ── */
+require_once __DIR__ . '/../../includes/points-check.php';
+$PR = 'Duckhoo\\Redesign\\PointsCheck\\pot_replay';
+$jun = [['amount'=>8800,'reason'=>'신규회원가입 적립금'],['amount'=>-8800,'reason'=>'주문 #202609040000000 적립금 사용'],['amount'=>700,'reason'=>'상품 구매 적립금'],['amount'=>5000,'reason'=>'261008 이벤트 적립금'],['amount'=>5000,'reason'=>'10월 감사 적립금'],['amount'=>10000,'reason'=>'노보 단골 고객 지원금'],['amount'=>-5000,'reason'=>'10월 감사 적립금 사용기간 종료'],['amount'=>-5000,'reason'=>'10월 이벤트 적립금 기간 만료'],['amount'=>-10700,'reason'=>'주문 #202610270000000 적립금 사용'],['amount'=>10700,'reason'=>'주문 #202610270005982 취소 적립금 반환']];
+$ok($PR($jun, 10700) === 0, '가입 적립분 다시 세기: 9월에 다 쓰고 10월 주문을 취소한 손님은 0 (지금 8,800 은 잘못 되살아난 것)');
+$ok($PR([['amount'=>8800,'reason'=>'신규회원가입 적립금'],['amount'=>-8800,'reason'=>'주문 #1 적립금 사용'],['amount'=>8800,'reason'=>'주문 #1 취소 적립금 반환']], 8800) === 8800, '가입 적립분 다시 세기: 가입 적립금을 쓴 주문을 취소했으면 8,800 이 맞다');
+$ok($PR([['amount'=>8800,'reason'=>'신규회원가입 적립금'],['amount'=>-2000,'reason'=>'주문 #1 적립금 사용']], 6800) === 6800 && $PR([['amount'=>8800,'reason'=>'신규회원가입 적립금']], 6800) === 6800, '가입 적립분 다시 세기: 일부만 썼으면 남은 만큼 · 보유 적립금보다 크지 않다');
+$ok($PR([['amount'=>5000,'reason'=>'이벤트']], 5000) === null, '가입 적립분 다시 세기: 가입 적립금 줄이 없으면 모른다');
+
 /* ── 거둔 묶음의 받은 사람 (원장에서 되살리기) ── */
 $lr = ("Duckhoo\\Redesign\\Points\\Admin\\ledger_received")([
  ['user'=>1,'amount'=>5000,'reason'=>'10월 감사 적립금'],
