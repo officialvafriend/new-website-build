@@ -3449,6 +3449,18 @@ $ok($PR([['amount'=>8800,'reason'=>'신규회원가입 적립금'],['amount'=>-8
 $ok($PR([['amount'=>8800,'reason'=>'신규회원가입 적립금'],['amount'=>-2000,'reason'=>'주문 #1 적립금 사용']], 6800) === 6800 && $PR([['amount'=>8800,'reason'=>'신규회원가입 적립금']], 6800) === 6800, '가입 적립분 다시 세기: 일부만 썼으면 남은 만큼 · 보유 적립금보다 크지 않다');
 $ok($PR([['amount'=>5000,'reason'=>'이벤트']], 5000) === null, '가입 적립분 다시 세기: 가입 적립금 줄이 없으면 모른다');
 
+/* ── CRM 한눈에 (summary) ── */
+$CRS = '\\Duckhoo\\Redesign\\CrmReport\\summary';
+$im = fn($n,$b,$bf,$s,$done=true) => ['n'=>$n,'buyers'=>$b,'before'=>['buyers'=>$bf],'sales'=>$s,'done'=>$done,'elapsed'=>3];
+$sm = $CRS(['points'=>[
+   ['label'=>'10월 감사 적립금','created'=>'2026-10-13 13:32','revoked'=>true,'p'=>[''=>['n'=>912,'buyers'=>75,'before'=>43,'sales'=>4618179,'elapsed'=>14]]],
+   ['label'=>'10월 13일 CRM 적립금','created'=>'2026-10-13 13:27','revoked'=>true,'p'=>[''=>['n'=>0,'buyers'=>0,'before'=>0,'sales'=>0]]]],
+ 'sent'=>[['at'=>'2026-10-20 11:58','group'=>'노보 구매 손님','impact'=>$im(423,33,37,2924091)],['at'=>'2026-10-20 12:06','group'=>'노보 구매 손님','impact'=>$im(425,34,37,3412041)]],
+ 'uploads'=>[['at'=>'2026-10-14 13:30','name'=>'1014_발송_954명.xlsx','kw'=>['영주사과'],'impact'=>$im(954,50,40,3000000,false),'prod'=>['buyers'=>12]]]]);
+$smh = ('\\Duckhoo\\Redesign\\CrmReport\\summary_html')(['from'=>'2026-10-13','to'=>'2026-10-27','sales'=>$sp,'base'=>$sp,'points'=>[],'sent'=>[['at'=>'2026-10-20 12:06','group'=>'노보 구매 손님','impact'=>$im(425,34,37,3412041)]],'uploads'=>[]]);
+$ok(str_contains($smh,'425') && str_contains($smh,'-3명') && str_contains($smh,'8.0%'), 'CRM 한눈에: 표에 받은 · 전환율 · 늘어난 사람이 나온다');
+$ok(count($sm)===3 && $sm[0]['name']==='10월 감사 적립금' && $sm[0]['note']==='기간 끝나 거둠' && $sm[1]['kind']==='신상품 문자' && $sm[1]['name']==='1014_발송_954명' && str_contains($sm[1]['note'],'영주사과 산 사람 12명') && str_contains($sm[1]['note'],'진행 3일째') && $sm[2]['n']===425, 'CRM 한눈에: 빈 묶음은 빼고, 같은 날 같은 문자 묶음은 마지막 것 하나, 신상품 문자는 그 상품 산 사람을 비고에');
+
 /* ── 거둔 묶음의 받은 사람 (원장에서 되살리기) ── */
 $lr = ("Duckhoo\\Redesign\\Points\\Admin\\ledger_received")([
  ['user'=>1,'amount'=>5000,'reason'=>'10월 감사 적립금'],

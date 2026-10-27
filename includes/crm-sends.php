@@ -197,6 +197,26 @@ function at_of( string $date, string $hm ): int {
 	}
 }
 
+const SAVED = 'duckhoo_crm_sends_saved';
+
+/**
+ * 올린 발송 파일을 기억한다 — 다음부터 CRM 기간 성과의 「한눈에」 표에 저절로 나온다.
+ * 번호는 숫자만(셈에만 쓴다). 같은 파일 · 같은 날은 하나로. 최근 60개.
+ */
+function remember( array $sends ): void {
+	$all = (array) get_option( SAVED, array() );
+	foreach ( $sends as $x ) {
+		$all[ md5( $x['name'] . '|' . $x['date'] ) ] = array( 'name' => $x['name'], 'date' => $x['date'], 'at' => (int) $x['at'], 'kw' => (array) $x['kw'], 'phones' => array_values( (array) $x['phones'] ), 'saved' => time() );
+	}
+	uasort( $all, fn( $a, $b ) => (int) $b['at'] <=> (int) $a['at'] );
+	update_option( SAVED, array_slice( $all, 0, 60, true ), false );
+}
+
+/** 기억해 둔 발송 파일. */
+function saved(): array {
+	return array_values( array_filter( (array) get_option( SAVED, array() ), 'is_array' ) );
+}
+
 /** 기본 신상품 낱말 (10월 발송분). */
 function default_products(): string {
 	return (string) apply_filters( 'duckhoo_crm_sends_products', "1014 = 영주사과, 고창수박\n1015 = 크림타바코, 말라이트\n1019 = 환타지아\n1021 = 스피아민트, 아메리카노\n1022 = 금실딸기, 복숭아" );
@@ -219,7 +239,7 @@ function screen(): void {
 	$hm    = isset( $_POST['hm'] ) && preg_match( '/^\d{1,2}:\d{2}$/', (string) $_POST['hm'] ) ? (string) $_POST['hm'] : '13:30'; // phpcs:ignore WordPress.Security
 	$prods = isset( $_POST['prods'] ) ? (string) wp_unslash( $_POST['prods'] ) : default_products(); // phpcs:ignore WordPress.Security
 	echo '<div class="wrap"><h1>문자 참여</h1>';
-	echo '<p style="max-width:780px">보낸 문자 파일(문자라인에 올린 엑셀 · CSV)을 <b>여러 개 한 번에</b> 고르세요. 보낸 날은 파일 이름의 날짜(1013 · 20261013)로 읽고, 받은 뒤 ' . (int) $days . '일 동안 산 사람을 문자마다 셉니다. <b>읽기만 하고 파일은 저장하지 않습니다.</b> 화면에는 숫자만 나옵니다.</p>';
+	echo '<p style="max-width:780px">보낸 문자 파일(문자라인에 올린 엑셀 · CSV)을 <b>여러 개 한 번에</b> 고르세요. 보낸 날은 파일 이름의 날짜(1013 · 20261013)로 읽고, 받은 뒤 ' . (int) $days . '일 동안 산 사람을 문자마다 셉니다. 올린 파일의 번호는 셈에 쓰려고 사이트에 남겨 두고(다음부터 <b>CRM 기간 성과 「한눈에」 표</b>에 저절로 나옵니다), 화면에는 숫자만 나옵니다.</p>';
 	echo '<form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #dcdcde;padding:14px;max-width:780px">';
 	wp_nonce_field( 'dhr-crm-sends' );
 	echo '<p><input type="file" name="files[]" multiple accept=".xlsx,.xls,.csv,.txt"></p>';
@@ -277,6 +297,7 @@ function screen(): void {
 			$prod = $s['kw'] ? product_stats( $s['phones'], $s['at'], $days, $d['orders'], $items, $d['uphone'], $s['kw'], $paid ) : array();
 			$rows[] = array( 'name' => $s['name'], 'date' => $s['date'], 'kw' => $s['kw'], 'im' => $im, 'prod' => $prod );
 		}
+		remember( $sends );
 		$all = overall( $sends, $d['orders'], $d['uphone'], $days, $paid, $dead );
 		render( $rows, $all, $days, $bad );
 	} catch ( \Throwable $e ) {

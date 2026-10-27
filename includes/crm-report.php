@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 /** 관리자 밖(REST)에서도 셈에 쓰는 모듈을 든다 — 월말 결산과 같은 방법. */
 function load_deps(): void {
 	$dir = dirname( __DIR__ ) . '/includes/';
-	foreach ( array( 'sales.php', 'anatomy.php', 'crm.php', 'crm-sms.php', 'crm-plan.php', 'crm-impact.php', 'points-admin.php' ) as $f ) {
+	foreach ( array( 'sales.php', 'anatomy.php', 'crm.php', 'crm-sms.php', 'crm-plan.php', 'crm-impact.php', 'points-admin.php', 'crm-sends.php' ) as $f ) {
 		if ( is_readable( $dir . $f ) ) {
 			require_once $dir . $f;
 		}
@@ -162,7 +162,34 @@ function period( string $from, string $to, bool $fresh = false ): array {
 		usort( $sent, fn( $a, $b ) => strcmp( $a['at'], $b['at'] ) );
 	}
 
+	// 3. 「문자 참여」에 올려 둔 발송 파일 (신상품 문자 등 — 사이트에서 내려받지 않은 것)
+	$uploads = array();
+	if ( function_exists( '\\Duckhoo\\Redesign\\CrmSends\\saved' ) && function_exists( '\\Duckhoo\\Redesign\\Crm\\impact_for' ) ) {
+		$ups = array_values( array_filter( \Duckhoo\Redesign\CrmSends\saved(), fn( $x ) => (int) $x['at'] >= $f && (int) $x['at'] <= $t ) );
+		if ( $ups ) {
+			$days  = \Duckhoo\Redesign\Crm\impact_days();
+			$first = min( array_map( fn( $x ) => (int) $x['at'], $ups ) );
+			$d     = \Duckhoo\Redesign\Crm\impact_orders( $first - $days * DAY_IN_SECONDS );
+			$items = array();
+			if ( array_filter( array_column( $ups, 'kw' ) ) && function_exists( '\\Duckhoo\\Redesign\\Anatomy\\items' ) ) {
+				$ids   = array_map( fn( $o ) => (int) $o['id'], array_filter( $d['orders'], fn( $o ) => (int) $o['ts'] >= $first && in_array( (string) $o['s'], $paid, true ) ) );
+				$items = \Duckhoo\Redesign\Anatomy\items( array_values( $ids ) );
+			}
+			foreach ( $ups as $x ) {
+				$uploads[] = array(
+					'at'     => wp_date( 'Y-m-d H:i', (int) $x['at'] ),
+					'name'   => (string) $x['name'],
+					'kw'     => (array) $x['kw'],
+					'impact' => \Duckhoo\Redesign\Crm\impact( (array) $x['phones'], (int) $x['at'], $d['orders'], $d['uphone'], $days, time(), $paid, \Duckhoo\Redesign\Crm\dead_statuses() ),
+					'prod'   => $x['kw'] ? \Duckhoo\Redesign\CrmSends\product_stats( (array) $x['phones'], (int) $x['at'], $days, $d['orders'], $items, $d['uphone'], (array) $x['kw'], $paid ) : array(),
+				);
+			}
+			usort( $uploads, fn( $a, $b ) => strcmp( $a['at'], $b['at'] ) );
+		}
+	}
+
 	$out = array(
+		'uploads' => $uploads,
 		'from'   => $from,
 		'to'     => $to,
 		'until'  => wp_date( 'Y-m-d H:i', $until ),
@@ -195,9 +222,17 @@ function text( array $r ): string {
 	$L[] = sprintf( '· 처음 산 손님 주문 %s건 · %s원 (앞 %s건)', $w( $s['first']['n'] ), $w( $s['first']['sales'] ), $w( $b['first']['n'] ) );
 	$L[] = sprintf( '· 다시 산 손님 주문 %s건 · %s원 (앞 %s건, %s)', $w( $s['repeat']['n'] ), $w( $s['repeat']['sales'] ), $w( $b['repeat']['n'] ), $ch( $s['repeat']['sales'], $b['repeat']['sales'] ) );
 	$L[] = sprintf( '· 객단가 %s원 (앞 %s원)', $w( $s['aov'] ), $w( $b['aov'] ) );
+	$sm = summary( $r );
+	if ( $sm ) {
+		$L[] = '';
+		$L[] = '한눈에 (받은 · 산 사람 · 전환율 · 보내기 전 대비)';
+		foreach ( $sm as $x ) {
+			$L[] = sprintf( '· %s %s %s — %s명 중 %s명 (%s) · 보내기 전 %s명 → %+d명 · 실입금 %s원%s', substr( $x['date'], 5 ), $x['kind'], $x['name'], $w( $x['n'] ), $w( $x['buyers'] ), $pc( $x['buyers'], $x['n'] ), $w( $x['before'] ), $x['buyers'] - $x['before'], $w( $x['sales'] ), '' !== $x['note'] ? ' · ' . $x['note'] : '' );
+		}
+	}
 	if ( $r['points'] ) {
 		$L[] = '';
-		$L[] = '적립금 묶음';
+		$L[] = '적립금 묶음 (자세히)';
 		foreach ( $r['points'] as $p ) {
 			$t   = (array) ( $p['p'][''] ?? array() );
 			$L[] = sprintf( '· %s — 넣은 날 %s · %s명 · %s원%s', $p['label'], implode( ', ', array_map( fn( $x ) => substr( $x['at'], 5, 5 ) . ' ' . $w( $x['n'] ) . '명', $p['runs'] ) ) ?: substr( $p['created'], 5, 5 ), $w( $p['revoked'] && $t ? $t['n'] : $p['n'] ), $w( $p['revoked'] && $t ? $t['given'] : $p['sum'] ), $p['revoked'] ? ' 넣었다가 거둠' : '' );
@@ -228,17 +263,88 @@ function text( array $r ): string {
 	return implode( "\n", $L );
 }
 
+/**
+ * 「한눈에」 — 보낸 것마다 한 줄. 받은 사람이 없는 줄은 빼고, 같은 날 같은 묶음을 여러 번 내려받은 것은 하나로. 순수.
+ *
+ * @return array<int,array{date:string,kind:string,name:string,n:int,buyers:int,before:int,sales:float,note:string}>
+ */
+function summary( array $r ): array {
+	$rows = array();
+	foreach ( (array) ( $r['points'] ?? array() ) as $p ) {
+		$t = (array) ( $p['p'][''] ?? array() );
+		if ( (int) ( $t['n'] ?? 0 ) <= 0 ) {
+			continue;
+		}
+		$note = ! empty( $p['revoked'] ) ? '기간 끝나 거둠' : '';
+		if ( isset( $t['elapsed'] ) && (int) $t['elapsed'] < 14 ) {
+			$note = trim( $note . ' · 진행 ' . (int) $t['elapsed'] . '일째', ' ·' );
+		}
+		$rows[] = array( 'date' => substr( (string) $p['created'], 0, 10 ), 'kind' => '적립금', 'name' => (string) $p['label'], 'n' => (int) $t['n'], 'buyers' => (int) $t['buyers'], 'before' => (int) $t['before'], 'sales' => (float) $t['sales'], 'note' => $note );
+	}
+	$seen = array();
+	foreach ( array_reverse( (array) ( $r['sent'] ?? array() ) ) as $x ) {
+		$m = (array) $x['impact'];
+		$k = substr( (string) $x['at'], 0, 10 ) . '|' . (string) $x['group'];
+		if ( (int) ( $m['n'] ?? 0 ) <= 0 || isset( $seen[ $k ] ) ) {
+			continue;
+		}
+		$seen[ $k ] = true;
+		$rows[]     = array( 'date' => substr( (string) $x['at'], 0, 10 ), 'kind' => '문자', 'name' => (string) $x['group'], 'n' => (int) $m['n'], 'buyers' => (int) $m['buyers'], 'before' => (int) ( $m['before']['buyers'] ?? 0 ), 'sales' => (float) $m['sales'], 'note' => empty( $m['done'] ) ? '진행 ' . (int) ( $m['elapsed'] ?? 0 ) . '일째' : '' );
+	}
+	foreach ( (array) ( $r['uploads'] ?? array() ) as $x ) {
+		$m = (array) $x['impact'];
+		if ( (int) ( $m['n'] ?? 0 ) <= 0 ) {
+			continue;
+		}
+		$note = $x['prod'] ? implode( '·', (array) $x['kw'] ) . ' 산 사람 ' . (int) $x['prod']['buyers'] . '명' : '';
+		if ( empty( $m['done'] ) ) {
+			$note = trim( $note . ' · 진행 ' . (int) ( $m['elapsed'] ?? 0 ) . '일째', ' ·' );
+		}
+		$rows[] = array( 'date' => substr( (string) $x['at'], 0, 10 ), 'kind' => $x['kw'] ? '신상품 문자' : '문자', 'name' => preg_replace( '/\.(xlsx|xls|csv|txt)$/i', '', (string) $x['name'] ), 'n' => (int) $m['n'], 'buyers' => (int) $m['buyers'], 'before' => (int) ( $m['before']['buyers'] ?? 0 ), 'sales' => (float) $m['sales'], 'note' => $note );
+	}
+	usort( $rows, fn( $a, $b ) => strcmp( $a['date'], $b['date'] ) ?: strcmp( $a['name'], $b['name'] ) );
+	return $rows;
+}
+
+/** 「한눈에」 표 (HTML). */
+function summary_html( array $r ): string {
+	$rows = summary( $r );
+	$w    = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
+	$s    = (array) $r['sales'];
+	$b    = (array) $r['base'];
+	$ch   = $b['all']['sales'] > 0 ? sprintf( '%+.0f%%', ( $s['all']['sales'] - $b['all']['sales'] ) / $b['all']['sales'] * 100 ) : '-';
+	$h    = '<div style="background:#fff;border:1px solid #dcdcde;padding:14px 16px;margin:10px 0;max-width:1040px">';
+	$h   .= '<p style="margin:0 0 10px;font-size:15px">가게 전체 ' . esc_html( $r['from'] ) . ' ~ ' . esc_html( $r['to'] ) . ' — 주문 <b>' . esc_html( $w( $s['all']['n'] ) ) . '건</b> · 실입금 <b>' . esc_html( $w( $s['all']['sales'] ) ) . '원</b> <span style="color:#646970">(앞 같은 기간 ' . esc_html( $w( $b['all']['sales'] ) ) . '원, ' . esc_html( $ch ) . ')</span> · 다시 산 손님 주문 ' . esc_html( $w( $s['repeat']['n'] ) ) . '건 <span style="color:#646970">(앞 ' . esc_html( $w( $b['repeat']['n'] ) ) . '건)</span></p>';
+	if ( ! $rows ) {
+		return $h . '<p>이 기간에 보낸 것이 없습니다.</p></div>';
+	}
+	$h .= '<div style="overflow-x:auto"><table class="widefat striped" style="min-width:860px"><thead><tr><th>날짜</th><th>종류</th><th>무엇</th><th style="text-align:right">받은</th><th style="text-align:right">산 사람</th><th style="text-align:right">전환율</th><th style="text-align:right">보내기 전</th><th style="text-align:right">늘어난 사람</th><th style="text-align:right">실입금</th><th>비고</th></tr></thead><tbody>';
+	foreach ( $rows as $x ) {
+		$lift = $x['buyers'] - $x['before'];
+		$col  = $lift > 0 ? '#067647' : ( $lift < 0 ? '#B42318' : '#646970' );
+		$h   .= '<tr><td>' . esc_html( substr( $x['date'], 5 ) ) . '</td><td>' . esc_html( $x['kind'] ) . '</td><td>' . esc_html( $x['name'] ) . '</td>'
+			. '<td style="text-align:right">' . esc_html( $w( $x['n'] ) ) . '명</td><td style="text-align:right"><b>' . esc_html( $w( $x['buyers'] ) ) . '명</b></td>'
+			. '<td style="text-align:right"><b>' . esc_html( number_format( $x['n'] ? $x['buyers'] / $x['n'] * 100 : 0, 1 ) ) . '%</b></td>'
+			. '<td style="text-align:right">' . esc_html( $w( $x['before'] ) ) . '명</td><td style="text-align:right;color:' . $col . '"><b>' . esc_html( sprintf( '%+d', $lift ) ) . '명</b></td>'
+			. '<td style="text-align:right">' . esc_html( $w( $x['sales'] ) ) . '원</td><td style="color:#646970">' . esc_html( $x['note'] ) . '</td></tr>';
+	}
+	$h .= '</tbody></table></div>';
+	$h .= '<p style="margin:8px 0 0;color:#646970">전환율 = 받은 사람 중 받은 뒤 14일 안에 산 사람. 「늘어난 사람」 = 산 사람 − 같은 사람들이 받기 전 같은 날수 동안 산 사람 (초록이면 효과가 있었던 것). 신상품 문자는 <b>마케팅 → 문자 참여</b>에 보낸 파일을 한 번 올리면 여기에도 계속 나옵니다.</p></div>';
+	return $h;
+}
+
 /** 고객 세그먼트 화면의 상자. */
 function box(): void {
 	$from = isset( $_GET['rf'] ) && ymd( (string) $_GET['rf'] ) ? (string) $_GET['rf'] : wp_date( 'Y-m-01' ); // phpcs:ignore WordPress.Security
 	$to   = isset( $_GET['rt'] ) && ymd( (string) $_GET['rt'] ) ? (string) $_GET['rt'] : wp_date( 'Y-m-d' ); // phpcs:ignore WordPress.Security
-	echo '<details class="dhr-crm-adv" style="background:#fff;border:1px solid #dcdcde;margin:12px 0"' . ( isset( $_GET['rf'] ) ? ' open' : '' ) . '><summary style="font-weight:700;cursor:pointer">CRM 기간 성과 — 한 기간에 보낸 것 전부 (적립금 묶음 · 문자 묶음 · 가게 전체)</summary>'; // phpcs:ignore WordPress.Security
+	echo '<details class="dhr-crm-adv" style="background:#fff;border:1px solid #dcdcde;margin:12px 0"' . ( isset( $_GET['rf'] ) ? ' open' : '' ) . '><summary style="font-weight:700;cursor:pointer">CRM 성과 한눈에 — 보낸 것마다 받은 사람 · 산 사람 · 전환율</summary>'; // phpcs:ignore WordPress.Security
 	echo '<form method="get" style="margin:10px 0"><input type="hidden" name="page" value="duckhoo-crm"> 시작 <input type="date" name="rf" value="' . esc_attr( $from ) . '"> 끝 <input type="date" name="rt" value="' . esc_attr( $to ) . '"> <button class="button button-primary">보기</button></form>';
 	if ( isset( $_GET['rf'] ) ) { // phpcs:ignore WordPress.Security
 		try {
 			$r = period( $from, $to );
-			echo '<p style="color:#646970">숫자만 들어 있습니다 (이름 · 연락처 없음). 통째로 복사해 클로드에게 붙여 주시면 보고서로 엮습니다.</p>';
-			echo '<textarea readonly rows="22" style="width:100%;font-family:monospace;font-size:12px" onclick="this.select()">' . esc_textarea( text( $r ) ) . '</textarea>';
+			echo summary_html( $r ); // phpcs:ignore WordPress.Security.EscapeOutput
+			echo '<details><summary style="cursor:pointer">자세한 숫자 (붙여 넣기용)</summary><p style="color:#646970">숫자만 들어 있습니다 (이름 · 연락처 없음).</p>';
+			echo '<textarea readonly rows="22" style="width:100%;font-family:monospace;font-size:12px" onclick="this.select()">' . esc_textarea( text( $r ) ) . '</textarea></details>';
 		} catch ( \Throwable $e ) {
 			echo '<p style="color:#b42318">셈하다 멈췄습니다: ' . esc_html( $e->getMessage() ) . '</p>';
 		}
