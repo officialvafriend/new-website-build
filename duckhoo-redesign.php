@@ -129,6 +129,7 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/coupon-admin.php';
 	// 마케팅 → 적립금 한 번에 넣기 — 엑셀 → 미리 보기 → 사장님이 「넣기」를 눌러야 들어간다 (잔액 + 원장 · 두 번 안 넣음 · 거두기).
 	require_once plugin_dir_path( __FILE__ ) . 'includes/points-admin.php';
+	require_once plugin_dir_path( __FILE__ ) . 'includes/points-check.php'; // 도구 → 적립금 확인 — 손님 한 명의 계정 · 잔액 · 내역 (읽기 전용)
 	// 도구 → 분류 묶기 — 상품 이름을 붙여 넣으면 새 분류를 만들고 그 상품들을 넣는다.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/cat-admin.php';
 	// 도구 → 옵션 이름 바꾸기 — 다른 상품들의 선택칸에 적힌 옵션 이름 · 값을 한 번에.
