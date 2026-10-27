@@ -98,7 +98,7 @@ def chart():
 
 def send_table():
     head = ('<table class="st"><tr><th>보낸 날</th><th>무엇을</th><th class="n">받은</th><th class="n">산</th>'
-            '<th class="n">받기 전</th><th class="n">늘어난</th><th class="n">실입금</th><th class="n">쓴 적립금</th></tr>')
+            '<th class="n">받기 전</th><th class="n">늘어난</th><th class="n">늘어난 돈<small>어림</small></th><th class="n">쓴 적립금</th></tr>')
     rows = []
     for s in SENDS:
         lf = lift(s)
@@ -108,7 +108,7 @@ def send_table():
         days = f'<small class="g">{s[9]}일째</small>' if s[9] < 14 else ''
         rows.append(f'<tr><td>{s[0]}{days}</td><td>{tag} {s[2]}{note}</td><td class="n">{s[3]}</td>'
                     f'<td class="n"><b>{s[4]}</b> <small>{pct(s[4], s[3])}</small></td><td class="n">{s[5]}</td>'
-                    f'<td class="n {cls}"><b>{lf:+d}</b></td><td class="n">{"(위 안)" if s[2] == "노보 지원금 다시 알림" else (man(s[6]) if s[6] else "-")}</td>'
+                    f'<td class="n {cls}"><b>{lf:+d}</b></td><td class="n">{"(위 안)" if s[2] == "노보 지원금 다시 알림" else ("약 " + man(gain(s)) if lf > 0 else "없음")}</td>'
                     f'<td class="n">{man(s[7]) if s[7] else "-"}</td></tr>')
     for d, nm, n, amt in TODAY:
         rows.append(f'<tr class="td"><td>{d}</td><td><i class="tg p">적립금</i> {nm}<small>오늘 넣음 · 결과는 11월 보고</small></td>'
@@ -189,7 +189,7 @@ table.dn {{ margin-top: 0; }} table.dn td {{ padding: 4pt 6pt; }}
 </style>"""
 CSS = CSS.replace('</style>', f'''
 .st {{ font-size: 10pt; margin-bottom: 8pt; }} .st td {{ padding: 3.5pt 5pt; vertical-align: top; line-height: 1.45; }} .st th {{ padding: 4pt 5pt; }}
-.st small {{ display: block; font-size: 9pt; color: #6B7280; }} .st .n small {{ display: inline; }}
+.st th.n small {{ display: block; font-size: 8pt; font-weight: 600; }} .st small {{ display: block; font-size: 9pt; color: #6B7280; }} .st .n small {{ display: inline; }}
 .st td.n small.g, .st td small.g {{ display: block; }}
 .st .up b {{ color: #067647; }} .st .dn b {{ color: #B42318; }} .st tr.td td {{ color: #374151; background: #F8FAFC; }}
 .tg {{ font-style: normal; font-size: 8.5pt; font-weight: 800; border-radius: 99pt; padding: 1pt 6pt; margin-right: 2pt; white-space: nowrap; }}
@@ -232,7 +232,7 @@ cover = f'''<section class="page cover">
 p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   <h2>돈이 걸린 문자는 움직였고,<br>소식만 알린 문자는 움직이지 않았습니다</h2>
   <div class="rows">
-    <div class="row"><span class="k ok">잘된 것</span><p>10/13 감사 적립금 · <b>912명 중 {A[4]}명이 샀습니다 (받기 전 {A[5]}명)</b><small>더 산 사람 {lift(A)}명 · 실입금 {man(A[6])} · 쓴 적립금 {man(A[7])}. 넣은 날 주문 30건 중 25건이 다시 산 손님이었습니다</small></p></div>
+    <div class="row"><span class="k ok">잘된 것</span><p>10/13 감사 적립금 · <b>912명 중 {A[4]}명이 샀습니다 (받기 전 {A[5]}명)</b><small>더 산 사람 {lift(A)}명 · 늘어난 돈 약 {man(gain(A))} · 쓴 적립금 {man(A[7])}. 넣은 날 주문 30건 중 25건이 다시 산 손님이었습니다</small></p></div>
     <div class="row"><span class="k ok">잘된 것</span><p>노보 지원금 1만원 · <b>213명 중 {NV[4]}명이 샀고 노보 14개가 팔렸습니다</b><small>같은 기간 가게 전체 노보 판매 60개의 23%. 쓴 지원금 {man(NV[7])}</small></p></div>
     <div class="row"><span class="k bad">아쉬운 것</span><p>신상품 알림 문자 5번 · <b>{w(NEW_N)}명이 받고 그 신상품은 2개 팔렸습니다</b><small>산 사람 {NEW_B}명은 대부분 원래 사던 손님입니다 (다섯 번 합쳐 받기 전보다 {NEW_LIFT:+d}명). 문자만으로는 새 상품을 사게 하지 못했습니다</small></p></div>
     <div class="row"><span class="k mid">주의</span><p>한 건당 금액이 <b>{w(STORE['p_aov'])}원 → {w(STORE['aov'])}원 (−{AOV_DN * 100:.0f}%)</b><small>적립금을 쓰는 작은 주문이 늘어난 탓으로 보입니다. 건수가 늘어 전체 실입금은 +{SALES_UP * 100:.0f}%</small></p></div>
@@ -240,7 +240,7 @@ p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   <h3>손님 주문, 앞 15일과 이번 15일</h3>
   <div class="cmp">
     <div class="c"><div class="t">다시 산 손님 주문</div><div class="v">{STORE['p_again']} → {STORE['again']}<small>건</small></div><p>{AGAIN_X:.1f}배 · CRM이 노린 손님입니다</p></div>
-    <div class="c dim"><div class="t">처음 산 손님 주문</div><div class="v">{STORE['p_first']} → {STORE['first']}<small>건</small></div><p>+{STORE['first'] - STORE['p_first']}건 · CRM과는 무관한 손님입니다</p></div>
+    <div class="c dim"><div class="t">처음 산 손님 주문</div><div class="v">{STORE['p_first']} → {STORE['first']}<small>건</small></div><p>+{STORE['first'] - STORE['p_first']}건 · CRM은 대부분 산 적 있는 손님에게 보냈습니다</p></div>
   </div>''')
 
 p2 = frame(2, '보낸 것마다', f'''  <div class="eb">2 · 보낸 것마다</div>
@@ -248,7 +248,8 @@ p2 = frame(2, '보낸 것마다', f'''  <div class="eb">2 · 보낸 것마다</d
   <p class="lead">「늘어난」이 클수록 효과가 있었던 것입니다. 「N일째」는 14일이 덜 찬 줄입니다.</p>
   {send_table()}
   <div class="box"><div class="t">읽는 법</div>
-    <p>· <b>줄마다 실입금을 더하지 않습니다.</b> 한 사람이 여러 줄에 듭니다 (10/13 적립금을 받고 10/14 신상품 문자도 받은 사람 등). 더하면 {man(sum(x[6] for x in SENDS if x[2] != '노보 지원금 다시 알림'))}으로, 15일 동안 다시 산 손님 실입금 {man(AGAIN_SALES)}보다 커집니다.</p>
+    <p>· <b>「늘어난 돈」은 더 산 사람 몫만 어림한 값입니다</b> (더 산 사람 × 산 사람 한 명당 낸 돈). 원래 샀을 사람(받기 전)이 낸 돈은 넣지 않았습니다. 늘어난 사람이 없으면 「없음」입니다.</p>
+    <p>· 한 사람이 여러 줄에 들 수 있어 줄끼리 더하지 않습니다. 10/14 신상품 문자의 +10명 중 일부는 전날 감사 적립금을 받은 사람일 수 있습니다 (겹침은 아직 확인 못 함).</p>
     <p>· 노보 다시 알림 뒤 산 6명은 위 14명 안에 있습니다.</p>
     <p>· 10/13 · 10/16 적립금은 기한 뒤 안 쓴 몫을 거뒀습니다. 비용은 「쓴 적립금」뿐입니다.</p>
     <p>· 미입금 안내 문자(10/14 · 17명)는 이 방식으로 잴 수 없어 뺐습니다.</p></div>''')
