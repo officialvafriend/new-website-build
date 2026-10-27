@@ -1514,13 +1514,15 @@ function screen(): void {
 	if ( $all ) {
 		echo '<h2 style="margin-top:28px">넣은 묶음</h2><table class="widefat striped" style="max-width:860px"><thead><tr><th>묶음</th><th>인원</th><th>금액</th><th>마지막</th><th></th></tr></thead><tbody>';
 		foreach ( array_reverse( $all, true ) as $k => $b ) {
-			echo '<tr><td>' . esc_html( (string) $b['label'] ) . '</td><td>' . number_format( (int) $b['n'] ) . '명</td><td>' . number_format( (int) $b['sum'] ) . '원</td><td>' . esc_html( wp_date( 'n/j H:i', (int) ( $b['revoked'] ?? $b['updated'] ?? $b['created'] ) ) ) . ( ! empty( $b['revoked'] ) ? ' 거둠' : '' ) . '</td><td>';
+			// 다 거둔 묶음은 지금 가진 사람이 0 이라도 받은 사람은 있다 — 참여 보기 · 받은 사람 자세히를 그대로 연다.
+			$got = (int) $b['n'] > 0 ? (int) $b['n'] : ( ( ! empty( $b['revoked'] ) || ! empty( $b['part_revoked'] ) ) ? count( received( (string) $k, $b ) ) : 0 );
+			echo '<tr><td>' . esc_html( (string) $b['label'] ) . '</td><td>' . number_format( (int) $b['n'] ) . '명' . ( (int) $b['n'] <= 0 && $got > 0 ? '<br><small>받았던 ' . number_format( $got ) . '명</small>' : '' ) . '</td><td>' . number_format( (int) $b['sum'] ) . '원</td><td>' . esc_html( wp_date( 'n/j H:i', (int) ( $b['revoked'] ?? $b['updated'] ?? $b['created'] ) ) ) . ( ! empty( $b['revoked'] ) ? ' 거둠' : '' ) . '</td><td>';
 			if ( (int) $b['n'] > 0 ) {
 				echo '<form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button" name="dhr_pts" value="revoke" onclick="return confirm(\'이 묶음으로 넣은 적립금을 거둘까요? 이미 쓴 만큼은 빼지 못합니다.\')">거두기</button></form>';
 			}
-			if ( (int) $b['n'] > 0 ) {
+			if ( $got > 0 ) {
 				echo ' <form method="post" style="display:inline">';
 				wp_nonce_field( 'dhr-pts' );
 				echo '<input type="hidden" name="key" value="' . esc_attr( (string) $k ) . '"><button class="button button-primary" name="dhr_pts" value="part">참여 보기</button></form>';
