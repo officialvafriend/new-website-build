@@ -362,6 +362,11 @@ function routes(): void {
 			try {
 				$fresh = is_object( $req ) && method_exists( $req, 'get_param' ) && '1' === (string) $req->get_param( 'fresh' );
 				$ym    = is_object( $req ) && method_exists( $req, 'get_param' ) ? (string) $req->get_param( 'ym' ) : '';
+				$part  = is_object( $req ) && method_exists( $req, 'get_param' ) ? (string) $req->get_param( 'part' ) : '';
+				if ( 'repeat' === $part && function_exists( '\\Duckhoo\\Redesign\\Anatomy\\repeat_data' ) ) {
+					// 재구매 패턴 — 집계만 (회원 번호 · 이름 · 연락처 없음). 다음 CRM 명단을 고를 때 본다
+					return rest_ensure_response( array( 'repeat' => \Duckhoo\Redesign\Anatomy\repeat_data( $fresh ) ) );
+				}
 				return rest_ensure_response( payload( $fresh, $ym ) );
 			} catch ( \Throwable $e ) {
 				return new \WP_Error( 'dhr_brief_failed', $e->getMessage(), array( 'status' => 500 ) );

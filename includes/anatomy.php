@@ -487,6 +487,220 @@ function report( array $a, string $today ): string {
 	return implode( "\n", $L );
 }
 
+/**
+ * 묶음 종류 — 낱병 · 2~9병 묶음 · 10병 이상 · 기기·팟.
+ */
+function pack( string $name ): string {
+	if ( preg_match( '/기기|디바이스|팟|코일|카트리지/u', $name ) && ! preg_match( '/액상\s*\d+\s*병/u', $name ) ) {
+		return '기기·팟';
+	}
+	$b = function_exists( '\\Duckhoo\\Redesign\\Cost\\bottles' ) ? (int) \Duckhoo\Redesign\Cost\bottles( $name ) : 0;
+	if ( ! $b && preg_match( '/(\d+)\s*\+\s*(\d+)/u', $name, $m ) ) {
+		$b = (int) $m[1] + (int) $m[2];
+	} elseif ( ! $b && preg_match( '/(\d+)\s*병/u', $name, $m ) ) {
+		$b = (int) $m[1];
+	}
+	if ( $b >= 10 ) {
+		return '10병 이상 묶음';
+	}
+	return $b >= 2 ? '2~9병 묶음' : '낱병';
+}
+
+/**
+ * 다음 CRM 을 고르는 재구매 패턴 — 집계만 (회원 번호 · 이름 · 연락처 없음).
+ * 돈 들어온 회원 주문만, 노보 줄은 빼고 센다 (`$skip` 브랜드).
+ *
+ * @param array<int,array> $orders orders() 꼴.
+ * @param array<int,array> $items  items() 꼴.
+ */
+function repeat_patterns( array $orders, array $items, int $now, array $skip = array( '노보' ) ): array {
+	$paid_s = paid_statuses();
+	$paid   = array_values( array_filter( $orders, fn( $o ) => $o['u'] > 0 && in_array( $o['s'], $paid_s, true ) ) );
+	usort( $paid, fn( $a, $b ) => $a['ts'] <=> $b['ts'] );
+	$day = 86400;
+	/* 회원별 주문 — 노보만 산 주문은 버린다 */
+	$by = array();
+	foreach ( $paid as $o ) {
+		$lines = array();
+		foreach ( (array) ( $items[ $o['id'] ] ?? array() ) as $l ) {
+			$b = brand( (string) $l['name'] );
+			if ( in_array( $b, $skip, true ) ) {
+				continue;
+			}
+			$lines[] = array( 'b' => $b, 'p' => short( (string) $l['name'] ), 'k' => pack( (string) $l['name'] ) );
+		}
+		if ( $lines ) {
+			$by[ $o['u'] ][] = array( 'ts' => (int) $o['ts'], 't' => (float) $o['t'], 'lines' => $lines );
+		}
+	}
+	$brands = array(); $prods = array(); $packs = array(); $pairs = array(); $flow = array();
+	$second = array(); $first_n = 0; $due = array(); $lapsed = 0; $lapsed_sum = 0.0;
+	foreach ( $by as $os ) {
+		++$first_n;
+		$n = count( $os );
+		if ( $n > 1 ) {
+			$second[] = ( $os[1]['ts'] - $os[0]['ts'] ) / $day;
+		}
+		/* 묶음 종류: 첫 주문의 가장 큰 묶음 */
+		$rank = array( '기기·팟' => 0, '낱병' => 1, '2~9병 묶음' => 2, '10병 이상 묶음' => 3 );
+		$k0 = '낱병';
+		foreach ( $os[0]['lines'] as $l ) {
+			if ( $rank[ $l['k'] ] > $rank[ $k0 ] || '기기·팟' === $k0 ) {
+				$k0 = $l['k'];
+			}
+		}
+		$packs[ $k0 ] = $packs[ $k0 ] ?? array( 'n' => 0, 'rep' => 0, 'gap' => array(), 'aov' => array() );
+		++$packs[ $k0 ]['n'];
+		$packs[ $k0 ]['aov'][] = $os[0]['t'];
+		if ( $n > 1 ) {
+			++$packs[ $k0 ]['rep'];
+			$packs[ $k0 ]['gap'][] = ( $os[1]['ts'] - $os[0]['ts'] ) / $day;
+		}
+		/* 브랜드 · 상품: 그 이름이 든 주문들 */
+		$bseen = array(); $pseen = array();
+		foreach ( $os as $i => $o ) {
+			foreach ( array_unique( array_column( $o['lines'], 'b' ) ) as $b ) {
+				$bseen[ $b ][] = $i;
+			}
+			foreach ( array_unique( array_column( $o['lines'], 'p' ) ) as $p ) {
+				$pseen[ $p ][] = $i;
+			}
+		}
+		$last_ts = $os[ $n - 1 ]['ts'];
+		foreach ( $bseen as $b => $idx ) {
+			$brands[ $b ] = $brands[ $b ] ?? array( 'buyers' => 0, 'again_same' => 0, 'again_any' => 0, 'gap' => array(), 'to' => array(), 'due' => 0 );
+			++$brands[ $b ]['buyers'];
+			if ( count( $idx ) > 1 ) {
+				++$brands[ $b ]['again_same'];
+				for ( $j = 1; $j < count( $idx ); $j++ ) {
+					$brands[ $b ]['gap'][] = ( $os[ $idx[ $j ] ]['ts'] - $os[ $idx[ $j - 1 ] ]['ts'] ) / $day;
+				}
+			}
+			$after = $idx[0] + 1;
+			if ( $after < $n ) {
+				++$brands[ $b ]['again_any'];
+				/* 그 브랜드를 처음 산 다음 주문에서 무엇을 샀나 */
+				foreach ( array_unique( array_column( $os[ $after ]['lines'], 'b' ) ) as $nb ) {
+					if ( $nb !== $b ) {
+						$brands[ $b ]['to'][ $nb ] = ( $brands[ $b ]['to'][ $nb ] ?? 0 ) + 1;
+					}
+				}
+			}
+		}
+		foreach ( $pseen as $p => $idx ) {
+			$prods[ $p ] = $prods[ $p ] ?? array( 'buyers' => 0, 'again' => 0, 'gap' => array() );
+			++$prods[ $p ]['buyers'];
+			if ( count( $idx ) > 1 ) {
+				++$prods[ $p ]['again'];
+				$prods[ $p ]['gap'][] = ( $os[ $idx[1] ]['ts'] - $os[ $idx[0] ]['ts'] ) / $day;
+			}
+		}
+		/* 앞 주문 상품 → 다음 주문 상품 (다른 상품만) */
+		for ( $i = 1; $i < $n; $i++ ) {
+			$prev = array_unique( array_column( $os[ $i - 1 ]['lines'], 'p' ) );
+			foreach ( array_unique( array_column( $os[ $i ]['lines'], 'p' ) ) as $q ) {
+				if ( ! in_array( $q, $prev, true ) ) {
+					foreach ( $prev as $p ) {
+						$pairs[ $p . ' → ' . $q ] = ( $pairs[ $p . ' → ' . $q ] ?? 0 ) + 1;
+					}
+				}
+			}
+		}
+		/* 지금 다시 살 때가 된 사람 (브랜드별) · 30~120일 쉬는 사람 */
+		$quiet = ( $now - $last_ts ) / $day;
+		if ( $quiet >= 30 && $quiet <= 120 ) {
+			++$lapsed;
+			$lapsed_sum += $os[ $n - 1 ]['t'];
+		}
+		foreach ( $bseen as $b => $idx ) {
+			$due[ $b ][] = ( $now - $os[ end( $idx ) ]['ts'] ) / $day; // 그 브랜드를 마지막으로 산 뒤 며칠
+		}
+	}
+	$med = fn( $v ) => $v ? (int) round( median( $v ) ) : null;
+	$out_b = array();
+	foreach ( $brands as $b => $r ) {
+		if ( $r['buyers'] < 5 ) {
+			continue;
+		}
+		arsort( $r['to'] );
+		$g   = $med( $r['gap'] );
+		$win = $g ? array( max( 7, $g - 7 ), $g + 21 ) : array( 21, 60 );
+		$cnt = count( array_filter( (array) ( $due[ $b ] ?? array() ), fn( $d ) => $d >= $win[0] && $d <= $win[1] ) );
+		$out_b[ $b ] = array(
+			'buyers'     => $r['buyers'],
+			'same_again' => $r['again_same'],
+			'same_rate'  => pct( $r['again_same'], $r['buyers'] ),
+			'any_again'  => $r['again_any'],
+			'any_rate'   => pct( $r['again_any'], $r['buyers'] ),
+			'gap_median' => $g,
+			'next_other' => array_slice( $r['to'], 0, 4, true ),
+			'due_window' => $win[0] . '~' . $win[1] . '일',
+			'due_now'    => $cnt,
+		);
+	}
+	uasort( $out_b, fn( $x, $y ) => $y['same_again'] <=> $x['same_again'] ?: $y['buyers'] <=> $x['buyers'] );
+	$out_p = array();
+	foreach ( $prods as $p => $r ) {
+		if ( $r['buyers'] >= 8 ) {
+			$out_p[ $p ] = array( 'buyers' => $r['buyers'], 'again' => $r['again'], 'rate' => pct( $r['again'], $r['buyers'] ), 'gap_median' => $med( $r['gap'] ) );
+		}
+	}
+	uasort( $out_p, fn( $x, $y ) => ( $y['again'] / max( 1, $y['buyers'] ) ) <=> ( $x['again'] / max( 1, $x['buyers'] ) ) ?: $y['buyers'] <=> $x['buyers'] );
+	$out_k = array();
+	foreach ( $packs as $k => $r ) {
+		$out_k[ $k ] = array( 'first_n' => $r['n'], 'again' => $r['rep'], 'rate' => pct( $r['rep'], $r['n'] ), 'gap_median' => $med( $r['gap'] ), 'first_aov' => $r['aov'] ? (int) round( array_sum( $r['aov'] ) / count( $r['aov'] ) ) : 0 );
+	}
+	arsort( $pairs );
+	$bins = array( 7 => 0, 14 => 0, 21 => 0, 30 => 0, 45 => 0, 60 => 0, 90 => 0 );
+	foreach ( $second as $g ) {
+		foreach ( $bins as $d => $c ) {
+			if ( $g <= $d ) {
+				++$bins[ $d ];
+			}
+		}
+	}
+	$cum = array();
+	foreach ( $bins as $d => $c ) {
+		$cum[ $d . '일 안' ] = array( 'n' => $c, 'of_repeaters' => pct( $c, count( $second ) ) );
+	}
+	return array(
+		'customers'      => $first_n,
+		'repeaters'      => count( $second ),
+		'repeat_rate'    => pct( count( $second ), $first_n ),
+		'second_gap_median' => $med( $second ),
+		'second_within'  => $cum,
+		'brands'         => array_slice( $out_b, 0, 15, true ),
+		'products'       => array_slice( array_filter( $out_p, fn( $r ) => $r['again'] >= 2 ), 0, 20, true ),
+		'packs'          => $out_k,
+		'pairs'          => array_slice( array_filter( $pairs, fn( $c ) => $c >= 3 ), 0, 15, true ),
+		'lapsed_30_120'  => array( 'n' => $lapsed, 'last_aov' => $lapsed ? (int) round( $lapsed_sum / $lapsed ) : 0 ),
+	);
+}
+
+/**
+ * 재구매 패턴 (1시간 캐시). 브리핑 열쇠로 `?part=repeat` 에서 읽는다 — 집계만 나간다.
+ */
+function repeat_data( bool $fresh = false ): array {
+	$key = CACHE . '_rep_' . (string) current_time( 'Y-m-d-H' );
+	if ( ! $fresh ) {
+		$hit = get_transient( $key );
+		if ( is_array( $hit ) && isset( $hit['r'] ) ) {
+			return $hit;
+		}
+	}
+	$os = orders();
+	$paid_s = paid_statuses();
+	$ids = array();
+	foreach ( $os as $o ) {
+		if ( $o['u'] > 0 && in_array( $o['s'], $paid_s, true ) ) {
+			$ids[] = $o['id'];
+		}
+	}
+	$out = array( 'r' => repeat_patterns( $os, items( $ids ), (int) current_time( 'timestamp' ) ), 'built' => (string) current_time( 'Y-m-d H:i' ) ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
+	set_transient( $key, $out, HOUR_IN_SECONDS );
+	return $out;
+}
+
 /* ── 화면 ────────────────────────────────────────────────────────────── */
 
 function data( bool $fresh = false ): array {

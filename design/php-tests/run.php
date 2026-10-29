@@ -3473,5 +3473,32 @@ $lr = ("Duckhoo\\Redesign\\Points\\Admin\\ledger_received")([
 ], '10월 감사 적립금');
 $ok($lr===[1=>5000,2=>8800,4=>5023], '거둔 묶음: 원장의 넣은 줄만 센다 (거둔 줄 · 이름이 더 긴 다른 묶음 · 회원 없는 줄 빼고, 두 번 받으면 더한다)');
 
+
+/* ── 재구매 패턴 (repeat_patterns) — 노보 빼고 · 집계만 ── */
+$RP = '\\Duckhoo\\Redesign\\Anatomy\\repeat_patterns';
+$D = 86400; $T0 = 1790000000;
+$ro = [
+ ['id'=>1,'ts'=>$T0,'s'=>'delivered','t'=>30000,'u'=>11],
+ ['id'=>2,'ts'=>$T0+20*$D,'s'=>'delivered','t'=>30000,'u'=>11],
+ ['id'=>3,'ts'=>$T0+45*$D,'s'=>'delivered','t'=>60000,'u'=>11],
+ ['id'=>4,'ts'=>$T0,'s'=>'delivered','t'=>130000,'u'=>12],
+ ['id'=>5,'ts'=>$T0+10*$D,'s'=>'delivered','t'=>13000,'u'=>12],
+ ['id'=>6,'ts'=>$T0,'s'=>'cancelled','t'=>20000,'u'=>13],
+ ['id'=>7,'ts'=>$T0,'s'=>'delivered','t'=>20000,'u'=>0],
+];
+$ri = [
+ 1=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1],['name'=>'[화이트아웃] 자몽','qty'=>1,'total'=>15000,'pid'=>2]],
+ 2=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+ 3=>[['name'=>'[펠릭스] 더블라임','qty'=>1,'total'=>20000,'pid'=>3]],
+ 4=>[['name'=>'[노보 리퀴드] 10+1','qty'=>1,'total'=>120000,'pid'=>4]],
+ 5=>[['name'=>'[노보] 타박멘솔','qty'=>1,'total'=>13000,'pid'=>5]],
+ 6=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+ 7=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+];
+$rp = $RP($ro, $ri, $T0 + 80*$D);
+$ok($rp['customers']===1 && $rp['repeaters']===1 && $rp['second_gap_median']===20, '재구매 패턴: 노보만 산 회원 · 취소 · 비회원은 안 센다');
+$ok(isset($rp['brands']) && !isset($rp['brands']['노보']) && $rp['packs']['낱병']['first_n']===1 && $rp['packs']['낱병']['gap_median']===20, '재구매 패턴: 노보는 브랜드 표에 없고, 묶음 종류 · 간격을 센다');
+$ok($rp['lapsed_30_120']['n']===1 && strpos(json_encode($rp),'"11"')===false && strpos(json_encode($rp,JSON_UNESCAPED_UNICODE),'u":')===false, '재구매 패턴: 쉬는 손님은 수만 · 회원 번호가 안 나간다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
