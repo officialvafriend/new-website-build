@@ -49,6 +49,7 @@ function in_files( string $needle, int $ctx = 12, bool $all_plugins = false, int
 			function_exists( 'get_stylesheet_directory' ) ? get_stylesheet_directory() : '',
 			function_exists( 'get_template_directory' ) ? get_template_directory() : '',
 		),
+		$all_plugins ? extra_dirs() : array(),
 		plugin_dirs( $all_plugins )
 	) ) );
 	// 화면이 멈추는 것보다 「여기까지」가 낫다 — 매출 화면과 같은 생각이다.
@@ -57,12 +58,12 @@ function in_files( string $needle, int $ctx = 12, bool $all_plugins = false, int
 		if ( ! is_dir( $dir ) || microtime( true ) > $deadline ) {
 			continue;
 		}
-		$it = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $dir, \FilesystemIterator::SKIP_DOTS ) );
+		$it = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $dir, \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS ) );
 		foreach ( $it as $f ) {
 			if ( microtime( true ) > $deadline ) {
 				break;
 			}
-			if ( ! preg_match( '/\.(php|js)$/', $f->getFilename() ) || $f->getSize() > 3_000_000 ) {
+			if ( ! preg_match( '/\.(php|js|po|mo)$/', $f->getFilename() ) || $f->getSize() > 3_000_000 ) {
 				continue;
 			}
 			$lines = @file( $f->getPathname(), FILE_IGNORE_NEW_LINES );
@@ -84,6 +85,25 @@ function in_files( string $needle, int $ctx = 12, bool $all_plugins = false, int
 					return $out;
 				}
 			}
+		}
+	}
+	return $out;
+}
+
+/**
+ * 「플러그인 전부」일 때 먼저 뒤질 곳 — 워드프레스닷컴이 깔아 두는 mu-plugins 와 번역 파일.
+ *
+ * 결제 화면의 「온라인으로 이 요청을 처리할 수 없습니다」가 우리 플러그인 · 워드커머스 ·
+ * 젯팩 · WooPayments 어디에도 없었다 (2026-10-29). 남은 자리가 이 둘이다. 화면 문구가
+ * 번역 파일에만 한글로 있으면 원문(영어)은 거기서 찾는다. 시간 예산 안에 들도록 앞에 둔다.
+ *
+ * @return string[]
+ */
+function extra_dirs(): array {
+	$out = array();
+	foreach ( array( 'WPMU_PLUGIN_DIR', 'WP_LANG_DIR' ) as $c ) {
+		if ( defined( $c ) && is_dir( constant( $c ) ) ) {
+			$out[] = constant( $c );
 		}
 	}
 	return $out;
@@ -307,7 +327,7 @@ function report_text( string $q, bool $all ): string {
 	$t   = "코드 찾기 결과\n";
 	$t  .= '사이트: ' . ( function_exists( 'home_url' ) ? home_url() : '' ) . "\n";
 	$t  .= '시각: ' . ( function_exists( 'wp_date' ) ? wp_date( 'Y-m-d H:i' ) : gmdate( 'Y-m-d H:i' ) ) . "\n";
-	$t  .= '찾은 곳: 테마 · Code Snippets · ' . ( $all ? '플러그인 전부' : '키플 · 우리 플러그인' ) . "\n";
+	$t  .= '찾은 곳: 테마 · Code Snippets · ' . ( $all ? '워드프레스닷컴 모듈 · 번역 파일 · 플러그인 전부' : '키플 · 우리 플러그인' ) . "\n";
 	foreach ( terms( $q ) as $term ) {
 		$hits = array_merge( in_snippets( $term ), in_files( $term, 12, $all, $max ) );
 		$t   .= "\n" . str_repeat( '=', 72 ) . "\n";
@@ -363,7 +383,7 @@ function screen(): void {
 	echo '<p>화면에 뜨는 문구를 그대로 넣으면 그 글자가 있는 자리를 보여 줍니다 — <strong>테마 · Code Snippets · 키플 플러그인</strong>. 읽기만 합니다.</p>';
 	echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( SLUG ) . '">';
 	echo '<input type="text" name="q" value="' . esc_attr( $q ) . '" class="regular-text" placeholder="예) 쿠폰함에서 확인  ·  여럿은 | 로: BUNDLE_RATIO | 맛 선택을 총"> ';
-	echo '<label style="margin-left:.6em"><input type="checkbox" name="all" value="1"' . checked( $all, true, false ) . '> 플러그인 전부 (느립니다)</label> ';
+	echo '<label style="margin-left:.6em"><input type="checkbox" name="all" value="1"' . checked( $all, true, false ) . '> 플러그인 전부 · 워드프레스닷컴 모듈 · 번역 파일 (느립니다)</label> ';
 	echo '<button class="button button-primary">찾기</button></form>';
 	// ── 파일 통째로 보기 ──────────────────────────────────────────────────
 	$dir  = isset( $_GET['dir'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['dir'] ) ) : ''; // phpcs:ignore
