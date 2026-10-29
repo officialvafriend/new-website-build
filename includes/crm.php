@@ -67,7 +67,7 @@ function view_all( string $seg ): bool {
 	if ( isset( $_GET['view'] ) && 'send' === $_GET['view'] ) { // phpcs:ignore WordPress.Security.NonceVerification
 		return false;
 	}
-	return in_array( $seg, (array) apply_filters( 'duckhoo_crm_view_all_segs', array( 'brand' ) ), true );
+	return in_array( $seg, (array) apply_filters( 'duckhoo_crm_view_all_segs', array( 'brand', 'due' ) ), true );
 }
 
 /** 죽은 주문 — 취소 · 환불 · 실패. 「살아 있는 주문」을 셀 때 뺀다. @return string[] */
@@ -192,6 +192,129 @@ function seg_brand( array $orders, array $items, array $brands, int $now, int $d
 		);
 	}
 	usort( $out, fn( $a, $b ) => $b['last'] <=> $a['last'] );
+	return $out;
+}
+
+/**
+ * 3. 다시 살 때가 된 손님 — 재구매 패턴(`Anatomy\repeat_patterns()` 의 브랜드별 「보통 며칠 만에 다시 사나」)으로 뽑는다
+ * (사장님 2026-10-29 「재구매 패턴을 CRM 명단으로」). 노보는 빼고 센다.
+ *
+ * - 그 브랜드를 마지막으로 산 지 그 브랜드의 시기(`due_window`) 안에 든 회원 → 그 브랜드 줄. 여럿이면 가장 최근에 산 브랜드
+ * - 아니면 마지막 주문이 30~120일 전인 회원 → 「쉬는 손님」
+ * - 빼는 사람: 최근 14일 안에 살아 있는 주문(입금전 포함)이 있는 사람 · 마지막 주문에 10병 이상 묶음이 있고 45일이 안 된 사람
+ *   (10병 손님은 다시 사기까지 49일 걸린다 — 일찍 보내면 낭비)
+ *
+ * @param array<int,array{id:int,ts:int,s:string,t:float,u:int}>                $orders 주문 머리 전부.
+ * @param array<int,array<int,array{pid:int,name:string,qty:int,total:float}>> $items  주문 번호 => 상품 줄.
+ * @param array<string,array>                                                  $stats  repeat_patterns()['brands'].
+ * @return array<int,array{u:int,kind:string,days:int,quiet:int,gap:?int,last:int,total:float,n:int,fav:string,pack:string,tip:string}>
+ */
+function seg_due( array $orders, array $items, int $now, array $stats, array $skip = array( '노보' ) ): array {
+	$A     = '\\Duckhoo\\Redesign\\Anatomy\\';
+	$bf    = function_exists( $A . 'brand' ) ? $A . 'brand' : fn( $n ) => preg_match( '/^\s*\[([^\]]+)\]/u', $n, $m ) ? trim( $m[1] ) : '기타';
+	$sf    = function_exists( $A . 'short' ) ? $A . 'short' : fn( $n ) => $n;
+	$kf    = function_exists( $A . 'pack' ) ? $A . 'pack' : fn( $n ) => '낱병';
+	$paid  = paid_statuses();
+	$dead  = dead_statuses();
+	$day   = 86400;
+	$win   = array();
+	foreach ( $stats as $b => $s ) {
+		if ( preg_match( '/(\d+)\s*~\s*(\d+)/', (string) ( $s['due_window'] ?? '' ), $m ) ) {
+			$win[ $b ] = array( (int) $m[1], (int) $m[2] );
+		}
+	}
+	$active = array();
+	$by     = array();
+	usort( $orders, fn( $a, $b ) => $a['ts'] <=> $b['ts'] );
+	foreach ( $orders as $o ) {
+		$u = (int) $o['u'];
+		if ( $u <= 0 ) {
+			continue;
+		}
+		if ( ! in_array( $o['s'], $dead, true ) && $o['ts'] >= $now - 14 * $day ) {
+			$active[ $u ] = true;
+		}
+		if ( in_array( $o['s'], $paid, true ) ) {
+			$by[ $u ][] = $o;
+		}
+	}
+	$out = array();
+	foreach ( $by as $u => $os ) {
+		if ( isset( $active[ $u ] ) ) {
+			continue;
+		}
+		$last_b = array(); // 브랜드 => 마지막으로 산 시각
+		$lastk  = null;     // 노보 아닌 마지막 주문의 줄
+		$lastp  = '';
+		foreach ( $os as $o ) {
+			$lines = array();
+			foreach ( (array) ( $items[ $o['id'] ] ?? array() ) as $l ) {
+				$b = $bf( (string) $l['name'] );
+				if ( in_array( $b, $skip, true ) ) {
+					continue;
+				}
+				$lines[]      = $l;
+				$last_b[ $b ] = (int) $o['ts'];
+			}
+			if ( $lines ) {
+				$lastk = $lines;
+				$lastp = $sf( (string) $lines[0]['name'] );
+			}
+		}
+		if ( null === $lastk ) {
+			continue; // 노보만 산 사람
+		}
+		$rank = array( '기기·팟' => 0, '낱병' => 1, '2~9병 묶음' => 2, '10병 이상 묶음' => 3 );
+		$pack = '낱병';
+		foreach ( $lastk as $l ) {
+			$k = $kf( (string) $l['name'] );
+			if ( ( $rank[ $k ] ?? 0 ) > ( $rank[ $pack ] ?? 0 ) ) {
+				$pack = $k;
+			}
+		}
+		$lastts = (int) end( $os )['ts'];
+		$quiet  = (int) floor( ( $now - $lastts ) / $day );
+		if ( '10병 이상 묶음' === $pack && $quiet < 45 ) {
+			continue;
+		}
+		$pick = '';
+		$pd   = PHP_INT_MAX;
+		foreach ( $last_b as $b => $ts ) {
+			$d = (int) floor( ( $now - $ts ) / $day );
+			if ( isset( $win[ $b ] ) && $d >= $win[ $b ][0] && $d <= $win[ $b ][1] && $d < $pd ) {
+				$pick = $b;
+				$pd   = $d;
+			}
+		}
+		if ( '' === $pick && ( $quiet < 30 || $quiet > 120 ) ) {
+			continue;
+		}
+		$kind = '' !== $pick ? $pick : '쉬는 손님';
+		if ( '' === $pick ) {
+			$tip = '60~90일 안에 한 번 부르기 — 지나면 돌아올 가능성이 크게 준다';
+		} elseif ( str_contains( $pick, '젤로' ) ) {
+			$tip = '팟 · 액상 안내 (기기 손님은 팟을 바꿀 때)';
+		} elseif ( '액상덕후' === $pick && '10병 이상 묶음' === $pack ) {
+			$tip = '다른 브랜드 5병 묶음 권하기 (액상덕후 10병 손님은 같은 브랜드를 잘 안 다시 삼)';
+		} else {
+			$to  = array_keys( (array) ( $stats[ $pick ]['next_other'] ?? array() ) );
+			$tip = '같은 브랜드 다시' . ( $to ? ' · 다음에 많이 사는 브랜드: ' . implode( ' · ', array_slice( $to, 0, 2 ) ) : '' );
+		}
+		$out[] = array(
+			'u'     => (int) $u,
+			'kind'  => $kind,
+			'days'  => '' !== $pick ? $pd : $quiet,
+			'quiet' => $quiet,
+			'gap'   => '' !== $pick ? ( $stats[ $pick ]['gap_median'] ?? null ) : null,
+			'last'  => $lastts,
+			'total' => (float) array_sum( array_column( $os, 't' ) ),
+			'n'     => count( $os ),
+			'fav'   => $lastp,
+			'pack'  => $pack,
+			'tip'   => $tip,
+		);
+	}
+	usort( $out, fn( $a, $b ) => ( '쉬는 손님' === $a['kind'] ) <=> ( '쉬는 손님' === $b['kind'] ) ?: $a['days'] <=> $b['days'] );
 	return $out;
 }
 
@@ -471,7 +594,7 @@ function dedupe( array $rows ): array {
 
 /** 합칠 때의 우선순위 — 급한 것부터. 필터 `duckhoo_crm_priority`. @return string[] */
 function priority(): array {
-	return (array) apply_filters( 'duckhoo_crm_priority', array( 'unpaid', 'abandon', 'brand', 'rfm' ) );
+	return (array) apply_filters( 'duckhoo_crm_priority', array( 'unpaid', 'abandon', 'brand', 'due', 'rfm' ) );
 }
 
 /**
@@ -685,6 +808,30 @@ function build( string $seg, array $opt, int $now ): array {
 			$c = $ct[ $r['u'] ] ?? array( 'name' => '#' . $r['u'], 'phone' => '', 'email' => '' );
 			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => implode( ' · ', $r['brands'] ) . ' ' . $r['n'] . '번 · ' . $r['bottles'] . '병', 'amount' => $r['total'], 'when' => $r['last'], 'note' => '자주 산 것: ' . $r['fav'], 'brands' => $r['brands'] );
 		}
+	} elseif ( 'due' === $seg ) {
+		$paid = paid_statuses();
+		$ids  = array();
+		foreach ( $orders as $o ) {
+			if ( $o['u'] > 0 && in_array( $o['s'], $paid, true ) ) {
+				$ids[] = $o['id'];
+			}
+		}
+		$A     = '\\Duckhoo\\Redesign\\Anatomy\\';
+		$items = function_exists( $A . 'items' ) ? \Duckhoo\Redesign\Anatomy\items( $ids ) : array();
+		$stats = function_exists( $A . 'repeat_patterns' ) ? (array) ( \Duckhoo\Redesign\Anatomy\repeat_patterns( $orders, $items, $now )['brands'] ?? array() ) : array();
+		$list  = seg_due( $orders, $items, $now, $stats );
+		$ct    = contacts( array_column( $list, 'u' ) );
+		$cnt   = array();
+		foreach ( $list as $r ) {
+			$c = $ct[ $r['u'] ] ?? array( 'name' => '#' . $r['u'], 'phone' => '', 'email' => '' );
+			$cnt[ $r['kind'] ] = ( $cnt[ $r['kind'] ] ?? 0 ) + 1;
+			$why = '쉬는 손님' === $r['kind']
+				? '마지막 주문 ' . $r['quiet'] . '일 전'
+				: $r['kind'] . ' 마지막 ' . $r['days'] . '일 전' . ( $r['gap'] ? ' (보통 ' . (int) $r['gap'] . '일 만에 다시 삼)' : '' );
+			$rows[] = array( 'u' => $r['u'], 'name' => $c['name'], 'phone' => $c['phone'], 'why' => $why, 'amount' => $r['total'], 'when' => $r['last'], 'note' => $r['n'] . '번 삼 · 마지막: ' . $r['fav'] . ' (' . $r['pack'] . ') / ' . $r['tip'], 'brands' => array( $r['kind'] ) );
+		}
+		arsort( $cnt );
+		$meta = array( 'counts' => $cnt, 'windows' => array_map( fn( $s ) => (string) ( $s['due_window'] ?? '' ), $stats ) );
 	} elseif ( 'rfm' === $seg ) {
 		$x    = rfm( $orders, $now );
 		$ct   = contacts( array_column( $x['rows'], 'u' ) );
@@ -758,8 +905,8 @@ function build( string $seg, array $opt, int $now ): array {
 }
 
 function opts( string $seg ): array {
-	$d = array( 'abandon' => 7, 'brand' => 0, 'rfm' => 0, 'unpaid' => 1 );
-	$days = isset( $_GET['days'] ) ? max( 0, min( 730, (int) $_GET['days'] ) ) : $d[ $seg ]; // phpcs:ignore WordPress.Security.NonceVerification
+	$d = array( 'abandon' => 7, 'brand' => 0, 'rfm' => 0, 'unpaid' => 1, 'due' => 0 );
+	$days = isset( $_GET['days'] ) ? max( 0, min( 730, (int) $_GET['days'] ) ) : ( $d[ $seg ] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
 	$only = isset( $_GET['only'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['only'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	return array( 'days' => $days, 'only' => $only );
 }
@@ -798,6 +945,9 @@ function group_name( string $seg, string $only ): string {
 	if ( 'brand' === $seg ) {
 		return $only . ' 구매 손님';
 	}
+	if ( 'due' === $seg ) {
+		return '쉬는 손님' === $only ? '30~120일 쉬는 손님' : $only . ' 다시 살 때';
+	}
 	return 'rfm' === $seg ? $base . ' ' . $only : $base;
 }
 
@@ -807,6 +957,7 @@ function segs(): array {
 	return array(
 		'abandon' => '장바구니 담고 나간 손님',
 		'brand'   => '노보 · 디오리퀴드 구매 손님',
+		'due'     => '다시 살 때가 된 손님',
 		'rfm'     => 'RFM',
 		'unpaid'  => '미입금 고객',
 		'all'     => '한 사람에 한 통',
@@ -815,7 +966,7 @@ function segs(): array {
 
 /** 합치기 탭에 넣을 수 있는 조각 — 명단 넷 + RFM 갈래. 기본은 미입금 · 담고 나간 · 노보/디오 · RFM 이탈 위험 · 관심 필요. */
 function parts(): array {
-	$p = array( 'unpaid' => '미입금 고객', 'abandon' => '장바구니 담고 나간 손님', 'brand' => '노보 · 디오리퀴드 구매 손님' );
+	$p = array( 'unpaid' => '미입금 고객', 'abandon' => '장바구니 담고 나간 손님', 'brand' => '노보 · 디오리퀴드 구매 손님', 'due' => '다시 살 때가 된 손님' );
 	foreach ( rfm_advice() as $k => $_ ) {
 		$p[ 'rfm:' . $k ] = 'RFM ' . $k;
 	}
@@ -836,7 +987,7 @@ function chosen_parts(): array {
 function combined( array $inc, bool $fresh = false ): array {
 	$lists = array();
 	$at    = 0;
-	foreach ( array( 'unpaid', 'abandon', 'brand' ) as $k ) {
+	foreach ( array( 'unpaid', 'abandon', 'brand', 'due' ) as $k ) {
 		if ( in_array( $k, $inc, true ) ) {
 			$d = data( $k, opts( $k ), $fresh );
 			$lists[ $k ] = array_map( fn( $r ) => $r + array( 'part' => $k ), dedupe( $d['rows'] ) );
@@ -907,6 +1058,7 @@ function screen(): void {
 	$explain = array(
 		'abandon' => '회원의 저장 장바구니에 상품이 있는데 최근 <b>%d일</b> 안에 살아 있는 주문이 없는 사람. 장바구니에는 담은 시각이 없어 「최근 주문이 없다」로 가릅니다. 담은 것이 오래된 것일 수 있으니 문구는 「담아 두신 상품 아직 있어요」 정도로.',
 		'brand'   => '%s 돈 들어온 주문에 노보 · 디오리퀴드 상품이 든 회원. 같은 브랜드 다른 맛 · 10+1 · 5+5 묶음 안내가 맞는 명단. 브랜드는 필터 duckhoo_crm_brands.',
+		'due'     => '재구매 패턴으로 뽑습니다 (노보 제외). 회원마다 브랜드를 마지막으로 산 날을 보고, 그 브랜드 손님이 보통 다시 사는 시기 안에 들면 그 브랜드 줄로, 아니면 마지막 주문이 30~120일 전이면 「쉬는 손님」으로 넣습니다. <b>최근 14일 안에 주문한 사람 · 10병 이상 묶음을 산 지 45일이 안 된 사람은 뺍니다</b> (10병 손님은 보통 49일 만에 다시 삽니다). 메모에 무엇을 권할지 적었습니다.',
 		'rfm'     => '돈 들어온 주문 전체로 회원마다 R(마지막 구매 뒤 며칠 — 가까울수록 5점) · F(주문 수) · M(누적 금액)을 5분위로 매깁니다. 갈래를 누르면 그 명단만 남습니다.',
 		'unpaid'  => '입금전으로 <b>%d일</b> 넘게 서 있는 주문. 입금 안내 문자 한 통이 가장 돈이 되는 명단 — 입금자명을 주문자명과 같게 보내 달라는 말을 꼭 넣습니다. 비회원 주문은 주문서의 연락처.',
 		'all'     => '네 명단을 연락처로 합쳐 <b>한 사람에 안내 하나</b>. 여러 명단에 든 사람은 급한 순서(미입금 → 담고 나간 → 노보 · 디오 → RFM)로 하나만 남기고, 다른 명단 이름은 메모에 적습니다. 어느 조각을 넣을지 아래에서 고릅니다 — RFM 전체를 넣으면 산 적 있는 회원이 전부 들어오니 갈래를 고르세요.',
@@ -918,7 +1070,7 @@ function screen(): void {
 			echo '<label><input type="checkbox" name="inc[]" value="' . esc_attr( $k ) . '"' . ( in_array( $k, $inc, true ) ? ' checked' : '' ) . '> ' . esc_html( $label ) . '</label> ';
 		}
 		echo '<button class="button">다시 보기</button>';
-	} elseif ( 'rfm' !== $seg ) {
+	} elseif ( 'rfm' !== $seg && 'due' !== $seg ) {
 		echo ( '' !== $opt['only'] ? '<input type="hidden" name="only" value="' . esc_attr( $opt['only'] ) . '">' : '' ) . '<label>기준 일수 <input type="number" name="days" min="0" max="730" value="' . (int) $opt['days'] . '">' . ( 'brand' === $seg ? ' (0 = 전체 기간)' : '' ) . '</label> <button class="button">다시 보기</button>';
 	}
 	echo '</form>';
@@ -940,6 +1092,15 @@ function screen(): void {
 			echo '<a class="' . ( $b === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=brand&only=' . rawurlencode( $b ) . $dq ) ) . '">' . esc_html( $b ) . '만 ' . (int) ( $cnt[ $b ] ?? 0 ) . '</a>';
 		}
 		echo '</div>';
+	}
+	if ( 'due' === $seg ) {
+		$cnt = (array) ( $d['meta']['counts'] ?? array() );
+		$wins = (array) ( $d['meta']['windows'] ?? array() );
+		echo '<div class="dhr-crm-segs"><a class="' . ( '' === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=due' ) ) . '">전체 ' . count( (array) $d['rows'] ) . '</a>';
+		foreach ( $cnt as $k => $n ) {
+			echo '<a class="' . ( $k === $opt['only'] ? 'on' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=' . SLUG . '&seg=due&only=' . rawurlencode( (string) $k ) ) ) . '">' . esc_html( (string) $k ) . ' ' . (int) $n . ( isset( $wins[ $k ] ) && '' !== $wins[ $k ] ? ' <small>(' . esc_html( $wins[ $k ] ) . ')</small>' : '' ) . '</a>';
+		}
+		echo '</div><div class="dhr-crm-adv">보내는 때: <b>5병 묶음 손님 25~30일째</b> · <b>젤로 기기 손님 30일쯤 팟 · 액상</b> · <b>액상덕후 10병 손님은 다른 브랜드 5병</b> · 쉬는 손님은 60~90일 안에. 괄호 안은 그 브랜드 손님이 보통 다시 사는 시기(마지막으로 산 뒤 며칠)입니다.</div>';
 	}
 	if ( 'rfm' === $seg ) {
 		$adv = rfm_advice();

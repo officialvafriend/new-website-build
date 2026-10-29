@@ -2923,7 +2923,7 @@ $GLOBALS['__filters']['duckhoo_crm_priority'] = [];
 $ok($cb3[0]['seg'] === 'brand' && $cb3[0]['also'] === ['unpaid'], '합치기: 필터로 우선순위를 바꾸면 그 순서대로 (brand 가 주 명단)');
 $cb4 = ($CR.'combine')(['extra' => [['name'=>'x','phone'=>'01099998888']], 'unpaid' => [['name'=>'y','phone'=>'01099998888']]]);
 $ok($cb4[0]['seg'] === 'unpaid' && $cb4[0]['also'] === ['extra'], '합치기: 우선순위에 없는 명단은 맨 뒤로');
-$ok(($CR.'default_parts')() === ['unpaid','abandon','brand','rfm:이탈 위험','rfm:관심 필요'] && isset(($CR.'parts')()['rfm:휴면']) && count(($CR.'parts')()) === 10 && isset(($CR.'segs')()['all']), '합치기 조각: 기본 다섯 · RFM 갈래 일곱 + 명단 셋 = 열 · 탭 all');
+$ok(($CR.'default_parts')() === ['unpaid','abandon','brand','rfm:이탈 위험','rfm:관심 필요'] && isset(($CR.'parts')()['rfm:휴면']) && count(($CR.'parts')()) === 11 && isset(($CR.'segs')()['all']), '합치기 조각: 기본 다섯 · RFM 갈래 일곱 + 명단 넷 = 열하나 · 탭 all');
 // SMS 수신 동의 · 문자 사이트 양식 (includes/crm-sms.php)
 $cw=$CR.'consent_word';
 $ok($cw('Y')==='yes' && $cw(' 동의 ')==='yes' && $cw('1')==='yes' && $cw('TRUE')==='yes' && $cw('N')==='no' && $cw('수신거부')==='no' && $cw('0')==='no' && $cw('')==='' && $cw('모름')==='' && $cw('2026-09-01')==='', '동의 낱말: Y·동의·1·TRUE 는 yes, N·수신거부·0 은 no, 빈 값·모르는 글자는 기록 없음');
@@ -3499,6 +3499,44 @@ $rp = $RP($ro, $ri, $T0 + 80*$D);
 $ok($rp['customers']===1 && $rp['repeaters']===1 && $rp['second_gap_median']===20, '재구매 패턴: 노보만 산 회원 · 취소 · 비회원은 안 센다');
 $ok(isset($rp['brands']) && !isset($rp['brands']['노보']) && $rp['packs']['낱병']['first_n']===1 && $rp['packs']['낱병']['gap_median']===20, '재구매 패턴: 노보는 브랜드 표에 없고, 묶음 종류 · 간격을 센다');
 $ok($rp['lapsed_30_120']['n']===1 && strpos(json_encode($rp),'"11"')===false && strpos(json_encode($rp,JSON_UNESCAPED_UNICODE),'u":')===false, '재구매 패턴: 쉬는 손님은 수만 · 회원 번호가 안 나간다');
+
+/* ── 다시 살 때가 된 손님 (seg_due) ── */
+$SD = '\\Duckhoo\\Redesign\\Crm\\seg_due';
+$N0 = $T0 + 300*$D;
+$so = [
+ ['id'=>21,'ts'=>$N0-30*$D,'s'=>'delivered','t'=>30000,'u'=>21],
+ ['id'=>22,'ts'=>$N0-40*$D,'s'=>'delivered','t'=>35000,'u'=>22],
+ ['id'=>23,'ts'=>$N0-100*$D,'s'=>'delivered','t'=>15000,'u'=>23],
+ ['id'=>24,'ts'=>$N0-30*$D,'s'=>'delivered','t'=>15000,'u'=>24],
+ ['id'=>25,'ts'=>$N0-3*$D,'s'=>'on-hold','t'=>15000,'u'=>24],
+ ['id'=>26,'ts'=>$N0-40*$D,'s'=>'delivered','t'=>13000,'u'=>25],
+ ['id'=>27,'ts'=>$N0-200*$D,'s'=>'delivered','t'=>15000,'u'=>26],
+ ['id'=>28,'ts'=>$N0-50*$D,'s'=>'delivered','t'=>69000,'u'=>27],
+];
+$si = [
+ 21=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+ 22=>[['name'=>'[액상덕후] 덕후 액상 10병 묶음','qty'=>1,'total'=>35000,'pid'=>9]],
+ 23=>[['name'=>'[화이트아웃] 자몽','qty'=>1,'total'=>15000,'pid'=>2]],
+ 24=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+ 26=>[['name'=>'[노보] 타박멘솔','qty'=>1,'total'=>13000,'pid'=>5]],
+ 27=>[['name'=>'[디오리퀴드] 로젤하트 (9.8mg / 30ml)','qty'=>1,'total'=>15000,'pid'=>1]],
+ 28=>[['name'=>'[젤로 크리스탈] 기기 + 액상 5병 증정','qty'=>1,'total'=>69000,'pid'=>207]],
+];
+$stats = [
+ '디오리퀴드'=>['due_window'=>'22~50일','gap_median'=>29,'next_other'=>['빌런'=>3]],
+ '액상덕후'=>['due_window'=>'34~62일','gap_median'=>41,'next_other'=>[]],
+ '화이트아웃'=>['due_window'=>'22~50일','gap_median'=>29,'next_other'=>[]],
+ '젤로 크리스탈'=>['due_window'=>'25~53일','gap_median'=>32,'next_other'=>[]],
+];
+$sd = $SD($so, $si, $N0, $stats);
+$su = array_column($sd, null, 'u');
+$ok(isset($su[21]) && '디오리퀴드'===$su[21]['kind'] && 30===$su[21]['days'] && str_contains($su[21]['tip'],'빌런'), '다시 살 때: 브랜드 시기 안이면 그 브랜드 줄 · 다음에 많이 사는 브랜드를 권한다');
+$ok(!isset($su[22]), '다시 살 때: 10병 묶음을 산 지 45일이 안 된 사람은 뺀다');
+$ok(isset($su[23]) && '쉬는 손님'===$su[23]['kind'] && 100===$su[23]['quiet'], '다시 살 때: 브랜드 시기 밖이고 30~120일 쉬면 「쉬는 손님」');
+$ok(!isset($su[24]) && !isset($su[25]) && !isset($su[26]), '다시 살 때: 최근 14일 안 주문 · 노보만 산 사람 · 120일 넘게 쉰 사람은 뺀다');
+$ok(isset($su[27]) && '젤로 크리스탈'===$su[27]['kind'] && str_contains($su[27]['tip'],'팟'), '다시 살 때: 젤로 기기 손님은 팟 · 액상 안내');
+$ok('젤로 크리스탈'===$sd[0]['kind'] || '디오리퀴드'===$sd[0]['kind'], '다시 살 때: 브랜드 줄이 쉬는 손님보다 앞');
+$ok('디오리퀴드 다시 살 때'===\Duckhoo\Redesign\Crm\group_name('due','디오리퀴드') && '30~120일 쉬는 손님'===\Duckhoo\Redesign\Crm\group_name('due','쉬는 손님'), '다시 살 때: 그룹명');
 
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
