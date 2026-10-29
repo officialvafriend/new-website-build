@@ -110,6 +110,12 @@ when = ''.join(
     for d, v in SW.items())
 
 
+C = R.get('check') or {}
+CHECK = (f'<p>· 검수: 둘째 주문이 첫 주문 뒤 24시간 안인 사람 {C["same_day"]}명은 나눠 결제했거나 두 번 넣은 주문일 수 있습니다 '
+         f'(빼면 재구매율 {C["repeat_rate_no_same_day"]}, 「7일 안」 막대도 그만큼 낮아집니다). 노보만 사러 돌아온 {C["novo_only_back"]}명을 넣으면 {C["repeat_rate_with_novo"]}입니다. '
+         f'「고른 길」의 숫자는 사람 수입니다.</p>') if C else ''
+
+
 def frame(no, title, body):
     return f'''<section class="page">
   <div class="run"><span>재구매 패턴 · 노보 제외</span><span>{no} · {title}</span></div>
@@ -173,6 +179,7 @@ p3 = frame(3, '다음 CRM에 쓸 것', f'''  <div class="eb">3 · 다음 CRM에 
   <div class="todo"><span class="no">5</span><div><h3>쉬는 손님 · 60~90일 안에 한 번</h3><p>명단: 마케팅 → 고객 세그먼트 → 「다시 살 때가 된 손님」 (브랜드별 칩 · 쉬는 손님 칩).</p></div></div>
   <div class="src"><p><b>숫자 출처 · 주의</b></p>
     <p>· {BUILT} 집계. 돈 들어온 회원 주문만 셉니다 (취소 · 입금전 · 비회원 제외). 노보 상품 줄은 뺐습니다.</p>
+    {CHECK}
     <p>· 「3+1 · 5+5 묶음」은 이름에 브랜드가 없어 디오리퀴드 묶음으로 봤습니다. 산 사람이 열 명 안팎인 상품의 비율(하이민트 33% 등)은 믿기 어려워 표에서 뺐습니다.</p></div>''')
 
 html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>재구매 패턴</title>
