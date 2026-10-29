@@ -3065,6 +3065,17 @@ $ok(($BS.'check')(($BS.'rows')([$one,$fl('A',30),$fl('B',20),$sv('A',1),$sv('B',
 $ok(($BS.'check')(($BS.'rows')([array_merge($one,['qty'=>2]),$fl('A',60),$sv('A',2),$sv('B',2),$sv('C',2)]),$sp)==='', '33병 두 개: 맛 60 + 서비스 6 (맛마다 2병까지)');
 
 
+// 이름으로 찾는 대량 상품 — 펠릭스 · 빌런도 디오 · 화이트아웃처럼 (2026-10-29)
+$ok(($BS.'parse_name')('[펠릭스] 대량 33병 (30병 묶음 + 서비스 3병)')===['brand'=>'펠릭스','total'=>33,'n'=>3] && ($BS.'parse_name')('[빌런] 대량 55병(50병 묶음+서비스 5병)')===['brand'=>'빌런','total'=>55,'n'=>5], '대량 이름: 33 · 55병 꼴을 읽는다 (빈칸이 달라도)');
+$ok(($BS.'parse_name')('[빌런] 대량 33병 (30병 묶음 + 서비스 2병)')===null && ($BS.'parse_name')('[빌런] 대량 35병 (30병 묶음 + 서비스 3병)')===null && ($BS.'parse_name')('[빌런] 대량 27병 (25병 묶음 + 서비스 2병)')===null && ($BS.'parse_name')('[빌런] ★ 맛돌이 액상 ★ 빌런 5병 EVENT')===null, '대량 이름: 숫자가 서로 안 맞거나 10병 단위가 아니면 잡지 않는다');
+$ag=($BS.'auto_groups')([9101=>['brand'=>'펠릭스','total'=>55,'n'=>5],9100=>['brand'=>'펠릭스','total'=>33,'n'=>3],9102=>['brand'=>'빌런','total'=>33,'n'=>3]]);
+$ok($ag===[[9100=>'33병',9101=>'55병']], '대량 묶음: 같은 브랜드 둘이면 전환 줄 · 하나뿐인 빌런은 빠진다 '.json_encode($ag,JSON_UNESCAPED_UNICODE));
+$GLOBALS['__transients']['dhr_bulk_auto']=[9100=>['brand'=>'펠릭스','total'=>33,'n'=>3],5373=>['brand'=>'디오리퀴드','total'=>33,'n'=>3]];
+$cf=($BS.'config')();
+$ok(isset($cf[9100]) && $cf[9100]['split']===true && $cf[9100]['n']===3 && $cf[9100]['label']==='펠릭스 대량 33병' && $cf[5373]['label']==='디오리퀴드 대량 33병' && ($BS.'js_config')()[9100]===['n'=>3,'lot'=>10,'split'=>true], '대량 이름: 찾은 상품이 설정 · 화면 값에 저절로 들어간다 (번호로 적은 것이 먼저)');
+unset($GLOBALS['__transients']['dhr_bulk_auto']);
+
+
 /* ── 같은 상품의 다른 구성 (Product\variants) ── */
 $VR = 'Duckhoo\\Redesign\\Product\\';
 $GLOBALS['__products'][207]  = new WC_Product(207, '[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 !', 69000);

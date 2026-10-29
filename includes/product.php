@@ -313,7 +313,20 @@ function variant_groups(): array {
 			array( 5384 => '33병', 5387 => '55병' ),
 		)
 	);
-	return is_array( $g ) ? array_values( array_filter( $g, 'is_array' ) ) : array();
+	$g = is_array( $g ) ? array_values( array_filter( $g, 'is_array' ) ) : array();
+	// 이름으로 찾은 대량 상품(「[브랜드] 대량 33병 (30병 묶음 + 서비스 3병)」)은 브랜드끼리 저절로 묶는다
+	if ( function_exists( '\\Duckhoo\\Redesign\\BulkSets\\auto_groups' ) ) {
+		$have = array();
+		foreach ( $g as $grp ) {
+			$have = array_merge( $have, array_map( 'intval', array_keys( $grp ) ) );
+		}
+		foreach ( \Duckhoo\Redesign\BulkSets\auto_groups() as $grp ) {
+			if ( ! array_intersect( array_keys( $grp ), $have ) ) {
+				$g[] = $grp;
+			}
+		}
+	}
+	return $g;
 }
 
 /**

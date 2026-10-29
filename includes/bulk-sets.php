@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * @return array<int,array>
  */
 function config(): array {
-	$c = (array) apply_filters( 'duckhoo_bulk_sets', defaults() );
+	$c = (array) apply_filters( 'duckhoo_bulk_sets', defaults() + auto() );
 	$out = array();
 	foreach ( $c as $pid => $cfg ) {
 		if ( (int) $pid > 0 && is_array( $cfg ) && ( ! empty( $cfg['choices'] ) || ( 'fixed' === ( $cfg['kind'] ?? '' ) && (int) ( $cfg['n'] ?? 0 ) > 0 ) ) ) {
@@ -61,6 +61,119 @@ function defaults(): array {
 		5384 => array( 'kind' => 'fixed', 'n' => 3, 'lot' => 10, 'split' => true, 'label' => '화이트아웃 대량 33병' ),   // 2026-10-09 · 디오와 같은 칸 구성
 		5387 => array( 'kind' => 'fixed', 'n' => 5, 'lot' => 10, 'split' => true, 'label' => '화이트아웃 대량 55병' ),
 	);
+}
+
+/**
+ * 대량 상품 이름 읽기 (2026-10-29, 사장님 「펠릭스 · 빌런 대량도 디오 · 화이트아웃처럼」).
+ *
+ * 「[브랜드] 대량 33병 (30병 묶음 + 서비스 3병)」 꼴이면 그 상품을 디오 · 화이트아웃과 같은 규칙(맛 10병씩 ·
+ * 서비스 맛마다 1병, 칸 나눔)으로 본다 — 번호를 이 파일에 적지 않아도 된다. 묶음은 10의 배수 ·
+ * 서비스 = 묶음 ÷ 10 · 합 = 묶음 + 서비스 가 다 맞을 때만. 하나라도 어긋나면 null (잡지 않는다).
+ *
+ * @param string $name 상품 이름.
+ * @return array{brand:string,total:int,n:int}|null
+ */
+function parse_name( string $name ): ?array {
+	if ( ! preg_match( '/대량\s*(\d+)\s*병\s*\(\s*(\d+)\s*병\s*묶음\s*\+\s*서비스\s*(\d+)\s*병\s*\)/u', $name, $m ) ) {
+		return null;
+	}
+	$total = (int) $m[1];
+	$lots  = (int) $m[2];
+	$svc   = (int) $m[3];
+	if ( $lots < 10 || 0 !== $lots % 10 || $svc !== intdiv( $lots, 10 ) || $total !== $lots + $svc ) {
+		return null;
+	}
+	$brand = preg_match( '/^\s*\[([^\]]+)\]/u', $name, $b ) ? trim( $b[1] ) : '';
+	return array( 'brand' => $brand, 'total' => $total, 'n' => $svc );
+}
+
+/**
+ * 이름으로 찾은 대량 상품 — 상품 번호 => [ brand, total, n ]. 10분 캐시 · 상품을 저장하면 비운다.
+ *
+ * @return array<int,array{brand:string,total:int,n:int}>
+ */
+function auto_found(): array {
+	if ( ! (bool) apply_filters( 'duckhoo_bulk_auto', true ) ) {
+		return array();
+	}
+	$c = function_exists( 'get_transient' ) ? get_transient( 'dhr_bulk_auto' ) : false;
+	if ( is_array( $c ) ) {
+		return $c;
+	}
+	if ( ! function_exists( 'get_posts' ) ) {
+		return array();
+	}
+	$out = array();
+	$ids = get_posts(
+		array(
+			'post_type'        => 'product',
+			'post_status'      => array( 'publish', 'private' ),
+			's'                => '대량',
+			'posts_per_page'   => 60,
+			'fields'           => 'ids',
+			'suppress_filters' => true,
+			'no_found_rows'    => true,
+		)
+	);
+	foreach ( (array) $ids as $id ) {
+		$hit = parse_name( (string) get_the_title( (int) $id ) );
+		if ( $hit ) {
+			$out[ (int) $id ] = $hit;
+		}
+	}
+	ksort( $out );
+	if ( function_exists( 'set_transient' ) ) {
+		set_transient( 'dhr_bulk_auto', $out, 600 );
+	}
+	return $out;
+}
+
+/**
+ * 이름으로 찾은 대량 상품을 설정 꼴로.
+ *
+ * @return array<int,array>
+ */
+function auto(): array {
+	$out = array();
+	foreach ( auto_found() as $pid => $hit ) {
+		$out[ $pid ] = array( 'kind' => 'fixed', 'n' => $hit['n'], 'lot' => 10, 'split' => true, 'label' => trim( $hit['brand'] . ' 대량 ' . $hit['total'] . '병' ) );
+	}
+	return $out;
+}
+
+/**
+ * 같은 브랜드 대량 상품끼리 묶은 구성 전환 줄 — [ [ 번호 => 「33병」, … ], … ]. 하나뿐인 브랜드는 뺀다.
+ *
+ * @param array<int,array{brand:string,total:int,n:int}>|null $found 시험용.
+ * @return array<int,array<int,string>>
+ */
+function auto_groups( ?array $found = null ): array {
+	$by = array();
+	foreach ( ( null === $found ? auto_found() : $found ) as $pid => $hit ) {
+		if ( '' !== $hit['brand'] ) {
+			$by[ $hit['brand'] ][ (int) $pid ] = (int) $hit['total'];
+		}
+	}
+	$out = array();
+	foreach ( $by as $grp ) {
+		if ( count( $grp ) < 2 ) {
+			continue;
+		}
+		asort( $grp );
+		$out[] = array_map( fn( $t ) => $t . '병', $grp );
+	}
+	return $out;
+}
+
+/**
+ * 상품을 저장하면 이름 캐시를 비운다.
+ *
+ * @return void
+ */
+function forget(): void {
+	if ( function_exists( 'delete_transient' ) ) {
+		delete_transient( 'dhr_bulk_auto' );
+	}
 }
 
 /**
@@ -395,4 +508,5 @@ if ( function_exists( 'add_filter' ) ) {
 	add_action( 'woocommerce_store_api_validate_add_to_cart', __NAMESPACE__ . '\\store_add', 10, 1 );
 	add_action( 'woocommerce_check_cart_items', __NAMESPACE__ . '\\check_cart', 30 );
 	add_action( 'woocommerce_checkout_create_order', __NAMESPACE__ . '\\guard_order', 4 );
+	add_action( 'save_post_product', __NAMESPACE__ . '\\forget' );
 }
