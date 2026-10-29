@@ -519,15 +519,16 @@ function repeat_patterns( array $orders, array $items, int $now, array $skip = a
 	usort( $paid, fn( $a, $b ) => $a['ts'] <=> $b['ts'] );
 	$day = 86400;
 	/* 회원별 주문 — 노보만 산 주문은 버린다 */
-	$by = array();
+	$by = array(); $all_ts = array();
 	foreach ( $paid as $o ) {
+		$all_ts[ $o['u'] ][] = (int) $o['ts'];
 		$lines = array();
 		foreach ( (array) ( $items[ $o['id'] ] ?? array() ) as $l ) {
 			$b = brand( (string) $l['name'] );
 			if ( in_array( $b, $skip, true ) ) {
 				continue;
 			}
-			$lines[] = array( 'b' => $b, 'p' => short( (string) $l['name'] ), 'k' => pack( (string) $l['name'] ) );
+			$lines[] = array( 'b' => $b, 'p' => $b . ' · ' . short( (string) $l['name'] ), 'k' => pack( (string) $l['name'] ) );
 		}
 		if ( $lines ) {
 			$by[ $o['u'] ][] = array( 'ts' => (int) $o['ts'], 't' => (float) $o['t'], 'lines' => $lines );
@@ -535,11 +536,22 @@ function repeat_patterns( array $orders, array $items, int $now, array $skip = a
 	}
 	$brands = array(); $prods = array(); $packs = array(); $pairs = array(); $flow = array();
 	$second = array(); $first_n = 0; $due = array(); $lapsed = 0; $lapsed_sum = 0.0;
-	foreach ( $by as $os ) {
+	$same_day = 0; $novo_only_back = 0;
+	foreach ( $by as $u => $os ) {
 		++$first_n;
 		$n = count( $os );
 		if ( $n > 1 ) {
 			$second[] = ( $os[1]['ts'] - $os[0]['ts'] ) / $day;
+			if ( $os[1]['ts'] - $os[0]['ts'] < $day ) {
+				++$same_day; // 둘째 주문이 24시간 안 — 다시 산 것이 아니라 나눠 낸 · 두 번 넣은 주문일 수 있다
+			}
+		} else {
+			foreach ( (array) ( $all_ts[ $u ] ?? array() ) as $t ) {
+				if ( $t > $os[0]['ts'] ) {
+					++$novo_only_back; // 노보만 든 주문으로 돌아온 사람 — 이 셈에서는 다시 안 산 사람으로 잡힌다
+					break;
+				}
+			}
 		}
 		/* 묶음 종류: 첫 주문의 가장 큰 묶음 */
 		$rank = array( '기기·팟' => 0, '낱병' => 1, '2~9병 묶음' => 2, '10병 이상 묶음' => 3 );
@@ -595,16 +607,20 @@ function repeat_patterns( array $orders, array $items, int $now, array $skip = a
 				$prods[ $p ]['gap'][] = ( $os[ $idx[1] ]['ts'] - $os[ $idx[0] ]['ts'] ) / $day;
 			}
 		}
-		/* 앞 주문 상품 → 다음 주문 상품 (다른 상품만) */
+		/* 앞 주문 상품 → 다음 주문 상품 (다른 상품만) — 사람 수로 센다 (한 사람이 같은 길을 여러 번 가도 한 번) */
+		$mine = array();
 		for ( $i = 1; $i < $n; $i++ ) {
 			$prev = array_unique( array_column( $os[ $i - 1 ]['lines'], 'p' ) );
 			foreach ( array_unique( array_column( $os[ $i ]['lines'], 'p' ) ) as $q ) {
 				if ( ! in_array( $q, $prev, true ) ) {
 					foreach ( $prev as $p ) {
-						$pairs[ $p . ' → ' . $q ] = ( $pairs[ $p . ' → ' . $q ] ?? 0 ) + 1;
+						$mine[ $p . ' → ' . $q ] = true;
 					}
 				}
 			}
+		}
+		foreach ( $mine as $k => $_ ) {
+			$pairs[ $k ] = ( $pairs[ $k ] ?? 0 ) + 1;
 		}
 		/* 지금 다시 살 때가 된 사람 (브랜드별) · 30~120일 쉬는 사람 */
 		$quiet = ( $now - $last_ts ) / $day;
@@ -674,6 +690,12 @@ function repeat_patterns( array $orders, array $items, int $now, array $skip = a
 		'packs'          => $out_k,
 		'pairs'          => array_slice( array_filter( $pairs, fn( $c ) => $c >= 3 ), 0, 15, true ),
 		'lapsed_30_120'  => array( 'n' => $lapsed, 'last_aov' => $lapsed ? (int) round( $lapsed_sum / $lapsed ) : 0 ),
+		'check'          => array(
+			'same_day'                => $same_day,
+			'repeat_rate_no_same_day' => pct( count( $second ) - $same_day, $first_n ),
+			'novo_only_back'          => $novo_only_back,
+			'repeat_rate_with_novo'   => pct( count( $second ) + $novo_only_back, $first_n ),
+		),
 	);
 }
 

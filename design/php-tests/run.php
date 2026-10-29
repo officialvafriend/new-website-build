@@ -3499,6 +3499,16 @@ $rp = $RP($ro, $ri, $T0 + 80*$D);
 $ok($rp['customers']===1 && $rp['repeaters']===1 && $rp['second_gap_median']===20, '재구매 패턴: 노보만 산 회원 · 취소 · 비회원은 안 센다');
 $ok(isset($rp['brands']) && !isset($rp['brands']['노보']) && $rp['packs']['낱병']['first_n']===1 && $rp['packs']['낱병']['gap_median']===20, '재구매 패턴: 노보는 브랜드 표에 없고, 묶음 종류 · 간격을 센다');
 $ok($rp['lapsed_30_120']['n']===1 && strpos(json_encode($rp),'"11"')===false && strpos(json_encode($rp,JSON_UNESCAPED_UNICODE),'u":')===false, '재구매 패턴: 쉬는 손님은 수만 · 회원 번호가 안 나간다');
+$ro2 = array_merge($ro, [
+ ['id'=>31,'ts'=>$T0,'s'=>'delivered','t'=>15000,'u'=>14],
+ ['id'=>32,'ts'=>$T0+10*$D,'s'=>'delivered','t'=>13000,'u'=>14],
+ ['id'=>33,'ts'=>$T0,'s'=>'delivered','t'=>15000,'u'=>15],
+ ['id'=>34,'ts'=>$T0+3*3600,'s'=>'delivered','t'=>15000,'u'=>15],
+]);
+$ri2 = $ri + [31=>$ri[1], 32=>$ri[5], 33=>$ri[2], 34=>$ri[2]];
+$rp2 = $RP($ro2, $ri2, $T0 + 80*$D);
+$ok($rp2['customers']===3 && $rp2['check']['novo_only_back']===1 && $rp2['check']['same_day']===1 && $rp2['check']['repeat_rate_with_novo']==='100%' && $rp2['check']['repeat_rate_no_same_day']==='33%', '재구매 검수: 노보로만 돌아온 사람 · 24시간 안 둘째 주문을 따로 센다');
+$ok(isset($rp2['products']) && !array_filter(array_keys($rp2['pairs']), fn($k)=>!str_contains($k,' · ')), '재구매 검수: 상품 열쇠에 브랜드가 붙는다 (브랜드 다른 같은 이름이 안 섞인다)');
 
 /* ── 다시 살 때가 된 손님 (seg_due) ── */
 $SD = '\\Duckhoo\\Redesign\\Crm\\seg_due';
