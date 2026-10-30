@@ -80,45 +80,65 @@ table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
 table.sm { font-size: 10pt; } table.sm td { padding: 4pt 5pt; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
 .note { font-size: 9.5pt; color: #6B7280; margin: 4pt 0 0; }
+table.xs { font-size: 9.5pt; margin-bottom: 8pt; } table.xs td { padding: 2.5pt 5pt; }
 </style></head><body>
 <section class="page cover">
-  <div class="eb">액상덕후 · 재구매 · 9월 손님의 10월</div>
-  <div class="big">16.5<small>%</small></div>
-  <h1>9월에 산 손님 741명 중 122명이<br>10월에 다시 샀습니다</h1>
-  <p class="lead">두 달 모두 1일부터 29일까지, 워드프레스 주문으로 셌습니다. 같은 상품을 다시 산 손님과 다른 상품으로 옮긴 손님을 나눠 봤습니다.</p>
-  <div class="facts"><div class="fact"><div class="v">63명</div><div class="l">같은 상품을 다시 삼</div></div><div class="fact"><div class="v">59명</div><div class="l">다른 상품만 삼</div></div><div class="fact"><div class="v">14.7%</div><div class="l">이전 손님의 그달 구매율 (9월 13.4%)</div></div></div>
+  <div class="eb">액상덕후 · 재구매 · 9월 손님이 10월에 다시 왔나</div>
+  <div class="big">1<small> / 6명</small></div>
+  <h1>9월에 산 손님 6명 중 1명이<br>10월에 다시 샀습니다</h1>
+  <p class="lead">9월 손님 741명 중 122명(16.5%)이 10월에 다시 샀습니다. 그중 절반은 같은 상품, 절반은 다른 상품을 골랐습니다.</p>
+  <div class="facts"><div class="fact"><div class="v">63명</div><div class="l">같은 상품을 다시 삼</div></div><div class="fact"><div class="v">59명</div><div class="l">다른 상품을 삼</div></div><div class="fact"><div class="v">619명</div><div class="l">10월에는 안 삼</div></div></div>
   
   <div class="meta"><span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인몰 운영</b></span><span>2026년 10월 30일</span></div>
 </section><section class="page">
   <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>1 · 한눈에</span></div>
-<h2>손님은 줄었지만, 산 적 있는 손님은 더 자주 왔습니다</h2>
-<p class="lead">10월은 주문과 손님이 9월보다 줄었습니다. 그 안에서 이미 산 적 있는 손님이 그달에 다시 산 비율은 올랐습니다.</p>
-<table class="fx"><thead><tr><th>9월 1~29일과 10월 1~29일</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th></tr></thead><tbody><tr><td>주문</td><td class="n">779건</td><td class="n">639건</td><td class="n"><span class="dn">-18.0%</span></td></tr><tr><td>산 손님</td><td class="n">741명</td><td class="n">591명</td><td class="n"><span class="dn">-20.2%</span></td></tr><tr><td>판매 수량 (병 · 묶음 · 기기)</td><td class="n">1,380</td><td class="n">1,675</td><td class="n"><span class="up">+21.4%</span></td></tr><tr><td><b>이전에 산 손님 중 그달에 산 비율</b></td><td class="n">13.4%<small>956명 중 128명</small></td><td class="n"><b>14.7%</b><small>1,590명 중 233명</small></td><td class="n"><span class="up">+1.3%p</span></td></tr></tbody></table>
-<div class="pb">
-<div class="pbr on"><span>같은 상품</span><span class="f"><i style="width:34%"></i></span><span class="n">63명</span><span class="n">8.5%</span></div>
-<div class="pbr on"><span>다른 상품만</span><span class="f"><i style="width:32%"></i></span><span class="n">59명</span><span class="n">8.0%</span></div>
-<div class="pbr"><span>안 삼</span><span class="f"><i style="width:100%"></i></span><span class="n">619명</span><span class="n">83.5%</span></div></div>
-<div class="rows"><div class="row"><span class="k ok">결과</span><p>다시 온 손님의 절반은 다른 상품을 골랐습니다<small>122명 중 59명. 같은 상품만 다시 권하면 나머지 절반을 놓칩니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>멘솔쨩 낱병을 산 손님은 한 명도 같은 맛을 다시 사지 않았습니다<small>머스케또쨩 27명 · 스모모쨩 20명 · 레몬쨩 16명. 10병 묶음으로 옮겼는지는 이 자료로 알 수 없습니다.</small></p></div></div>
+<style>
+.dots { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4pt; margin: 8pt 0 6pt; }
+.dots i { aspect-ratio: 1; border-radius: 50%; background: #E2E8F0; }
+.dots i.s { background: #2F6FE0; } .dots i.o { background: #9CC3FF; }
+.lg { display: flex; gap: 16pt; font-size: 11pt; margin: 4pt 0 14pt; } .lg b { font-weight: 900; }
+.lg span::before { content: ''; display: inline-block; width: 9pt; height: 9pt; border-radius: 50%; margin-right: 5pt; vertical-align: -1pt; background: var(--c); }
+.say { font-size: 12.5pt; margin: 0 0 10pt; padding-left: 0; list-style: none; }
+.say li { padding: 8pt 0; border-top: 1px solid #EEF2F7; } .say li:first-child { border-top: 0; }
+.say li b { font-weight: 900; }
+.hb { margin: 6pt 0 12pt; } .hr { display: grid; grid-template-columns: 110pt 1fr 92pt; gap: 8pt; align-items: center; margin: 7pt 0; font-size: 11.5pt; }
+.hr .f { height: 16pt; background: #F1F5F9; border-radius: 4pt; overflow: hidden; } .hr .f i { display: block; height: 100%; background: #2F6FE0; border-radius: 4pt; }
+.hr .n { font-weight: 900; text-align: right; } .hr .n small { display: block; font-weight: 400; font-size: 9pt; color: #6B7280; }
+.chips { display: flex; flex-wrap: wrap; gap: 6pt; margin: 4pt 0 10pt; } .chips span { background: #FEF3F2; color: #B42318; border-radius: 99pt; padding: 3pt 10pt; font-size: 10.5pt; font-weight: 700; }
+.mv { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt 18pt; margin: 6pt 0 12pt; }
+.mv div { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #EEF2F7; padding: 5pt 0; font-size: 11pt; }
+.mv b { font-weight: 900; } .mv em { font-style: normal; font-size: 10pt; margin-left: 6pt; }
+</style><h2>9월 손님 100명 중 17명이 10월에 다시 왔습니다</h2>
+<p class="lead">점 하나가 9월 손님 1%입니다 (9월 1~29일에 산 741명).</p>
+<div class="dots"><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="lg"><span style="--c:#2F6FE0">같은 상품을 다시 삼 <b>63명</b></span><span style="--c:#9CC3FF">다른 상품을 삼 <b>59명</b></span><span style="--c:#E2E8F0">안 삼 <b>619명</b></span></div>
+<h3>세 줄로 보면</h3>
+<ul class="say">
+<li><b>다시 온 손님의 절반은 다른 상품을 골랐습니다.</b> 같은 상품만 다시 권하면 절반을 놓칩니다.</li>
+<li><b>10월은 손님이 줄었는데(741명 → 591명), 산 적 있는 손님은 더 자주 왔습니다.</b> 예전 손님 중 그달에 산 사람이 13.4% → 14.7%로 늘었습니다.</li>
+<li><b>멘솔쨩 낱병 손님은 같은 맛을 한 명도 다시 사지 않았습니다.</b> 머스케또쨩 27명 · 스모모쨩 20명 · 레몬쨩 16명.</li>
+</ul>
   <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>1</b> / 3</span></div>
 </section><section class="page">
   <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>2 · 상품별</span></div>
-<h2>다시 산 비율이 높은 것은 묶음이었습니다</h2>
-<p class="lead">9월에 그 상품을 산 손님 중 10월에 같은 상품을 다시 산 비율입니다. 노보는 단종 소식으로 흐름이 달라 뺐고, 9월 손님이 5명 아래인 상품도 뺐습니다.</p>
-<table class="sm"><thead><tr><th>상품</th><th class="n">9월에 산 손님</th><th class="n">10월에 다시 삼</th><th class="n">비율</th></tr></thead><tbody><tr><td>디오리퀴드 3+1</td><td class="n">58명</td><td class="n">9명</td><td class="n"><b>15.5%</b></td></tr><tr><td>빌런 5병</td><td class="n">52명</td><td class="n">6명</td><td class="n"><b>11.5%</b></td></tr><tr><td>흑염룡 10병</td><td class="n">62명</td><td class="n">6명</td><td class="n"><b>9.7%</b></td></tr><tr><td>덕후 액상 10병</td><td class="n">159명</td><td class="n">9명</td><td class="n">5.7%</td></tr><tr><td>디오리퀴드 5+5</td><td class="n">37명</td><td class="n">2명</td><td class="n">5.4%</td></tr><tr><td><span class="g">아래는 9월 손님이 20명 미만이라 한두 명에 비율이 크게 움직입니다</span></td><td class="n"></td><td class="n"></td><td class="n"></td></tr><tr><td>리퀴드랩 상어바</td><td class="n">6명</td><td class="n">1명</td><td class="n">16.7%</td></tr><tr><td>개꿀포도</td><td class="n">8명</td><td class="n">1명</td><td class="n">12.5%</td></tr><tr><td>빌런 자두 낱병</td><td class="n">8명</td><td class="n">1명</td><td class="n">12.5%</td></tr><tr><td>소다쨩 낱병</td><td class="n">17명</td><td class="n">1명</td><td class="n">5.9%</td></tr></tbody></table>
+<h2>같은 상품을 다시 산 손님은 묶음에서 많았습니다</h2>
+<p class="lead">9월에 그 상품을 산 손님 중 10월에 같은 상품을 또 산 비율입니다. 막대가 길수록 잘 돌아오는 상품입니다.</p>
+<div class="hb"><div class="hr"><span>디오리퀴드 3+1</span><span class="f"><i style="width:97%"></i></span><span class="n">16%<small>58명 중 9명</small></span></div><div class="hr"><span>빌런 5병</span><span class="f"><i style="width:72%"></i></span><span class="n">12%<small>52명 중 6명</small></span></div><div class="hr"><span>흑염룡 10병</span><span class="f"><i style="width:60%"></i></span><span class="n">10%<small>62명 중 6명</small></span></div><div class="hr"><span>덕후 액상 10병</span><span class="f"><i style="width:35%"></i></span><span class="n">6%<small>159명 중 9명</small></span></div><div class="hr"><span>디오리퀴드 5+5</span><span class="f"><i style="width:34%"></i></span><span class="n">5%<small>37명 중 2명</small></span></div></div>
+<p class="note" style="margin:-4pt 0 14pt">덕후 액상 10병은 다시 산 사람(9명)이 디오리퀴드 3+1과 같지만 9월 손님이 159명으로 많아 비율이 낮습니다. 9월 손님이 20명 아래인 상품(리퀴드랩 상어바 · 개꿀포도 · 빌런 자두 낱병 · 소다쨩 낱병)은 한두 명이라 넣지 않았습니다. 노보는 단종 소식으로 흐름이 달라 뺐습니다.</p>
 <h3>9월 손님이 한 명도 다시 사지 않은 상품</h3>
-<table class="sm"><thead><tr><th>상품</th><th class="n">9월에 산 손님</th><th class="n">10월에 다시 삼</th></tr></thead><tbody><tr><td>머스케또쨩 낱병</td><td class="n">27명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>스모모쨩 낱병</td><td class="n">20명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>화이트아웃 10병</td><td class="n">17명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>레몬쨩 낱병</td><td class="n">16명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>화이트아웃 2+3</td><td class="n">16명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>쟈쿠로쨩 낱병</td><td class="n">13명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>포도 덕후 PICK 5병</td><td class="n">11명</td><td class="n"><span class="dn">0명</span></td></tr></tbody></table>
-<p class="note">같은 묶음 안에서 맛만 바꿔 산 것도 「같은 상품」으로 셉니다. 상품 · 묶음 단위이고 맛 단위가 아닙니다. 덕후 액상 10병은 다시 산 사람 수(9명)가 디오리퀴드 3+1과 같지만 9월 손님이 159명이라 비율이 낮습니다.</p>
+<div class="chips"><span>머스케또쨩 낱병 · 27명 중 0명</span><span>스모모쨩 낱병 · 20명 중 0명</span><span>화이트아웃 10병 · 17명 중 0명</span><span>레몬쨩 낱병 · 16명 중 0명</span><span>화이트아웃 2+3 · 16명 중 0명</span><span>쟈쿠로쨩 낱병 · 13명 중 0명</span><span>포도 덕후 PICK 5병 · 11명 중 0명</span></div>
+<p class="note">같은 묶음 안에서 맛만 바꿔 산 것도 「같은 상품」으로 셉니다.</p>
   <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>2</b> / 3</span></div>
 </section><section class="page">
   <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>3 · 수량과 11월</span></div>
-<h2>노보 낱병이 늘고 덕후 10병이 반으로 줄었습니다</h2>
-<p class="lead">10월에 많이 팔린 상품 10개의 판매 수량입니다. 노보 낱병 여섯 가지가 위를 차지했고, 9월에 가장 많이 팔렸던 덕후 액상 10병은 159개에서 84개가 됐습니다. 10월에 처음 팔린 상품도 46가지입니다(대부분 리퀴드랩 새 맛).</p>
-<table class="sm"><thead><tr><th>상품</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th></tr></thead><tbody><tr><td>노보 타박멘솔</td><td class="n">192</td><td class="n"><b>193</b></td><td class="n"><span class="up">+1</span></td></tr><tr><td>노보 블랙멘솔</td><td class="n">61</td><td class="n"><b>151</b></td><td class="n"><span class="up">+90</span></td></tr><tr><td>노보 엠에스블랜드</td><td class="n">4</td><td class="n"><b>102</b></td><td class="n"><span class="up">+98</span></td></tr><tr><td>노보 아메리카노</td><td class="n">0</td><td class="n"><b>100</b></td><td class="n"><span class="up">+100</span></td></tr><tr><td>덕후 액상 10병 묶음</td><td class="n">159</td><td class="n"><b>84</b></td><td class="n"><span class="dn">-75</span></td></tr><tr><td>노보 데저트</td><td class="n">4</td><td class="n"><b>66</b></td><td class="n"><span class="up">+62</span></td></tr><tr><td>젤로 크리스탈 기기 + 5병</td><td class="n">58</td><td class="n"><b>63</b></td><td class="n"><span class="up">+5</span></td></tr><tr><td>노보 블랙 쿠바시가</td><td class="n">7</td><td class="n"><b>61</b></td><td class="n"><span class="up">+54</span></td></tr><tr><td>디오리퀴드 3+1</td><td class="n">61</td><td class="n"><b>53</b></td><td class="n"><span class="dn">-8</span></td></tr><tr><td>노보 블랙 블랙멘솔</td><td class="n">42</td><td class="n"><b>52</b></td><td class="n"><span class="up">+10</span></td></tr></tbody></table>
+<h2>노보 낱병이 늘고, 덕후 10병은 반으로 줄었습니다</h2>
+<p class="lead">10월에 많이 팔린 상품 10개의 판매 수량입니다 (9월 → 10월). 10월에 처음 팔린 상품도 46가지입니다 (대부분 리퀴드랩 새 맛).</p>
+<div class="mv"><div><span>노보 타박멘솔</span><span>192 → <b>193</b><em class="up">+1</em></span></div><div><span>노보 블랙멘솔</span><span>61 → <b>151</b><em class="up">+90</em></span></div><div><span>노보 엠에스블랜드</span><span>4 → <b>102</b><em class="up">+98</em></span></div><div><span>노보 아메리카노</span><span>0 → <b>100</b><em class="up">+100</em></span></div><div><span>덕후 액상 10병 묶음</span><span>159 → <b>84</b><em class="dn">-75</em></span></div><div><span>노보 데저트</span><span>4 → <b>66</b><em class="up">+62</em></span></div><div><span>젤로 크리스탈 기기 + 5병</span><span>58 → <b>63</b><em class="up">+5</em></span></div><div><span>노보 블랙 쿠바시가</span><span>7 → <b>61</b><em class="up">+54</em></span></div><div><span>디오리퀴드 3+1</span><span>61 → <b>53</b><em class="dn">-8</em></span></div><div><span>노보 블랙 블랙멘솔</span><span>42 → <b>52</b><em class="up">+10</em></span></div></div>
 <h3>11월에 할 일</h3>
 <div class="todo"><div class="no">1</div><div><h3>잘 돌아오는 묶음 손님에게 다시 살 때 알리기</h3><p>디오리퀴드 3+1 · 빌런 5병 · 흑염룡 10병. 산 지 한 달쯤 된 손님에게 같은 묶음과 비슷한 맛을 함께 권합니다.</p></div></div>
 <div class="todo"><div class="no">2</div><div><h3>낱병 손님에게 10병 묶음 권하기</h3><p>멘솔쨩 낱병 손님이 다시 오지 않았습니다. 다음 주문에서 같은 맛을 묶음으로 담게 안내합니다.</p></div></div>
 <div class="todo"><div class="no">3</div><div><h3>노보 손님이 옮겨 갈 자리 만들기</h3><p>노보 재고가 끝나면 노보만 사던 손님이 빠집니다. 맛이 가까운 입호흡 액상을 상품 화면과 문자에서 먼저 보여 줍니다.</p></div></div>
-<p class="note">숫자 출처: 워드프레스 주문(10월 30일 오후 2시 28분 추출). 5월부터의 주문만 있어 그 전 구매는 모릅니다. 옛 사이트(아임웹) 주문은 손님 번호가 달라 넣지 않았습니다.</p>
+<p class="note">숫자 출처: 워드프레스 주문(10월 30일 오후 2시 28분 추출, 두 달 모두 1~29일). 옛 사이트(아임웹) 주문은 넣지 않았습니다.</p>
   <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>3</b> / 3</span></div>
 </section>
 </body></html>
