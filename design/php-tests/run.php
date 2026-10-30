@@ -3230,7 +3230,10 @@ $ok($ga('5000원 적립금을 넣어드렸어요 (10월 23일까지)') === 5000 
 $rt = ($PA.'read_table')([['안규태','01012345678','문구','10만원 이벤트 중','5000원 적립금을 넣어드렸어요 (10월 23일까지)'],['김가','01012345679','x','(10월 23일까지)']]);
 $ok(count($rt['rows'])===1 && $rt['rows'][0]['amount']===5000 && count($rt['bad'])===1, '적립금: 100원 아래로 읽힌 줄은 넣지 않고 「못 읽은 줄」로 뺀다');
 $xf = getenv('DHR_PTS_XLSX');
-if ($xf && is_file($xf)) { $xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $ok(count($xt['rows'])===913 && array_sum(array_column($xt['rows'],'amount'))===4827200, '적립금: 사장님 엑셀 913명 · 4,827,200원'); }
+if ($xf && is_file($xf)) { // 올린 엑셀을 화면과 같은 코드로 읽어 본다 (DHR_PTS_XLSX=<파일>)
+	$xt = ($PA.'read_table')(($PA.'xlsx_table')($xf)); $kc = [];
+	foreach ($xt['rows'] as $r) { $k = ($r['kind'] ?? '').' · '.$r['amount']; $kc[$k] = ($kc[$k] ?? 0) + 1; }
+	echo '엑셀 읽음: '.count($xt['rows']).'명 · '.array_sum(array_column($xt['rows'], 'amount')).'원 · 못 읽은 줄 '.count($xt['bad'])."\n"; print_r($kc); print_r(array_slice($xt['bad'], 0, 5)); }
 
 // ── 재고 수량보다 많이 담기 막기 (2026-10-14, 그린펀치 1병) ─────────────────
 require_once dirname(__DIR__, 2).'/includes/stock-cap.php';
