@@ -1,0 +1,136 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>액상덕후 10월 월마감</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css"><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; } html, body { margin: 0; }
+body { font-family: "Pretendard Variable", Pretendard, sans-serif; color: #111; font-size: 12.5pt; line-height: 1.6; word-break: keep-all; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 16mm; position: relative; break-after: page; overflow: hidden; }
+.page:last-child { break-after: auto; }
+.run, .foot { position: absolute; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6B7280; }
+.run { top: 8mm; } .foot { bottom: 8mm; border-top: 1px solid #E5E9EE; padding-top: 4pt; } .foot b { color: #111; }
+.eb { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; letter-spacing: .04em; }
+h1 { font-size: 29pt; line-height: 1.25; margin: 0 0 10pt; font-weight: 900; }
+h2 { font-size: 22pt; line-height: 1.3; margin: 4pt 0 8pt; font-weight: 900; }
+h3 { font-size: 14pt; margin: 0 0 6pt; font-weight: 900; }
+.lead { font-size: 12.5pt; color: #374151; margin: 0 0 12pt; }
+.g { color: #6B7280; } .acc { color: #2F6FE0; }
+.cover { background: #0F172A; color: #fff; }
+.cover .eb { color: #9CC3FF; }
+.cover .big { font-size: 104pt; font-weight: 900; line-height: 1; margin: 24mm 0 10mm; }
+.cover .big small { font-size: 30pt; color: #9CC3FF; margin-left: 6pt; }
+.cover h1 { color: #fff; } .cover .lead { color: #CBD5E1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; margin-top: 16mm; }
+.fact { border-top: 2px solid #9CC3FF; padding-top: 8pt; }
+.fact .v { font-size: 25pt; font-weight: 900; line-height: 1.15; } .fact .l { font-size: 11pt; color: #CBD5E1; }
+.words { margin-top: 13mm; background: #1E293B; border-radius: 8pt; padding: 12pt 14pt; font-size: 11.5pt; color: #E2E8F0; }
+.words .t { font-weight: 900; color: #9CC3FF; margin-bottom: 4pt; } .words p { margin: 2pt 0; } .words b { color: #fff; }
+.meta { position: absolute; left: 18mm; right: 18mm; bottom: 15mm; font-size: 10pt; color: #94A3B8; display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 8pt; }
+.meta b { color: #fff; }
+.rows { margin: 6pt 0 14pt; }
+.row { display: grid; grid-template-columns: 74pt 1fr; gap: 12pt; padding: 10pt 0; border-bottom: 1px solid #E5E9EE; align-items: baseline; }
+.row .k { font-size: 11pt; font-weight: 900; border-radius: 99pt; padding: 2pt 0; text-align: center; }
+.k.ok { background: #EEF4FF; color: #2F6FE0; } .k.mid { background: #F1F5F9; color: #334155; } .k.bad { background: #FEF3F2; color: #B42318; } .k.next { background: #111; color: #fff; }
+.row p { margin: 0; font-size: 13pt; } .row p small { display: block; font-size: 11pt; color: #6B7280; }
+.bars { margin: 4pt 0 6pt; }
+.bar { display: grid; grid-template-columns: 120pt 1fr 60pt; align-items: center; gap: 8pt; margin: 5pt 0; font-size: 11.5pt; }
+.bar .f { height: 15pt; border-radius: 3pt; background: #CBD5E1; } .bar.on .f { background: #2F6FE0; }
+.bar .n { text-align: right; font-weight: 900; }
+table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 2pt 0 12pt; }
+th { text-align: left; font-size: 9.5pt; color: #6B7280; font-weight: 700; border-bottom: 2px solid #111; padding: 4pt 5pt; }
+td { border-bottom: 1px solid #E5E9EE; padding: 6pt 5pt; vertical-align: top; }
+.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fx td small { display: block; font-size: 9pt; color: #6B7280; font-weight: 400; margin-top: 1pt; }
+table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
+.chart { border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 10pt; }
+.legend { display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }
+.legend i { display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: #9CC3FF; margin-right: 4pt; vertical-align: -1pt; }
+.legend i.l { height: 0; border-top: 2px dashed #374151; border-radius: 0; background: none; vertical-align: 3pt; }
+.box { background: #EEF4FF; border: 1px solid #C7DCFF; border-radius: 8pt; padding: 11pt 14pt; font-size: 11.5pt; }
+.box .t { font-weight: 900; margin-bottom: 4pt; } .box p { margin: 0 0 4pt; }
+.pb { margin: 4pt 0 12pt; }
+.pbr { display: grid; grid-template-columns: 52pt 1fr 70pt 46pt; gap: 8pt; align-items: center; margin: 4pt 0; font-size: 11pt; }
+.pbr .f { height: 13pt; background: #F1F5F9; border-radius: 3pt; overflow: hidden; } .pbr .f i { display: block; height: 100%; background: #CBD5E1; }
+.pbr.on .f i { background: #2F6FE0; } .pbr.on span:first-child { font-weight: 900; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 4pt 0 14pt; }
+.vsb { border-radius: 8pt; padding: 12pt 14pt; border: 1.5px solid #E5E9EE; }
+.vsb.on { background: #EEF4FF; border-color: #C7DCFF; }
+.vsb .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.vsb .v { font-size: 30pt; font-weight: 900; line-height: 1.15; } .vsb.on .v { color: #2F6FE0; }
+.vsb .d { font-size: 10.5pt; color: #6B7280; }
+.vsb code { font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }
+.todo { display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }
+.todo .no { width: 30pt; height: 30pt; border-radius: 50%; background: #2F6FE0; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+.tight .row { padding: 6pt 0; } .tight .row p { font-size: 12pt; } table.tight td { padding: 4pt 5pt; }
+.todo h3 { margin: 2pt 0 1pt; } .done { font-size: 10pt; font-weight: 800; color: #2F6FE0; background: #EEF4FF; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; } .todo p { margin: 0; font-size: 11.5pt; color: #374151; } .todo p b { color: #111; }
+.not { margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }
+.not li { padding-left: 14pt; position: relative; margin: 0 0 3pt; } .not li::before { content: "×"; position: absolute; left: 0; color: #94A3B8; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }
+.goal { border: 1.5px solid #C7DCFF; background: #EEF4FF; border-radius: 8pt; padding: 9pt 12pt; }
+.goal .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.goal .v { font-size: 21pt; font-weight: 900; line-height: 1.25; } .goal .v small { font-size: 11pt; color: #374151; }
+.goal .d { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; }
+.src { font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; } .src p { margin: 0 0 2pt; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10pt; margin: 6pt 0 14pt; }
+.kpi { border: 1.5px solid #E5E9EE; border-radius: 8pt; padding: 9pt 11pt; }
+.kpi.on { background: #EEF4FF; border-color: #C7DCFF; }
+.kpi .l { font-size: 10pt; color: #374151; font-weight: 700; }
+.kpi .v { font-size: 19pt; font-weight: 900; line-height: 1.2; }
+.kpi .d { font-size: 9.5pt; color: #6B7280; }
+.up { color: #1A7F37; } .dn { color: #B42318; }
+table.sm { font-size: 10pt; } table.sm td { padding: 4pt 5pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.note { font-size: 9.5pt; color: #6B7280; margin: 4pt 0 0; }
+</style></head><body>
+<section class="page cover">
+  <div class="eb">액상덕후 · 10월 월마감 · 10월 1일 ~ 30일 오후 2시 45분 (잠정)</div>
+  <div class="big">4,475<small>만 원</small></div>
+  <h1>10월에 4,475만 원을 팔고<br>원가와 배송비를 빼고 1,727만 원이 남았습니다</h1>
+  <p class="lead">입금이 확인된 주문 646건으로 셌습니다. 상품 원가는 상품별 원가표로, 배송비는 건당 2,500원으로 뺐습니다.</p>
+  <div class="facts"><div class="fact"><div class="v">57.8%</div><div class="l">원가율</div></div><div class="fact"><div class="v">646건</div><div class="l">주문 · 한 건 평균 69,278원</div></div><div class="fact"><div class="v">38.6%</div><div class="l">원가 · 배송비 뺀 몫</div></div></div>
+  
+  <div class="meta"><span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인몰 운영</b></span><span>2026년 10월 30일</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 월마감</span><span>1 · 한눈에</span></div>
+<h2>큰 주문을 빼면 9월보다 14% 줄었습니다</h2>
+<p class="lead">10월 숫자를 9월과 견줬습니다. 날수를 맞추려고 견줄 때는 두 달 모두 1일부터 29일까지만 셉니다.</p>
+<div class="kpis">
+<div class="kpi on"><div class="l">순상품매출</div><div class="v">4,475만 원</div><div class="d">할인 · 환불 반영, 배송비 제외</div></div>
+<div class="kpi"><div class="l">상품 원가</div><div class="v">2,587만 원</div><div class="d">원가율 57.8%</div></div>
+<div class="kpi"><div class="l">원가 뺀 이익</div><div class="v">1,889만 원</div><div class="d">매출의 42.2%</div></div>
+<div class="kpi on"><div class="l">배송비까지 뺀 이익</div><div class="v">1,727만 원</div><div class="d">매출의 38.6%</div></div>
+</div>
+<table class="fx"><thead><tr><th>9월과 견주기 (두 달 모두 1~29일)</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th></tr></thead><tbody><tr><td>주문</td><td class="n">779건</td><td class="n">639건</td><td class="n"><span class="dn">-18.0%</span></td></tr><tr><td>산 손님</td><td class="n">741명</td><td class="n">591명</td><td class="n"><span class="dn">-20.2%</span></td></tr><tr><td>순상품매출</td><td class="n">6,725만 원</td><td class="n">4,441만 원</td><td class="n"><span class="dn">-34.0%</span></td></tr><tr><td><b>큰 주문 한 건씩 뺀 매출</b><small>9월 2,100만 원 · 10월 459만 원</small></td><td class="n">4,625만 원</td><td class="n">3,982만 원</td><td class="n"><b><span class="dn">-13.9%</span></b></td></tr><tr><td>판매 수량 (병 · 묶음 · 기기)</td><td class="n">1,380</td><td class="n">1,675</td><td class="n"><span class="up">+21.4%</span></td></tr></tbody></table>
+<div class="rows"><div class="row"><span class="k ok">결과</span><p>노보가 매출의 43%를 냈습니다<small>단종 소식이 퍼진 뒤 노보 낱병이 몰렸습니다. 블랙멘솔 61 → 151병, 아메리카노 0 → 100병.</small></p></div><div class="row"><span class="k ok">결과</span><p>이미 산 적 있는 손님이 더 자주 샀습니다<small>이전에 산 손님 중 그달에 다시 산 비율 9월 13.4% → 10월 14.7%. 다시 산 손님 233명이 284건을 주문했습니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>처음 사는 손님이 634명에서 367명으로 줄었습니다<small>새 가입도 1,698명 → 1,044명. 10월 초 광고가 멈춘 뒤 새 손님이 덜 들어옵니다.</small></p></div></div>
+  <div class="foot"><span>액상덕후 10월 월마감</span><span><b>1</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 월마감</span><span>2 · 손익</span></div>
+<h2>원가율 57.8%, 100원 팔아 39원이 남았습니다</h2>
+<p class="lead">입금이 확인된 주문만 셉니다. 10월 27일 노보 450병 주문(459만 원) 한 건이 커서 뺀 값을 옆에 둡니다. 단위는 원입니다.</p>
+<table class="fx"><thead><tr><th></th><th class="n">10월 전체</th><th class="n">대량 주문 1건 뺀 값</th></tr></thead><tbody><tr><td>순상품매출</td><td class="n">44,753,716</td><td class="n">40,163,716</td></tr><tr><td>− 상품 원가</td><td class="n">−25,866,056</td><td class="n">−23,166,056</td></tr><tr><td><b>= 원가 뺀 이익</b></td><td class="n"><b>18,887,660</b><small>42.2%</small></td><td class="n"><b>16,997,660</b><small>42.3%</small></td></tr><tr><td>− 배송비 (주문 × 2,500원)</td><td class="n">−1,615,000</td><td class="n">−1,612,500</td></tr><tr><td><b>= 배송비까지 뺀 이익</b></td><td class="n"><b class="acc">17,272,660</b><small>38.6%</small></td><td class="n"><b>15,385,160</b><small>38.3%</small></td></tr></tbody></table>
+<h3>매출에 넣지 않은 것</h3>
+<table class="sm"><thead><tr><th></th><th class="n">건수</th><th class="n">금액</th><th class="n"></th></tr></thead><tbody><tr><td>취소된 주문</td><td class="n">51건</td><td class="n">3,426,590</td><td class="n">손님 취소 · 미입금 자동 취소</td></tr><tr><td>아직 입금 전</td><td class="n">33건</td><td class="n">2,204,930</td><td class="n">입금되면 매출로 들어옵니다</td></tr><tr><td>옛 사이트(아임웹) 결제</td><td class="n">6건</td><td class="n">348,000</td><td class="n">원가 자료가 없어 위 표와 따로 둡니다</td></tr></tbody></table>
+<div class="box"><div class="t">원가를 어떻게 셌나</div>
+<p>상품마다 원가표 값을 넣었습니다. 노보는 병당 6,000원입니다. 묶음 안의 맛마다 원가가 다른데 맛별 값이 없는 줄(888줄 중 362줄)은 같은 브랜드 평균으로 넣었습니다. 그래서 원가는 몇십만 원 오르내릴 수 있습니다.</p>
+<p>10월 31일 주문과 9월 주문의 환불은 아직 들어 있지 않습니다. 확정 숫자는 11월 3일에 다시 셉니다.</p></div>
+  <div class="foot"><span>액상덕후 10월 월마감</span><span><b>2</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 월마감</span><span>3 · 무엇이 팔렸나</span></div>
+<h2>많이 팔린 것과 많이 남긴 것이 다릅니다</h2>
+<p class="lead">젤로 크리스탈 세트와 빌런 5병은 원가율이 80%를 넘습니다. 두 상품을 586만 원어치 팔아 90만 원이 남았습니다. 디오리퀴드와 리퀴드랩은 원가율이 40% 안팎입니다.</p>
+<table class="fx"><thead><tr><th>브랜드</th><th class="n">매출</th><th class="n">원가율</th><th class="n">원가 뺀 이익</th><th class="n">매출 몫</th></tr></thead><tbody><tr><td>노보<small>대량 주문 459만 원 포함</small></td><td class="n">19,279,353</td><td class="n">55%</td><td class="n">8,710,123</td><td class="n">43%</td></tr><tr><td>액상덕후<small>흑염룡 · 멘솔쨩</small></td><td class="n">7,071,684</td><td class="n">51%</td><td class="n">3,484,310</td><td class="n">16%</td></tr><tr><td>젤로 크리스탈<small>기기 + 액상 묶음</small></td><td class="n">5,425,653</td><td class="n">81%</td><td class="n">1,049,853</td><td class="n">12%</td></tr><tr><td>디오리퀴드</td><td class="n">3,885,807</td><td class="n">43%</td><td class="n">2,214,261</td><td class="n">9%</td></tr><tr><td>빌런</td><td class="n">1,926,621</td><td class="n">81%</td><td class="n">370,431</td><td class="n">4%</td></tr><tr><td>리퀴드랩</td><td class="n">1,809,205</td><td class="n">39%</td><td class="n">1,095,237</td><td class="n">4%</td></tr><tr><td>화이트아웃</td><td class="n">1,442,540</td><td class="n">62%</td><td class="n">553,994</td><td class="n">3%</td></tr><tr><td>스위든<small>수기 결제 6건</small></td><td class="n">1,095,572</td><td class="n">75%</td><td class="n">279,026</td><td class="n">2%</td></tr><tr><td>펠릭스</td><td class="n">1,010,917</td><td class="n">62%</td><td class="n">382,825</td><td class="n">2%</td></tr></tbody></table>
+<table class="sm"><thead><tr><th>많이 팔린 상품 10</th><th class="n">매출</th><th class="n">원가율</th><th class="n">원가 뺀 이익</th></tr></thead><tbody><tr><td>노보 10+1 묶음</td><td class="n">6,767,351</td><td class="n">57%</td><td class="n">2,887,167</td></tr><tr><td>덕후 액상 10병 묶음</td><td class="n">4,483,923</td><td class="n">46%</td><td class="n">2,406,279</td></tr><tr><td>젤로 크리스탈 기기 + 액상 5병</td><td class="n">4,346,023</td><td class="n"><b class="dn">82%</b></td><td class="n">766,643</td></tr><tr><td>노보 블랙 10+1 묶음</td><td class="n">3,210,890</td><td class="n">52%</td><td class="n">1,526,890</td></tr><tr><td>노보 타박멘솔 낱병</td><td class="n">2,039,206</td><td class="n">57%</td><td class="n">881,206</td></tr><tr><td>디오리퀴드 5+5</td><td class="n">1,698,342</td><td class="n">43%</td><td class="n">976,296</td></tr><tr><td>노보 블랙멘솔 낱병</td><td class="n">1,614,752</td><td class="n">57%</td><td class="n">686,752</td></tr><tr><td>디오리퀴드 3+1</td><td class="n">1,598,776</td><td class="n">44%</td><td class="n">901,276</td></tr><tr><td>흑염룡 10병 묶음</td><td class="n">1,570,268</td><td class="n">69%</td><td class="n">485,268</td></tr><tr><td>빌런 5병</td><td class="n">1,519,169</td><td class="n"><b class="dn">91%</b></td><td class="n">134,809</td></tr></tbody></table>
+  <div class="foot"><span>액상덕후 10월 월마감</span><span><b>3</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 월마감</span><span>4 · 흐름과 11월</span></div>
+<h2>대량 주문을 빼도 후반이 전반보다 43% 더 팔았습니다</h2>
+<p class="lead">날짜별 순상품매출입니다. 1~15일 1,630만 원, 16~29일 2,791만 원(대량 주문 빼면 2,332만 원). 20일 노보 단종 안내 뒤로 하루 매출이 올라섰습니다. 30일은 오후 2시까지입니다.</p>
+<div class="chart"><svg viewBox="0 0 640 150" width="100%" style="display:block"><rect x="1.5" y="108.7" width="18.3" height="27.3" rx="1.5" fill="#9CC3FF"/><text x="10.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">1</text><rect x="22.8" y="121.9" width="18.3" height="14.1" rx="1.5" fill="#9CC3FF"/><rect x="44.2" y="129.1" width="18.3" height="6.9" rx="1.5" fill="#9CC3FF"/><rect x="65.5" y="128.3" width="18.3" height="7.7" rx="1.5" fill="#9CC3FF"/><text x="74.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">4</text><rect x="86.8" y="116.8" width="18.3" height="19.2" rx="1.5" fill="#9CC3FF"/><rect x="108.2" y="113.9" width="18.3" height="22.1" rx="1.5" fill="#9CC3FF"/><rect x="129.5" y="116.7" width="18.3" height="19.3" rx="1.5" fill="#9CC3FF"/><text x="138.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">7</text><rect x="150.8" y="92.2" width="18.3" height="43.8" rx="1.5" fill="#9CC3FF"/><rect x="172.2" y="125.8" width="18.3" height="10.2" rx="1.5" fill="#9CC3FF"/><rect x="193.5" y="122.6" width="18.3" height="13.4" rx="1.5" fill="#9CC3FF"/><text x="202.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">10</text><rect x="214.8" y="124.7" width="18.3" height="11.3" rx="1.5" fill="#9CC3FF"/><rect x="236.2" y="112.4" width="18.3" height="23.6" rx="1.5" fill="#9CC3FF"/><rect x="257.5" y="109.6" width="18.3" height="26.4" rx="1.5" fill="#9CC3FF"/><text x="266.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">13</text><rect x="278.8" y="115.4" width="18.3" height="20.6" rx="1.5" fill="#9CC3FF"/><rect x="300.2" y="113.7" width="18.3" height="22.3" rx="1.5" fill="#9CC3FF"/><rect x="321.5" y="108.5" width="18.3" height="27.5" rx="1.5" fill="#9CC3FF"/><text x="330.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">16</text><rect x="342.8" y="134.1" width="18.3" height="1.9" rx="1.5" fill="#9CC3FF"/><rect x="364.2" y="121.7" width="18.3" height="14.3" rx="1.5" fill="#9CC3FF"/><rect x="385.5" y="120.0" width="18.3" height="16.0" rx="1.5" fill="#9CC3FF"/><text x="394.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">19</text><rect x="406.8" y="76.1" width="18.3" height="59.9" rx="1.5" fill="#2F6FE0"/><text x="416.0" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">20</text><text x="416.0" y="72.1" font-size="9" font-weight="800" text-anchor="middle" fill="#111">노보 단종 문자</text><rect x="428.2" y="106.5" width="18.3" height="29.5" rx="1.5" fill="#9CC3FF"/><rect x="449.5" y="100.3" width="18.3" height="35.7" rx="1.5" fill="#9CC3FF"/><text x="458.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">22</text><rect x="470.8" y="99.3" width="18.3" height="36.7" rx="1.5" fill="#9CC3FF"/><rect x="492.2" y="125.3" width="18.3" height="10.7" rx="1.5" fill="#9CC3FF"/><rect x="513.5" y="116.6" width="18.3" height="19.4" rx="1.5" fill="#9CC3FF"/><text x="522.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">25</text><rect x="534.8" y="104.7" width="18.3" height="31.3" rx="1.5" fill="#9CC3FF"/><rect x="556.2" y="14.0" width="18.3" height="122.0" rx="1.5" fill="#2F6FE0"/><text x="565.3" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">27</text><text x="565.3" y="10.0" font-size="9" font-weight="800" text-anchor="middle" fill="#111">대량 459만</text><rect x="577.5" y="91.8" width="18.3" height="44.2" rx="1.5" fill="#9CC3FF"/><text x="586.7" y="148" font-size="8.5" text-anchor="middle" fill="#6B7280">28</text><rect x="598.8" y="92.1" width="18.3" height="43.9" rx="1.5" fill="#9CC3FF"/><rect x="620.2" y="126.3" width="18.3" height="9.7" rx="1.5" fill="#9CC3FF"/></svg></div>
+<h3>11월에 할 일</h3>
+<div class="todo"><div class="no">1</div><div><h3>원가율 80% 넘는 묶음의 값 · 구성 다시 보기</h3><p>젤로 크리스탈 세트와 빌런 5병. 많이 팔릴수록 남는 몫이 줄어드는 구조입니다.</p></div></div>
+<div class="todo"><div class="no">2</div><div><h3>노보 다음 자리를 정하기</h3><p>노보가 매출의 43%입니다. 재고가 떨어지면 그만큼 빕니다. 원가율이 낮은 디오리퀴드 · 리퀴드랩 묶음을 앞자리에 세웁니다.</p></div></div>
+<div class="todo"><div class="no">3</div><div><h3>새 손님 들어오는 길 넓히기</h3><p>처음 산 손님이 9월의 절반 남짓입니다. 검색으로 들어오는 손님을 키우는 일은 검색 보고서에 따로 적었습니다.</p></div></div>
+<div class="src"><p>숫자 출처: 워드프레스 주문 · 원가표 (10월 30일 오후 2시 45분 조회). 9월과의 견줌은 같은 날 뽑은 상품별 주문 자료(1~29일).</p>
+<p>처음 산 손님 · 다시 산 손님 · 가입 수는 사이트 집계(10월 30일).</p></div>
+  <div class="foot"><span>액상덕후 10월 월마감</span><span><b>4</b> / 4</span></div>
+</section>
+</body></html>

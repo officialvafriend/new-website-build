@@ -202,9 +202,12 @@ table.fx td.why {{ font-size: 10.5pt; color: #374151; width: 42%; }}
 .goal .v {{ font-size: 21pt; font-weight: 900; line-height: 1.25; }} .goal .v small {{ font-size: 11pt; color: #374151; }}
 .goal .d {{ font-size: 10.5pt; color: {BLUE}; font-weight: 800; }}
 .src {{ font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; }} .src p {{ margin: 0 0 2pt; }}
+.dn {{ color: #B42318; }} .up {{ color: #1A7F37; }}
+.two {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }}
+table.sm {{ font-size: 10pt; }} table.sm td {{ padding: 4pt 4pt; }} table.sm th {{ padding: 3pt 4pt; }}
 </style>"""
 
-TOTAL = 7 if NAV else 6
+TOTAL = 9 if NAV else 8
 def frame(no, title, body):
     return f'''<section class="page">
   <div class="run"><span>10월 검색 마감 보고</span><span>{no} · {title}</span></div>
@@ -366,6 +369,50 @@ if NAV:
 </div>
   <p class="g" style="font-size:10pt;margin:6pt 0 0">순위는 하루에 잰 값이라 한두 자리씩 흔들립니다. 11월에도 같은 검색어로 잽니다.{' 10월 ' + ', '.join(str(int(g[3:])) + '일' for g in gap) + '은 네이버 자료가 비어 빼고 셌습니다.' if gap else ''}</p>""")
 
+# 6 · 검색 손님 (구글 애널리틱스, 9월 1~30일 vs 10월 1~30일) · 7 · 네이버 검색어 (서치어드바이저 최근 30일, 10/29 기준)
+GA = [('인스타 · 페이스북 광고', 12735, 7281, 54.3), ('검색 (네이버 · 구글)', 3461, 3479, 72.8),
+      ('주소를 치고 바로', 1887, 2564, 47.6), ('인스타 · 페이스북 (광고 아님)', 379, 380, 62.4)]
+GA_ALL = (18818, 13845)
+NK = [('액상덕후', 836, 3903), ('화이트아웃 액상', 44, 386), ('펠릭스 더블라임', 43, 1093), ('노보 타박멘솔', 39, 2739),
+      ('노보 데저트', 37, 799), ('폐호흡 액상', 32, 2831), ('노보액상', 31, 1154), ('노보 액상 사이트', 26, 92),
+      ('액상82', 24, 9978), ('노보 블랙멘솔', 21, 1106), ('디오리퀴드 액상', 21, 186), ('전자담배 액상 가격', 20, 840),
+      ('노보 엠에스 블랜드', 15, 94), ('니코틴 액상 가격', 12, 65), ('액상 가격', 9, 119)]
+NPG = [('첫 화면', 1045, 10358), ('노보 액상 목록', 115, 3291), ('전 상품 가격표', 94, 4356), ('펠릭스 더블라임 상품', 86, 2297),
+       ('노보 데저트 상품', 74, 1163), ('화이트아웃 브랜드', 67, 1320), ('노보 타박멘솔 상품', 65, 4527),
+       ('입호흡 액상 목록', 53, 13224), ('폐호흡 액상 목록', 52, 4706), ('전체 상품', 50, 1780)]
+def gatab():
+    h = '<table><thead><tr><th>어디서 왔나</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th><th class="n">10월 몫</th><th class="n">둘러본 비율</th></tr></thead><tbody>'
+    for n_, a, b, e in GA:
+        on = '검색' in n_
+        h += (f'<tr><td>{"<b>" + n_ + "</b>" if on else n_}</td><td class="n">{w(a)}</td><td class="n">{"<b>" + w(b) + "</b>" if on else w(b)}</td>'
+              f'<td class="n">{(b / a - 1) * 100:+.0f}%</td><td class="n">{b / GA_ALL[1] * 100:.0f}%</td><td class="n">{e:.0f}%</td></tr>')
+    return h + f'<tr><td>전체 (그 밖 포함)</td><td class="n">{w(GA_ALL[0])}</td><td class="n">{w(GA_ALL[1])}</td><td class="n">{(GA_ALL[1] / GA_ALL[0] - 1) * 100:+.0f}%</td><td></td><td></td></tr></tbody></table>'
+pga = frame(6, '검색 손님', f"""  <div class="eb">6 · 검색으로 온 손님</div>
+  <h2>광고 손님이 반 가까이 줄 때<br>검색 손님은 그대로였습니다</h2>
+  <p class="lead">구글 애널리틱스로 사이트에 들어온 횟수(방문)를 어디서 왔는지 나눠 봤습니다. 10월 초 인스타 · 페이스북 광고가 멈춰 광고로 온 방문이 {(1 - GA[0][2] / GA[0][1]) * 100:.0f}% 줄었습니다. 검색으로 온 방문은 {w(GA[1][1])}번에서 {w(GA[1][2])}번으로 그대로였고, 전체에서 차지하는 몫은 {GA[1][1] / GA_ALL[0] * 100:.0f}%에서 {GA[1][2] / GA_ALL[1] * 100:.0f}%로 커졌습니다.</p>
+  {gatab()}
+  <div class="rows tight">
+    <div class="row"><span class="k ok">결과</span><p>검색으로 온 손님이 가장 오래 둘러봤습니다<small>한 페이지만 보고 나가지 않고 둘러본 비율이 {GA[1][3]:.0f}%로 광고({GA[0][3]:.0f}%)보다 높습니다. 사려는 말을 치고 들어온 손님이라서입니다.</small></p></div>
+    <div class="row"><span class="k ok">결과</span><p>네이버 모바일 검색으로 들어온 사람이 늘었습니다<small>9월 1,296명 → 10월 1,432명. 구글 검색은 439명 → 448명으로 그대로입니다.</small></p></div>
+    <div class="row"><span class="k bad">걸리는 것</span><p>어느 길로 온 손님이 샀는지는 아직 못 봅니다<small>애널리틱스에 「구매」 기록이 연결돼 있지 않습니다. 11월에 주문 완료를 기록하게 하면 12월부터 길별로 산 손님을 셉니다.</small></p></div>
+  </div>
+  <p class="g" style="font-size:10pt;margin:4pt 0 0">10월은 1~30일이라 9월보다 하루 짧습니다. 「검색」에는 네이버 · 구글 등 검색엔진에서 온 방문이 모두 들어갑니다.</p>""")
+def kt(rows_, head):
+    h = f'<table class="sm"><thead><tr><th>{head}</th><th class="n">들어온</th><th class="n">보인</th><th class="n">비율</th></tr></thead><tbody>'
+    for n_, c_, i_ in rows_:
+        r_ = c_ / i_ * 100
+        h += f'<tr><td>{n_}</td><td class="n"><b>{w(c_)}</b></td><td class="n">{w(i_)}</td><td class="n">' + (f'<span class="dn">{r_:.1f}%</span>' if r_ < 1 else f'{r_:.1f}%') + '</td></tr>'
+    return h + '</tbody></table>'
+pkw = frame(7, '네이버 검색어', f"""  <div class="eb">7 · 네이버에서 무엇을 치고 왔나</div>
+  <h2>가게 이름 다음은 노보 · 펠릭스 · 화이트아웃</h2>
+  <p class="lead">네이버 서치어드바이저의 최근 30일(10월 29일까지) 숫자입니다. 이 기간 네이버 검색에서 약 2,300번 들어왔고, 그 전 30일보다 50% 많습니다. 검색 결과에 보인 횟수는 약 11만 1천 번으로 70% 늘었습니다.</p>
+  <div class="two">
+    <div><h3>들어온 검색어</h3>{kt(NK, '검색어')}</div>
+    <div><h3>들어온 페이지</h3>{kt(NPG, '페이지')}
+      <div class="box" style="margin-top:4pt"><div class="t">빨간 비율</div><p>보인 횟수에 비해 거의 안 눌린 곳입니다. 「액상82」는 남의 가게 이름이라 노리지 않습니다. 입호흡 액상 목록은 1만 3천 번 보였는데 53번 들어왔습니다. 목록 제목과 설명이 다음 손볼 곳입니다.</p></div></div>
+  </div>
+  <p class="g" style="font-size:10pt;margin:4pt 0 0">옛 사이트(액상덕후.com)는 같은 기간 네이버에서 3번 들어와 검색 손님이 거의 다 지금 사이트로 옮겨 왔습니다.</p>""")
+
 p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 11월에 할 일</div>
   <h2>누른 비율을 올리는 일 셋</h2>
   <div class="todo"><span class="no">1</span><div><h3>모든 상품 제목을 노보처럼 바꾸기</h3><p>「브랜드 맛 + 액상 + 입호흡/폐호흡 + 용량 + <b>값</b> + 재고」. 값은 상품에서 그때그때 읽으므로 값이 바뀌어도 틀리지 않습니다. 디톡스 · 젤로 크리스탈 · 마르키사 · 흑염룡부터.</p></div></div>
@@ -390,7 +437,7 @@ p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 1
 
 html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 검색 마감 보고</title>
 <link rel="stylesheet" href="../demo-src/pretendard.css">{STYLE}</head><body>
-{cover}{p1}{pw}{p2}{p3}{pn}{p4}
+{cover}{p1}{pw}{p2}{p3}{pn}{pga}{pkw}{p4}
 </body></html>'''
 open(OUT, 'w', encoding='utf-8').write(html)
 print('O', O, 'S', S, 'OB', OB, 'ON', ON, 'SB', SB, 'SN', SN, 'MID', MID, 'NOVO', NOVO, 'PROD', PROD, 'SL', SL, 'COMP', COMPI, 'PRICE', PRICE)

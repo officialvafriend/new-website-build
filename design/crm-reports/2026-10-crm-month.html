@@ -1,0 +1,122 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>액상덕후 10월 CRM 성과</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css"><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; } html, body { margin: 0; }
+body { font-family: "Pretendard Variable", Pretendard, sans-serif; color: #111; font-size: 12.5pt; line-height: 1.6; word-break: keep-all; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 16mm; position: relative; break-after: page; overflow: hidden; }
+.page:last-child { break-after: auto; }
+.run, .foot { position: absolute; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6B7280; }
+.run { top: 8mm; } .foot { bottom: 8mm; border-top: 1px solid #E5E9EE; padding-top: 4pt; } .foot b { color: #111; }
+.eb { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; letter-spacing: .04em; }
+h1 { font-size: 29pt; line-height: 1.25; margin: 0 0 10pt; font-weight: 900; }
+h2 { font-size: 22pt; line-height: 1.3; margin: 4pt 0 8pt; font-weight: 900; }
+h3 { font-size: 14pt; margin: 0 0 6pt; font-weight: 900; }
+.lead { font-size: 12.5pt; color: #374151; margin: 0 0 12pt; }
+.g { color: #6B7280; } .acc { color: #2F6FE0; }
+.cover { background: #0F172A; color: #fff; }
+.cover .eb { color: #9CC3FF; }
+.cover .big { font-size: 104pt; font-weight: 900; line-height: 1; margin: 24mm 0 10mm; }
+.cover .big small { font-size: 30pt; color: #9CC3FF; margin-left: 6pt; }
+.cover h1 { color: #fff; } .cover .lead { color: #CBD5E1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; margin-top: 16mm; }
+.fact { border-top: 2px solid #9CC3FF; padding-top: 8pt; }
+.fact .v { font-size: 25pt; font-weight: 900; line-height: 1.15; } .fact .l { font-size: 11pt; color: #CBD5E1; }
+.words { margin-top: 13mm; background: #1E293B; border-radius: 8pt; padding: 12pt 14pt; font-size: 11.5pt; color: #E2E8F0; }
+.words .t { font-weight: 900; color: #9CC3FF; margin-bottom: 4pt; } .words p { margin: 2pt 0; } .words b { color: #fff; }
+.meta { position: absolute; left: 18mm; right: 18mm; bottom: 15mm; font-size: 10pt; color: #94A3B8; display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 8pt; }
+.meta b { color: #fff; }
+.rows { margin: 6pt 0 14pt; }
+.row { display: grid; grid-template-columns: 74pt 1fr; gap: 12pt; padding: 10pt 0; border-bottom: 1px solid #E5E9EE; align-items: baseline; }
+.row .k { font-size: 11pt; font-weight: 900; border-radius: 99pt; padding: 2pt 0; text-align: center; }
+.k.ok { background: #EEF4FF; color: #2F6FE0; } .k.mid { background: #F1F5F9; color: #334155; } .k.bad { background: #FEF3F2; color: #B42318; } .k.next { background: #111; color: #fff; }
+.row p { margin: 0; font-size: 13pt; } .row p small { display: block; font-size: 11pt; color: #6B7280; }
+.bars { margin: 4pt 0 6pt; }
+.bar { display: grid; grid-template-columns: 120pt 1fr 60pt; align-items: center; gap: 8pt; margin: 5pt 0; font-size: 11.5pt; }
+.bar .f { height: 15pt; border-radius: 3pt; background: #CBD5E1; } .bar.on .f { background: #2F6FE0; }
+.bar .n { text-align: right; font-weight: 900; }
+table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 2pt 0 12pt; }
+th { text-align: left; font-size: 9.5pt; color: #6B7280; font-weight: 700; border-bottom: 2px solid #111; padding: 4pt 5pt; }
+td { border-bottom: 1px solid #E5E9EE; padding: 6pt 5pt; vertical-align: top; }
+.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fx td small { display: block; font-size: 9pt; color: #6B7280; font-weight: 400; margin-top: 1pt; }
+table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
+.chart { border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 10pt; }
+.legend { display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }
+.legend i { display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: #9CC3FF; margin-right: 4pt; vertical-align: -1pt; }
+.legend i.l { height: 0; border-top: 2px dashed #374151; border-radius: 0; background: none; vertical-align: 3pt; }
+.box { background: #EEF4FF; border: 1px solid #C7DCFF; border-radius: 8pt; padding: 11pt 14pt; font-size: 11.5pt; }
+.box .t { font-weight: 900; margin-bottom: 4pt; } .box p { margin: 0 0 4pt; }
+.pb { margin: 4pt 0 12pt; }
+.pbr { display: grid; grid-template-columns: 52pt 1fr 70pt 46pt; gap: 8pt; align-items: center; margin: 4pt 0; font-size: 11pt; }
+.pbr .f { height: 13pt; background: #F1F5F9; border-radius: 3pt; overflow: hidden; } .pbr .f i { display: block; height: 100%; background: #CBD5E1; }
+.pbr.on .f i { background: #2F6FE0; } .pbr.on span:first-child { font-weight: 900; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 4pt 0 14pt; }
+.vsb { border-radius: 8pt; padding: 12pt 14pt; border: 1.5px solid #E5E9EE; }
+.vsb.on { background: #EEF4FF; border-color: #C7DCFF; }
+.vsb .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.vsb .v { font-size: 30pt; font-weight: 900; line-height: 1.15; } .vsb.on .v { color: #2F6FE0; }
+.vsb .d { font-size: 10.5pt; color: #6B7280; }
+.vsb code { font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }
+.todo { display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }
+.todo .no { width: 30pt; height: 30pt; border-radius: 50%; background: #2F6FE0; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+.tight .row { padding: 6pt 0; } .tight .row p { font-size: 12pt; } table.tight td { padding: 4pt 5pt; }
+.todo h3 { margin: 2pt 0 1pt; } .done { font-size: 10pt; font-weight: 800; color: #2F6FE0; background: #EEF4FF; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; } .todo p { margin: 0; font-size: 11.5pt; color: #374151; } .todo p b { color: #111; }
+.not { margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }
+.not li { padding-left: 14pt; position: relative; margin: 0 0 3pt; } .not li::before { content: "×"; position: absolute; left: 0; color: #94A3B8; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }
+.goal { border: 1.5px solid #C7DCFF; background: #EEF4FF; border-radius: 8pt; padding: 9pt 12pt; }
+.goal .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.goal .v { font-size: 21pt; font-weight: 900; line-height: 1.25; } .goal .v small { font-size: 11pt; color: #374151; }
+.goal .d { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; }
+.src { font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; } .src p { margin: 0 0 2pt; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10pt; margin: 6pt 0 14pt; }
+.kpi { border: 1.5px solid #E5E9EE; border-radius: 8pt; padding: 9pt 11pt; }
+.kpi.on { background: #EEF4FF; border-color: #C7DCFF; }
+.kpi .l { font-size: 10pt; color: #374151; font-weight: 700; }
+.kpi .v { font-size: 19pt; font-weight: 900; line-height: 1.2; }
+.kpi .d { font-size: 9.5pt; color: #6B7280; }
+.up { color: #1A7F37; } .dn { color: #B42318; }
+table.sm { font-size: 10pt; } table.sm td { padding: 4pt 5pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.note { font-size: 9.5pt; color: #6B7280; margin: 4pt 0 0; }
+</style></head><body>
+<section class="page cover">
+  <div class="eb">액상덕후 · 10월 CRM 성과 · 문자 10월 8일 ~ 27일</div>
+  <div class="big">164<small>명</small></div>
+  <h1>문자를 받은 손님 164명이 7일 안에 샀습니다.<br>다만 보내기 전 7일에도 비슷하게 샀습니다</h1>
+  <p class="lead">10월에 문자 5,726통을 2,373명에게 보냈습니다. 받은 사람이 산 숫자를, 같은 사람들이 문자를 받기 전 7일에 산 숫자와 견줬습니다.</p>
+  <div class="facts"><div class="fact"><div class="v">2,373명</div><div class="l">문자를 받은 사람</div></div><div class="fact"><div class="v">1,210만 원</div><div class="l">받은 사람이 7일 안에 산 매출</div></div><div class="fact"><div class="v">17만 원</div><div class="l">문자 비용</div></div></div>
+  
+  <div class="meta"><span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인몰 운영</b></span><span>2026년 10월 30일</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 CRM 성과</span><span>1 · 한눈에</span></div>
+<h2>적립금이 함께 간 문자만 뚜렷하게 늘었습니다</h2>
+<p class="lead">문자를 받은 사람이 산 매출은 1,210만 원입니다. 그런데 이 사람들은 대부분 원래 사던 단골이라, 문자를 받기 전 7일에도 거의 같은 수가 샀습니다. 그래서 「받고 산 매출」을 문자 덕으로 보지 않고, 보내기 전과 견준 차이만 봅니다.</p>
+<div class="vs"><div class="vsb"><div class="l">보내기 전 7일에 산 사람</div><div class="v">250명</div><div class="d">문자 열 번 각각의 받은 사람 기준</div></div>
+<div class="vsb on"><div class="l">보낸 뒤 7일에 산 사람</div><div class="v">254명</div><div class="d">차이 +4명</div></div></div>
+<div class="rows"><div class="row"><span class="k ok">결과</span><p>감사 적립금을 넣은 손님은 받기 전보다 더 샀습니다<small>10월 13일 감사 적립금 912명: 14일 동안 75명이 샀습니다. 받기 전 14일에는 43명. 쓴 적립금 69만 원, 그 주문 매출 462만 원.</small></p></div><div class="row"><span class="k ok">결과</span><p>노보 단골 지원금도 늘었습니다<small>노보 묶음을 샀던 213명에게 1만 원: 14일 동안 14명(받기 전 6명)이 샀고 노보 14개가 나갔습니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>신상품 문자는 그 상품을 거의 팔지 못했습니다<small>다섯 번에 걸쳐 1,388명이 받았는데 알린 신상품은 2개 팔렸습니다. 받은 사람이 산 것은 원래 사던 상품입니다.</small></p></div></div>
+<div class="box"><div class="t">「문자비의 70배 매출」로 읽지 않습니다</div><p>추출 파일의 효율 값(ROAS 70)은 받은 사람이 7일 안에 산 금액을 전부 문자 덕으로 센 값입니다. 보내기 전과 견주면 문자가 새로 만든 구매는 그보다 훨씬 적습니다.</p></div>
+  <div class="foot"><span>액상덕후 10월 CRM 성과</span><span><b>1</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 CRM 성과</span><span>2 · 문자별</span></div>
+<h2>열 번 중 늘어난 것은 넷, 모두 작았습니다</h2>
+<p class="lead">문자를 보낸 날마다, 받은 사람이 받은 뒤 7일과 받기 전 7일에 각각 몇 명 샀는지입니다. 굵은 글씨는 적립금이나 지원금이 함께 간 문자입니다.</p>
+<table class="fx sm"><thead><tr><th>날짜</th><th>무엇을 보냈나</th><th class="n">받은 사람</th><th class="n">보낸 뒤 7일</th><th class="n">보내기 전 7일</th><th class="n">차이</th><th class="n">보낸 뒤 매출(원)</th></tr></thead><tbody><tr><td>10/8</td><td>노보 · 디오리퀴드 구매 손님 안내</td><td class="n">567</td><td class="n">40명</td><td class="n">41명</td><td class="n"><b class="dn">-1</b></td><td class="n">3,365,800</td></tr><tr><td>10/13</td><td><b>감사 적립금</b></td><td class="n">931</td><td class="n">44명</td><td class="n">35명</td><td class="n"><b class="up">+9</b></td><td class="n">2,112,402</td></tr><tr><td>10/14</td><td>신상품 · 영주사과 · 고창수박</td><td class="n">973</td><td class="n">47명</td><td class="n">43명</td><td class="n"><b class="up">+4</b></td><td class="n">2,404,501</td></tr><tr><td>10/15</td><td>신상품 · 크림타바코 · 말라이트</td><td class="n">284</td><td class="n">19명</td><td class="n">21명</td><td class="n"><b class="dn">-2</b></td><td class="n">1,173,258</td></tr><tr><td>10/16</td><td><b>감사 적립금 추가</b></td><td class="n">100</td><td class="n">11명</td><td class="n">10명</td><td class="n"><b class="up">+1</b></td><td class="n">992,078</td></tr><tr><td>10/19</td><td>신상품 · 환타지아</td><td class="n">371</td><td class="n">18명</td><td class="n">20명</td><td class="n"><b class="dn">-2</b></td><td class="n">859,460</td></tr><tr><td>10/20</td><td><b>노보 단골 지원금 · 단종 안내 외</b></td><td class="n">436</td><td class="n">35명</td><td class="n">37명</td><td class="n"><b class="dn">-2</b></td><td class="n">3,548,746</td></tr><tr><td>10/21</td><td>신상품 · 스피아민트 · 아메리카노</td><td class="n">57</td><td class="n">4명</td><td class="n">6명</td><td class="n"><b class="dn">-2</b></td><td class="n">274,785</td></tr><tr><td>10/22</td><td><b>노보 지원금 다시 알림 · 신상품</b></td><td class="n">214</td><td class="n">7명</td><td class="n">4명</td><td class="n"><b class="up">+3</b></td><td class="n">980,063</td></tr><tr><td>10/23</td><td>단체 발송 (내용 기록 없음)</td><td class="n">1,528</td><td class="n">29명</td><td class="n">33명</td><td class="n"><b class="dn">-4</b></td><td class="n">1,440,872</td></tr><tr><td>10/27</td><td>고객 · 단골 감사 적립금<small>7일이 아직 안 지남</small></td><td class="n">140</td><td class="n">4명</td><td class="n">6명</td><td class="n">–</td><td class="n">–</td></tr></tbody></table>
+<p class="note">한 사람이 여러 문자를 받았으면 날마다 따로 셉니다. 그래서 날짜별 합은 위 164명보다 큽니다. 10월 20일은 노보 지원금 213명과 다른 명단이 같은 날 나가 섞였습니다. 10월 8일 · 23일 문자의 내용은 추출 파일에 없습니다.</p>
+<h3>돈이 걸린 문자를 14일로 보면</h3>
+<table class="sm"><thead><tr><th></th><th class="n">받은 사람</th><th class="n">14일 안에 산 사람</th><th class="n">받기 전 14일</th><th class="n">쓴 적립금</th><th class="n">그 주문 매출</th></tr></thead><tbody><tr><td>10월 감사 적립금 (10/13)</td><td class="n">912</td><td class="n"><b>75명</b></td><td class="n">43명</td><td class="n">686,391원</td><td class="n">4,618,179원</td></tr><tr><td>노보 단골 지원금 1만 원 (10/20)</td><td class="n">213</td><td class="n"><b>14명</b></td><td class="n">6명</td><td class="n">254,389원</td><td class="n">2,305,411원</td></tr></tbody></table>
+<p class="note">적립금 묶음은 사이트 원장으로 셌습니다(14일). 위 표의 7일 숫자와 기간이 달라 조금 다릅니다.</p>
+  <div class="foot"><span>액상덕후 10월 CRM 성과</span><span><b>2</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 10월 CRM 성과</span><span>3 · 11월</span></div>
+<h2>11월에는 보내는 수를 줄이고 재는 법을 바꿉니다</h2>
+<p class="lead">10월에 쓴 돈은 문자비 171,780원과 손님이 실제로 쓴 적립금 1,028,702원입니다. 10월 27일 넣은 적립금 741,000원(133명)의 결과는 11월 10일에 봅니다.</p>
+<div class="todo"><div class="no">1</div><div><h3>모두에게 보내는 신상품 문자를 멈춥니다</h3><p>1,388명이 받고 그 상품은 2개 팔렸습니다. 신상품은 그 맛과 비슷한 상품을 산 사람에게만 알립니다.</p></div></div>
+<div class="todo"><div class="no">2</div><div><h3>문자는 「돈이 걸린 것」만, 작은 명단으로</h3><p>크게 늘어난 문자는 적립금 · 지원금이 함께 간 것이었습니다. 다시 살 때가 된 손님처럼 이유가 있는 명단에만 보냅니다.</p></div></div>
+<div class="todo"><div class="no">3</div><div><h3>명단의 10%는 일부러 보내지 않습니다</h3><p>받은 사람과 안 받은 사람을 견주어야 문자 덕분에 산 사람을 셀 수 있습니다. 지금은 보내기 전 기간과 견주는 방법뿐이라, 받은 날이 겹치면 숫자가 섞입니다.</p></div></div>
+<div class="src"><p>숫자 출처: 문자 발송 기록과 주문을 전화번호로 맞춘 추출 파일(10월 30일 오후 2시 19분). 입금확인 · 배송준비 · 배송완료 주문만, 환불은 뺐습니다.</p>
+<p>「보내기 전 7일」은 그 문자를 받은 같은 사람들이 받기 전 7일에 낸 주문입니다. 적립금 사용액 · 14일 숫자는 사이트 적립금 원장(10월 27일).</p></div>
+  <div class="foot"><span>액상덕후 10월 CRM 성과</span><span><b>3</b> / 3</span></div>
+</section>
+</body></html>

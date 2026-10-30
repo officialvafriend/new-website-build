@@ -1,0 +1,124 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>액상덕후 재구매 9월 → 10월</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css"><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; } html, body { margin: 0; }
+body { font-family: "Pretendard Variable", Pretendard, sans-serif; color: #111; font-size: 12.5pt; line-height: 1.6; word-break: keep-all; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 16mm; position: relative; break-after: page; overflow: hidden; }
+.page:last-child { break-after: auto; }
+.run, .foot { position: absolute; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6B7280; }
+.run { top: 8mm; } .foot { bottom: 8mm; border-top: 1px solid #E5E9EE; padding-top: 4pt; } .foot b { color: #111; }
+.eb { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; letter-spacing: .04em; }
+h1 { font-size: 29pt; line-height: 1.25; margin: 0 0 10pt; font-weight: 900; }
+h2 { font-size: 22pt; line-height: 1.3; margin: 4pt 0 8pt; font-weight: 900; }
+h3 { font-size: 14pt; margin: 0 0 6pt; font-weight: 900; }
+.lead { font-size: 12.5pt; color: #374151; margin: 0 0 12pt; }
+.g { color: #6B7280; } .acc { color: #2F6FE0; }
+.cover { background: #0F172A; color: #fff; }
+.cover .eb { color: #9CC3FF; }
+.cover .big { font-size: 104pt; font-weight: 900; line-height: 1; margin: 24mm 0 10mm; }
+.cover .big small { font-size: 30pt; color: #9CC3FF; margin-left: 6pt; }
+.cover h1 { color: #fff; } .cover .lead { color: #CBD5E1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; margin-top: 16mm; }
+.fact { border-top: 2px solid #9CC3FF; padding-top: 8pt; }
+.fact .v { font-size: 25pt; font-weight: 900; line-height: 1.15; } .fact .l { font-size: 11pt; color: #CBD5E1; }
+.words { margin-top: 13mm; background: #1E293B; border-radius: 8pt; padding: 12pt 14pt; font-size: 11.5pt; color: #E2E8F0; }
+.words .t { font-weight: 900; color: #9CC3FF; margin-bottom: 4pt; } .words p { margin: 2pt 0; } .words b { color: #fff; }
+.meta { position: absolute; left: 18mm; right: 18mm; bottom: 15mm; font-size: 10pt; color: #94A3B8; display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 8pt; }
+.meta b { color: #fff; }
+.rows { margin: 6pt 0 14pt; }
+.row { display: grid; grid-template-columns: 74pt 1fr; gap: 12pt; padding: 10pt 0; border-bottom: 1px solid #E5E9EE; align-items: baseline; }
+.row .k { font-size: 11pt; font-weight: 900; border-radius: 99pt; padding: 2pt 0; text-align: center; }
+.k.ok { background: #EEF4FF; color: #2F6FE0; } .k.mid { background: #F1F5F9; color: #334155; } .k.bad { background: #FEF3F2; color: #B42318; } .k.next { background: #111; color: #fff; }
+.row p { margin: 0; font-size: 13pt; } .row p small { display: block; font-size: 11pt; color: #6B7280; }
+.bars { margin: 4pt 0 6pt; }
+.bar { display: grid; grid-template-columns: 120pt 1fr 60pt; align-items: center; gap: 8pt; margin: 5pt 0; font-size: 11.5pt; }
+.bar .f { height: 15pt; border-radius: 3pt; background: #CBD5E1; } .bar.on .f { background: #2F6FE0; }
+.bar .n { text-align: right; font-weight: 900; }
+table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 2pt 0 12pt; }
+th { text-align: left; font-size: 9.5pt; color: #6B7280; font-weight: 700; border-bottom: 2px solid #111; padding: 4pt 5pt; }
+td { border-bottom: 1px solid #E5E9EE; padding: 6pt 5pt; vertical-align: top; }
+.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fx td small { display: block; font-size: 9pt; color: #6B7280; font-weight: 400; margin-top: 1pt; }
+table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
+.chart { border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 10pt; }
+.legend { display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }
+.legend i { display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: #9CC3FF; margin-right: 4pt; vertical-align: -1pt; }
+.legend i.l { height: 0; border-top: 2px dashed #374151; border-radius: 0; background: none; vertical-align: 3pt; }
+.box { background: #EEF4FF; border: 1px solid #C7DCFF; border-radius: 8pt; padding: 11pt 14pt; font-size: 11.5pt; }
+.box .t { font-weight: 900; margin-bottom: 4pt; } .box p { margin: 0 0 4pt; }
+.pb { margin: 4pt 0 12pt; }
+.pbr { display: grid; grid-template-columns: 52pt 1fr 70pt 46pt; gap: 8pt; align-items: center; margin: 4pt 0; font-size: 11pt; }
+.pbr .f { height: 13pt; background: #F1F5F9; border-radius: 3pt; overflow: hidden; } .pbr .f i { display: block; height: 100%; background: #CBD5E1; }
+.pbr.on .f i { background: #2F6FE0; } .pbr.on span:first-child { font-weight: 900; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 4pt 0 14pt; }
+.vsb { border-radius: 8pt; padding: 12pt 14pt; border: 1.5px solid #E5E9EE; }
+.vsb.on { background: #EEF4FF; border-color: #C7DCFF; }
+.vsb .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.vsb .v { font-size: 30pt; font-weight: 900; line-height: 1.15; } .vsb.on .v { color: #2F6FE0; }
+.vsb .d { font-size: 10.5pt; color: #6B7280; }
+.vsb code { font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }
+.todo { display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }
+.todo .no { width: 30pt; height: 30pt; border-radius: 50%; background: #2F6FE0; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+.tight .row { padding: 6pt 0; } .tight .row p { font-size: 12pt; } table.tight td { padding: 4pt 5pt; }
+.todo h3 { margin: 2pt 0 1pt; } .done { font-size: 10pt; font-weight: 800; color: #2F6FE0; background: #EEF4FF; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; } .todo p { margin: 0; font-size: 11.5pt; color: #374151; } .todo p b { color: #111; }
+.not { margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }
+.not li { padding-left: 14pt; position: relative; margin: 0 0 3pt; } .not li::before { content: "×"; position: absolute; left: 0; color: #94A3B8; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }
+.goal { border: 1.5px solid #C7DCFF; background: #EEF4FF; border-radius: 8pt; padding: 9pt 12pt; }
+.goal .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.goal .v { font-size: 21pt; font-weight: 900; line-height: 1.25; } .goal .v small { font-size: 11pt; color: #374151; }
+.goal .d { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; }
+.src { font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; } .src p { margin: 0 0 2pt; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10pt; margin: 6pt 0 14pt; }
+.kpi { border: 1.5px solid #E5E9EE; border-radius: 8pt; padding: 9pt 11pt; }
+.kpi.on { background: #EEF4FF; border-color: #C7DCFF; }
+.kpi .l { font-size: 10pt; color: #374151; font-weight: 700; }
+.kpi .v { font-size: 19pt; font-weight: 900; line-height: 1.2; }
+.kpi .d { font-size: 9.5pt; color: #6B7280; }
+.up { color: #1A7F37; } .dn { color: #B42318; }
+table.sm { font-size: 10pt; } table.sm td { padding: 4pt 5pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.note { font-size: 9.5pt; color: #6B7280; margin: 4pt 0 0; }
+</style></head><body>
+<section class="page cover">
+  <div class="eb">액상덕후 · 재구매 · 9월 손님의 10월</div>
+  <div class="big">16.5<small>%</small></div>
+  <h1>9월에 산 손님 741명 중 122명이<br>10월에 다시 샀습니다</h1>
+  <p class="lead">두 달 모두 1일부터 29일까지, 워드프레스 주문으로 셌습니다. 같은 상품을 다시 산 손님과 다른 상품으로 옮긴 손님을 나눠 봤습니다.</p>
+  <div class="facts"><div class="fact"><div class="v">63명</div><div class="l">같은 상품을 다시 삼</div></div><div class="fact"><div class="v">59명</div><div class="l">다른 상품만 삼</div></div><div class="fact"><div class="v">14.7%</div><div class="l">이전 손님의 그달 구매율 (9월 13.4%)</div></div></div>
+  
+  <div class="meta"><span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인몰 운영</b></span><span>2026년 10월 30일</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>1 · 한눈에</span></div>
+<h2>손님은 줄었지만, 산 적 있는 손님은 더 자주 왔습니다</h2>
+<p class="lead">10월은 주문과 손님이 9월보다 줄었습니다. 그 안에서 이미 산 적 있는 손님이 그달에 다시 산 비율은 올랐습니다.</p>
+<table class="fx"><thead><tr><th>9월 1~29일과 10월 1~29일</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th></tr></thead><tbody><tr><td>주문</td><td class="n">779건</td><td class="n">639건</td><td class="n"><span class="dn">-18.0%</span></td></tr><tr><td>산 손님</td><td class="n">741명</td><td class="n">591명</td><td class="n"><span class="dn">-20.2%</span></td></tr><tr><td>판매 수량 (병 · 묶음 · 기기)</td><td class="n">1,380</td><td class="n">1,675</td><td class="n"><span class="up">+21.4%</span></td></tr><tr><td><b>이전에 산 손님 중 그달에 산 비율</b></td><td class="n">13.4%<small>956명 중 128명</small></td><td class="n"><b>14.7%</b><small>1,590명 중 233명</small></td><td class="n"><span class="up">+1.3%p</span></td></tr></tbody></table>
+<div class="pb">
+<div class="pbr on"><span>같은 상품</span><span class="f"><i style="width:34%"></i></span><span class="n">63명</span><span class="n">8.5%</span></div>
+<div class="pbr on"><span>다른 상품만</span><span class="f"><i style="width:32%"></i></span><span class="n">59명</span><span class="n">8.0%</span></div>
+<div class="pbr"><span>안 삼</span><span class="f"><i style="width:100%"></i></span><span class="n">619명</span><span class="n">83.5%</span></div></div>
+<div class="rows"><div class="row"><span class="k ok">결과</span><p>다시 온 손님의 절반은 다른 상품을 골랐습니다<small>122명 중 59명. 같은 상품만 다시 권하면 나머지 절반을 놓칩니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>멘솔쨩 낱병을 산 손님은 한 명도 같은 맛을 다시 사지 않았습니다<small>머스케또쨩 27명 · 스모모쨩 20명 · 레몬쨩 16명. 10병 묶음으로 옮겼는지는 이 자료로 알 수 없습니다.</small></p></div></div>
+  <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>1</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>2 · 상품별</span></div>
+<h2>다시 산 비율이 높은 것은 묶음이었습니다</h2>
+<p class="lead">9월에 그 상품을 산 손님 중 10월에 같은 상품을 다시 산 비율입니다. 노보는 단종 소식으로 흐름이 달라 뺐고, 9월 손님이 5명 아래인 상품도 뺐습니다.</p>
+<table class="sm"><thead><tr><th>상품</th><th class="n">9월에 산 손님</th><th class="n">10월에 다시 삼</th><th class="n">비율</th></tr></thead><tbody><tr><td>디오리퀴드 3+1</td><td class="n">58명</td><td class="n">9명</td><td class="n"><b>15.5%</b></td></tr><tr><td>빌런 5병</td><td class="n">52명</td><td class="n">6명</td><td class="n"><b>11.5%</b></td></tr><tr><td>흑염룡 10병</td><td class="n">62명</td><td class="n">6명</td><td class="n"><b>9.7%</b></td></tr><tr><td>덕후 액상 10병</td><td class="n">159명</td><td class="n">9명</td><td class="n">5.7%</td></tr><tr><td>디오리퀴드 5+5</td><td class="n">37명</td><td class="n">2명</td><td class="n">5.4%</td></tr><tr><td><span class="g">아래는 9월 손님이 20명 미만이라 한두 명에 비율이 크게 움직입니다</span></td><td class="n"></td><td class="n"></td><td class="n"></td></tr><tr><td>리퀴드랩 상어바</td><td class="n">6명</td><td class="n">1명</td><td class="n">16.7%</td></tr><tr><td>개꿀포도</td><td class="n">8명</td><td class="n">1명</td><td class="n">12.5%</td></tr><tr><td>빌런 자두 낱병</td><td class="n">8명</td><td class="n">1명</td><td class="n">12.5%</td></tr><tr><td>소다쨩 낱병</td><td class="n">17명</td><td class="n">1명</td><td class="n">5.9%</td></tr></tbody></table>
+<h3>9월 손님이 한 명도 다시 사지 않은 상품</h3>
+<table class="sm"><thead><tr><th>상품</th><th class="n">9월에 산 손님</th><th class="n">10월에 다시 삼</th></tr></thead><tbody><tr><td>머스케또쨩 낱병</td><td class="n">27명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>스모모쨩 낱병</td><td class="n">20명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>화이트아웃 10병</td><td class="n">17명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>레몬쨩 낱병</td><td class="n">16명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>화이트아웃 2+3</td><td class="n">16명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>쟈쿠로쨩 낱병</td><td class="n">13명</td><td class="n"><span class="dn">0명</span></td></tr><tr><td>포도 덕후 PICK 5병</td><td class="n">11명</td><td class="n"><span class="dn">0명</span></td></tr></tbody></table>
+<p class="note">같은 묶음 안에서 맛만 바꿔 산 것도 「같은 상품」으로 셉니다. 상품 · 묶음 단위이고 맛 단위가 아닙니다. 덕후 액상 10병은 다시 산 사람 수(9명)가 디오리퀴드 3+1과 같지만 9월 손님이 159명이라 비율이 낮습니다.</p>
+  <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>2</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>액상덕후 재구매 9월 → 10월</span><span>3 · 수량과 11월</span></div>
+<h2>노보 낱병이 늘고 덕후 10병이 반으로 줄었습니다</h2>
+<p class="lead">10월에 많이 팔린 상품 10개의 판매 수량입니다. 노보 낱병 여섯 가지가 위를 차지했고, 9월에 가장 많이 팔렸던 덕후 액상 10병은 159개에서 84개가 됐습니다. 10월에 처음 팔린 상품도 46가지입니다(대부분 리퀴드랩 새 맛).</p>
+<table class="sm"><thead><tr><th>상품</th><th class="n">9월</th><th class="n">10월</th><th class="n">변화</th></tr></thead><tbody><tr><td>노보 타박멘솔</td><td class="n">192</td><td class="n"><b>193</b></td><td class="n"><span class="up">+1</span></td></tr><tr><td>노보 블랙멘솔</td><td class="n">61</td><td class="n"><b>151</b></td><td class="n"><span class="up">+90</span></td></tr><tr><td>노보 엠에스블랜드</td><td class="n">4</td><td class="n"><b>102</b></td><td class="n"><span class="up">+98</span></td></tr><tr><td>노보 아메리카노</td><td class="n">0</td><td class="n"><b>100</b></td><td class="n"><span class="up">+100</span></td></tr><tr><td>덕후 액상 10병 묶음</td><td class="n">159</td><td class="n"><b>84</b></td><td class="n"><span class="dn">-75</span></td></tr><tr><td>노보 데저트</td><td class="n">4</td><td class="n"><b>66</b></td><td class="n"><span class="up">+62</span></td></tr><tr><td>젤로 크리스탈 기기 + 5병</td><td class="n">58</td><td class="n"><b>63</b></td><td class="n"><span class="up">+5</span></td></tr><tr><td>노보 블랙 쿠바시가</td><td class="n">7</td><td class="n"><b>61</b></td><td class="n"><span class="up">+54</span></td></tr><tr><td>디오리퀴드 3+1</td><td class="n">61</td><td class="n"><b>53</b></td><td class="n"><span class="dn">-8</span></td></tr><tr><td>노보 블랙 블랙멘솔</td><td class="n">42</td><td class="n"><b>52</b></td><td class="n"><span class="up">+10</span></td></tr></tbody></table>
+<h3>11월에 할 일</h3>
+<div class="todo"><div class="no">1</div><div><h3>잘 돌아오는 묶음 손님에게 다시 살 때 알리기</h3><p>디오리퀴드 3+1 · 빌런 5병 · 흑염룡 10병. 산 지 한 달쯤 된 손님에게 같은 묶음과 비슷한 맛을 함께 권합니다.</p></div></div>
+<div class="todo"><div class="no">2</div><div><h3>낱병 손님에게 10병 묶음 권하기</h3><p>멘솔쨩 낱병 손님이 다시 오지 않았습니다. 다음 주문에서 같은 맛을 묶음으로 담게 안내합니다.</p></div></div>
+<div class="todo"><div class="no">3</div><div><h3>노보 손님이 옮겨 갈 자리 만들기</h3><p>노보 재고가 끝나면 노보만 사던 손님이 빠집니다. 맛이 가까운 입호흡 액상을 상품 화면과 문자에서 먼저 보여 줍니다.</p></div></div>
+<p class="note">숫자 출처: 워드프레스 주문(10월 30일 오후 2시 28분 추출). 5월부터의 주문만 있어 그 전 구매는 모릅니다. 옛 사이트(아임웹) 주문은 손님 번호가 달라 넣지 않았습니다.</p>
+  <div class="foot"><span>액상덕후 재구매 9월 → 10월</span><span><b>3</b> / 3</span></div>
+</section>
+</body></html>
