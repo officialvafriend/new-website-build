@@ -69,11 +69,11 @@ NOTSL = (O[0] - SL[0], O[1] - SL[1])
 
 def pg(u): return OP.get(u, (0, 0, 0))
 FIX = [  # 주소, 보이는 이름, 지금 검색 결과 제목, 왜 덜 눌리나
-    ('/product/펠릭스-더블라임-9-8mg-30ml/', '펠릭스 더블라임 (옛 주소)', '펠릭스 라임 알로에 … 20,000원', '「더블라임」을 찾는데 이 주소는 지금 라임 알로에(품절) 화면입니다'),
+    ('/product/펠릭스-더블라임-9-8mg-30ml/', '펠릭스 더블라임 (옛 주소)', '펠릭스 라임 알로에 … 20,000원', '「더블라임」 검색에 뜨던 이 주소가 10월에는 라임 알로에 화면이었습니다'),
     ('/product/디톡스-톡스-알로에베라-모드-액상-3mg-60ml/', '디톡스 알로에베라', '[디톡스] 톡스 알로에베라 모드 액상 (3MG/60ml) - 액상덕후', '제목에 값이 없습니다 (21,000원)'),
     ('/product/젤로-크리스탈-젤로-크리스탈-전자담배-액상-5병-증/', '젤로 크리스탈 5병', '[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 ! - 액상덕후', '「젤로 크리스탈 가격」으로 71번 보였는데 제목에 값(69,000원)이 없습니다'),
-    ('/product/마르키사-오리지날-9-8mg-30ml/', '마르키사 라즈베리', '기본 제목 (값 없음)', '주소는 「오리지날」, 상품은 라즈베리'),
-    ('/liquid-guide/', '액상 고르는 법 (안내 글)', '전자담배 액상 고르는 법 — 입호흡 · 폐호흡 …', '정보를 찾는 검색이라 원래 덜 누릅니다. 날짜를 붙여 봅니다'),
+    ('/product/마르키사-오리지날-9-8mg-30ml/', '마르키사 라즈베리', '기본 제목 (값 없음)', '주소는 「오리지날」인데 상품은 라즈베리입니다'),
+    ('/liquid-guide/', '액상 고르는 법 (안내 글)', '전자담배 액상 고르는 법 — 입호흡 · 폐호흡 …', '정보를 찾는 검색이라 원래 덜 누릅니다. 제목에 날짜를 붙여 봅니다'),
 ]
 
 # ── 그림 ──
@@ -195,7 +195,7 @@ table.fx td.why {{ font-size: 10.5pt; color: #374151; width: 42%; }}
 .tight .row {{ padding: 6pt 0; }} .tight .row p {{ font-size: 12pt; }} table.tight td {{ padding: 4pt 5pt; }}
 .todo h3 {{ margin: 2pt 0 1pt; }} .done {{ font-size: 10pt; font-weight: 800; color: {BLUE}; background: {PALE}; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; }} .todo p {{ margin: 0; font-size: 11.5pt; color: #374151; }} .todo p b {{ color: #111; }}
 .not {{ margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }}
-.not li {{ padding-left: 14pt; position: relative; margin: 0 0 3pt; }} .not li::before {{ content: "—"; position: absolute; left: 0; color: #94A3B8; }}
+.not li {{ padding-left: 14pt; position: relative; margin: 0 0 3pt; }} .not li::before {{ content: "×"; position: absolute; left: 0; color: #94A3B8; }}
 .goals {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }}
 .goal {{ border: 1.5px solid {LINE}; background: {PALE}; border-radius: 8pt; padding: 9pt 12pt; }}
 .goal .l {{ font-size: 10.5pt; font-weight: 700; color: #374151; }}
@@ -216,17 +216,17 @@ NEWX = ON[0] / SN[0]
 cover = f'''<section class="page cover">
   <div class="eb">액상덕후 · 10월 검색 마감 보고 (구글 · 네이버)</div>
   <div class="big">{NEWX:.1f}배</div>
-  <h1>이름을 모르고 검색한 손님이<br>9월보다 {NEWX:.1f}배 들어왔습니다</h1>
-  <p class="lead">대신 보인 횟수에 비해 눌러 주는 비율은 {S[2]:.1f}%에서 {O[2]:.1f}%로 반이 됐습니다.<br>왜 그런지, 11월에 무엇을 고칠지를 함께 적었습니다.</p>
+  <h1>이름을 모르고 검색해 들어온 횟수가<br>9월의 {NEWX:.1f}배입니다</h1>
+  <p class="lead">대신 누른 비율은 {S[2]:.1f}%에서 {O[2]:.1f}%로 반이 됐습니다.<br>왜 그런지와 11월에 고칠 것을 함께 적었습니다.</p>
   <div class="facts">
     <div class="fact"><div class="v">{w(SN[0])} → {w(ON[0])}번</div><div class="l">이름을 모르고 온 검색에서<br>들어온 횟수 (9월 → 10월)</div></div>
     <div class="fact"><div class="v">{w(S[1])} → {w(O[1])}번</div><div class="l">구글 검색 결과에<br>보인 횟수 ({O[1] / S[1]:.1f}배)</div></div>
-    <div class="fact"><div class="v">{S[2]:.1f} → {O[2]:.1f}%</div><div class="l">보인 횟수 중<br>눌러서 들어온 비율</div></div>
+    <div class="fact"><div class="v">{S[2]:.1f} → {O[2]:.1f}%</div><div class="l">누른 비율<br>(들어온 횟수 ÷ 보인 횟수)</div></div>
   </div>
   <div class="words"><div class="t">이 보고서에서 쓰는 말은 세 개뿐입니다</div>
-    <p><b>보인 횟수</b> · 구글 검색 결과에 우리 사이트가 나온 횟수</p>
-    <p><b>들어온 횟수</b> · 그 결과를 눌러 우리 사이트에 들어온 횟수</p>
-    <p><b>누른 비율</b> · 들어온 횟수 ÷ 보인 횟수 (100번 보여서 5번 들어오면 5%)</p></div>
+    <p><b>보인 횟수</b>는 구글 검색 결과에 우리 사이트가 나온 횟수입니다.</p>
+    <p><b>들어온 횟수</b>는 그 결과를 눌러 우리 사이트에 들어온 횟수입니다.</p>
+    <p><b>누른 비율</b>은 들어온 횟수를 보인 횟수로 나눈 값입니다. 100번 보여 5번 들어오면 5%입니다.</p></div>
   <div class="meta"><span><b>보고 대상</b> 대표님 · 이사님</span><span><b>작성</b> 온라인몰 운영</span><span><b>2026년 10월 30일</b> · 10월 1일 ~ 29일</span></div>
 </section>'''
 
@@ -234,8 +234,8 @@ p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   <h2>한 장으로 보면</h2>
   <div class="rows">
     <div class="row"><span class="k ok">잘된 것</span><p>이름을 모르고 검색해 들어온 횟수 <b>{w(SN[0])}번 → {w(ON[0])}번</b><small>노보 브랜드 페이지 {w(SP.get('/brand/novo/', (0,))[0])} → {w(pg('/brand/novo/')[0])}번 · 타격감 분류 {w(SP.get('/product-category/타격감/', (0,))[0])} → {w(pg('/product-category/타격감/')[0])}번 · 노보 블랙 엠에스블랜드 {w(SP.get('/product/노보-블랙-엠에스블랜드-9-8mg-30ml/', (0,))[0])} → {w(pg('/product/노보-블랙-엠에스블랜드-9-8mg-30ml/')[0])}번</small></p></div>
-    <div class="row"><span class="k mid">그대로</span><p>구글로 들어온 전체 횟수 <b>{w(S[0])}번 → {w(O[0])}번</b> ({(O[0] / S[0] - 1) * 100:+.0f}%)<small>가게 이름(「액상덕후」)으로 검색해 들어온 횟수가 {w(SB[0])} → {w(OB[0])}번으로 줄어, 새로 온 만큼을 상쇄했습니다</small></p></div>
-    <div class="row"><span class="k bad">아쉬운 것</span><p>누른 비율 <b>{S[2]:.1f}% → {O[2]:.1f}%</b><small>새로 보이기 시작한 검색의 절반 넘게가 5~10위 자리라 잘 안 눌립니다 (2쪽)</small></p></div>
+    <div class="row"><span class="k mid">그대로</span><p>구글로 들어온 전체 횟수 <b>{w(S[0])}번 → {w(O[0])}번</b> ({(O[0] / S[0] - 1) * 100:+.0f}%)<small>가게 이름(「액상덕후」)으로 검색해 들어온 횟수가 {w(SB[0])} → {w(OB[0])}번으로 줄어 새로 늘어난 몫이 그만큼 가려졌습니다</small></p></div>
+    <div class="row"><span class="k bad">아쉬운 것</span><p>누른 비율 <b>{S[2]:.1f}% → {O[2]:.1f}%</b><small>새로 보이기 시작한 검색은 절반 넘게 5~10위 자리라 잘 안 눌립니다 (2쪽)</small></p></div>
     <div class="row"><span class="k next">11월</span><p><b>상품 화면 제목에 값과 「액상」을 넣기</b><small>그렇게 바꾼 노보 상품 화면은 다른 상품보다 {NOVO[2] / PROD[2]:.1f}배 잘 눌립니다 (3쪽)</small></p></div>
   </div>
   <h3>구글로 들어온 횟수, 어떤 검색에서 왔나</h3>
@@ -248,15 +248,15 @@ p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   <p class="g" style="font-size:10.5pt;margin:0">구글이 어떤 말로 검색했는지 알려 주는 몫만 셌습니다 (9월 {w(SB[0] + SN[0])}번 · 10월 {w(OB[0] + ON[0])}번). 나머지는 구글이 검색어를 감춥니다.</p>''')
 
 p2 = frame(2, '누른 비율', f'''  <div class="eb">2 · 누른 비율이 왜 반이 됐나</div>
-  <h2>덜 눌려서라기보다,<br>잘 안 눌리는 자리에 많이 보이기 시작해서입니다</h2>
-  <p class="lead">가게 이름 검색은 원래 절반 가까이 누르고, 처음 보는 가게는 5~10위에서 거의 안 누릅니다. 10월에는 뒤쪽이 {ON[1] / SN[1]:.1f}배로 늘었습니다.</p>
+  <h2>잘 안 눌리는 자리에<br>많이 보이기 시작했습니다</h2>
+  <p class="lead">가게 이름으로 검색한 사람은 절반 가까이 누르지만 처음 보는 가게가 5~10위에 있으면 거의 누르지 않습니다. 10월에는 이름 모르고 온 검색에서 보인 횟수가 {ON[1] / SN[1]:.1f}배로 늘었습니다.</p>
   {mix_table()}
   <div class="cols2" style="display:grid;grid-template-columns:1.1fr 1fr;gap:16pt">
     <div><h3>이름 모르고 온 검색, 우리 자리별 누른 비율</h3>{pos_bars()}
       <p class="g" style="font-size:10.5pt;margin:-6pt 0 0">5~10위에서 <b style="color:#111">{w(MID[1])}번 보였고 {MID[0]}번 들어왔습니다 ({pct(*MID):.1f}%)</b>. 11월에 손볼 곳이 여기입니다.</p></div>
     <div class="box"><div class="t">비율 계산에서 따로 봐야 할 것</div>
-      <p>· <b>가게 이름 검색 밑에 딸려 나오는 링크</b>(로그인 · 적립금 · 특가 · 회사 소개 …) {w(SL[1])}번 보임 · {SL[0]}번 들어옴. 이름을 친 사람은 맨 위 링크를 누르므로 원래 거의 안 눌립니다.</p>
-      <p>· <b>남의 가게 이름</b>(액상82 · 노보마트 · 딜리퀴드) {w(COMPI)}번 보임 · 0번. 노리지 않습니다.</p>
+      <p>· 가게 이름 검색 밑에 딸려 나오는 링크(로그인 · 적립금 · 특가 · 회사 소개 …)는 {w(SL[1])}번 보여 {SL[0]}번 들어왔습니다. 이름을 친 사람은 맨 위 링크를 누르므로 원래 거의 안 눌립니다.</p>
+      <p>· 남의 가게 이름(액상82 · 노보마트 · 딜리퀴드)은 {w(COMPI)}번 보여 한 번도 안 들어왔습니다. 노리지 않습니다.</p>
       <p>· 둘을 빼면 10월 누른 비율은 <b>{pct(NOTSL[0], NOTSL[1] - COMPI):.1f}%</b>입니다.</p></div>
   </div>
   <div class="chart">{chart()}
@@ -264,7 +264,7 @@ p2 = frame(2, '누른 비율', f'''  <div class="eb">2 · 누른 비율이 왜 �
 
 p3 = frame(3, '덜 눌리는 화면', f'''  <div class="eb">3 · 어느 화면이 덜 눌리나</div>
   <h2>제목에 값이 보이는 상품 화면이<br>{NOVO[2] / PROD[2]:.1f}배 잘 눌립니다</h2>
-  <p class="lead">9월 21일부터 노보 상품만 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿔 두었습니다. 다른 상품은 기본 제목 그대로입니다. 순위는 비슷합니다.</p>
+  <p class="lead">9월 21일부터 노보 상품만 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿔 두었습니다. 다른 상품은 기본 제목 그대로입니다. 평균 순위는 둘이 비슷합니다.</p>
   <div class="vs">
     <div class="vsb on"><div class="l">노보 상품 화면 {NOVO[4]}개 · 바꾼 제목</div><div class="v">{NOVO[2]:.1f}%</div><div class="d">{w(NOVO[1])}번 보여 {NOVO[0]}번 들어옴 · 평균 {NOVO[3]:.1f}위</div>
       <code>노보 블랙 타박멘솔 액상 입호흡 9.8mg 30ml 13,500원 재고 있음</code></div>
@@ -274,7 +274,7 @@ p3 = frame(3, '덜 눌리는 화면', f'''  <div class="eb">3 · 어느 화면�
   <h3>많이 보이는데 거의 안 눌리는 화면</h3>
   {fix_table()}
   <div class="box"><div class="t">값을 묻는 검색도 그냥 지나갑니다</div>
-    <p>「액상 가격」 · 「입호흡 액상 가격」 · 「젤로 크리스탈 가격」처럼 <b>값을 묻는 검색이 {w(PRICE[1])}번 보였고 {PRICE[0]}번 들어왔습니다.</b> 「입호흡 액상 가격」은 평균 2.7위인데도 0번입니다.</p>
+    <p>「액상 가격」 · 「입호흡 액상 가격」 · 「젤로 크리스탈 가격」처럼 <b>값을 묻는 검색이 {w(PRICE[1])}번 보였고 {PRICE[0]}번 들어왔습니다.</b> 「입호흡 액상 가격」은 평균 2.7위인데도 한 번도 안 들어왔습니다.</p>
     <p>9월 말에 만든 전 상품 가격표(/price/)는 10월에 {P_PRICE[1]}번만 보였습니다. 구글이 아직 그 화면을 값 검색의 답으로 보지 않습니다.</p></div>''')
 
 # ── 네이버 (서치어드바이저 날짜별 합계 + 순위 측정) ──
@@ -321,10 +321,10 @@ if NAV:
         return f'<div class="chips {cls}">' + ''.join(f'<span>{q}</span>' for q in qs) + '</div>'
     pn = frame(4, '네이버', f"""  <div class="eb">4 · 네이버</div>
   <h2>네이버는 순위가 내려갔는데도<br>들어온 횟수는 매주 늘었습니다</h2>
-  <p class="lead">네이버 서치어드바이저 날짜별 합계(9월 30일 ~ 10월 29일). 네이버로는 하루 {NDAY:.0f}번 들어와 구글(하루 {GDAY:.0f}번)의 {NDAY / GDAY:.1f}배입니다.</p>
+  <p class="lead">네이버 서치어드바이저 날짜별 합계(9월 30일 ~ 10월 29일)로 봤습니다. 네이버로는 하루 {NDAY:.0f}번 들어와 구글(하루 {GDAY:.0f}번)의 {NDAY / GDAY:.1f}배입니다.</p>
   {wtab()}
   <h3>순위는 왜 내려갔나</h3>
-  <p style="margin:0 0 6pt;font-size:11.5pt">손님이 칠 말 {NQ}개를 10월 26~27일과 30일에 같은 방법으로 쟀습니다. <b>오르거나 그대로 {len(cats['same'])}개 · 내려감 {NQ - len(cats['same'])}개</b>입니다.</p>
+  <p style="margin:0 0 6pt;font-size:11.5pt">손님이 칠 만한 검색어 {NQ}개를 10월 26~27일과 30일에 같은 방법으로 쟀습니다. <b>오르거나 그대로 {len(cats['same'])}개 · 내려감 {NQ - len(cats['same'])}개</b>입니다.</p>
   <div class="rows tight" style="margin:0 0 8pt">
     <div class="row"><span class="k mid">블로그 {len(cats['blog'])}</span><p>가게 사이트끼리는 그대로인데 <b>블로그 · 카페 글이 위로</b> 들어왔습니다<small>{' · '.join(cats['blog'][:4])}</small></p></div>
     <div class="row"><span class="k mid">밀림 {len(cats['store'])}</span><p>다른 가게 페이지에 한두 자리 밀렸습니다<small>{' · '.join(cats['store'][:5])} …</small></p></div>
@@ -333,20 +333,20 @@ if NAV:
   </div>
   <div class="box"><div class="t">읽는 법</div>
     <p>· 우리 페이지는 네이버에 그대로 잡혀 있습니다(사이트 검색으로 확인). 벌점이나 수집 문제는 아닙니다.</p>
-    <p>· 빠진 자리는 대부분 「노보 액상 · 노보 타박멘솔」처럼 이름을 묻는 말이고, 사려는 말(가격 · 10병 · 묶음)은 지켰습니다. 그래서 순위가 내려간 주에도 들어온 횟수는 늘었습니다.</p>
+    <p>· 빠진 자리는 대부분 「노보 액상」 「노보 타박멘솔」처럼 이름을 묻는 말입니다. 사려는 말(가격 · 10병 · 묶음)은 지켰습니다. 그래서 순위가 내려간 주에도 들어온 횟수는 늘었습니다.</p>
 </div>
   <p class="g" style="font-size:10pt;margin:6pt 0 0">하루에 잰 순위라 한두 자리씩 흔들립니다. 11월 2일에 같은 말로 다시 잽니다.{' 10월 ' + ', '.join(str(int(g[3:])) + '일' for g in gap) + '은 네이버 자료가 비어 빼고 셌습니다.' if gap else ''}</p>""")
 
 p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 11월에 할 일</div>
   <h2>누른 비율을 올리는 일 넷</h2>
   <div class="todo"><span class="no">1</span><div><h3>모든 상품 제목을 노보처럼 바꾸기</h3><p>「브랜드 맛 + 액상 + 입호흡/폐호흡 + 용량 + <b>값</b> + 재고」. 값은 상품에서 그때그때 읽으므로 값이 바뀌어도 틀리지 않습니다. 디톡스 · 젤로 크리스탈 · 마르키사 · 흑염룡부터.</p></div></div>
-  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기 <span class="done">10월 30일에 했음</span></h3><p>구글이 「펠릭스 더블라임」 검색에 띄우던 주소가 <b>라임 알로에</b> 화면이었습니다 ({w(pg('/product/펠릭스-더블라임-9-8mg-30ml/')[1])}번 보임 · {pg('/product/펠릭스-더블라임-9-8mg-30ml/')[0]}번). 두 상품의 주소를 맞바꿔 그 주소가 더블라임을 가리킵니다. 펠릭스 제목에는 값과 「5병 묶음」을 넣었습니다.</p></div></div>
-  <div class="todo"><span class="no">3</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목 · 설명 첫머리에 「액상 가격」을 그대로 두고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
+  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기 <span class="done">10월 30일에 했음</span></h3><p>구글이 「펠릭스 더블라임」 검색에 띄우던 주소가 <b>라임 알로에</b> 화면이었습니다 ({w(pg('/product/펠릭스-더블라임-9-8mg-30ml/')[1])}번 보여 {pg('/product/펠릭스-더블라임-9-8mg-30ml/')[0]}번 들어옴). 두 상품의 주소를 맞바꿔 이제 그 주소가 더블라임을 가리킵니다. 펠릭스 제목에는 값과 「5병 묶음」을 넣었습니다.</p></div></div>
+  <div class="todo"><span class="no">3</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목과 설명 첫머리에 「액상 가격」을 그대로 넣고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
   <div class="todo"><span class="no">4</span><div><h3>검색 결과 밑 두 줄 설명에 「오늘 출고」</h3><p>상품 설명 첫 문장에 값 · 3만원 이상 무료배송 · 평일 오후 4시 전 입금 시 당일 출고를 넣습니다. 같은 자리의 다른 가게보다 누를 이유가 하나 더 생깁니다.</p></div></div>
   <h3 style="margin-top:2pt">하지 않을 것</h3>
   <ul class="not">
     <li>남의 가게 이름(액상82 · 노보마트 · 딜리퀴드)을 노리는 글</li>
-    <li>가게 이름 검색 밑의 링크를 비율 때문에 지우는 일 — 이름을 친 손님에게는 쓸모가 있습니다</li>
+    <li>가게 이름 검색 밑의 링크를 비율 때문에 지우는 일 (이름을 친 손님에게는 쓸모가 있습니다)</li>
   </ul>
   <h3>12월 초에 볼 숫자 셋</h3>
   <div class="goals">
