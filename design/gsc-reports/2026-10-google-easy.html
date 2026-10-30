@@ -1,0 +1,165 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 구글 검색 마감 보고</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css"><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; } html, body { margin: 0; }
+body { font-family: "Pretendard Variable", Pretendard, sans-serif; color: #111; font-size: 12.5pt; line-height: 1.6; word-break: keep-all; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 16mm; position: relative; break-after: page; overflow: hidden; }
+.page:last-child { break-after: auto; }
+.run, .foot { position: absolute; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6B7280; }
+.run { top: 8mm; } .foot { bottom: 8mm; border-top: 1px solid #E5E9EE; padding-top: 4pt; } .foot b { color: #111; }
+.eb { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; letter-spacing: .04em; }
+h1 { font-size: 29pt; line-height: 1.25; margin: 0 0 10pt; font-weight: 900; }
+h2 { font-size: 22pt; line-height: 1.3; margin: 4pt 0 8pt; font-weight: 900; }
+h3 { font-size: 14pt; margin: 0 0 6pt; font-weight: 900; }
+.lead { font-size: 12.5pt; color: #374151; margin: 0 0 12pt; }
+.g { color: #6B7280; } .acc { color: #2F6FE0; }
+.cover { background: #0F172A; color: #fff; }
+.cover .eb { color: #9CC3FF; }
+.cover .big { font-size: 104pt; font-weight: 900; line-height: 1; margin: 24mm 0 10mm; }
+.cover .big small { font-size: 30pt; color: #9CC3FF; margin-left: 6pt; }
+.cover h1 { color: #fff; } .cover .lead { color: #CBD5E1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; margin-top: 16mm; }
+.fact { border-top: 2px solid #9CC3FF; padding-top: 8pt; }
+.fact .v { font-size: 25pt; font-weight: 900; line-height: 1.15; } .fact .l { font-size: 11pt; color: #CBD5E1; }
+.words { margin-top: 13mm; background: #1E293B; border-radius: 8pt; padding: 12pt 14pt; font-size: 11.5pt; color: #E2E8F0; }
+.words .t { font-weight: 900; color: #9CC3FF; margin-bottom: 4pt; } .words p { margin: 2pt 0; } .words b { color: #fff; }
+.meta { position: absolute; left: 18mm; right: 18mm; bottom: 15mm; font-size: 10pt; color: #94A3B8; display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 8pt; }
+.meta b { color: #fff; }
+.rows { margin: 6pt 0 14pt; }
+.row { display: grid; grid-template-columns: 74pt 1fr; gap: 12pt; padding: 10pt 0; border-bottom: 1px solid #E5E9EE; align-items: baseline; }
+.row .k { font-size: 11pt; font-weight: 900; border-radius: 99pt; padding: 2pt 0; text-align: center; }
+.k.ok { background: #EEF4FF; color: #2F6FE0; } .k.mid { background: #F1F5F9; color: #334155; } .k.bad { background: #FEF3F2; color: #B42318; } .k.next { background: #111; color: #fff; }
+.row p { margin: 0; font-size: 13pt; } .row p small { display: block; font-size: 11pt; color: #6B7280; }
+.bars { margin: 4pt 0 6pt; }
+.bar { display: grid; grid-template-columns: 120pt 1fr 60pt; align-items: center; gap: 8pt; margin: 5pt 0; font-size: 11.5pt; }
+.bar .f { height: 15pt; border-radius: 3pt; background: #CBD5E1; } .bar.on .f { background: #2F6FE0; }
+.bar .n { text-align: right; font-weight: 900; }
+table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 2pt 0 12pt; }
+th { text-align: left; font-size: 9.5pt; color: #6B7280; font-weight: 700; border-bottom: 2px solid #111; padding: 4pt 5pt; }
+td { border-bottom: 1px solid #E5E9EE; padding: 6pt 5pt; vertical-align: top; }
+.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fx td small { display: block; font-size: 9pt; color: #6B7280; font-weight: 400; margin-top: 1pt; }
+table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
+.chart { border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 10pt; }
+.legend { display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }
+.legend i { display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: #9CC3FF; margin-right: 4pt; vertical-align: -1pt; }
+.legend i.l { height: 0; border-top: 2px dashed #374151; border-radius: 0; background: none; vertical-align: 3pt; }
+.box { background: #EEF4FF; border: 1px solid #C7DCFF; border-radius: 8pt; padding: 11pt 14pt; font-size: 11.5pt; }
+.box .t { font-weight: 900; margin-bottom: 4pt; } .box p { margin: 0 0 4pt; }
+.pb { margin: 4pt 0 12pt; }
+.pbr { display: grid; grid-template-columns: 52pt 1fr 70pt 46pt; gap: 8pt; align-items: center; margin: 4pt 0; font-size: 11pt; }
+.pbr .f { height: 13pt; background: #F1F5F9; border-radius: 3pt; overflow: hidden; } .pbr .f i { display: block; height: 100%; background: #CBD5E1; }
+.pbr.on .f i { background: #2F6FE0; } .pbr.on span:first-child { font-weight: 900; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 4pt 0 14pt; }
+.vsb { border-radius: 8pt; padding: 12pt 14pt; border: 1.5px solid #E5E9EE; }
+.vsb.on { background: #EEF4FF; border-color: #C7DCFF; }
+.vsb .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.vsb .v { font-size: 30pt; font-weight: 900; line-height: 1.15; } .vsb.on .v { color: #2F6FE0; }
+.vsb .d { font-size: 10.5pt; color: #6B7280; }
+.vsb code { font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }
+.todo { display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }
+.todo .no { width: 30pt; height: 30pt; border-radius: 50%; background: #2F6FE0; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+.todo h3 { margin: 2pt 0 1pt; } .todo p { margin: 0; font-size: 11.5pt; color: #374151; } .todo p b { color: #111; }
+.not { margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }
+.not li { padding-left: 14pt; position: relative; margin: 0 0 3pt; } .not li::before { content: "—"; position: absolute; left: 0; color: #94A3B8; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }
+.goal { border: 1.5px solid #C7DCFF; background: #EEF4FF; border-radius: 8pt; padding: 9pt 12pt; }
+.goal .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.goal .v { font-size: 21pt; font-weight: 900; line-height: 1.25; } .goal .v small { font-size: 11pt; color: #374151; }
+.goal .d { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; }
+.src { font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; } .src p { margin: 0 0 2pt; }
+</style></head><body>
+<section class="page cover">
+  <div class="eb">액상덕후 · 10월 구글 검색 마감 보고</div>
+  <div class="big">2.0배</div>
+  <h1>이름을 모르고 검색한 손님이<br>9월보다 2.0배 들어왔습니다</h1>
+  <p class="lead">대신 보인 횟수에 비해 눌러 주는 비율은 18.4%에서 9.2%로 반이 됐습니다.<br>왜 그런지, 11월에 무엇을 고칠지를 함께 적었습니다.</p>
+  <div class="facts">
+    <div class="fact"><div class="v">60 → 118번</div><div class="l">이름을 모르고 온 검색에서<br>들어온 횟수 (9월 → 10월)</div></div>
+    <div class="fact"><div class="v">3,257 → 6,032번</div><div class="l">구글 검색 결과에<br>보인 횟수 (1.9배)</div></div>
+    <div class="fact"><div class="v">18.4 → 9.2%</div><div class="l">보인 횟수 중<br>눌러서 들어온 비율</div></div>
+  </div>
+  <div class="words"><div class="t">이 보고서에서 쓰는 말은 세 개뿐입니다</div>
+    <p><b>보인 횟수</b> · 구글 검색 결과에 우리 사이트가 나온 횟수</p>
+    <p><b>들어온 횟수</b> · 그 결과를 눌러 우리 사이트에 들어온 횟수</p>
+    <p><b>누른 비율</b> · 들어온 횟수 ÷ 보인 횟수 (100번 보여서 5번 들어오면 5%)</p></div>
+  <div class="meta"><span><b>보고 대상</b> 대표님 · 이사님</span><span><b>작성</b> 온라인몰 운영</span><span><b>2026년 10월 30일</b> · 10월 1일 ~ 29일</span></div>
+</section><section class="page">
+  <div class="run"><span>10월 구글 검색 마감 보고</span><span>1 · 한눈에</span></div>
+  <div class="eb">1 · 한눈에</div>
+  <h2>한 장으로 보면</h2>
+  <div class="rows">
+    <div class="row"><span class="k ok">잘된 것</span><p>이름을 모르고 검색해 들어온 횟수 <b>60번 → 118번</b><small>노보 브랜드 페이지 11 → 41번 · 타격감 분류 8 → 22번 · 노보 블랙 엠에스블랜드 3 → 29번</small></p></div>
+    <div class="row"><span class="k mid">그대로</span><p>구글로 들어온 전체 횟수 <b>598번 → 555번</b> (-7%)<small>가게 이름(「액상덕후」)으로 검색해 들어온 횟수가 339 → 176번으로 줄어, 새로 온 만큼을 상쇄했습니다</small></p></div>
+    <div class="row"><span class="k bad">아쉬운 것</span><p>누른 비율 <b>18.4% → 9.2%</b><small>새로 보이기 시작한 검색의 절반 넘게가 5~10위 자리라 잘 안 눌립니다 (2쪽)</small></p></div>
+    <div class="row"><span class="k next">11월</span><p><b>상품 화면 제목에 값과 「액상」을 넣기</b><small>그렇게 바꾼 노보 상품 화면은 다른 상품보다 2.6배 잘 눌립니다 (3쪽)</small></p></div>
+  </div>
+  <h3>구글로 들어온 횟수, 어떤 검색에서 왔나</h3>
+  <div class="bars">
+    <div class="bar"><span>가게 이름 · 9월</span><span class="f" style="width:100%"></span><span class="n">339번</span></div>
+    <div class="bar"><span>가게 이름 · 10월</span><span class="f" style="width:52%"></span><span class="n">176번</span></div>
+    <div class="bar on"><span>이름 모르고 · 9월</span><span class="f" style="width:18%"></span><span class="n">60번</span></div>
+    <div class="bar on"><span>이름 모르고 · 10월</span><span class="f" style="width:35%"></span><span class="n">118번</span></div>
+  </div>
+  <p class="g" style="font-size:10.5pt;margin:0">구글이 어떤 말로 검색했는지 알려 주는 몫만 셌습니다 (9월 399번 · 10월 294번). 나머지는 구글이 검색어를 감춥니다.</p>
+  <div class="foot"><span>10월 구글 검색 마감 보고</span><span><b>1</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>10월 구글 검색 마감 보고</span><span>2 · 누른 비율</span></div>
+  <div class="eb">2 · 누른 비율이 왜 반이 됐나</div>
+  <h2>덜 눌려서라기보다,<br>잘 안 눌리는 자리에 많이 보이기 시작해서입니다</h2>
+  <p class="lead">가게 이름 검색은 원래 절반 가까이 누르고, 처음 보는 가게는 5~10위에서 거의 안 누릅니다. 10월에는 뒤쪽이 2.3배로 늘었습니다.</p>
+  <table><thead><tr><th>어떤 검색인가</th><th class="n">9월 보인</th><th class="n">9월 누른 비율</th><th class="n">10월 보인</th><th class="n">10월 들어온</th><th class="n">10월 누른 비율</th></tr></thead><tbody><tr><td>가게 이름으로 검색</td><td class="n g">518번</td><td class="n g">65.4%</td><td class="n">390번</td><td class="n"><b>176번</b></td><td class="n"><b>45.1%</b></td></tr><tr><td>이름을 모르고 온 검색</td><td class="n g">1,002번</td><td class="n g">6.0%</td><td class="n">2,346번</td><td class="n"><b>118번</b></td><td class="n"><b>5.0%</b></td></tr><tr><td>구글이 감춘 검색어</td><td class="n g">1,737번</td><td class="n g">11.5%</td><td class="n">3,296번</td><td class="n"><b>261번</b></td><td class="n"><b>7.9%</b></td></tr><tr><td><b>전체</b></td><td class="n g">3,257번</td><td class="n g">18.4%</td><td class="n"><b>6,032번</b></td><td class="n"><b>555번</b></td><td class="n"><b>9.2%</b></td></tr></tbody></table>
+  <div class="cols2" style="display:grid;grid-template-columns:1.1fr 1fr;gap:16pt">
+    <div><h3>이름 모르고 온 검색, 우리 자리별 누른 비율</h3><div class="pb"><div class="pbr"><span>1~3위</span><span class="f"><i style="width:11%"></i></span><span class="n">79번 보임</span><span class="n"><b>25.3%</b></span></div><div class="pbr"><span>3~5위</span><span class="f"><i style="width:70%"></i></span><span class="n">506번 보임</span><span class="n"><b>12.3%</b></span></div><div class="pbr on"><span>5~8위</span><span class="f"><i style="width:80%"></i></span><span class="n">580번 보임</span><span class="n"><b>2.4%</b></span></div><div class="pbr on"><span>8~10위</span><span class="f"><i style="width:100%"></i></span><span class="n">723번 보임</span><span class="n"><b>2.2%</b></span></div><div class="pbr"><span>10위 밖</span><span class="f"><i style="width:29%"></i></span><span class="n">208번 보임</span><span class="n"><b>2.9%</b></span></div></div>
+      <p class="g" style="font-size:10.5pt;margin:-6pt 0 0">5~10위에서 <b style="color:#111">1,303번 보였고 30번 들어왔습니다 (2.3%)</b>. 11월에 손볼 곳이 여기입니다.</p></div>
+    <div class="box"><div class="t">비율 계산에서 따로 봐야 할 것</div>
+      <p>· <b>가게 이름 검색 밑에 딸려 나오는 링크</b>(로그인 · 적립금 · 특가 · 회사 소개 …) 1,450번 보임 · 12번 들어옴. 이름을 친 사람은 맨 위 링크를 누르므로 원래 거의 안 눌립니다.</p>
+      <p>· <b>남의 가게 이름</b>(액상82 · 노보마트 · 딜리퀴드) 250번 보임 · 0번. 노리지 않습니다.</p>
+      <p>· 둘을 빼면 10월 누른 비율은 <b>12.5%</b>입니다.</p></div>
+  </div>
+  <div class="chart"><svg viewBox="0 0 640 230" width="100%"><rect x="73.0" y="16" width="58.6" height="184" fill="#F1F3F5"/><text x="102.3" y="27" font-size="9.5" fill="#6B7280" text-anchor="middle">개천절 연휴</text><rect x="190.1" y="16" width="58.6" height="184" fill="#F1F3F5"/><text x="219.4" y="27" font-size="9.5" fill="#6B7280" text-anchor="middle">한글날 연휴</text><line x1="34" x2="600" y1="200.0" y2="200.0" stroke="#E5E9EE"/><text x="29" y="203.0" font-size="9" fill="#6B7280" text-anchor="end">0번</text><line x1="34" x2="600" y1="126.4" y2="126.4" stroke="#E5E9EE"/><text x="29" y="129.4" font-size="9" fill="#6B7280" text-anchor="end">20번</text><line x1="34" x2="600" y1="52.8" y2="52.8" stroke="#E5E9EE"/><text x="29" y="55.8" font-size="9" fill="#6B7280" text-anchor="end">40번</text><text x="605" y="157.0" font-size="9" fill="#6B7280">100</text><text x="605" y="111.0" font-size="9" fill="#6B7280">200</text><text x="605" y="65.0" font-size="9" fill="#6B7280">300</text><rect x="37.5" y="126.4" width="12.5" height="73.6" rx="1.5" fill="#9CC3FF"/><rect x="57.0" y="163.2" width="12.5" height="36.8" rx="1.5" fill="#9CC3FF"/><rect x="76.5" y="155.8" width="12.5" height="44.2" rx="1.5" fill="#9CC3FF"/><rect x="96.1" y="144.8" width="12.5" height="55.2" rx="1.5" fill="#9CC3FF"/><rect x="115.6" y="133.8" width="12.5" height="66.2" rx="1.5" fill="#9CC3FF"/><rect x="135.1" y="152.2" width="12.5" height="47.8" rx="1.5" fill="#9CC3FF"/><rect x="154.6" y="159.5" width="12.5" height="40.5" rx="1.5" fill="#9CC3FF"/><rect x="174.1" y="122.7" width="12.5" height="77.3" rx="1.5" fill="#9CC3FF"/><rect x="193.7" y="177.9" width="12.5" height="22.1" rx="1.5" fill="#9CC3FF"/><rect x="213.2" y="159.5" width="12.5" height="40.5" rx="1.5" fill="#9CC3FF"/><rect x="232.7" y="148.5" width="12.5" height="51.5" rx="1.5" fill="#9CC3FF"/><rect x="252.2" y="130.1" width="12.5" height="69.9" rx="1.5" fill="#9CC3FF"/><rect x="271.7" y="119.0" width="12.5" height="81.0" rx="1.5" fill="#9CC3FF"/><rect x="291.2" y="137.4" width="12.5" height="62.6" rx="1.5" fill="#9CC3FF"/><rect x="310.8" y="144.8" width="12.5" height="55.2" rx="1.5" fill="#9CC3FF"/><rect x="330.3" y="119.0" width="12.5" height="81.0" rx="1.5" fill="#9CC3FF"/><rect x="349.8" y="137.4" width="12.5" height="62.6" rx="1.5" fill="#9CC3FF"/><rect x="369.3" y="97.0" width="12.5" height="103.0" rx="1.5" fill="#9CC3FF"/><rect x="388.8" y="119.0" width="12.5" height="81.0" rx="1.5" fill="#9CC3FF"/><rect x="408.3" y="41.8" width="12.5" height="158.2" rx="1.5" fill="#9CC3FF"/><rect x="427.9" y="111.7" width="12.5" height="88.3" rx="1.5" fill="#9CC3FF"/><rect x="447.4" y="108.0" width="12.5" height="92.0" rx="1.5" fill="#9CC3FF"/><rect x="466.9" y="163.2" width="12.5" height="36.8" rx="1.5" fill="#9CC3FF"/><rect x="486.4" y="159.5" width="12.5" height="40.5" rx="1.5" fill="#9CC3FF"/><rect x="505.9" y="126.4" width="12.5" height="73.6" rx="1.5" fill="#9CC3FF"/><rect x="525.4" y="115.4" width="12.5" height="84.6" rx="1.5" fill="#9CC3FF"/><rect x="545.0" y="56.5" width="12.5" height="143.5" rx="1.5" fill="#9CC3FF"/><rect x="564.5" y="52.8" width="12.5" height="147.2" rx="1.5" fill="#9CC3FF"/><rect x="584.0" y="174.2" width="12.5" height="25.8" rx="1.5" fill="#E2E8F0"/><path d="M43.8 123.2 L63.3 125.0 L82.8 137.4 L102.3 135.1 L121.8 112.6 L141.3 107.1 L160.9 121.8 L180.4 125.5 L199.9 144.8 L219.4 139.3 L238.9 107.5 L258.4 91.9 L278.0 95.6 L297.5 106.6 L317.0 113.5 L336.5 98.3 L356.0 112.1 L375.6 97.4 L395.1 98.3 L414.6 74.9 L434.1 85.9 L453.6 105.7 L473.1 132.4 L492.7 123.6 L512.2 64.8 L531.7 38.5 L551.2 33.9 L570.7 37.6 L590.2 134.7" fill="none" stroke="#374151" stroke-width="1.6" stroke-dasharray="4 3"/><text x="43.8" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/1</text><text x="121.8" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/5</text><text x="199.9" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/9</text><text x="278.0" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/13</text><text x="356.0" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/17</text><text x="434.1" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/21</text><text x="512.2" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/25</text><text x="590.2" y="214" font-size="9" fill="#6B7280" text-anchor="middle">10/29</text><rect x="408.3" y="41.8" width="12.5" height="158.2" rx="1.5" fill="#2F6FE0"/><text x="414.6" y="35.8" font-size="10" font-weight="800" fill="#111" text-anchor="middle">10/20 · 43번</text></svg>
+    <div class="legend"><span><i></i>하루 들어온 횟수 (왼쪽)</span><span><i class="l"></i>하루 보인 횟수 (오른쪽)</span><span class="g">10/29 는 구글이 아직 덜 채움</span></div></div>
+  <div class="foot"><span>10월 구글 검색 마감 보고</span><span><b>2</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>10월 구글 검색 마감 보고</span><span>3 · 덜 눌리는 화면</span></div>
+  <div class="eb">3 · 어느 화면이 덜 눌리나</div>
+  <h2>제목에 값이 보이는 상품 화면이<br>2.6배 잘 눌립니다</h2>
+  <p class="lead">9월 21일부터 노보 상품만 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿔 두었습니다. 다른 상품은 기본 제목 그대로입니다. 순위는 비슷합니다.</p>
+  <div class="vs">
+    <div class="vsb on"><div class="l">노보 상품 화면 5개 · 바꾼 제목</div><div class="v">9.4%</div><div class="d">597번 보여 56번 들어옴 · 평균 7.9위</div>
+      <code>노보 블랙 타박멘솔 액상 입호흡 9.8mg 30ml 13,500원 재고 있음</code></div>
+    <div class="vsb"><div class="l">나머지 상품 화면 56개 · 기본 제목</div><div class="v">3.7%</div><div class="d">2,291번 보여 84번 들어옴 · 평균 7.6위</div>
+      <code>[디톡스] 톡스 알로에베라 모드 액상 (3MG/60ml) - 액상덕후</code></div>
+  </div>
+  <h3>많이 보이는데 거의 안 눌리는 화면</h3>
+  <table class="fx"><thead><tr><th>화면</th><th class="n">보인</th><th class="n">누른 비율</th><th>왜 덜 눌리나</th></tr></thead><tbody><tr><td><b>펠릭스 더블라임 (옛 주소)</b><small>펠릭스 라임 알로에 … 20,000원</small></td><td class="n">230번</td><td class="n"><b>0.9%</b></td><td class="why">「더블라임」을 찾는데 이 주소는 지금 라임 알로에(품절) 화면입니다</td></tr><tr><td><b>디톡스 알로에베라</b><small>[디톡스] 톡스 알로에베라 모드 액상 (3MG/60ml) - 액상덕후</small></td><td class="n">273번</td><td class="n"><b>1.5%</b></td><td class="why">제목에 값이 없습니다 (21,000원)</td></tr><tr><td><b>젤로 크리스탈 5병</b><small>[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 ! - 액상덕후</small></td><td class="n">137번</td><td class="n"><b>2.2%</b></td><td class="why">「젤로 크리스탈 가격」으로 71번 보였는데 제목에 값(69,000원)이 없습니다</td></tr><tr><td><b>마르키사 라즈베리</b><small>기본 제목 (값 없음)</small></td><td class="n">113번</td><td class="n"><b>4.4%</b></td><td class="why">주소는 「오리지날」, 상품은 라즈베리</td></tr><tr><td><b>액상 고르는 법 (안내 글)</b><small>전자담배 액상 고르는 법 — 입호흡 · 폐호흡 …</small></td><td class="n">264번</td><td class="n"><b>1.1%</b></td><td class="why">정보를 찾는 검색이라 원래 덜 누릅니다. 날짜를 붙여 봅니다</td></tr></tbody></table>
+  <div class="box"><div class="t">값을 묻는 검색도 그냥 지나갑니다</div>
+    <p>「액상 가격」 · 「입호흡 액상 가격」 · 「젤로 크리스탈 가격」처럼 <b>값을 묻는 검색이 257번 보였고 1번 들어왔습니다.</b> 「입호흡 액상 가격」은 평균 2.7위인데도 0번입니다.</p>
+    <p>9월 말에 만든 전 상품 가격표(/price/)는 10월에 5번만 보였습니다. 구글이 아직 그 화면을 값 검색의 답으로 보지 않습니다.</p></div>
+  <div class="foot"><span>10월 구글 검색 마감 보고</span><span><b>3</b> / 4</span></div>
+</section><section class="page">
+  <div class="run"><span>10월 구글 검색 마감 보고</span><span>4 · 11월에 할 일</span></div>
+  <div class="eb">4 · 11월에 할 일</div>
+  <h2>누른 비율을 올리는 일 넷</h2>
+  <div class="todo"><span class="no">1</span><div><h3>모든 상품 제목을 노보처럼 바꾸기</h3><p>「브랜드 맛 + 액상 + 입호흡/폐호흡 + 용량 + <b>값</b> + 재고」. 값은 상품에서 그때그때 읽으므로 값이 바뀌어도 틀리지 않습니다. 디톡스 · 젤로 크리스탈 · 마르키사 · 흑염룡부터.</p></div></div>
+  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기</h3><p>구글이 「펠릭스 더블라임」 검색에 띄우는 주소가 지금은 <b>라임 알로에(품절)</b> 화면입니다 (230번 보임 · 2번). 두 상품의 주소를 맞바꿔, 그 주소가 새 더블라임 상품을 가리키게 합니다.</p></div></div>
+  <div class="todo"><span class="no">3</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목 · 설명 첫머리에 「액상 가격」을 그대로 두고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
+  <div class="todo"><span class="no">4</span><div><h3>검색 결과 밑 두 줄 설명에 「오늘 출고」</h3><p>상품 설명 첫 문장에 값 · 3만원 이상 무료배송 · 평일 오후 4시 전 입금 시 당일 출고를 넣습니다. 같은 자리의 다른 가게보다 누를 이유가 하나 더 생깁니다.</p></div></div>
+  <h3 style="margin-top:2pt">하지 않을 것</h3>
+  <ul class="not">
+    <li>남의 가게 이름(액상82 · 노보마트 · 딜리퀴드)을 노리는 글</li>
+    <li>가게 이름 검색 밑의 링크를 비율 때문에 지우는 일 — 이름을 친 손님에게는 쓸모가 있습니다</li>
+  </ul>
+  <h3>12월 초에 볼 숫자 셋</h3>
+  <div class="goals">
+    <div class="goal"><div class="l">노보 밖 상품 화면 누른 비율</div><div class="v">3.7<small>% →</small> 6<small>%</small></div><div class="d">노보 수준(9.4%)의 3분의 2</div></div>
+    <div class="goal"><div class="l">5~10위 자리 누른 비율</div><div class="v">2.3<small>% →</small> 3<small>%</small></div><div class="d">이름 모르고 온 검색</div></div>
+    <div class="goal"><div class="l">이름 모르고 와서 들어온 횟수</div><div class="v">118<small>번 →</small> 150<small>번</small></div><div class="d">11월 한 달</div></div>
+  </div>
+  <div class="src"><p><b>숫자 출처</b></p>
+    <p>· 구글 서치콘솔 「실적」 내보내기. 10월은 1 ~ 29일(29일, 29일은 아직 덜 채워짐), 9월은 1 ~ 29일(29일, 30일은 0으로 와서 뺌)</p>
+    <p>· 가게 이름 검색 = 「액상덕후 · 덕후 · duckhoo」가 든 검색어. 구글이 검색어를 감춘 몫(9월 199번 · 10월 261번 들어옴)은 어느 쪽에도 넣지 않았습니다</p>
+    <p>· 자리 = 구글이 준 평균 게재 순위. 검색 결과 제목은 10월 30일 사이트 화면으로 확인</p></div>
+  <div class="foot"><span>10월 구글 검색 마감 보고</span><span><b>4</b> / 4</span></div>
+</section>
+</body></html>
