@@ -6,7 +6,9 @@ from easy import *
 
 ASOF = '10월 1일 ~ 30일 오후 2시 45분 (잠정)'
 SALES, COST, N = 44753716, 25866056, 646            # 입금 확인된 주문 · 순상품매출(배송비 · 할인 · 환불 반영) · 상품 원가
-SHIP = N * 2500                                       # 우체국 계약소포 2,500원 × 주문
+BOXES, POST, PACK = 687, 1477850, 171750              # 우체국 발송 687건(등기번호 기준) · 우체국 요금 · 박스비 250원 × 687
+SHIP = POST + PACK                                    # 1,649,600원 (건당 약 2,401원)
+PER = SHIP / BOXES
 BIG = (4590000, 2700000)                              # 10/27 노보 450병 한 건 · 원가 6,000 × 450
 VOID = (51, 3426590); PEND = (33, 2204930)            # 취소 · 입금 전 (매출에 안 넣음)
 IMWEB = (6, 348000)
@@ -30,12 +32,12 @@ DAY = [1543818, 797698, 389775, 437763, 1083814, 1249957, 1089560, 2479155, 5752
 def man(n): return f'{n / 10000:,.0f}만 원'
 def dp(a, b): d = (a / b - 1) * 100; return f'<span class="{"up" if d >= 0 else "dn"}">{d:+.1f}%</span>'
 GP = SALES - COST; NET = GP - SHIP
-xs, xc = SALES - BIG[0], COST - BIG[1]; xn = xs - xc - (N - 1) * 2500
+xs, xc = SALES - BIG[0], COST - BIG[1]; xn = xs - xc - round(SHIP - PER)
 d = Doc('액상덕후 10월 월마감', 4)
 
 cov = cover('액상덕후 · 10월 월마감 · ' + ASOF, f'{SALES / 1e4:,.0f}<small>만 원</small>',
     f'10월에 {man(SALES)}을 팔고<br>원가와 배송비를 빼고 {man(NET)}이 남았습니다',
-    f'입금이 확인된 주문 {N}건으로 셌습니다. 상품 원가는 상품별 원가표로, 배송비는 건당 2,500원으로 뺐습니다.',
+    f'입금이 확인된 주문 {N}건으로 셌습니다. 상품 원가는 상품별 원가표로, 배송비는 실제 우체국 발송 {BOXES}건의 요금과 박스비로 뺐습니다.',
     [(f'{COST / SALES * 100:.1f}%', '원가율'), (f'{N}건', f'주문 · 한 건 평균 {w(SALES / N)}원'), (f'{NET / SALES * 100:.1f}%', '원가 · 배송비 뺀 몫')],
     '<span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인몰 운영</b></span><span>2026년 10월 30일</span>')
 
@@ -65,9 +67,9 @@ pl = table(['', '10월 전체', '대량 주문 1건 뺀 값'], [
     ['순상품매출', w(SALES), w(xs)],
     ['− 상품 원가', '−' + w(COST), '−' + w(xc)],
     ['<b>= 원가 뺀 이익</b>', f'<b>{w(GP)}</b><small>{GP / SALES * 100:.1f}%</small>', f'<b>{w(xs - xc)}</b><small>{(xs - xc) / xs * 100:.1f}%</small>'],
-    ['− 배송비 (주문 × 2,500원)', '−' + w(SHIP), '−' + w((N - 1) * 2500)],
+    [f'− 배송비<small>우체국 요금 {w(POST)} + 박스비 {w(PACK)} · {BOXES}건</small>', '−' + w(SHIP), '−' + w(round(SHIP - PER))],
     ['<b>= 배송비까지 뺀 이익</b>', f'<b class="acc">{w(NET)}</b><small>{NET / SALES * 100:.1f}%</small>', f'<b>{w(xn)}</b><small>{xn / xs * 100:.1f}%</small>']], 'fx')
-p2 = d.frame(2, '손익', f'''<h2>원가율 57.8%, 100원 팔아 39원이 남았습니다</h2>
+p2 = d.frame(2, '손익', f'''<h2>원가율 57.8%, 100원 팔아 {NET / SALES * 100:.0f}원이 남았습니다</h2>
 <p class="lead">입금이 확인된 주문만 셉니다. 10월 27일 노보 450병 주문(459만 원) 한 건이 커서 뺀 값을 옆에 둡니다. 단위는 원입니다.</p>
 {pl}
 <h3>매출에 넣지 않은 것</h3>
