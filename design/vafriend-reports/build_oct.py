@@ -67,17 +67,45 @@ p1 = d.frame(1, '한눈에', f'''<h2>우리 사이트 넷이 서로 다른 검�
  ('bad', '걸리는 것', '각인 검색어를 홈페이지와 각인 갤러리가 나눠 갖습니다', '「전자담배각인」 「대구전자담배각인」에서 홈페이지 각인 안내가 1위, 각인 갤러리가 2위입니다. 같은 말을 두 사이트가 나눠 가지면 한쪽이 더 오르기 어렵습니다.'),
 ])}''')
 
-def mrow(q, g=None):
-    r = ([g] if g else []) + [q] + [cell(pos(q, h)) for h, _, _ in SITES]
-    if not best(q): r[1 if g else 0] += '<small>첫 쪽이 전부 블로그 · 카페</small>' if ugc(q) else '<small>우리 사이트 넷 모두 첫 쪽 밖</small>'
-    return r
-SH = [f'{n}' for _, n, _ in SITES]
-mt = ([mrow(q, '이름') for q in NAMEQ] + [mrow(q, '이벤트') for q in EVENT] + [mrow(q, '각인') for q in ENGR] + [mrow(q, '넓은 말') for q in BROAD])
-p2 = d.frame(2, '사이트별 자리', f'''<h2>이름 · 이벤트 · 각인 · 넓은 말 {len(mt)}개</h2>
-<p class="lead">홈페이지 = vafriend.com · 블로그 모음 = 대구전자담배.com · 이벤트 = 대구전자담배이벤트.com · 각인 갤러리 = 전자담배각인.com. 칸의 숫자가 그 사이트의 웹사이트 자리입니다 (블로그 · 카페를 뺀 순서, 1이 맨 위). 「–」는 첫 쪽에 없다는 뜻입니다.</p>
-{table(['묶음', '검색어'] + SH, mt, 'fx xs', left=2)}
-<div class="box"><div class="t">읽는 법</div>
-<p>「vafriend」를 치면 우리 사이트 넷이 모두 첫 쪽에 나옵니다. 「베이프렌드」는 유튜브 채널 다음 2위입니다. 이벤트 검색어는 이벤트 사이트가, 지점 검색어 상당수는 블로그 모음이 받고 있어 사이트마다 맡은 말이 갈립니다.</p></div>''')
+def line(q):
+    h = D[q]['web_hits']
+    if not h:
+        why = '첫 쪽이 전부 블로그 · 카페' if ugc(q) else '우리 사이트 넷 모두 첫 쪽 밖'
+        return f'<li><span class="q">{q}</span><span class="r none">없음</span><small>{why}</small></li>'
+    p, nm = h[0][0], NAME[h[0][1]]
+    seen = {h[0][1]}; rest = []
+    for pp, x in h[1:]:
+        if x not in seen: seen.add(x); rest.append(f'{NAME[x]} {pp}위')
+    cls = 'win' if p == 1 else 'hi' if p <= 3 else ''
+    sm = f'<small>함께: {" · ".join(rest)}</small>' if rest else ''
+    return f'<li><span class="q">{q}</span><span class="r {cls}">{p}위 · {nm}</span>{sm}</li>'
+def grp(t, sub, qs):
+    w = sum(1 for q in qs if best(q) and best(q)[0] == 1)
+    return f'<div class="g"><div class="gt">{t}<span>{w} / {len(qs)} 1위</span></div><div class="gs">{sub}</div><ul>{"".join(line(q) for q in qs)}</ul></div>'
+CSS2 = """<style>
+.grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin: 4pt 0 12pt; }
+.g { border: 1px solid #DCE6F5; border-radius: 10pt; padding: 10pt 12pt; background: #fff; }
+.gt { font-size: 13pt; font-weight: 900; display: flex; justify-content: space-between; align-items: baseline; }
+.gt span { font-size: 10pt; font-weight: 800; color: #2F6FE0; }
+.gs { font-size: 9pt; color: #6B7280; margin: 1pt 0 6pt; }
+.g ul { list-style: none; margin: 0; padding: 0; }
+.g li { display: grid; grid-template-columns: 1fr auto; column-gap: 6pt; padding: 4pt 0; border-top: 1px solid #EEF2F7; font-size: 10.5pt; }
+.g li:first-child { border-top: 0; }
+.g li small { grid-column: 1 / -1; font-size: 8.5pt; color: #6B7280; margin-top: 1pt; }
+.g .r { font-weight: 800; font-size: 10pt; padding: 1pt 7pt; border-radius: 99pt; background: #F1F5F9; color: #334155; white-space: nowrap; }
+.g .r.win { background: #2F6FE0; color: #fff; } .g .r.hi { background: #EAF2FF; color: #2F6FE0; } .g .r.none { background: #FEF3F2; color: #B42318; }
+.sites { font-size: 9.5pt; color: #374151; margin: -4pt 0 8pt; }
+</style>"""
+p2 = d.frame(2, '사이트별 자리', f'''{CSS2}<h2>이름 · 이벤트 · 각인 · 넓은 말: 누가 몇 위인가</h2>
+<p class="lead">검색어마다 우리 사이트 중 가장 높은 자리와 그 사이트를 적었습니다. 파란 알약이 웹사이트 1위입니다.</p>
+<p class="sites">홈페이지 vafriend.com · 블로그 모음 대구전자담배.com · 이벤트 대구전자담배이벤트.com · 각인 갤러리 전자담배각인.com</p>
+<div class="grid4">
+{grp('이름', '가게 이름을 친 사람', NAMEQ)}
+{grp('이벤트', '할인 · 증정을 찾는 사람', EVENT)}
+{grp('각인', '각인을 찾는 사람', ENGR)}
+{grp('넓은 말', '대구에서 전자담배를 찾는 사람', BROAD)}
+</div>
+<p class="note">이벤트는 이벤트 사이트, 각인은 홈페이지, 블로그는 블로그 모음이 1위입니다. 넓은 말은 첫 쪽이 블로그 · 카페뿐이라 어느 가게 사이트도 없습니다.</p>''')
 
 bt = []
 for br, q in BRANCH:
