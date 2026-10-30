@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""10월 구글 검색 마감 보고 — 표지 + 4장, 연한 파랑. 네이버 보고서(design/naver-reports/build.py)와 같은 틀.
-쓰는 법: python3 -I build_oct.py <10월 CSV 폴더> <9월 CSV 폴더> <out.html>"""
+"""10월 검색 마감 보고 (구글 · 네이버) — 표지 + 5장, 연한 파랑. 네이버 보고서(design/naver-reports/build.py)와 같은 틀.
+쓰는 법: python3 -I build_oct.py <10월 CSV 폴더> <9월 CSV 폴더> <out.html> [네이버 날짜별 CSV] [순위 폴더]"""
 import csv, re, sys, datetime
 
 OCT, SEP, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+NAV = sys.argv[4] if len(sys.argv) > 4 else ''
+RANKS = sys.argv[5] if len(sys.argv) > 5 else '../seo-ranks'
 BLUE, SKY, PALE, LINE = '#2F6FE0', '#9CC3FF', '#EEF4FF', '#C7DCFF'
 
 def rd(d, f): return list(csv.reader(open(f'{d}/{f}', encoding='utf-8-sig')))[1:]
@@ -190,7 +192,8 @@ table.fx td.why {{ font-size: 10.5pt; color: #374151; width: 42%; }}
 .vsb code {{ font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }}
 .todo {{ display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }}
 .todo .no {{ width: 30pt; height: 30pt; border-radius: 50%; background: {BLUE}; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }}
-.todo h3 {{ margin: 2pt 0 1pt; }} .todo p {{ margin: 0; font-size: 11.5pt; color: #374151; }} .todo p b {{ color: #111; }}
+.tight .row {{ padding: 6pt 0; }} .tight .row p {{ font-size: 12pt; }} table.tight td {{ padding: 4pt 5pt; }}
+.todo h3 {{ margin: 2pt 0 1pt; }} .done {{ font-size: 10pt; font-weight: 800; color: {BLUE}; background: {PALE}; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; }} .todo p {{ margin: 0; font-size: 11.5pt; color: #374151; }} .todo p b {{ color: #111; }}
 .not {{ margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }}
 .not li {{ padding-left: 14pt; position: relative; margin: 0 0 3pt; }} .not li::before {{ content: "—"; position: absolute; left: 0; color: #94A3B8; }}
 .goals {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }}
@@ -201,17 +204,17 @@ table.fx td.why {{ font-size: 10.5pt; color: #374151; width: 42%; }}
 .src {{ font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; }} .src p {{ margin: 0 0 2pt; }}
 </style>"""
 
-TOTAL = 5
+TOTAL = 6 if NAV else 5
 def frame(no, title, body):
     return f'''<section class="page">
-  <div class="run"><span>10월 구글 검색 마감 보고</span><span>{no} · {title}</span></div>
+  <div class="run"><span>10월 검색 마감 보고</span><span>{no} · {title}</span></div>
 {body}
-  <div class="foot"><span>10월 구글 검색 마감 보고</span><span><b>{no}</b> / {TOTAL - 1}</span></div>
+  <div class="foot"><span>10월 검색 마감 보고</span><span><b>{no}</b> / {TOTAL - 1}</span></div>
 </section>'''
 
 NEWX = ON[0] / SN[0]
 cover = f'''<section class="page cover">
-  <div class="eb">액상덕후 · 10월 구글 검색 마감 보고</div>
+  <div class="eb">액상덕후 · 10월 검색 마감 보고 (구글 · 네이버)</div>
   <div class="big">{NEWX:.1f}배</div>
   <h1>이름을 모르고 검색한 손님이<br>9월보다 {NEWX:.1f}배 들어왔습니다</h1>
   <p class="lead">대신 보인 횟수에 비해 눌러 주는 비율은 {S[2]:.1f}%에서 {O[2]:.1f}%로 반이 됐습니다.<br>왜 그런지, 11월에 무엇을 고칠지를 함께 적었습니다.</p>
@@ -274,10 +277,70 @@ p3 = frame(3, '덜 눌리는 화면', f'''  <div class="eb">3 · 어느 화면�
     <p>「액상 가격」 · 「입호흡 액상 가격」 · 「젤로 크리스탈 가격」처럼 <b>값을 묻는 검색이 {w(PRICE[1])}번 보였고 {PRICE[0]}번 들어왔습니다.</b> 「입호흡 액상 가격」은 평균 2.7위인데도 0번입니다.</p>
     <p>9월 말에 만든 전 상품 가격표(/price/)는 10월에 {P_PRICE[1]}번만 보였습니다. 구글이 아직 그 화면을 값 검색의 답으로 보지 않습니다.</p></div>''')
 
-p4 = frame(4, '11월에 할 일', f'''  <div class="eb">4 · 11월에 할 일</div>
+# ── 네이버 (서치어드바이저 날짜별 합계 + 순위 측정) ──
+pn = ''
+if NAV:
+    import json, os
+    nr = list(csv.reader(open(NAV, encoding='utf-8-sig')))
+    nd = nr[0][1:]; ni = list(map(int, nr[1][1:])); nc = list(map(int, nr[2][1:]))
+    keep = [k for k in range(len(nd)) if ni[k] > 0]
+    gap = [nd[k] for k in range(len(nd)) if ni[k] == 0]
+    def nwk(a, b):
+        ks = [k for k in range(a, b) if ni[k] > 0]
+        return ks, sum(ni[k] for k in ks) / len(ks), sum(nc[k] for k in ks) / len(ks), pct(sum(nc[k] for k in ks), sum(ni[k] for k in ks))
+    W = []
+    for a in range(0, len(nd), 7):
+        b = min(a + 7, len(nd)); ks, i_, c_, r_ = nwk(a, b)
+        lab = f"{int(nd[a][:2])}/{int(nd[a][3:])} ~ {int(nd[b-1][:2])}/{int(nd[b-1][3:])}"
+        W.append((lab, len(ks), i_, c_, r_))
+    NCLK = sum(nc[k] for k in keep); NDAY = NCLK / len(keep)
+    GDAY = O[0] / ND
+    # 순위
+    cats = {'same': [], 'blog': [], 'store': [], 'gone': []}
+    seen = set()
+    for a, b in (('2026-10-26-buy.json', '2026-10-30-buy.json'), ('2026-10-27-novo.json', '2026-10-30-novo.json')):
+        A = json.load(open(os.path.join(RANKS, a)))['ranks']; B = json.load(open(os.path.join(RANKS, b)))['ranks']
+        for q, v in B.items():
+            if q in seen or not v['n'] or not A.get(q, {}).get('hits'):
+                continue
+            seen.add(q)
+            xa = A[q]['hits'][0][0]; y = v['hits']; ya = y[0][0] if y else 99
+            xw = (A[q]['web_hits'] or [99])[0]; yw = (v['web_hits'] or [99])[0]
+            if ya <= xa: cats['same'].append(q)
+            elif not y: cats['gone'].append(q)
+            elif yw <= xw: cats['blog'].append(q)
+            else: cats['store'].append(q)
+    NQ = sum(len(x) for x in cats.values())
+    GONE_NOVO = [q for q in cats['gone'] if '노보' in q]
+    def wtab():
+        h = '<table class="tight"><thead><tr><th>기간</th><th class="n">하루 보인</th><th class="n">하루 들어온</th><th class="n">누른 비율</th></tr></thead><tbody>'
+        for lab, n_, i_, c_, r_ in W:
+            h += f'<tr><td>{lab}' + (f' <span class="g">({n_}일)</span>' if n_ < 7 else '') + f'</td><td class="n">{w(i_)}번</td><td class="n"><b>{c_:.0f}번</b></td><td class="n">{r_:.1f}%</td></tr>'
+        return h + '</tbody></table>'
+    def chipsq(qs, cls=''):
+        return f'<div class="chips {cls}">' + ''.join(f'<span>{q}</span>' for q in qs) + '</div>'
+    pn = frame(4, '네이버', f"""  <div class="eb">4 · 네이버</div>
+  <h2>네이버는 순위가 내려갔는데도<br>들어온 횟수는 매주 늘었습니다</h2>
+  <p class="lead">네이버 서치어드바이저 날짜별 합계(9월 30일 ~ 10월 29일). 네이버로는 하루 {NDAY:.0f}번 들어와 구글(하루 {GDAY:.0f}번)의 {NDAY / GDAY:.1f}배입니다.</p>
+  {wtab()}
+  <h3>순위는 왜 내려갔나</h3>
+  <p style="margin:0 0 6pt;font-size:11.5pt">손님이 칠 말 {NQ}개를 10월 26~27일과 30일에 같은 방법으로 쟀습니다. <b>오르거나 그대로 {len(cats['same'])}개 · 내려감 {NQ - len(cats['same'])}개</b>입니다.</p>
+  <div class="rows tight" style="margin:0 0 8pt">
+    <div class="row"><span class="k mid">블로그 {len(cats['blog'])}</span><p>가게 사이트끼리는 그대로인데 <b>블로그 · 카페 글이 위로</b> 들어왔습니다<small>{' · '.join(cats['blog'][:4])}</small></p></div>
+    <div class="row"><span class="k mid">밀림 {len(cats['store'])}</span><p>다른 가게 페이지에 한두 자리 밀렸습니다<small>{' · '.join(cats['store'][:5])} …</small></p></div>
+    <div class="row"><span class="k bad">첫 쪽 밖 {len(cats['gone'])}</span><p>첫 쪽(20개)에서 빠졌습니다. <b>{len(GONE_NOVO)}개가 노보 말</b>입니다<small>단종 소식 뒤 노보 블로그 · 카페 글이 몰리고 노보 공식 판매처가 새로 들어와 자리를 채웠습니다</small></p></div>
+    <div class="row"><span class="k ok">지킨 것 {len(cats['same'])}</span><p>값 · 묶음을 묻는 말은 1~2위 그대로입니다<small>{' · '.join(cats['same'][:7])}</small></p></div>
+  </div>
+  <div class="box"><div class="t">읽는 법</div>
+    <p>· 우리 페이지는 네이버에 그대로 잡혀 있습니다(사이트 검색으로 확인). 벌점이나 수집 문제는 아닙니다.</p>
+    <p>· 빠진 자리는 대부분 「노보 액상 · 노보 타박멘솔」처럼 이름을 묻는 말이고, 사려는 말(가격 · 10병 · 묶음)은 지켰습니다. 그래서 순위가 내려간 주에도 들어온 횟수는 늘었습니다.</p>
+</div>
+  <p class="g" style="font-size:10pt;margin:6pt 0 0">하루에 잰 순위라 한두 자리씩 흔들립니다. 11월 2일에 같은 말로 다시 잽니다.{' 10월 ' + ', '.join(str(int(g[3:])) + '일' for g in gap) + '은 네이버 자료가 비어 빼고 셌습니다.' if gap else ''}</p>""")
+
+p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 11월에 할 일</div>
   <h2>누른 비율을 올리는 일 넷</h2>
   <div class="todo"><span class="no">1</span><div><h3>모든 상품 제목을 노보처럼 바꾸기</h3><p>「브랜드 맛 + 액상 + 입호흡/폐호흡 + 용량 + <b>값</b> + 재고」. 값은 상품에서 그때그때 읽으므로 값이 바뀌어도 틀리지 않습니다. 디톡스 · 젤로 크리스탈 · 마르키사 · 흑염룡부터.</p></div></div>
-  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기</h3><p>구글이 「펠릭스 더블라임」 검색에 띄우는 주소가 지금은 <b>라임 알로에(품절)</b> 화면입니다 ({w(pg('/product/펠릭스-더블라임-9-8mg-30ml/')[1])}번 보임 · {pg('/product/펠릭스-더블라임-9-8mg-30ml/')[0]}번). 두 상품의 주소를 맞바꿔, 그 주소가 새 더블라임 상품을 가리키게 합니다.</p></div></div>
+  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기 <span class="done">10월 30일에 했음</span></h3><p>구글이 「펠릭스 더블라임」 검색에 띄우던 주소가 <b>라임 알로에</b> 화면이었습니다 ({w(pg('/product/펠릭스-더블라임-9-8mg-30ml/')[1])}번 보임 · {pg('/product/펠릭스-더블라임-9-8mg-30ml/')[0]}번). 두 상품의 주소를 맞바꿔 그 주소가 더블라임을 가리킵니다. 펠릭스 제목에는 값과 「5병 묶음」을 넣었습니다.</p></div></div>
   <div class="todo"><span class="no">3</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목 · 설명 첫머리에 「액상 가격」을 그대로 두고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
   <div class="todo"><span class="no">4</span><div><h3>검색 결과 밑 두 줄 설명에 「오늘 출고」</h3><p>상품 설명 첫 문장에 값 · 3만원 이상 무료배송 · 평일 오후 4시 전 입금 시 당일 출고를 넣습니다. 같은 자리의 다른 가게보다 누를 이유가 하나 더 생깁니다.</p></div></div>
   <h3 style="margin-top:2pt">하지 않을 것</h3>
@@ -296,9 +359,9 @@ p4 = frame(4, '11월에 할 일', f'''  <div class="eb">4 · 11월에 할 일</d
     <p>· 가게 이름 검색 = 「액상덕후 · 덕후 · duckhoo」가 든 검색어. 구글이 검색어를 감춘 몫(9월 {w(SH[0])}번 · 10월 {w(OH[0])}번 들어옴)은 어느 쪽에도 넣지 않았습니다</p>
     <p>· 자리 = 구글이 준 평균 게재 순위. 검색 결과 제목은 10월 30일 사이트 화면으로 확인</p></div>''')
 
-html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 구글 검색 마감 보고</title>
+html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 검색 마감 보고</title>
 <link rel="stylesheet" href="../demo-src/pretendard.css">{STYLE}</head><body>
-{cover}{p1}{p2}{p3}{p4}
+{cover}{p1}{p2}{p3}{pn}{p4}
 </body></html>'''
 open(OUT, 'w', encoding='utf-8').write(html)
 print('O', O, 'S', S, 'OB', OB, 'ON', ON, 'SB', SB, 'SN', SN, 'MID', MID, 'NOVO', NOVO, 'PROD', PROD, 'SL', SL, 'COMP', COMPI, 'PRICE', PRICE)
