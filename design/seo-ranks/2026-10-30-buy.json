@@ -1,0 +1,488 @@
+{
+ "date": "2026-10-30",
+ "where": "naver 웹 탭(ssc=tab.ur.all) — blog/cafe 섞임, n=첫 쪽 결과 수, web_hits=블로그·카페·지식인 뺀 순위",
+ "ranks": {
+  "디오리퀴드 액상": {
+   "n": 0,
+   "hits": [],
+   "web_hits": [],
+   "first": ""
+  },
+  "디오리퀴드 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     6,
+     "https://duck-hoo.com/product/디오리퀴드-멜론-9-8mg-30ml-2/"
+    ],
+    [
+     7,
+     "https://duck-hoo.com/brand/the-o-liquid/"
+    ]
+   ],
+   "web_hits": [
+    3,
+    4
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/디오리퀴드-레몬라임-30ml-액상/"
+  },
+  "디오리퀴드 5+5": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/디오리퀴드-55-묶음-이벤트/"
+    ],
+    [
+     7,
+     "https://duck-hoo.com/brand/the-o-liquid/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/디오리퀴드-55-묶음-이벤트/"
+  },
+  "디오리퀴드 10병": {
+   "n": 20,
+   "hits": [
+    [
+     3,
+     "https://duck-hoo.com/brand/the-o-liquid/"
+    ],
+    [
+     9,
+     "https://duck-hoo.com/product/디오리퀴드-31-묶음-이벤트/"
+    ],
+    [
+     13,
+     "https://duck-hoo.com/product/디오리퀴드-대량-33병-골라-담기/"
+    ],
+    [
+     14,
+     "https://duck-hoo.com/product/디오리퀴드-대량-55병-골라-담기/"
+    ],
+    [
+     19,
+     "https://duck-hoo.com/"
+    ]
+   ],
+   "web_hits": [
+    3,
+    8,
+    12,
+    13,
+    17
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/디오리퀴드-일반-시리즈-10병-묶음-특가-할인/"
+  },
+  "디오리퀴드 액상 종류": {
+   "n": 20,
+   "hits": [
+    [
+     19,
+     "https://duck-hoo.com/brand/the-o-liquid/"
+    ]
+   ],
+   "web_hits": [
+    8
+   ],
+   "first": "https://blog.naver.com/es4015/224457998081"
+  },
+  "화이트아웃 액상": {
+   "n": 20,
+   "hits": [
+    [
+     15,
+     "https://duck-hoo.com/brand/whiteout/"
+    ]
+   ],
+   "web_hits": [
+    1
+   ],
+   "first": "https://blog.naver.com/jhp2626/224458130230"
+  },
+  "화이트아웃 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/brand/whiteout/"
+    ]
+   ],
+   "web_hits": [
+    1
+   ],
+   "first": "https://duck-hoo.com/brand/whiteout/"
+  },
+  "화이트아웃 액상 종류": {
+   "n": 20,
+   "hits": [
+    [
+     7,
+     "https://duck-hoo.com/brand/whiteout/"
+    ]
+   ],
+   "web_hits": [
+    1
+   ],
+   "first": "https://blog.naver.com/vapedogjy/224438872467"
+  },
+  "화이트아웃 10병": {
+   "n": 19,
+   "hits": [
+    [
+     3,
+     "https://duck-hoo.com/product/화이트아웃-대량-55병-50병-묶음-서비스-5병/"
+    ],
+    [
+     7,
+     "https://duck-hoo.com/product/화이트아웃-대량-33병-30병-묶음-서비스-3병/"
+    ]
+   ],
+   "web_hits": [
+    3,
+    7
+   ],
+   "first": "https://buffget.com/ko/news/whiteout-survival-bear-hunt-best-101080-troop-ratio-guide"
+  },
+  "펠릭스 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://felixeliquids.com/"
+  },
+  "펠릭스 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/brand/felix/"
+    ],
+    [
+     11,
+     "https://duck-hoo.com/product/펠릭스-더블-라임-9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    6
+   ],
+   "first": "https://duck-hoo.com/brand/felix/"
+  },
+  "펠릭스 더블라임": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://cafe.naver.com/dgmom365/7332179?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1zZWFyY2gtY2FmZS"
+  },
+  "흑염룡 액상": {
+   "n": 19,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/액상덕후-바나나-흑염룡-시리즈-0-98mg-30ml/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product/액상덕후-아오리-흑염룡-시리즈-0-98mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/액상덕후-바나나-흑염룡-시리즈-0-98mg-30ml/"
+  },
+  "흑염룡 액상 가격": {
+   "n": 17,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product-category/적립금-사용-가능-상품/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product/액상덕후-아오리-흑염룡-시리즈-0-98mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product-category/적립금-사용-가능-상품/"
+  },
+  "빌런 액상": {
+   "n": 20,
+   "hits": [
+    [
+     14,
+     "https://duck-hoo.com/product/빌런-아이스빌런레즈애플-9-8mg-30ml-2/"
+    ],
+    [
+     17,
+     "https://duck-hoo.com/product/빌런-아이스빌런-보석바9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://blog.naver.com/blog_monsterciga/224456651089"
+  },
+  "빌런 액상 5병": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/빌런-아이스빌런레즈애플-9-8mg-30ml-2/"
+    ],
+    [
+     3,
+     "https://duck-hoo.com/product-category/7월-특가-할인/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/빌런-아이스빌런레즈애플-9-8mg-30ml-2/"
+  },
+  "리퀴드랩 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://cafe.naver.com/vapelife/94081?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1zZWFyY2gtY2FmZS1w"
+  },
+  "젤로 크리스탈": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/mysky22222/224456489038"
+  },
+  "젤로 크리스탈 기기 가격": {
+   "n": 20,
+   "hits": [
+    [
+     5,
+     "https://duck-hoo.com/product/젤로-크리스탈-기기-액상-10병-묶음/"
+    ],
+    [
+     16,
+     "https://duck-hoo.com/product/젤로-크리스탈-젤로-크리스탈-전자담배-액상-5병-증/"
+    ]
+   ],
+   "web_hits": [
+    2,
+    5
+   ],
+   "first": "https://blog.naver.com/nara7892/224445810784"
+  },
+  "젤로 크리스탈 팟": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/vapingclub/224455815025"
+  },
+  "조바 기기": {
+   "n": 20,
+   "hits": [
+    [
+     8,
+     "https://duck-hoo.com/product/조바-입호흡-전자담배/"
+    ]
+   ],
+   "web_hits": [
+    1
+   ],
+   "first": "https://blog.naver.com/theking1982/224442469455"
+  },
+  "노보 10+1 가격": {
+   "n": 19,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/노보-리퀴드-101-금액-120000원/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/노보-리퀴드-101-금액-120000원/"
+  },
+  "노보 블랙 10+1": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+  },
+  "노보 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ],
+    [
+     18,
+     "https://duck-hoo.com/brand/novo/"
+    ]
+   ],
+   "web_hits": [
+    2,
+    10
+   ],
+   "first": "https://juiceshop.kr/"
+  },
+  "노보 블랙 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "액상 10병 묶음": {
+   "n": 20,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/젤로-크리스탈-기기-액상-10병-묶음/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/젤로-크리스탈-기기-액상-10병-묶음/"
+  },
+  "액상 묶음 할인": {
+   "n": 20,
+   "hits": [
+    [
+     5,
+     "https://duck-hoo.com/product-category/액상-랭킹/"
+    ],
+    [
+     10,
+     "https://duck-hoo.com/product-category/7월-특가-할인/"
+    ]
+   ],
+   "web_hits": [
+    5,
+    10
+   ],
+   "first": "https://xn--bn1bn8wqrd0yw.com/62"
+  },
+  "입호흡 액상 10병": {
+   "n": 20,
+   "hits": [
+    [
+     6,
+     "https://duck-hoo.com/product/노보-리퀴드-101-금액-120000원/"
+    ],
+    [
+     9,
+     "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+    ]
+   ],
+   "web_hits": [
+    4,
+    7
+   ],
+   "first": "https://xn--9m1bw6pq2an64c.net/products/베라쥬스-입호흡-액상-98mg빨강-10병구매시-할인-3458"
+  },
+  "입호흡 액상 가격": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/metavapecorp/224455512321"
+  },
+  "폐호흡 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     11,
+     "https://duck-hoo.com/mtl-vs-dl/"
+    ],
+    [
+     14,
+     "https://duck-hoo.com/price/"
+    ]
+   ],
+   "web_hits": [
+    3,
+    6
+   ],
+   "first": "https://blog.naver.com/metavapecorp/224454563346"
+  },
+  "액상 가격표": {
+   "n": 19,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/price/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/shop/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/price/"
+  },
+  "전자담배 액상 가격": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://namu.wiki/w/액상형 전자담배/액상"
+  },
+  "전담 액상": {
+   "n": 21,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://namu.wiki/w/액상형 전자담배"
+  },
+  "전자담배 액상": {
+   "n": 19,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://juicebox.co.kr/"
+  },
+  "입호흡 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/metavapecorp/224455512321"
+  },
+  "액상 쇼핑몰": {
+   "n": 21,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://lscompany001.cafe24.com/"
+  }
+ }
+}

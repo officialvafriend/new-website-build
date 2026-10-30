@@ -2947,3 +2947,12 @@ html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__row{display:flex;align-items:center;
 html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__code{font-size:1.05rem;font-weight:800;letter-spacing:.08em !important;padding:.35rem .7rem;border-radius:10px;background:var(--dh-surface-2);color:var(--dh-ink)}
 html body.dhr.dhr-wrap.dhr-wrap .dhr-wcard__copy{min-height:40px;padding:0 1rem;border-radius:999px;border:1px solid var(--dh-line-strong);background:transparent;color:var(--dh-ink);font-weight:700;font-size:.8125rem;cursor:pointer}
 @media (max-width:479px){html body.dhr.dhr-wrap.dhr-wrap .dhr-wc{flex-direction:column;align-items:stretch}html body.dhr.dhr-wrap.dhr-wrap .dhr-wc__b{justify-content:center}}
+
+/* 브랜드 페이지 격자 위 묶음 한 장 (2026-10-30, 펠릭스부터) — Brand\lead_card() */
+html body.dhr.dhr-wrap.dhr-wrap a.dha-lead{ display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: "eb eb" "t p" "s s" "go go"; gap: .3rem .8rem; margin: 0 0 1.2rem; padding: clamp(1rem, .8rem + 1vw, 1.4rem); background: var(--dh-ink); color: var(--dh-surface); border-radius: 20px; text-decoration: none !important; box-shadow: 0 10px 28px rgba(16,24,40,.14); transition: transform 160ms ease-out; }
+html body.dhr.dhr-wrap.dhr-wrap a.dha-lead:active{ transform: scale(.98); }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lead__eb{ grid-area: eb; justify-self: start; padding: .15rem .6rem; border-radius: 999px; background: var(--dh-accent); color: var(--dh-accent-ink); font-size: 13px; font-weight: 800; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lead__t{ grid-area: t; align-self: end; font-size: clamp(19px, 17px + .8vw, 24px); font-weight: 900; color: var(--dh-surface); word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lead__p{ grid-area: p; align-self: end; font-size: clamp(19px, 17px + .8vw, 24px); font-weight: 900; color: var(--dh-surface); white-space: nowrap; font-variant-numeric: tabular-nums; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lead__s{ grid-area: s; font-size: 14px; color: var(--dh-surface); opacity: .8; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dha-lead__go{ grid-area: go; margin-top: .5rem; display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 999px; background: var(--dh-surface); color: var(--dh-ink); font-size: 15px; font-weight: 800; }

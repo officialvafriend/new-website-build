@@ -151,8 +151,97 @@ function cat_words( array $f ): string {
 function title( string $b ): string {
 	$n    = brands()[ $b ] ?? count( brand_items( $b ) );
 	$what = 'device' === brand_kind( $b ) ? ' 기기 · 팟 가격' : ' 액상 종류 · 가격';
+	$lead = lead_bundle( $b );
+	if ( $lead ) {
+		// 2026-10-30 — 「펠릭스」만 쳐도 묶음을 판다는 것이 검색 결과 제목에서 보이게 (사장님).
+		$pb = per_bottle( $lead );
+		return $b . ' 액상 ' . $pb['qty'] . '병 묶음 ' . won( (float) $lead->get_price() ) . ' · 종류 · 가격'
+			. ( $n ? ' ' . $n . '종' : '' ) . ' (' . asof() . ' 기준) | ' . get_bloginfo( 'name' );
+	}
 	return $b . $what . ( $n ? ' ' . $n . '종' : '' ) . ' (' . asof() . ' 기준) | ' . get_bloginfo( 'name' );
 }
+
+/**
+ * 묶음을 앞세울 브랜드 (2026-10-30, 사장님 「펠릭스를 검색하면 5병 묶음을 판다고 보이게」).
+ *
+ * @return string[]
+ */
+function lead_brands(): array {
+	return (array) apply_filters( 'duckhoo_brand_lead_bundle', array( '펠릭스' ) );
+}
+
+/**
+ * 그 브랜드의 재고 있는 묶음 중 병당이 가장 싼 것. 앞세울 브랜드가 아니거나 없으면 null.
+ *
+ * @param string $b 브랜드.
+ * @return \WC_Product|null
+ */
+function lead_bundle( string $b ): ?\WC_Product {
+	if ( ! in_array( $b, lead_brands(), true ) ) {
+		return null;
+	}
+	$best = null;
+	$bp   = 0.0;
+	foreach ( brand_items( $b ) as $p ) {
+		if ( ! $p->is_in_stock() || (float) $p->get_price() <= 0 || false !== mb_strpos( $p->get_name(), '대량' ) ) {
+			continue;
+		}
+		$pb = per_bottle( $p );
+		if ( $pb['qty'] < 2 ) {
+			continue;
+		}
+		if ( ! $best || $pb['per'] < $bp ) {
+			$best = $p;
+			$bp   = $pb['per'];
+		}
+	}
+	return $best;
+}
+
+/**
+ * 묶음 이름의 맛들 — 「더블 라임+라임 알로에 5병 묶음 이벤트」 → [더블 라임, 라임 알로에].
+ *
+ * @param \WC_Product $p 묶음.
+ * @return string[]
+ */
+function bundle_flavors( \WC_Product $p ): array {
+	$t = (string) split_name( $p )['title'];
+	$t = (string) preg_replace( '/\([^)]*\)|\s*\d+\s*병.*$/u', '', $t );
+	$out = array();
+	foreach ( preg_split( '/\s*[+\/,·]\s*/u', $t ) as $f ) {
+		$f = trim( (string) $f );
+		if ( '' !== $f ) {
+			$out[] = $f;
+		}
+	}
+	return $out;
+}
+
+/**
+ * 브랜드 페이지 격자 위 — 묶음 한 장 (앞세울 브랜드만). `form.cart` 와 무관한 링크 하나다.
+ *
+ * @return void
+ */
+function lead_card(): void {
+	$b = here();
+	if ( '' === $b ) {
+		return;
+	}
+	$p = lead_bundle( $b );
+	if ( ! $p ) {
+		return;
+	}
+	$pb  = per_bottle( $p );
+	$fl  = bundle_flavors( $p );
+	$sub = ( $fl ? implode( ' · ', $fl ) . ' 골라 담기 · ' : '' ) . '병당 약 ' . won( floor( $pb['per'] / 100 ) * 100 );
+	echo '<a class="dha-lead" href="' . esc_url( get_permalink( $p->get_id() ) ) . '">'
+		. '<span class="dha-lead__eb">' . (int) $pb['qty'] . '병 묶음</span>'
+		. '<b class="dha-lead__t">' . esc_html( $b . ' 액상 ' . $pb['qty'] . '병 묶음' ) . '</b>'
+		. '<span class="dha-lead__s">' . esc_html( $sub ) . '</span>'
+		. '<span class="dha-lead__p">' . esc_html( won( (float) $p->get_price() ) ) . '</span>'
+		. '<span class="dha-lead__go">묶음으로 사기</span></a>';
+}
+add_action( 'duckhoo_archive_before_grid', __NAMESPACE__ . '\\lead_card', 6 );
 
 /**
  * 자주 묻는 질문. 답은 우리 가게 사실뿐 — 다른 가게 · 건강 낱말 없음.

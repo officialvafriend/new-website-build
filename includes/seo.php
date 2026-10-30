@@ -566,7 +566,7 @@ function with_shop( string $own ): string {
  * |---|---|
  * | `노보-데저트-9-8mg-30ml` | 일반 라인인데 「노보 **블랙** 데저트」라고 적혀 있었다 |
  * | `초특가-노보-10병-병당-8000원-금액-80000원` | 실제 130,000원인데 「병당 7,000원(총 70,000원)」 |
- * | `펠릭스-더블라임-9-8mg-30ml` (#254) | 상품이 「라임 알로에」로 바뀌었는데 글은 「더블라임 20,000원」 (2026-10-09) — 더블라임은 새 상품 #4701 |
+ * | `펠릭스-라임-알로에-9-8mg-30ml` (#254) | 상품이 「라임 알로에」로 바뀌었는데 글은 「더블라임 20,000원」 (2026-10-09). 2026-10-30 옛 주소 `펠릭스-더블라임-…` 는 더블라임 #4701 에게 넘겼다 |
  *
  * 사장님이 AIOSEO 상자를 직접 고치시면 이 목록에서 그 주소만 빼면 된다 (필터 한 줄).
  *
@@ -580,7 +580,9 @@ function overrides(): array {
 			array(
 				'노보-데저트-9-8mg-30ml',
 				'초특가-노보-10병-병당-8000원-금액-80000원',
-				'펠릭스-더블라임-9-8mg-30ml',
+				// #254 라임 알로에 — 2026-10-30 주소를 맞바꿨다 (옛 「펠릭스-더블라임」 주소는 이제 더블라임 #4701).
+				// AIOSEO 상자에는 아직 「더블라임」 글이 남아 있다.
+				'펠릭스-라임-알로에-9-8mg-30ml',
 			)
 		)
 	);
@@ -686,6 +688,16 @@ add_filter( 'pre_get_document_title', __NAMESPACE__ . '\\title', 20 );
  *
  * @return string[]
  */
+/**
+ * 노보가 아닌데 제목을 우리가 정하는 브랜드 — `plain_title()` 꼴 (입호흡 · 폐호흡은 분류에서).
+ * 2026-10-30 펠릭스부터 (사장님). 10월 구글: 노보처럼 값이 보이는 제목이 2.6배 잘 눌린다.
+ *
+ * @return string[]
+ */
+function plain_title_brands(): array {
+	return (array) apply_filters( 'duckhoo_plain_title_brands', array( '펠릭스' ) );
+}
+
 function title_brands(): array {
 	return (array) apply_filters( 'duckhoo_product_title_brands', array( '노보' ) );
 }
@@ -708,7 +720,7 @@ function product_title( \WC_Product $p ): string {
 	if ( ! in_array( $brand, title_brands(), true ) ) {
 		// 2026-10-09 — 손으로 쓴 제목이 틀린 상품(overrides())은 다른 브랜드라도 우리가 정한다.
 		// 「[펠릭스] 더블라임 20,000원」이 이름이 바뀐 라임 알로에(#254)에 남아 새 더블라임(#4701)과 제목이 같았다.
-		return overridden( $p ) ? plain_title( $p, $n ) : '';
+		return overridden( $p ) || in_array( $brand, plain_title_brands(), true ) ? plain_title( $p, $n ) : '';
 	}
 	$line  = trim( (string) preg_replace( '/\s*리퀴드\s*$/u', '', $n['brand'] ) );   // 노보 · 노보 블랙
 	$title = $n['title'];
@@ -744,6 +756,21 @@ function product_title( \WC_Product $p ): string {
  */
 function plain_title( \WC_Product $p, array $n ): string {
 	$title = (string) $n['title'];
+	$pb    = per_bottle( $p );
+	if ( $pb['qty'] > 1 && (float) $p->get_price() > 0 && false === mb_strpos( $title, '대량' ) ) {
+		// 묶음 — `펠릭스 액상 5병 묶음 89,000원 · 더블 라임 · 라임 알로에 골라 담기 입호흡 | 액상덕후`.
+		$fl = trim( (string) preg_replace( '/\s*\([^)]*\)|\s*\d+\s*병.*$/u', '', $title ) );
+		$fl = trim( (string) preg_replace( '/\s*[+\/,]\s*/u', ' · ', $fl ), ' ·' );
+		$kind = '';
+		foreach ( cat_names( $p ) as $c ) {
+			if ( preg_match( '/입호흡|폐호흡/u', $c, $k ) ) {
+				$kind = $k[0];
+				break;
+			}
+		}
+		$parts = array( $n['brand'] . ' 액상 ' . $pb['qty'] . '병 묶음', number_format( (float) $p->get_price() ) . '원', '' !== $fl ? '· ' . $fl . ' 골라 담기' : '', $kind );
+		return trim( implode( ' ', array_filter( $parts, fn( $x ) => '' !== trim( (string) $x ) ) ) ) . ' | ' . get_bloginfo( 'name' );
+	}
 	$spec  = '';
 	if ( preg_match( '/\(([^)]*)\)/u', $title, $m ) ) {
 		$spec = trim( (string) preg_replace( '/\s+/u', ' ', str_replace( '/', ' ', $m[1] ) ) );

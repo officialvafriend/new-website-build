@@ -1,0 +1,258 @@
+{
+ "date": "2026-10-30",
+ "where": "naver 웹 탭(ssc=tab.ur.all) — blog/cafe 섞임, n=첫 쪽 결과 수, web_hits=블로그·카페·지식인 뺀 순위",
+ "ranks": {
+  "노보 10+1": {
+   "n": 19,
+   "hits": [
+    [
+     1,
+     "https://duck-hoo.com/product/노보-리퀴드-101-금액-120000원/"
+    ],
+    [
+     2,
+     "https://duck-hoo.com/product/초특가-노보-10병-병당-8000원-금액-80000원/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    2
+   ],
+   "first": "https://duck-hoo.com/product/노보-리퀴드-101-금액-120000원/"
+  },
+  "노보 그린펀치": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/apple0006175/224452419118"
+  },
+  "노보 데저트": {
+   "n": 20,
+   "hits": [
+    [
+     12,
+     "https://duck-hoo.com/product/노보-데저트-9-8mg-30ml/"
+    ],
+    [
+     19,
+     "https://duck-hoo.com/product/노보-블랙-데저트-9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    5,
+    11
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 리퀴드": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://www.novokorea.com/"
+  },
+  "노보 블랙 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 블랙멘솔": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 아메리카노": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://cafe.naver.com/gimhaezumma/2698917?art=ZXh0ZXJuYWwtc2VydmljZS1uYXZlci1zZWFyY2gtY2F"
+  },
+  "노보 액상 가격": {
+   "n": 20,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ],
+    [
+     18,
+     "https://duck-hoo.com/brand/novo/"
+    ]
+   ],
+   "web_hits": [
+    2,
+    10
+   ],
+   "first": "https://juiceshop.kr/"
+  },
+  "노보 액상 구매": {
+   "n": 20,
+   "hits": [
+    [
+     16,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ]
+   ],
+   "web_hits": [
+    9
+   ],
+   "first": "https://blog.naver.com/zerogosan/224455701168"
+  },
+  "노보 액상 재고": {
+   "n": 20,
+   "hits": [
+    [
+     7,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ],
+    [
+     9,
+     "https://duck-hoo.com/"
+    ]
+   ],
+   "web_hits": [
+    1,
+    3
+   ],
+   "first": "https://blog.naver.com/8vape/224450050792"
+  },
+  "노보 액상 종류": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 액상 파는곳": {
+   "n": 20,
+   "hits": [
+    [
+     20,
+     "https://duck-hoo.com/liquid-guide/"
+    ]
+   ],
+   "web_hits": [
+    9
+   ],
+   "first": "https://blog.naver.com/ecp_dongtan/224306225034"
+  },
+  "노보 액상 품절": {
+   "n": 20,
+   "hits": [
+    [
+     6,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ]
+   ],
+   "web_hits": [
+    2
+   ],
+   "first": "https://blog.naver.com/8vape/224450050792"
+  },
+  "노보 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 엠에스블랜드": {
+   "n": 20,
+   "hits": [
+    [
+     14,
+     "https://duck-hoo.com/product/노보-엠에스블랜드-9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    6
+   ],
+   "first": "https://m.enuri.com/m/search.jsp?keyword=노보+엠에스블랜드"
+  },
+  "노보 코코넛커피": {
+   "n": 20,
+   "hits": [
+    [
+     8,
+     "https://duck-hoo.com/product/노보-블랙-코코넛커피-9-8mg-30ml/"
+    ],
+    [
+     10,
+     "https://duck-hoo.com/product/노보-코코넛커피-9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    2,
+    4
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/노보-코코넛커피-액상-30ml/"
+  },
+  "노보 쿠바시가": {
+   "n": 20,
+   "hits": [
+    [
+     10,
+     "https://duck-hoo.com/brand/novo/"
+    ],
+    [
+     14,
+     "https://duck-hoo.com/product/노보-블랙-쿠바시가-9-8mg-30ml/"
+    ]
+   ],
+   "web_hits": [
+    4,
+    7
+   ],
+   "first": "https://xn--o80bv1to3ck4f.com/shop/노보-쿠바시가-액상-30ml/"
+  },
+  "노보 타박멘솔": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보리퀴드": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://www.novokorea.com/"
+  },
+  "노보액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://xn--o80bv1to3ck4f.com/"
+  },
+  "노보 단종": {
+   "n": 20,
+   "hits": [
+    [
+     12,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ]
+   ],
+   "web_hits": [
+    8
+   ],
+   "first": "https://winter24.kr/novo/"
+  },
+  "노보 액상 단종": {
+   "n": 20,
+   "hits": [
+    [
+     2,
+     "https://duck-hoo.com/product-category/novo-liquid/"
+    ]
+   ],
+   "web_hits": [
+    2
+   ],
+   "first": "https://winter24.kr/novo/"
+  },
+  "노보 대체 액상": {
+   "n": 20,
+   "hits": [],
+   "web_hits": [],
+   "first": "https://blog.naver.com/8vape/224457001602"
+  }
+ }
+}

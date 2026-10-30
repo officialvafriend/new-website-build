@@ -1290,16 +1290,26 @@ $GLOBALS['__products'][907] = new WC_Product(907, '[노보 블랙] 엠에스블�
 $ok(($S.'product_title')($GLOBALS['__products'][905]) === '노보 타박멘솔 액상 입호흡 9.8mg 30ml 13,000원 재고 있음 | 액상덕후', '노보 낱병 제목: 브랜드 · 맛 · 「맛 액상」 · 입호흡 · 규격 · 값');
 $ok(($S.'product_title')($GLOBALS['__products'][906]) === '노보 블랙 액상 10+1 묶음 11병 130,000원 입호흡 재고 있음 | 액상덕후', '노보 10+1 제목: 「리퀴드」를 떼고 병 수 · 값');
 $ok(($S.'product_title')($GLOBALS['__products'][907]) === '노보 블랙 엠에스블랜드 액상 입호흡 9.8mg 30ml 13,500원 재고 있음 | 액상덕후', '노보 블랙 낱병 제목');
-$ok(($S.'product_title')($GLOBALS['__products'][901]) === '', '펠릭스는 제목을 안 정한다 (AIOSEO 값 그대로)');
+$ok(str_starts_with(($S.'product_title')($GLOBALS['__products'][901]), '펠릭스 ') && str_ends_with(($S.'product_title')($GLOBALS['__products'][901]), '원 | 액상덕후'), '펠릭스는 우리 제목 (2026-10-30 — 값이 보이는 제목)');
+$GLOBALS['__filters']['duckhoo_plain_title_brands'] = [fn($v) => []];
+$ok(($S.'product_title')($GLOBALS['__products'][901]) === '', '펠릭스 제목 끄기 (duckhoo_plain_title_brands 비움)');
+$GLOBALS['__products'][909] = new WC_Product(909, '[펠릭스] 더블 라임+라임 알로에 5병 묶음 이벤트', 89000);
+$GLOBALS['__pterms'][909] = [(object)['name'=>'입호흡 액상']];
+$ok(($S.'product_title')($GLOBALS['__products'][909]) === '', '끄면 묶음도 AIOSEO 그대로');
+unset($GLOBALS['__filters']['duckhoo_plain_title_brands']);
+$ok(($S.'product_title')($GLOBALS['__products'][909]) === '펠릭스 액상 5병 묶음 89,000원 · 더블 라임 · 라임 알로에 골라 담기 입호흡 | 액상덕후', '펠릭스 묶음 제목: 「펠릭스 액상 5병 묶음 값 · 맛 골라 담기」');
+$GLOBALS['__brand_items_stub'] = true;
+$ok(count(('Duckhoo\\Redesign\\Seo\\Brand\\bundle_flavors')($GLOBALS['__products'][909])) === 2, '묶음 이름에서 맛 둘을 읽는다');
+unset($GLOBALS['__products'][909], $GLOBALS['__pterms'][909], $GLOBALS['__brand_items_stub']);
 $GLOBALS['__qid'] = 905;
 $ok(($S.'title')('[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후') === '노보 타박멘솔 액상 입호흡 9.8mg 30ml 13,000원 재고 있음 | 액상덕후', 'title 필터가 노보 상품에서 우리 제목을 준다');
 $tags = ($S.'social_title')(['og:title' => '[노보] 타박멘솔 (9.8mg / 30ml) - 액상덕후', 'og:type' => 'product']);
 $ok($tags['og:title'] === '노보 타박멘솔 액상 입호흡 9.8mg 30ml 13,000원 재고 있음 | 액상덕후' && $tags['og:type'] === 'product' && !isset($tags['twitter:title']), 'og:title 만 바꾸고 없는 칸은 만들지 않는다');
 $GLOBALS['__qid'] = 901;
-$ok(($S.'title')('[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후') === '[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후', '펠릭스 제목은 AIOSEO 값 그대로');
+$ok(str_starts_with(($S.'title')('[펠릭스] 더블라임 20,000원 입호흡 액상 | 액상덕후'), '펠릭스 '), '펠릭스 제목은 우리 것 (2026-10-30)');
 // 2026-10-09 — 이름이 「라임 알로에」로 바뀐 #254 (주소는 옛 더블라임). 손으로 쓴 「더블라임」 제목 · 설명을 우리가 덮는다.
 $GLOBALS['__products'][908] = new WC_Product(908, '[펠릭스] 라임 알로에 (9.8mg / 30ml)', 20000);
-$GLOBALS['__slugs'][908] = rawurlencode('펠릭스-더블라임-9-8mg-30ml');
+$GLOBALS['__slugs'][908] = rawurlencode('펠릭스-라임-알로에-9-8mg-30ml');   // 2026-10-30 주소 맞바꿈
 $GLOBALS['__pterms'][908] = [(object)['name'=>'타격감'], (object)['name'=>'입호흡 액상']];
 $ok(($S.'product_title')($GLOBALS['__products'][908]) === '펠릭스 라임 알로에 입호흡 액상 9.8mg 30ml 20,000원 | 액상덕후', '틀린 손글 목록의 펠릭스는 우리 제목 (분류의 입호흡 · 규격 · 값)');
 $GLOBALS['__qid'] = 908;
@@ -1400,7 +1410,7 @@ $_POST = []; $GLOBALS['__can'] = false;
 require_once dirname(__DIR__, 2).'/includes/seo-texts.php';
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][901] = rawurlencode('펠릭스-더블-라임-9-8mg-30ml');
-$ok(str_starts_with(($S.'hand_text')($GLOBALS['__products'][901]), '라임을 두 겹'), '상자가 비면 승인된 글을 쓴다 (slug 는 퍼센트 인코딩돼 있어도)');
+$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][901]), '라임을 두 겹'), '상자가 비면 승인된 글을 쓴다 (slug 는 퍼센트 인코딩돼 있어도)');
 ob_start(); ($S.'render_text')($GLOBALS['__products'][901]); $h = ob_get_clean();
 $ok(str_contains($h, 'dhp-about') && str_contains($h, '입호흡(MTL)'), '화면에도 그린다');
 $GLOBALS['__pmeta'][901]['_dhr_text'] = '사장님이 상자에 쓴 글';
@@ -1408,7 +1418,7 @@ $ok(($S.'hand_text')($GLOBALS['__products'][901]) === '사장님이 상자에 �
 $GLOBALS['__pmeta'][901] = [];
 $GLOBALS['__slugs'][902] = '노보-10-1';
 $GLOBALS['__slugs'][903] = rawurlencode('노보-블랙-블랙멘솔-9-8mg-30ml');
-$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 69, '상품 글이 실렸다 (주소 69개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다, 2026-09-28 서치콘솔 6개 추가)');
+$ok(str_contains(($S.'hand_text')($GLOBALS['__products'][903]), '노보보다') && count(('Duckhoo\\Redesign\\Seo\\Texts\\texts')()) === 71, '상품 글이 실렸다 (주소 71개 — 이름이 다른 상품은 옛 주소 · 새 주소 둘 다, 2026-09-28 서치콘솔 6개 추가)');
 $ok(($S.'hand_text')($GLOBALS['__products'][902]) === '', '목록에 없는 상품은 그대로 비어 있다');
 foreach (('Duckhoo\\Redesign\\Seo\\Texts\\texts')() as $slug => $txt) { foreach (['건강','금연','순하','해롭'] as $bad) { $ok(!str_contains($txt, $bad), "「{$bad}」 없음: {$slug}"); } $ok(mb_strlen($txt) <= 160, "160자 이내: {$slug}"); }
 
