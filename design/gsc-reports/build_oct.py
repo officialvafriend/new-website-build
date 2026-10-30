@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""10월 검색 마감 보고 (구글 · 네이버) — 표지 + 5장, 연한 파랑. 네이버 보고서(design/naver-reports/build.py)와 같은 틀.
+"""10월 검색 마감 보고 (구글 · 네이버) — 표지 + 6장, 처음 읽는 사람 기준, 연한 파랑. 네이버 보고서(design/naver-reports/build.py)와 같은 틀.
 쓰는 법: python3 -I build_oct.py <10월 CSV 폴더> <9월 CSV 폴더> <out.html> [네이버 날짜별 CSV] [순위 폴더]"""
 import csv, re, sys, datetime
 
@@ -69,7 +69,7 @@ NOTSL = (O[0] - SL[0], O[1] - SL[1])
 
 def pg(u): return OP.get(u, (0, 0, 0))
 FIX = [  # 주소, 보이는 이름, 지금 검색 결과 제목, 왜 덜 눌리나
-    ('/product/펠릭스-더블라임-9-8mg-30ml/', '펠릭스 더블라임 (옛 주소)', '펠릭스 라임 알로에 … 20,000원', '「더블라임」 검색에 뜨던 이 주소가 10월에는 라임 알로에 화면이었습니다'),
+    ('/product/펠릭스-더블라임-9-8mg-30ml/', '펠릭스 더블라임 주소', '펠릭스 라임 알로에 … 20,000원', '「더블라임」 검색에 뜨던 이 주소가 10월에는 라임 알로에 화면이었습니다 (10월 30일에 바로잡음)'),
     ('/product/디톡스-톡스-알로에베라-모드-액상-3mg-60ml/', '디톡스 알로에베라', '[디톡스] 톡스 알로에베라 모드 액상 (3MG/60ml) - 액상덕후', '제목에 값이 없습니다 (21,000원)'),
     ('/product/젤로-크리스탈-젤로-크리스탈-전자담배-액상-5병-증/', '젤로 크리스탈 5병', '[젤로 크리스탈] 젤로 크리스탈 기기 + 액상 5병 증정 이벤트 ! - 액상덕후', '「젤로 크리스탈 가격」으로 71번 보였는데 제목에 값(69,000원)이 없습니다'),
     ('/product/마르키사-오리지날-9-8mg-30ml/', '마르키사 라즈베리', '기본 제목 (값 없음)', '주소는 「오리지날」인데 상품은 라즈베리입니다'),
@@ -204,7 +204,7 @@ table.fx td.why {{ font-size: 10.5pt; color: #374151; width: 42%; }}
 .src {{ font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; }} .src p {{ margin: 0 0 2pt; }}
 </style>"""
 
-TOTAL = 6 if NAV else 5
+TOTAL = 7 if NAV else 6
 def frame(no, title, body):
     return f'''<section class="page">
   <div class="run"><span>10월 검색 마감 보고</span><span>{no} · {title}</span></div>
@@ -232,11 +232,14 @@ cover = f'''<section class="page cover">
 
 p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   <h2>한 장으로 보면</h2>
+  <div class="box" style="margin:0 0 4pt"><div class="t">이 보고서는</div>
+    <p>액상덕후(duck-hoo.com)는 전자담배 액상을 파는 온라인몰입니다. 손님이 돈 들이지 않고 우리 사이트를 찾아오는 길이 구글과 네이버 검색입니다.</p>
+    <p>10월 한 달 동안 검색 결과에 우리 사이트가 몇 번 보였는지, 그중 몇 번 눌러 들어왔는지, 그 숫자를 움직이려고 무엇을 했는지 적었습니다. 견주는 기준은 지난달(9월)입니다.</p></div>
   <div class="rows">
     <div class="row"><span class="k ok">잘된 것</span><p>이름을 모르고 검색해 들어온 횟수 <b>{w(SN[0])}번 → {w(ON[0])}번</b><small>노보 브랜드 페이지 {w(SP.get('/brand/novo/', (0,))[0])} → {w(pg('/brand/novo/')[0])}번 · 타격감 분류 {w(SP.get('/product-category/타격감/', (0,))[0])} → {w(pg('/product-category/타격감/')[0])}번 · 노보 블랙 엠에스블랜드 {w(SP.get('/product/노보-블랙-엠에스블랜드-9-8mg-30ml/', (0,))[0])} → {w(pg('/product/노보-블랙-엠에스블랜드-9-8mg-30ml/')[0])}번</small></p></div>
     <div class="row"><span class="k mid">그대로</span><p>구글로 들어온 전체 횟수 <b>{w(S[0])}번 → {w(O[0])}번</b> ({(O[0] / S[0] - 1) * 100:+.0f}%)<small>가게 이름(「액상덕후」)으로 검색해 들어온 횟수가 {w(SB[0])} → {w(OB[0])}번으로 줄어 새로 늘어난 몫이 그만큼 가려졌습니다</small></p></div>
-    <div class="row"><span class="k bad">아쉬운 것</span><p>누른 비율 <b>{S[2]:.1f}% → {O[2]:.1f}%</b><small>새로 보이기 시작한 검색은 절반 넘게 5~10위 자리라 잘 안 눌립니다 (2쪽)</small></p></div>
-    <div class="row"><span class="k next">11월</span><p><b>상품 화면 제목에 값과 「액상」을 넣기</b><small>그렇게 바꾼 노보 상품 화면은 다른 상품보다 {NOVO[2] / PROD[2]:.1f}배 잘 눌립니다 (3쪽)</small></p></div>
+    <div class="row"><span class="k bad">아쉬운 것</span><p>누른 비율 <b>{S[2]:.1f}% → {O[2]:.1f}%</b><small>새로 보이기 시작한 검색은 절반 넘게 5~10위 자리라 잘 안 눌립니다 (3쪽)</small></p></div>
+    <div class="row"><span class="k next">11월</span><p><b>상품 화면 제목에 값과 「액상」을 넣기</b><small>그렇게 바꾼 노보 상품 화면은 다른 상품보다 {NOVO[2] / PROD[2]:.1f}배 잘 눌립니다 (4쪽)</small></p></div>
   </div>
   <h3>구글로 들어온 횟수, 어떤 검색에서 왔나</h3>
   <div class="bars">
@@ -247,7 +250,23 @@ p1 = frame(1, '한눈에', f'''  <div class="eb">1 · 한눈에</div>
   </div>
   <p class="g" style="font-size:10.5pt;margin:0">구글이 어떤 말로 검색했는지 알려 주는 몫만 셌습니다 (9월 {w(SB[0] + SN[0])}번 · 10월 {w(OB[0] + ON[0])}번). 나머지는 구글이 검색어를 감춥니다.</p>''')
 
-p2 = frame(2, '누른 비율', f'''  <div class="eb">2 · 누른 비율이 왜 반이 됐나</div>
+pw = frame(2, '10월에 한 일', f'''  <div class="eb">2 · 10월에 한 일</div>
+  <h2>검색 결과에 보이는 제목과 글을<br>손님이 치는 말에 맞췄습니다</h2>
+  <p class="lead">상품 · 값 · 주문 과정은 그대로 두고 검색엔진이 읽는 제목 · 설명 · 안내 글만 고쳤습니다. 검색엔진이 고친 페이지를 다시 읽기까지 며칠에서 몇 주가 걸려, 10월 30일 작업은 이 보고서 숫자에 아직 없습니다.</p>
+  <div class="box" style="margin:0 0 6pt"><div class="t">먼저 알아 둘 것</div>
+    <p>· <b>노보</b>는 9월 매출 1위 액상 브랜드입니다. 10월에 단종 소식이 퍼져 다른 가게는 품절이 이어졌고 우리는 재고가 있어 10월 작업의 상당 부분이 노보입니다.</p>
+    <p>· 9월에 해 둔 두 가지가 10월 숫자에 이어집니다. 9월 21일 노보 상품 5개의 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿨고, 9월 28일 전 상품 가격표 페이지(/price/)를 만들었습니다.</p></div>
+  <div class="rows tight">
+    <div class="row"><span class="k mid">10월 1일</span><p>노보 재고가 있다는 것을 검색에 보이게 했습니다<small>노보 상품 제목 끝에 「재고 있음」, 첫 화면 맨 위에 노보 상품 줄, 노보 목록에 자주 묻는 질문</small></p></div>
+    <div class="row"><span class="k mid">10월 1일</span><p>「전담 액상」 「전자담배 액상」 같은 넓은 검색어를 노렸습니다<small>첫 화면과 입호흡 · 폐호흡 목록의 제목 · 설명을 손님이 치는 말로 고치고, 안내 글 두 장(액상 고르는 법, 입호흡과 폐호흡의 차이)을 새로 냈습니다</small></p></div>
+    <div class="row"><span class="k mid">10월 2일</span><p>브랜드 페이지 30장의 설명을 다시 썼습니다<small>같은 문장에 이름만 바꿔 넣던 것을 그 브랜드의 종류 수 · 규격 · 값으로 바꿨습니다. 상품이 하나뿐인 9장은 검색에서 뺐습니다</small></p></div>
+    <div class="row"><span class="k mid">10월 6일</span><p>노보 상품끼리 맛 이름을 늘어놓던 링크를 걷었습니다<small>같은 맛 이름이 여러 페이지에 깔리자 네이버에서 「노보 타박멘솔」이 15위 밖으로 밀렸습니다. 걷고 나서 10월 9일에 2위로 돌아왔습니다</small></p></div>
+    <div class="row"><span class="k mid">10월 19일</span><p>제목이 비어 있던 곳을 채웠습니다<small>기본 제목뿐이던 분류 6개에 제목 · 설명을 쓰고, 사진 설명 11장의 니코틴 표기(0.98mg → 9.8mg)를 바로잡았습니다</small></p></div>
+    <div class="row"><span class="k mid">10월 20일</span><p>「종류 · 가격」을 묻는 검색에 답하는 표를 넣었습니다<small>노보 목록과 브랜드 페이지마다 종류 · 가격 표와 자주 묻는 질문, 제목에는 기준 날짜를 붙였습니다</small></p></div>
+    <div class="row"><span class="k mid">10월 30일</span><p>펠릭스 검색을 바로잡았습니다<small>「펠릭스 더블라임」 검색에 뜨던 주소가 다른 맛(라임 알로에) 화면이어서 두 상품의 주소를 맞바꿨습니다. 펠릭스 검색 제목에는 5병 묶음 값을 넣었습니다</small></p></div>
+  </div>''')
+
+p2 = frame(3, '누른 비율', f'''  <div class="eb">3 · 누른 비율이 왜 반이 됐나</div>
   <h2>잘 안 눌리는 자리에<br>많이 보이기 시작했습니다</h2>
   <p class="lead">가게 이름으로 검색한 사람은 절반 가까이 누르지만 처음 보는 가게가 5~10위에 있으면 거의 누르지 않습니다. 10월에는 이름 모르고 온 검색에서 보인 횟수가 {ON[1] / SN[1]:.1f}배로 늘었습니다.</p>
   {mix_table()}
@@ -262,9 +281,9 @@ p2 = frame(2, '누른 비율', f'''  <div class="eb">2 · 누른 비율이 왜 �
   <div class="chart">{chart()}
     <div class="legend"><span><i></i>하루 들어온 횟수 (왼쪽)</span><span><i class="l"></i>하루 보인 횟수 (오른쪽)</span><span class="g">10/29 는 구글이 아직 덜 채움</span></div></div>''')
 
-p3 = frame(3, '덜 눌리는 화면', f'''  <div class="eb">3 · 어느 화면이 덜 눌리나</div>
+p3 = frame(4, '덜 눌리는 화면', f'''  <div class="eb">4 · 어느 화면이 덜 눌리나</div>
   <h2>제목에 값이 보이는 상품 화면이<br>{NOVO[2] / PROD[2]:.1f}배 잘 눌립니다</h2>
-  <p class="lead">9월 21일부터 노보 상품만 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿔 두었습니다. 다른 상품은 기본 제목 그대로입니다. 평균 순위는 둘이 비슷합니다.</p>
+  <p class="lead">노보 상품 5개는 9월 21일에 검색 결과 제목을 「맛 + 액상 + 값 + 재고」로 바꿨습니다(2쪽). 다른 상품은 기본 제목 그대로입니다. 평균 순위는 둘이 비슷합니다.</p>
   <div class="vs">
     <div class="vsb on"><div class="l">노보 상품 화면 {NOVO[4]}개 · 바꾼 제목</div><div class="v">{NOVO[2]:.1f}%</div><div class="d">{w(NOVO[1])}번 보여 {NOVO[0]}번 들어옴 · 평균 {NOVO[3]:.1f}위</div>
       <code>노보 블랙 타박멘솔 액상 입호흡 9.8mg 30ml 13,500원 재고 있음</code></div>
@@ -275,7 +294,7 @@ p3 = frame(3, '덜 눌리는 화면', f'''  <div class="eb">3 · 어느 화면�
   {fix_table()}
   <div class="box"><div class="t">값을 묻는 검색도 그냥 지나갑니다</div>
     <p>「액상 가격」 · 「입호흡 액상 가격」 · 「젤로 크리스탈 가격」처럼 <b>값을 묻는 검색이 {w(PRICE[1])}번 보였고 {PRICE[0]}번 들어왔습니다.</b> 「입호흡 액상 가격」은 평균 2.7위인데도 한 번도 안 들어왔습니다.</p>
-    <p>9월 말에 만든 전 상품 가격표(/price/)는 10월에 {P_PRICE[1]}번만 보였습니다. 구글이 아직 그 화면을 값 검색의 답으로 보지 않습니다.</p></div>''')
+    <p>9월 28일에 만든 전 상품 가격표 페이지(/price/)는 10월에 {P_PRICE[1]}번만 보였습니다. 구글이 아직 그 화면을 값 검색의 답으로 보지 않습니다.</p></div>''')
 
 # ── 네이버 (서치어드바이저 날짜별 합계 + 순위 측정) ──
 pn = ''
@@ -298,10 +317,23 @@ if NAV:
     # 순위
     cats = {'same': [], 'blog': [], 'store': [], 'gone': []}
     seen = set()
-    for a, b in (('2026-10-26-buy.json', '2026-10-30-buy.json'), ('2026-10-27-novo.json', '2026-10-30-novo.json')):
+    END = {}
+    for b in ('2026-10-30-buy.json', '2026-10-30-novo.json'):
+        for q, v in json.load(open(os.path.join(RANKS, b)))['ranks'].items():
+            if v['n'] and q not in END: END[q] = v
+    ENDP = [v['hits'][0][0] if v['hits'] else 99 for v in END.values()]
+    NE, N1, N3, NF = len(END), sum(x == 1 for x in ENDP), sum(x <= 3 for x in ENDP), sum(x < 99 for x in ENDP)
+    A19 = {q: v for q, v in json.load(open(os.path.join(RANKS, '2026-10-19-all.json')))['ranks'].items() if v['n']}
+    COM = [q for q in END if q in A19]
+    F19, F30 = sum(bool(A19[q]['hits']) for q in COM), sum(bool(END[q]['hits']) for q in COM)
+    for a, b in (('2026-10-19-all.json', '2026-10-30-buy.json'), ('2026-10-19-all.json', '2026-10-30-novo.json')):
         A = json.load(open(os.path.join(RANKS, a)))['ranks']; B = json.load(open(os.path.join(RANKS, b)))['ranks']
         for q, v in B.items():
-            if q in seen or not v['n'] or not A.get(q, {}).get('hits'):
+            if q in seen or not v['n'] or not A.get(q, {}).get('n'):
+                continue
+            if not A[q]['hits']:
+                seen.add(q)
+                if v['hits']: cats['same'].append(q)
                 continue
             seen.add(q)
             xa = A[q]['hits'][0][0]; y = v['hits']; ya = y[0][0] if y else 99
@@ -319,34 +351,33 @@ if NAV:
         return h + '</tbody></table>'
     def chipsq(qs, cls=''):
         return f'<div class="chips {cls}">' + ''.join(f'<span>{q}</span>' for q in qs) + '</div>'
-    pn = frame(4, '네이버', f"""  <div class="eb">4 · 네이버</div>
+    pn = frame(5, '네이버', f"""  <div class="eb">5 · 네이버</div>
   <h2>네이버는 순위가 내려갔는데도<br>들어온 횟수는 매주 늘었습니다</h2>
   <p class="lead">네이버 서치어드바이저 날짜별 합계(9월 30일 ~ 10월 29일)로 봤습니다. 네이버로는 하루 {NDAY:.0f}번 들어와 구글(하루 {GDAY:.0f}번)의 {NDAY / GDAY:.1f}배입니다.</p>
   {wtab()}
-  <h3>순위는 왜 내려갔나</h3>
-  <p style="margin:0 0 6pt;font-size:11.5pt">손님이 칠 만한 검색어 {NQ}개를 10월 26~27일과 30일에 같은 방법으로 쟀습니다. <b>오르거나 그대로 {len(cats['same'])}개 · 내려감 {NQ - len(cats['same'])}개</b>입니다.</p>
+  <h3>10월 말 네이버 검색 자리</h3>
+  <p style="margin:0 0 6pt;font-size:11.5pt">손님이 칠 만한 검색어 {NE}개를 10월 30일 네이버 웹 검색에서 쟀습니다. <b>첫 쪽(20개)에 {NF}개, 3위 안에 {N3}개, 1위는 {N1}개</b>입니다. 10월 19일에도 잰 {len(COM)}개만 견주면 첫 쪽에 든 검색어가 {F19}개에서 {F30}개로 줄었습니다.</p>
   <div class="rows tight" style="margin:0 0 8pt">
     <div class="row"><span class="k mid">블로그 {len(cats['blog'])}</span><p>가게 사이트끼리는 그대로인데 <b>블로그 · 카페 글이 위로</b> 들어왔습니다<small>{' · '.join(cats['blog'][:4])}</small></p></div>
     <div class="row"><span class="k mid">밀림 {len(cats['store'])}</span><p>다른 가게 페이지에 한두 자리 밀렸습니다<small>{' · '.join(cats['store'][:5])} …</small></p></div>
-    <div class="row"><span class="k bad">첫 쪽 밖 {len(cats['gone'])}</span><p>첫 쪽(20개)에서 빠졌습니다. <b>{len(GONE_NOVO)}개가 노보 말</b>입니다<small>단종 소식 뒤 노보 블로그 · 카페 글이 몰리고 노보 공식 판매처가 새로 들어와 자리를 채웠습니다</small></p></div>
-    <div class="row"><span class="k ok">지킨 것 {len(cats['same'])}</span><p>값 · 묶음을 묻는 말은 1~2위 그대로입니다<small>{' · '.join(cats['same'][:7])}</small></p></div>
+    <div class="row"><span class="k bad">첫 쪽 밖 {len(cats['gone'])}</span><p>첫 쪽(20개)에서 빠졌습니다. <b>{len(GONE_NOVO)}개가 노보 말</b>입니다<small>10월 중순 노보 단종 소식이 퍼진 뒤 노보 블로그 · 카페 글이 몰리고 노보 공식 판매처가 새로 들어와 자리를 채웠습니다</small></p></div>
+    <div class="row"><span class="k ok">지킨 것 {len(cats['same'])}</span><p>오르거나 같은 자리를 지켰습니다<small>{' · '.join(cats['same'][:7])}</small></p></div>
   </div>
   <div class="box"><div class="t">읽는 법</div>
-    <p>· 우리 페이지는 네이버에 그대로 잡혀 있습니다(사이트 검색으로 확인). 벌점이나 수집 문제는 아닙니다.</p>
-    <p>· 빠진 자리는 대부분 「노보 액상」 「노보 타박멘솔」처럼 이름을 묻는 말입니다. 사려는 말(가격 · 10병 · 묶음)은 지켰습니다. 그래서 순위가 내려간 주에도 들어온 횟수는 늘었습니다.</p>
+    <p>우리 페이지는 네이버에 그대로 잡혀 있어(사이트 검색으로 확인) 벌점이나 수집 문제는 아닙니다. 빠진 것은 대부분 「노보 액상」처럼 노보 이름을 묻는 말입니다. 「노보 10+1 가격」 「액상 가격표」처럼 사려는 말은 1~3위에 있어 순위가 내려간 주에도 들어온 횟수는 늘었습니다.</p>
 </div>
-  <p class="g" style="font-size:10pt;margin:6pt 0 0">하루에 잰 순위라 한두 자리씩 흔들립니다. 11월 2일에 같은 말로 다시 잽니다.{' 10월 ' + ', '.join(str(int(g[3:])) + '일' for g in gap) + '은 네이버 자료가 비어 빼고 셌습니다.' if gap else ''}</p>""")
+  <p class="g" style="font-size:10pt;margin:6pt 0 0">순위는 하루에 잰 값이라 한두 자리씩 흔들립니다. 11월에도 같은 검색어로 잽니다.{' 10월 ' + ', '.join(str(int(g[3:])) + '일' for g in gap) + '은 네이버 자료가 비어 빼고 셌습니다.' if gap else ''}</p>""")
 
 p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 11월에 할 일</div>
-  <h2>누른 비율을 올리는 일 넷</h2>
+  <h2>누른 비율을 올리는 일 셋</h2>
   <div class="todo"><span class="no">1</span><div><h3>모든 상품 제목을 노보처럼 바꾸기</h3><p>「브랜드 맛 + 액상 + 입호흡/폐호흡 + 용량 + <b>값</b> + 재고」. 값은 상품에서 그때그때 읽으므로 값이 바뀌어도 틀리지 않습니다. 디톡스 · 젤로 크리스탈 · 마르키사 · 흑염룡부터.</p></div></div>
-  <div class="todo"><span class="no">2</span><div><h3>「더블라임」 주소 바로잡기 <span class="done">10월 30일에 했음</span></h3><p>구글이 「펠릭스 더블라임」 검색에 띄우던 주소가 <b>라임 알로에</b> 화면이었습니다 ({w(pg('/product/펠릭스-더블라임-9-8mg-30ml/')[1])}번 보여 {pg('/product/펠릭스-더블라임-9-8mg-30ml/')[0]}번 들어옴). 두 상품의 주소를 맞바꿔 이제 그 주소가 더블라임을 가리킵니다. 펠릭스 제목에는 값과 「5병 묶음」을 넣었습니다.</p></div></div>
-  <div class="todo"><span class="no">3</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목과 설명 첫머리에 「액상 가격」을 그대로 넣고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
-  <div class="todo"><span class="no">4</span><div><h3>검색 결과 밑 두 줄 설명에 「오늘 출고」</h3><p>상품 설명 첫 문장에 값 · 3만원 이상 무료배송 · 평일 오후 4시 전 입금 시 당일 출고를 넣습니다. 같은 자리의 다른 가게보다 누를 이유가 하나 더 생깁니다.</p></div></div>
+  <div class="todo"><span class="no">2</span><div><h3>값 검색은 가격표 한 장으로 받기</h3><p>가격표 제목과 설명 첫머리에 「액상 가격」을 그대로 넣고 기준 날짜를 붙입니다. 첫 화면 · 입호흡/폐호흡 목록에서 가격표로 가는 길을 넓힙니다.</p></div></div>
+  <div class="todo"><span class="no">3</span><div><h3>검색 결과 밑 두 줄 설명에 「오늘 출고」</h3><p>상품 설명 첫 문장에 값 · 3만원 이상 무료배송 · 평일 오후 4시 전 입금 시 당일 출고를 넣습니다. 같은 자리의 다른 가게보다 누를 이유가 하나 더 생깁니다.</p></div></div>
   <h3 style="margin-top:2pt">하지 않을 것</h3>
   <ul class="not">
     <li>남의 가게 이름(액상82 · 노보마트 · 딜리퀴드)을 노리는 글</li>
     <li>가게 이름 검색 밑의 링크를 비율 때문에 지우는 일 (이름을 친 손님에게는 쓸모가 있습니다)</li>
+    <li>노보 이름 검색에서 블로그를 이기려고 블로그를 따로 여는 일 (담배 광고 제한에 걸립니다)</li>
   </ul>
   <h3>12월 초에 볼 숫자 셋</h3>
   <div class="goals">
@@ -361,7 +392,7 @@ p4 = frame(TOTAL - 1, '11월에 할 일', f'''  <div class="eb">{TOTAL - 1} · 1
 
 html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>10월 검색 마감 보고</title>
 <link rel="stylesheet" href="../demo-src/pretendard.css">{STYLE}</head><body>
-{cover}{p1}{p2}{p3}{pn}{p4}
+{cover}{p1}{pw}{p2}{p3}{pn}{p4}
 </body></html>'''
 open(OUT, 'w', encoding='utf-8').write(html)
 print('O', O, 'S', S, 'OB', OB, 'ON', ON, 'SB', SB, 'SN', SN, 'MID', MID, 'NOVO', NOVO, 'PROD', PROD, 'SL', SL, 'COMP', COMPI, 'PRICE', PRICE)
