@@ -44,20 +44,37 @@ p1 = d.frame(1, '한눈에', f'''<h2>적립금이 함께 간 문자만 뚜렷하
 ])}
 <div class="box"><div class="t">「문자비의 70배 매출」로 읽지 않습니다</div><p>추출 파일의 효율 값(ROAS 70)은 받은 사람이 7일 안에 산 금액을 전부 문자 덕으로 센 값입니다. 보내기 전과 견주면 문자가 새로 만든 구매는 그보다 훨씬 적습니다.</p></div>''')
 
-body = []
-for dt, what, n, a, b, s, money in SENDS:
-    diff = a - b
-    body.append([dt, (f'<b>{what}</b>' if money else what), w(n), f'{a}명', f'{b}명',
-                 f'<b class="{"up" if diff > 0 else ("dn" if diff < 0 else "")}">{diff:+d}</b>', w(s)])
-body.append([LATE[0], LATE[1] + '<small>7일이 아직 안 지남</small>', w(LATE[2]), f'{LATE[3]}명', f'{LATE[4]}명', '–', '–'])
-p2 = d.frame(2, '문자별', f'''<h2>열 번 중 늘어난 것은 넷, 모두 작았습니다</h2>
-<p class="lead">문자를 보낸 날마다, 받은 사람이 받은 뒤 7일과 받기 전 7일에 각각 몇 명 샀는지입니다. 굵은 글씨는 적립금이나 지원금이 함께 간 문자입니다.</p>
-{table(['날짜', '무엇을 보냈나', '받은 사람', '보낸 뒤 7일', '보내기 전 7일', '차이', '보낸 뒤 매출(원)'], body, 'fx sm', left=2)}
-<p class="note">한 사람이 여러 문자를 받았으면 날마다 따로 셉니다. 그래서 날짜별 합은 위 164명보다 큽니다. 10월 20일은 노보 지원금 213명과 다른 명단이 같은 날 나가 섞였습니다. 10월 8일 · 23일 문자의 내용은 추출 파일에 없습니다.</p>
-<h3>돈이 걸린 문자를 14일로 보면</h3>
-{table(['', '받은 사람', '14일 안에 산 사람', '받기 전 14일', '쓴 적립금', '그 주문 매출'],
-       [[n, w(r), f'<b>{a}명</b>', f'{b}명', w(u) + '원', w(s) + '원'] for n, r, a, b, u, s in PTS], 'sm')}
-<p class="note">적립금 묶음은 사이트 원장으로 셌습니다(14일). 위 표의 7일 숫자와 기간이 달라 조금 다릅니다.</p>''')
+CSS2 = """<style>
+.sl { list-style: none; margin: 4pt 0 12pt; padding: 0; }
+.sl li { display: grid; grid-template-columns: 38pt 1fr 100pt 50pt; gap: 8pt; align-items: center; padding: 4.5pt 0; border-top: 1px solid #EEF2F7; font-size: 11pt; }
+.sl li:first-child { border-top: 0; }
+.sl .dt { color: #6B7280; font-size: 10pt; } .sl .w small { display: block; font-size: 9pt; color: #6B7280; }
+.sl .ba { text-align: right; font-size: 11pt; color: #6B7280; } .sl .ba b { color: #111; font-weight: 900; font-size: 12pt; }
+.pl { text-align: center; font-weight: 900; border-radius: 99pt; padding: 2pt 0; font-size: 10.5pt; background: #F1F5F9; color: #334155; }
+.pl.up { background: #E7F6EC; color: #1A7F37; } .pl.dn { background: #FEF3F2; color: #B42318; }
+.gh { font-size: 12pt; font-weight: 900; margin: 8pt 0 0; } .gh small { font-weight: 400; color: #6B7280; font-size: 9.5pt; margin-left: 6pt; }
+.big2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin: 6pt 0 8pt; }
+.big2 > div { border: 1px solid #DCE6F5; border-radius: 10pt; padding: 10pt 12pt; }
+.big2 .t { font-weight: 900; font-size: 11.5pt; } .big2 .v { font-size: 20pt; font-weight: 900; margin: 4pt 0 2pt; } .big2 .v small { font-size: 11pt; color: #6B7280; font-weight: 600; }
+.big2 p { margin: 0; font-size: 9.5pt; color: #6B7280; }
+</style>"""
+MX = max(max(x[3], x[4]) for x in SENDS)
+def li(dt, what, n, a, bb):
+    diff = a - bb
+    pc = 'up' if diff > 0 else 'dn' if diff < 0 else ''
+    return (f'<li><span class="dt">{dt}</span><span class="w">{what}<small>받은 사람 {w(n)}명</small></span>'
+            f'<span class="ba">{bb}명 → <b>{a}명</b></span>'
+            f'<span class="pl {pc}">{diff:+d}명</span></li>')
+money = [x for x in SENDS if x[6]]; plain = [x for x in SENDS if not x[6]]
+p2 = d.frame(2, '문자별', f'''{CSS2}<h2>적립금이 간 문자는 4번 중 3번 늘었고,<br>알림만 간 문자는 6번 중 5번 줄었습니다</h2>
+<p class="lead">문자마다 받은 사람 중 받기 전 7일 → <b>받은 뒤 7일</b>에 산 사람 수입니다. 오른쪽 알약이 그 차이입니다 (초록 = 늘어남, 빨강 = 줄어듦). 10월 27일 문자는 7일이 안 지나 뺐습니다.</p>
+<div class="gh">적립금 · 지원금이 함께 간 문자<small>{len(money)}번</small></div>
+<ul class="sl">{"".join(li(*x[:5]) for x in money)}</ul>
+<div class="gh">알림만 간 문자<small>{len(plain)}번</small></div>
+<ul class="sl">{"".join(li(*x[:5]) for x in plain)}</ul>
+<div class="gh">적립금 두 번을 14일로 보면</div>
+<div class="big2">{"".join(f'<div><div class="t">{n}</div><div class="v">{bb}명 → {a}명</div><p style="margin-bottom:4pt">받기 전 14일 → 받은 뒤 14일에 산 사람</p><p>{w(r)}명이 받음 · 쓴 적립금 {w(u)}원 · 그 주문 매출 {w(m)}원</p></div>' for n, r, a, bb, u, m in PTS)}</div>
+''')
 
 p3 = d.frame(3, '11월', f'''<h2>11월에는 보내는 수를 줄이고 재는 법을 바꿉니다</h2>
 <p class="lead">10월에 쓴 돈은 문자비 {w(COST)}원과 손님이 실제로 쓴 적립금 {w(USED)}원입니다. 10월 27일 넣은 적립금 {w(TODAY[1])}원({TODAY[0]}명)의 결과는 11월 10일에 봅니다.</p>
