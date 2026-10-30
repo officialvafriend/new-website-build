@@ -1,0 +1,119 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>베이프렌드 10월 검색 · 플레이스</title>
+<link rel="stylesheet" href="../demo-src/pretendard.css"><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; } html, body { margin: 0; }
+body { font-family: "Pretendard Variable", Pretendard, sans-serif; color: #111; font-size: 12.5pt; line-height: 1.6; word-break: keep-all; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 16mm; position: relative; break-after: page; overflow: hidden; }
+.page:last-child { break-after: auto; }
+.run, .foot { position: absolute; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6B7280; }
+.run { top: 8mm; } .foot { bottom: 8mm; border-top: 1px solid #E5E9EE; padding-top: 4pt; } .foot b { color: #111; }
+.eb { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; letter-spacing: .04em; }
+h1 { font-size: 29pt; line-height: 1.25; margin: 0 0 10pt; font-weight: 900; }
+h2 { font-size: 22pt; line-height: 1.3; margin: 4pt 0 8pt; font-weight: 900; }
+h3 { font-size: 14pt; margin: 0 0 6pt; font-weight: 900; }
+.lead { font-size: 12.5pt; color: #374151; margin: 0 0 12pt; }
+.g { color: #6B7280; } .acc { color: #2F6FE0; }
+.cover { background: #0F172A; color: #fff; }
+.cover .eb { color: #9CC3FF; }
+.cover .big { font-size: 104pt; font-weight: 900; line-height: 1; margin: 24mm 0 10mm; }
+.cover .big small { font-size: 30pt; color: #9CC3FF; margin-left: 6pt; }
+.cover h1 { color: #fff; } .cover .lead { color: #CBD5E1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; margin-top: 16mm; }
+.fact { border-top: 2px solid #9CC3FF; padding-top: 8pt; }
+.fact .v { font-size: 25pt; font-weight: 900; line-height: 1.15; } .fact .l { font-size: 11pt; color: #CBD5E1; }
+.words { margin-top: 13mm; background: #1E293B; border-radius: 8pt; padding: 12pt 14pt; font-size: 11.5pt; color: #E2E8F0; }
+.words .t { font-weight: 900; color: #9CC3FF; margin-bottom: 4pt; } .words p { margin: 2pt 0; } .words b { color: #fff; }
+.meta { position: absolute; left: 18mm; right: 18mm; bottom: 15mm; font-size: 10pt; color: #94A3B8; display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 8pt; }
+.meta b { color: #fff; }
+.rows { margin: 6pt 0 14pt; }
+.row { display: grid; grid-template-columns: 74pt 1fr; gap: 12pt; padding: 10pt 0; border-bottom: 1px solid #E5E9EE; align-items: baseline; }
+.row .k { font-size: 11pt; font-weight: 900; border-radius: 99pt; padding: 2pt 0; text-align: center; }
+.k.ok { background: #EEF4FF; color: #2F6FE0; } .k.mid { background: #F1F5F9; color: #334155; } .k.bad { background: #FEF3F2; color: #B42318; } .k.next { background: #111; color: #fff; }
+.row p { margin: 0; font-size: 13pt; } .row p small { display: block; font-size: 11pt; color: #6B7280; }
+.bars { margin: 4pt 0 6pt; }
+.bar { display: grid; grid-template-columns: 120pt 1fr 60pt; align-items: center; gap: 8pt; margin: 5pt 0; font-size: 11.5pt; }
+.bar .f { height: 15pt; border-radius: 3pt; background: #CBD5E1; } .bar.on .f { background: #2F6FE0; }
+.bar .n { text-align: right; font-weight: 900; }
+table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 2pt 0 12pt; }
+th { text-align: left; font-size: 9.5pt; color: #6B7280; font-weight: 700; border-bottom: 2px solid #111; padding: 4pt 5pt; }
+td { border-bottom: 1px solid #E5E9EE; padding: 6pt 5pt; vertical-align: top; }
+.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fx td small { display: block; font-size: 9pt; color: #6B7280; font-weight: 400; margin-top: 1pt; }
+table.fx td.why { font-size: 10.5pt; color: #374151; width: 42%; }
+.chart { border: 1px solid #E5E9EE; border-radius: 8pt; padding: 10pt 12pt 6pt; margin: 4pt 0 10pt; }
+.legend { display: flex; gap: 16pt; font-size: 10pt; color: #374151; margin-top: 2pt; }
+.legend i { display: inline-block; width: 12pt; height: 9pt; border-radius: 2pt; background: #9CC3FF; margin-right: 4pt; vertical-align: -1pt; }
+.legend i.l { height: 0; border-top: 2px dashed #374151; border-radius: 0; background: none; vertical-align: 3pt; }
+.box { background: #EEF4FF; border: 1px solid #C7DCFF; border-radius: 8pt; padding: 11pt 14pt; font-size: 11.5pt; }
+.box .t { font-weight: 900; margin-bottom: 4pt; } .box p { margin: 0 0 4pt; }
+.pb { margin: 4pt 0 12pt; }
+.pbr { display: grid; grid-template-columns: 52pt 1fr 70pt 46pt; gap: 8pt; align-items: center; margin: 4pt 0; font-size: 11pt; }
+.pbr .f { height: 13pt; background: #F1F5F9; border-radius: 3pt; overflow: hidden; } .pbr .f i { display: block; height: 100%; background: #CBD5E1; }
+.pbr.on .f i { background: #2F6FE0; } .pbr.on span:first-child { font-weight: 900; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin: 4pt 0 14pt; }
+.vsb { border-radius: 8pt; padding: 12pt 14pt; border: 1.5px solid #E5E9EE; }
+.vsb.on { background: #EEF4FF; border-color: #C7DCFF; }
+.vsb .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.vsb .v { font-size: 30pt; font-weight: 900; line-height: 1.15; } .vsb.on .v { color: #2F6FE0; }
+.vsb .d { font-size: 10.5pt; color: #6B7280; }
+.vsb code { font-family: inherit; font-size: 10pt; background: #fff; border: 1px solid #E5E9EE; border-radius: 4pt; padding: 1pt 5pt; display: inline-block; margin-top: 4pt; }
+.todo { display: grid; grid-template-columns: 34pt 1fr; gap: 10pt; margin: 0 0 11pt; }
+.todo .no { width: 30pt; height: 30pt; border-radius: 50%; background: #2F6FE0; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+.tight .row { padding: 6pt 0; } .tight .row p { font-size: 12pt; } table.tight td { padding: 4pt 5pt; }
+.todo h3 { margin: 2pt 0 1pt; } .done { font-size: 10pt; font-weight: 800; color: #2F6FE0; background: #EEF4FF; border-radius: 99pt; padding: 1pt 8pt; margin-left: 4pt; vertical-align: 2pt; } .todo p { margin: 0; font-size: 11.5pt; color: #374151; } .todo p b { color: #111; }
+.not { margin: 2pt 0 12pt; padding: 0; list-style: none; font-size: 11pt; color: #374151; }
+.not li { padding-left: 14pt; position: relative; margin: 0 0 3pt; } .not li::before { content: "×"; position: absolute; left: 0; color: #94A3B8; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin: 6pt 0 12pt; }
+.goal { border: 1.5px solid #C7DCFF; background: #EEF4FF; border-radius: 8pt; padding: 9pt 12pt; }
+.goal .l { font-size: 10.5pt; font-weight: 700; color: #374151; }
+.goal .v { font-size: 21pt; font-weight: 900; line-height: 1.25; } .goal .v small { font-size: 11pt; color: #374151; }
+.goal .d { font-size: 10.5pt; color: #2F6FE0; font-weight: 800; }
+.src { font-size: 9.5pt; color: #6B7280; border-top: 1px solid #E5E9EE; padding-top: 7pt; } .src p { margin: 0 0 2pt; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10pt; margin: 6pt 0 14pt; }
+.kpi { border: 1.5px solid #E5E9EE; border-radius: 8pt; padding: 9pt 11pt; }
+.kpi.on { background: #EEF4FF; border-color: #C7DCFF; }
+.kpi .l { font-size: 10pt; color: #374151; font-weight: 700; }
+.kpi .v { font-size: 19pt; font-weight: 900; line-height: 1.2; }
+.kpi .d { font-size: 9.5pt; color: #6B7280; }
+.up { color: #1A7F37; } .dn { color: #B42318; }
+table.sm { font-size: 10pt; } table.sm td { padding: 4pt 5pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.note { font-size: 9.5pt; color: #6B7280; margin: 4pt 0 0; }
+table.xs { font-size: 9.5pt; margin-bottom: 8pt; } table.xs td { padding: 2.5pt 5pt; }
+</style></head><body>
+<section class="page cover">
+  <div class="eb">베이프렌드 · 10월 검색 · 플레이스 보고</div>
+  <div class="big">+38<small>%</small></div>
+  <h1>네이버 플레이스 조회가<br>4주 사이 38% 늘었습니다</h1>
+  <p class="lead">대구 매장 7곳(반월당은 자료가 없어 뺌)의 9월 28일 주와 10월 19일 주를 견줬습니다. 블로그 · 웹사이트 검색 자리도 함께 봤습니다.</p>
+  <div class="facts"><div class="fact"><div class="v">4,184회</div><div class="l">한 주 플레이스 조회 (9월 28일 주 3,035회)</div></div><div class="fact"><div class="v">37 → 57%</div><div class="l">지점 검색어 블로그 자리 차지</div></div><div class="fact"><div class="v">-17%</div><div class="l">전화 (앞 2주 → 뒤 2주)</div></div></div>
+  
+  <div class="meta"><span>보고 대상 <b>대표님 · 이사님</b></span><span>작성 <b>온라인 운영</b></span><span>2026년 10월 30일</span></div>
+</section><section class="page">
+  <div class="run"><span>베이프렌드 10월 검색 · 플레이스</span><span>1 · 한눈에</span></div>
+<h2>찾아보는 사람은 늘었고, 전화는 줄었습니다</h2>
+<p class="lead">네이버 플레이스에서 매장을 열어 본 횟수(조회)를 주마다 셌습니다. 9월 말에 바닥을 찍고 10월 넷째 주까지 매주 올랐습니다.</p>
+<div class="chart"><svg viewBox="0 0 640 130" width="100%" style="display:block"><rect x="1.5" y="14.0" width="103.7" height="102.0" rx="1.5" fill="#9CC3FF"/><text x="53.3" y="128" font-size="8.5" text-anchor="middle" fill="#6B7280">9/14</text><rect x="108.2" y="41.0" width="103.7" height="75.0" rx="1.5" fill="#9CC3FF"/><rect x="214.8" y="49.6" width="103.7" height="66.4" rx="1.5" fill="#9CC3FF"/><rect x="321.5" y="44.4" width="103.7" height="71.6" rx="1.5" fill="#9CC3FF"/><text x="373.3" y="128" font-size="8.5" text-anchor="middle" fill="#6B7280">10/5</text><rect x="428.2" y="32.6" width="103.7" height="83.4" rx="1.5" fill="#9CC3FF"/><rect x="534.8" y="24.5" width="103.7" height="91.5" rx="1.5" fill="#2F6FE0"/><text x="586.7" y="128" font-size="8.5" text-anchor="middle" fill="#6B7280">10/19</text><text x="586.7" y="20.5" font-size="9" font-weight="800" text-anchor="middle" fill="#111">4,184</text></svg></div>
+<p class="note" style="margin:-4pt 0 10pt">주 시작일 기준 · 7곳 합계. 견줌은 9월 28일 주부터 네 주입니다.</p>
+<div class="rows"><div class="row"><span class="k ok">결과</span><p>플레이스 조회 3,035회 → 4,184회<small>늘어난 몫의 45%는 수성, 34%는 본점입니다. 수성은 첫 주 245회에서 넷째 주 763회로 세 배가 됐습니다.</small></p></div><div class="row"><span class="k ok">결과</span><p>지점 검색어 블로그 자리 88개 → 137개<small>8개 지점 검색어마다 블로그 검색 결과 30개 중 베이프렌드 글이 차지한 자리입니다. 10월에 블로그 글 16건을 냈습니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>전화는 395통 → 327통<small>조회가 는 2주 동안 전화는 17% 줄었습니다. 율하(21 → 15통)와 상인(21 → 14통)에서 많이 줄었습니다.</small></p></div><div class="row"><span class="k bad">걸리는 것</span><p>웹사이트 검색어 7개가 첫 쪽 밖으로 나갔습니다<small>「동성로전자담배」처럼 지점 이름만 친 말 넷과 상인 검색어 셋, 「대구전자담배」입니다. 그 자리를 블로그와 업체 안내 사이트가 채웠습니다 (3쪽).</small></p></div></div>
+  <div class="foot"><span>베이프렌드 10월 검색 · 플레이스</span><span><b>1</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>베이프렌드 10월 검색 · 플레이스</span><span>2 · 지점별</span></div>
+<h2>수성과 본점이 늘어난 몫의 80%를 냈습니다</h2>
+<p class="lead">지점마다 4주 동안의 플레이스 조회와, 첫 주와 넷째 주의 차이입니다. 검색 유입은 네이버 검색에서 플레이스로 들어온 횟수, 블로그 자리는 그 지점 검색어의 블로그 결과 30개 중 베이프렌드 글 수입니다.</p>
+<table class="fx"><thead><tr><th>지점</th><th class="n">4주 조회</th><th class="n">첫 주 → 넷째 주</th><th class="n">변화</th><th class="n">검색 유입 (전주 → 최근 주)</th><th class="n">블로그 자리 (30개 중)</th></tr></thead><tbody><tr><td><b>본점</b></td><td class="n">5,009</td><td class="n">1,127 → <b>1,523</b></td><td class="n"><span class="up">+35%</span></td><td class="n">832 → 898</td><td class="n">14 → 19</td></tr><tr><td>동성로</td><td class="n">3,557</td><td class="n">889 → <b>1,022</b></td><td class="n"><span class="up">+15%</span></td><td class="n">499 → 684</td><td class="n">9 → 12</td></tr><tr><td><b>수성</b></td><td class="n">2,375</td><td class="n">245 → <b>763</b></td><td class="n"><span class="up">+211%</span></td><td class="n">486 → 493</td><td class="n">7 → <b>23</b></td></tr><tr><td>상인</td><td class="n">993</td><td class="n">221 → <b>248</b></td><td class="n"><span class="up">+12%</span></td><td class="n">103 → 127</td><td class="n">4 → <b>19</b></td></tr><tr><td>광장코아</td><td class="n">890</td><td class="n">165 → <b>225</b></td><td class="n"><span class="up">+36%</span></td><td class="n">110 → 117</td><td class="n">25 → 26</td></tr><tr><td>율하</td><td class="n">795</td><td class="n">201 → <b>204</b></td><td class="n"><span class="">+1%</span></td><td class="n">84 → 67</td><td class="n">5 → 11</td></tr><tr><td>현풍</td><td class="n">684</td><td class="n">187 → <b>199</b></td><td class="n"><span class="up">+6%</span></td><td class="n">52 → 109</td><td class="n">11 → 16</td></tr><tr><td>반월당</td><td class="n"><span class="g">자료 없음</span></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n">13 → 11</td></tr></tbody></table>
+<div class="box"><div class="t">읽는 법</div>
+<p>수성은 블로그 자리(7 → 23개)와 플레이스 조회가 함께 올랐습니다. 상인도 블로그 자리가 4개에서 19개로 늘었지만 조회는 거의 그대로입니다. 율하 · 현풍은 조회가 네 주 내내 비슷합니다. 블로그 자리가 곧 방문으로 이어지지는 않아, 지점마다 따로 봐야 합니다.</p></div>
+<p class="note">반월당은 9월 말부터 플레이스 통계를 받지 못했습니다. 4주 합계와 변화율은 나머지 7곳입니다.</p>
+  <div class="foot"><span>베이프렌드 10월 검색 · 플레이스</span><span><b>2</b> / 3</span></div>
+</section><section class="page">
+  <div class="run"><span>베이프렌드 10월 검색 · 플레이스</span><span>3 · 웹사이트 · 11월</span></div>
+<h2>「대구 + 지점」 검색어는 대부분 올랐고,<br>지점 이름만 친 말은 빠졌습니다</h2>
+<p class="lead">네이버 웹 검색 첫 쪽에서 블로그 · 카페 글을 뺀 웹사이트끼리의 자리입니다. 10월 30일 오전에 쟀고, 오후에 다시 재도 첫 쪽 밖 7개는 같았습니다.</p>
+<table class="xs"><thead><tr><th>지점</th><th>검색어</th><th class="n">10월 9일</th><th class="n">10월 30일</th><th class="n">변화</th></tr></thead><tbody><tr><td>공통</td><td>대구전자담배</td><td class="n">2위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>동성로</td><td>동성로전자담배</td><td class="n">1위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>동성로</td><td>대구동성로전자담배</td><td class="n">2위</td><td class="n"><b>1위</b></td><td class="n"><span class="up">1계단 오름</span></td></tr><tr><td>본점</td><td>동대구전자담배</td><td class="n">3위</td><td class="n"><b>2위</b></td><td class="n"><span class="up">1계단 오름</span></td></tr><tr><td>본점</td><td>대구동구전자담배</td><td class="n">4위</td><td class="n"><b>2위</b></td><td class="n"><span class="up">2계단 오름</span></td></tr><tr><td>수성</td><td>수성전자담배</td><td class="n">1위</td><td class="n"><b>1위</b></td><td class="n">그대로</td></tr><tr><td>수성</td><td>대구수성전자담배</td><td class="n">3위</td><td class="n"><b>1위</b></td><td class="n"><span class="up">2계단 오름</span></td></tr><tr><td>율하</td><td>율하전자담배</td><td class="n">2위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>율하</td><td>대구율하전자담배</td><td class="n">2위</td><td class="n"><b>2위</b></td><td class="n">그대로</td></tr><tr><td>반월당</td><td>반월당전자담배</td><td class="n">2위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>반월당</td><td>대구반월당전자담배</td><td class="n">1위</td><td class="n"><b>1위</b></td><td class="n">그대로</td></tr><tr><td>상인</td><td>상인동전자담배</td><td class="n">5위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>상인</td><td>대구상인동전자담배</td><td class="n">4위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>상인</td><td>대구상인전자담배</td><td class="n">4위</td><td class="n">–</td><td class="n"><span class="dn">첫 쪽 밖</span></td></tr><tr><td>광장코아</td><td>광장코아전자담배</td><td class="n">2위</td><td class="n"><b>2위</b></td><td class="n">그대로</td></tr><tr><td>광장코아</td><td>대구광장코아전자담배</td><td class="n">5위</td><td class="n"><b>1위</b></td><td class="n"><span class="up">4계단 오름</span></td></tr><tr><td>현풍</td><td>현풍전자담배</td><td class="n">1위</td><td class="n"><b>3위</b></td><td class="n"><span class="dn">2계단 내림</span></td></tr><tr><td>현풍</td><td>대구현풍전자담배</td><td class="n">4위</td><td class="n"><b>1위</b></td><td class="n"><span class="up">3계단 오름</span></td></tr></tbody></table>
+<h3>11월에 할 일</h3>
+<div class="rows tight"><div class="row"><span class="k next">1</span><p>지점마다 웹 페이지 한 장씩<small>지금은 8곳이 한 페이지에 모여 있습니다. 「율하전자담배」를 친 사람에게 율하점 한 장을 보여 줍니다.</small></p></div><div class="row"><span class="k next">2</span><p>전화가 준 율하 · 상인의 플레이스 정보 점검<small>영업시간 · 전화 버튼 · 최근 소식을 확인합니다.</small></p></div><div class="row"><span class="k next">3</span><p>반월당 플레이스 통계 받기<small>8곳을 모두 견줍니다.</small></p></div></div>
+  <div class="foot"><span>베이프렌드 10월 검색 · 플레이스</span><span><b>3</b> / 3</span></div>
+</section>
+</body></html>
