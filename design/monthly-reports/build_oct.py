@@ -33,7 +33,7 @@ def man(n): return f'{n / 10000:,.0f}만 원'
 def dp(a, b): d = (a / b - 1) * 100; return f'<span class="{"up" if d >= 0 else "dn"}">{d:+.1f}%</span>'
 GP = SALES - COST; NET = GP - SHIP
 xs, xc = SALES - BIG[0], COST - BIG[1]; xn = xs - xc - round(SHIP - PER)
-d = Doc('액상덕후 10월 월마감', 4)
+d = Doc('액상덕후 10월 월마감', 5)
 
 cov = cover('액상덕후 · 10월 월마감 · ' + ASOF, f'{SALES / 1e4:,.0f}<small>만 원</small>',
     f'10월에 {man(SALES)}을 팔고<br>원가와 배송비를 빼고 {man(NET)}이 남았습니다',
@@ -102,4 +102,16 @@ p4 = d.frame(4, '흐름과 11월', f'''<h2>대량 주문을 빼도 후반이 전
 <div class="src"><p>숫자 출처: 워드프레스 주문 · 원가표 (10월 30일 오후 2시 45분 조회). 9월과의 견줌은 같은 날 뽑은 상품별 주문 자료(1~29일).</p>
 <p>처음 산 손님 · 다시 산 손님 · 가입 수는 사이트 집계(10월 30일).</p></div>''')
 
-open(sys.argv[1], 'w').write(d.html('액상덕후 10월 월마감', cov, p1, p2, p3, p4))
+import openpyxl
+CT = [r for r in openpyxl.load_workbook('2026년 10월 상품 원가표.xlsx', read_only=True).active.iter_rows(min_row=4, values_only=True) if r[0] and r[0] != '합계']
+def nm(n): return n.replace('여기서 결제 도와드리겠습니다!', '(수기 결제)').replace('(9.8mg / 30ml)', '').replace('(NTSC SALT / 30ml)', '')[:34]
+top = CT[:24]; rest = CT[24:]
+ct = table(['상품 (매출 순)', '수량', '매출', '1개 원가', '원가', '원가율'],
+    [[nm(r[0]), w(r[1]), w(r[2]), w(r[5]), w(r[3]), f'<b class="dn">{r[4] * 100:.0f}%</b>' if r[4] > .75 else f'{r[4] * 100:.0f}%'] for r in top]
+    + [[f'그 밖 {len(rest)}개 상품', w(sum(r[1] for r in rest)), w(sum(r[2] for r in rest)), '', w(sum(r[3] for r in rest)), f'{sum(r[3] for r in rest) / sum(r[2] for r in rest) * 100:.0f}%'],
+       ['<b>합계 142개 상품</b>', f'<b>{w(sum(r[1] for r in CT))}</b>', f'<b>{w(SALES)}</b>', '', f'<b>{w(COST)}</b>', f'<b>{COST / SALES * 100:.1f}%</b>']], 'xs')
+p5 = d.frame(5, '상품별 원가표', f'''<h2>상품별 원가표 (매출 상위 24개)</h2>
+<p class="lead">1개 원가는 낱개 · 묶음 한 세트 기준입니다. 노보 · 노보 블랙은 병당 6,000원, 그 밖은 베이프렌드 본점 마스터 원가(10월 9일)입니다. 마스터에 없는 액상덕후 자체 상품 · 얼려먹구싶오는 기존 원가표 값입니다.</p>
+{ct}
+<p class="note">142개 상품 전체는 첨부한 「2026년 10월 상품 원가표」 엑셀에 있습니다.</p>''')
+open(sys.argv[1], 'w').write(d.html('액상덕후 10월 월마감', cov, p1, p2, p3, p4, p5))
