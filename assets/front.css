@@ -1217,3 +1217,5 @@ body.dhr.dhd-open{overflow:hidden}
 }
 @media (min-width:880px) and (prefers-reduced-transparency:reduce){.dhr .hvid{background:var(--dh-surface);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media (min-width:880px){.dhr .hvid__cta{min-height:56px;padding:0 2.25rem;font-size:1.125rem}}
+/* 단종 알약 — 카드 가격 아래 (includes/ending.php). 반전 면이라 다크에서도 뒤집힌다. */
+.dhr .dhr-endtag{display:inline-block;margin-top:.35rem;padding:.2rem .55rem;border-radius:999px;background:var(--dh-ink);color:var(--dh-surface);font-size:12.5px;font-weight:800;line-height:1.4;word-break:keep-all}

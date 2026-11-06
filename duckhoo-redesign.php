@@ -55,6 +55,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/signup.php';
 
 // 노보 물량 이벤트 — 하루 구매 한도 · 남은 수량 · 이벤트 기준 가격.
 require_once plugin_dir_path( __FILE__ ) . 'includes/novo.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/ending.php';
 
 // 구매 깔때기 — 첫 화면부터 주문까지 날마다 몇 명이 어디까지 갔는지 센다 (매출 화면에 그린다).
 require_once plugin_dir_path( __FILE__ ) . 'includes/funnel.php';

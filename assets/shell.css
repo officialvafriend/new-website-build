@@ -2956,3 +2956,13 @@ html body.dhr.dhr-wrap.dhr-wrap .dha-lead__t{ grid-area: t; align-self: end; fon
 html body.dhr.dhr-wrap.dhr-wrap .dha-lead__p{ grid-area: p; align-self: end; font-size: clamp(19px, 17px + .8vw, 24px); font-weight: 900; color: var(--dh-surface); white-space: nowrap; font-variant-numeric: tabular-nums; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-lead__s{ grid-area: s; font-size: 14px; color: var(--dh-surface); opacity: .8; word-break: keep-all; }
 html body.dhr.dhr-wrap.dhr-wrap .dha-lead__go{ grid-area: go; margin-top: .5rem; display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 999px; background: var(--dh-surface); color: var(--dh-ink); font-size: 15px; font-weight: 800; }
+
+/* 단종 안내 — 상품 상세 가격 아래 · 카드 (includes/ending.php). 안내 띠보다 눈에 띄게 반전 면. */
+html body.dhr.dhr-wrap.dhr-wrap .dhr-end{
+  margin: .9rem 0 0; padding: .85rem 1rem .8rem; background: var(--dh-ink); color: var(--dh-surface);
+  border-radius: 16px; border: 0;
+}
+html body.dhr.dhr-wrap.dhr-wrap .dhr-end__t{ display: block; font-size: 15px; font-weight: 800; color: var(--dh-surface); letter-spacing: 0; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-end__t span{ display: inline-block; margin-left: .35rem; padding: .1rem .5rem; border-radius: 999px; background: var(--dh-accent); color: var(--dh-accent-ink); font-size: 12.5px; vertical-align: 1px; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-end__p{ margin: .35rem 0 0 !important; font-size: 13.5px; line-height: 1.6; color: var(--dh-surface) !important; opacity: .85; word-break: keep-all; }
+html body.dhr.dhr-wrap.dhr-wrap .dhr-endtag{ display: inline-block; margin-top: .35rem; padding: .2rem .55rem; border-radius: 999px; background: var(--dh-ink); color: var(--dh-surface); font-size: 12.5px; font-weight: 800; line-height: 1.4; }

@@ -3572,5 +3572,18 @@ $ok(isset($su[27]) && '젤로 크리스탈'===$su[27]['kind'] && str_contains($s
 $ok('젤로 크리스탈'===$sd[0]['kind'] || '디오리퀴드'===$sd[0]['kind'], '다시 살 때: 브랜드 줄이 쉬는 손님보다 앞');
 $ok('디오리퀴드 다시 살 때'===\Duckhoo\Redesign\Crm\group_name('due','디오리퀴드') && '30~120일 쉬는 손님'===\Duckhoo\Redesign\Crm\group_name('due','쉬는 손님'), '다시 살 때: 그룹명');
 
+echo "\n· 단종 안내\n";
+require_once dirname(__DIR__, 2).'/includes/ending.php';
+$EL = \Duckhoo\Redesign\Ending\lines();
+$ok(null !== \Duckhoo\Redesign\Ending\line_in('[액상덕후] 링고 흑염룡 시리즈 (9.8mg / 30ml)', $EL) && null === \Duckhoo\Redesign\Ending\line_in('[노보] 블랙멘솔', $EL), '단종: 흑염룡 이름만 잡는다');
+$ok(null !== \Duckhoo\Redesign\Ending\line_in('흑 염룡 레몬', $EL), '단종: 빈칸이 달라도 잡는다');
+$et = \Duckhoo\Redesign\Ending\notice_text(['line'=>$EL[0],'own'=>true], true);
+$ok(str_contains($et['tag'],'남은 재고 한정') && str_contains($et['p'],'재입고되지 않습니다'), '단종: 재고 있는 낱병 — 남은 재고 한정');
+$ok('단종' === \Duckhoo\Redesign\Ending\notice_text(['line'=>$EL[0],'own'=>true], false)['tag'], '단종: 품절 낱병 — 「단종」만');
+$ok(str_contains(\Duckhoo\Redesign\Ending\notice_text(['line'=>$EL[0],'own'=>false], true)['p'],'이 묶음에서'), '단종: 묶음은 그 맛만 남은 재고까지라고');
+$ok(str_contains(\Duckhoo\Redesign\Ending\card_note('', new WC_Product(9101,'[액상덕후] 레몬 흑염룡 시리즈',8800)), '단종 · 남은 재고 한정') && '' === \Duckhoo\Redesign\Ending\card_note('', new WC_Product(9102,'[노보] 데저트',13000)), '단종: 카드 알약은 흑염룡 상품에만');
+add_filter('duckhoo_ending_lines', fn() => array());
+$ok('' === \Duckhoo\Redesign\Ending\card_note('', new WC_Product(9103,'[액상덕후] 레몬 흑염룡 시리즈',8800)), '단종: 필터로 끄면 아무것도 안 붙는다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
