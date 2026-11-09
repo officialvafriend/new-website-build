@@ -129,7 +129,10 @@ function period( string $from, string $to, bool $fresh = false ): array {
 			continue;
 		}
 		usort( $runs, fn( $a, $b ) => strcmp( $a['at'], $b['at'] ) );
-		$p = function_exists( '\\Duckhoo\\Redesign\\Points\\Admin\\participation_for' ) ? \Duckhoo\Redesign\Points\Admin\participation_for( (string) $bk, $until ) : null;
+		// 넣은 뒤 14일까지만 센다 — 문자 묶음과 같은 자. 끝까지(오늘) 세면 오래된 묶음일수록 창이 길어지고
+		// 「넣기 전 같은 날수」도 같이 길어져 광고가 돌던 9월까지 들어간다 (10/13 묶음이 +32명 → −3명으로 보였다).
+		$pend = (int) ( $b['created'] ?? 0 ) > 0 ? min( $until, (int) $b['created'] + (int) apply_filters( 'duckhoo_crm_report_points_days', 14 ) * DAY_IN_SECONDS ) : $until;
+		$p    = function_exists( '\\Duckhoo\\Redesign\\Points\\Admin\\participation_for' ) ? \Duckhoo\Redesign\Points\Admin\participation_for( (string) $bk, $pend ) : null;
 		$points[] = array(
 			'label'   => (string) ( $b['label'] ?? $bk ),
 			'created' => wp_date( 'Y-m-d H:i', (int) ( $b['created'] ?? 0 ) ),
