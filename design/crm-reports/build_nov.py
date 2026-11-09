@@ -51,7 +51,7 @@ p1 = d.frame(1, '한눈에', f'''<h2>다시 산 손님이 크게 늘었고,<br>�
 <div class="vs"><div class="vsb"><div class="l">앞 4주 다시 산 손님 주문</div><div class="v">{BASE["rep"]}건</div><div class="d">처음 산 손님 주문 {BASE["first"]}건</div></div>
 <div class="vsb on"><div class="l">이번 4주 다시 산 손님 주문</div><div class="v">{STORE["rep"]}건</div><div class="d">처음 산 손님 주문 {STORE["first"]}건</div></div></div>
 {rows([
- ('ok', '결과', f'10월 13일 감사 적립금이 가장 잘됐습니다 · 100명 중 {r(L13[5], L13[3]):.1f}명 → {r(L13[4], L13[3]):.1f}명', f'912명 중 78명이 14일 안에 샀습니다. 같은 손님들이 받기 전 같은 기간에는 100명 중 4.7명이 샀습니다. 적립금을 실제로 쓴 사람 72명, 쓴 금액 {w(USED_1013)}원.'),
+ ('ok', '결과', f'10월 13일 감사 적립금이 가장 잘됐습니다 · 100명 중 {r(L13[5], L13[3]):.1f}명 → {r(L13[4], L13[3]):.1f}명', f'912명 중 78명이 14일 안에 샀습니다. 같은 손님들이 받기 전 같은 기간에는 100명 중 4.7명이 샀습니다. 받은 손님이 14일 안에 낸 실입금은 {L13[6]/1e4:,.0f}만 원이고, 받기 전보다 더 산 35명 몫으로 어림하면 약 {(L13[4]-L13[5])*L13[6]/L13[4]/1e4:,.0f}만 원입니다. 적립금을 실제로 쓴 사람 72명, 쓴 금액 {w(USED_1013)}원.'),
  ('mid', '결과', '월말 적립금은 한동안 쉰 손님에게만 통했습니다', '「곧 사라집니다」 문구를 처음 쓴 10월 30일 묶음: 한동안 쉰 손님은 100명 중 1.3명 → 3.6명이 샀고, 한 번도 안 산 손님은 0.7명 → 0.8명으로 거의 그대로였습니다.'),
  ('bad', '걸리는 것', '신상품 문자는 알린 상품을 거의 팔지 못했습니다', f'다섯 번에 {w(new_n)}통이 나갔고 알린 상품을 산 사람은 {new_items}명입니다. '),
 ])}
@@ -76,13 +76,28 @@ def res(a, b, n):
     if v <= -1.0: return '<span class="rs dn">덜 샀음</span>'
     return '<span class="rs eq">비슷</span>'
 
-def row(dt, what, note, n, a, b):
+def extra(a, b, sales):
+    """받기 전보다 더 산 사람 × 산 사람 한 명당 실입금 — 어림."""
+    if b is None or not a or a <= b:
+        return 0
+    return (a - b) * sales / a
+
+def row(dt, what, note, n, a, b, sales=None):
     bb = '–' if b is None else f'{r(b, n):.1f}명'
+    money = ''
+    if sales is not None:
+        ex = extra(a, b, sales)
+        money = (f'<td class="n">{man(sales)}</td>'
+                 f'<td class="n">{"<b>" + man(ex) + "</b>" if ex else ("–" if b is None else "0")}</td>')
     return (f'<tr><td>{dt}</td><td>{what}' + (f'<small>{note}</small>' if note else '') + '</td>'
-            f'<td class="n">{w(n)}명</td><td class="n">{bb}</td><td class="n"><span class="big">{r(a, n):.1f}명</span></td><td class="n">{res(a, b, n)}</td></tr>')
+            f'<td class="n">{w(n)}명</td><td class="n">{bb}</td><td class="n"><span class="big">{r(a, n):.1f}명</span></td><td class="n">{res(a, b, n)}</td>{money}</tr>')
+
+def man(v):
+    v = float(v)
+    return '0' if v < 5000 else (f'{v / 1e4:,.0f}만 원' if v >= 1e5 else f'{v / 1e4:.1f}만 원')
 
 TH = ('<thead><tr><th>날짜</th><th>무엇을 보냈나</th><th class="n">받은 손님</th>'
-      '<th class="n">받기 전<br>100명 중 산</th><th class="n">받은 뒤<br>100명 중 산</th><th class="n">결과</th></tr></thead>')
+      '<th class="n">받기 전<br>100명 중 산</th><th class="n">받은 뒤<br>100명 중 산</th><th class="n">결과</th><th class="n">산 손님<br>실입금</th><th class="n">더 산 몫<br>(어림)</th></tr></thead>')
 G23 = (1570, 31, 1562402, 36)       # 10/23 성장 이벤트 · 원장으로 넣은 묶음 · 운영 엑셀(지급 10/23 11:35 ~ 10/30 주문, 7일)
 
 pts = []
@@ -90,15 +105,15 @@ for x in LINES:
     if x[1] != '적립금': continue
     dt, k, what, n, a, b, s_, used, note = x
     nt = '· '.join(t for t in [note, f'적립금 쓴 손님 {used}명' if used else ''] if t)
-    pts.append((dt, row(dt, what, nt, n, a, b)))
-pts.append(('10/23', row('10/23', '성장 이벤트 3,000원', '7일만 셈 · 3,000원 쓴 손님 36명', G23[0], G23[1], None)))
+    pts.append((dt, row(dt, what, nt, n, a, b, s_)))
+pts.append(('10/23', row('10/23', '성장 이벤트 3,000원', '7일만 셈 · 3,000원 쓴 손님 36명', G23[0], G23[1], None, G23[2])))
 pts.sort(key=lambda t: tuple(int(v) for v in t[0].split('/')))
-sms = ''.join(row(x[0], x[2], x[8], x[3], x[4], x[5]) for x in LINES if x[1] == '문자')
+sms = ''.join(row(x[0], x[2], x[8], x[3], x[4], x[5], x[6]) for x in LINES if x[1] == '문자')
 
 p2 = d.frame(2, '적립금', f'''{CSS2}<h2>적립금마다, 받은 손님 100명 중 몇 명이 샀나</h2>
 <p class="lead">받은 뒤 14일 동안 100명 중 몇 명이 샀는지와, 같은 손님들이 받기 전 같은 기간에 산 수를 나란히 놓았습니다. 줄끼리 더하지 않습니다.</p>
 <table class="cr">{TH}<tbody>{''.join(h for _, h in pts)}</tbody></table>
-<p style="font-size:8.6pt;color:#6B7280">「더 샀음 · 덜 샀음」은 100명 중 1명 넘게 차이 날 때입니다.</p>''')
+<p style="font-size:8.6pt;color:#6B7280">「더 샀음 · 덜 샀음」은 100명 중 1명 넘게 차이 날 때입니다. 「산 손님 실입금」은 받은 손님이 14일 안에 낸 돈 전부라 원래 사던 손님의 몫이 섞여 있습니다. 「더 산 몫」은 받기 전보다 늘어난 손님 수 × 산 손님 한 명당 실입금으로 어림한 것이고, 줄끼리 더하지 않습니다.</p>''')
 
 def sub(rows_):
     return ''.join(row('', nm, '', k, a, b).replace('<td></td>', '', 1) for nm, k, a, b in rows_)
@@ -119,15 +134,16 @@ p3 = d.frame(3, '문자 · 손님 묶음', f'''{CSS2}<h2>문자만 보낸 것, �
 # (상품, 판매, 산 손님, 그 문자 받고 14일 안, 그 뒤, 다른 신상품 문자만, 문자 안 받음)
 NEWS = [('말라이트', 9, 9, 0, 0, 2, 7), ('복숭아 망고', 8, 8, 0, 0, 2, 6), ('고창수박', 7, 7, 2, 1, 0, 4), ('크림타바코', 7, 7, 0, 0, 1, 6),
         ('환타지아', 6, 6, 1, 0, 2, 3), ('영주사과', 4, 4, 0, 1, 0, 3), ('스피아민트', 4, 4, 0, 0, 3, 1), ('금실딸기 폐호흡', 4, 4, 0, 0, 0, 4)]
+NEWS_WON = {'말라이트': 158600, '복숭아 망고': 116100, '고창수박': 69300, '크림타바코': 104700, '환타지아': 89100, '영주사과': 49500, '스피아민트': 49500, '금실딸기 폐호흡': 90000}
 QUIET = [('뉴스프라이트포도', 11), ('백도우롱차', 9), ('ㅇㅋㄹㅌ', 8), ('유자녹차', 4), ('블루스위트', 2)]
 sm = [sum(x[i] for x in NEWS) for i in range(1, 7)]
-nrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td><td class="n">{c}명</td><td class="n"><b>{d}</b></td><td class="n">{e}</td><td class="n">{f}</td><td class="n">{g}</td></tr>' for a, b, c, d, e, f, g in NEWS)
-nrow += f'<tr style="font-weight:900;background:#F0F6FF"><td>8종 합계</td><td class="n">{sm[0]}개</td><td class="n">{sm[1]}명</td><td class="n">{sm[2]}명</td><td class="n">{sm[3]}명</td><td class="n">{sm[4]}명</td><td class="n">{sm[5]}명</td></tr>'
+nrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td><td class="n">{NEWS_WON[a]:,}원</td><td class="n">{c}명</td><td class="n"><b>{d}</b></td><td class="n">{e}</td><td class="n">{f}</td><td class="n">{g}</td></tr>' for a, b, c, d, e, f, g in NEWS)
+nrow += f'<tr style="font-weight:900;background:#F0F6FF"><td>8종 합계</td><td class="n">{sm[0]}개</td><td class="n">{sum(NEWS_WON.values()):,}원</td><td class="n">{sm[1]}명</td><td class="n">{sm[2]}명</td><td class="n">{sm[3]}명</td><td class="n">{sm[4]}명</td><td class="n">{sm[5]}명</td></tr>'
 qrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td></tr>' for a, b in QUIET)
 avg_n = sm[0] / len(NEWS); avg_q = sum(b for _, b in QUIET) / len(QUIET)
 p4 = d.frame(4, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[1]}명 중 {sm[5]}명은<br>문자를 받지 않은 손님이었습니다</h2>
 <p class="lead">문자로 알린 리퀴드랩 신상품 8종을 올린 날(10월 13일 · 스피아민트는 21일)부터 11월 9일까지 셌습니다. 산 손님을 문자를 받았는지로 나눴습니다.</p>
-<table class="cr"><thead><tr><th>상품</th><th class="n">판매</th><th class="n">산 손님</th><th class="n">그 상품 문자 받고<br>14일 안</th><th class="n">그 뒤</th><th class="n">다른 신상품<br>문자만 받음</th><th class="n">문자 안 받음</th></tr></thead><tbody>{nrow}</tbody></table>
+<table class="cr"><thead><tr><th>상품</th><th class="n">판매</th><th class="n">매출</th><th class="n">산 손님</th><th class="n">그 상품 문자 받고<br>14일 안</th><th class="n">그 뒤</th><th class="n">다른 신상품<br>문자만 받음</th><th class="n">문자 안 받음</th></tr></thead><tbody>{nrow}</tbody></table>
 <div class="gh2">문자로 알리지 않은 리퀴드랩 신상품 (같은 날 올림)</div>
 <table class="cr" style="max-width:60%"><thead><tr><th>상품</th><th class="n">판매</th></tr></thead><tbody>{qrow}</tbody></table>
 <div class="todo"><div class="no">1</div><div><h3>문자를 받고 14일 안에 그 상품을 산 손님은 {sm[2]}명입니다</h3><p>{sm[1]}명 중 {sm[5]}명({sm[5] / sm[1] * 100:.0f}%)은 신상품 문자를 받은 적이 없는 손님이었습니다.</p></div></div>
