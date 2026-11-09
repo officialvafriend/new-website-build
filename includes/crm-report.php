@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 /** 관리자 밖(REST)에서도 셈에 쓰는 모듈을 든다 — 월말 결산과 같은 방법. */
 function load_deps(): void {
 	$dir = dirname( __DIR__ ) . '/includes/';
-	foreach ( array( 'sales.php', 'anatomy.php', 'crm.php', 'crm-sms.php', 'crm-plan.php', 'crm-impact.php', 'points-admin.php', 'crm-sends.php' ) as $f ) {
+	foreach ( array( 'sales.php', 'anatomy.php', 'crm.php', 'crm-sms.php', 'crm-plan.php', 'crm-impact.php', 'points-admin.php', 'points-reason.php', 'crm-sends.php' ) as $f ) {
 		if ( is_readable( $dir . $f ) ) {
 			require_once $dir . $f;
 		}
@@ -143,6 +143,20 @@ function period( string $from, string $to, bool $fresh = false ): array {
 			'p'       => $p ? (array) $p['p'] : array(),
 		);
 	}
+	// 1-b. 원장에만 있는 적립금 묶음 — 「적립금 한 번에 넣기」 화면을 거치지 않고 넣은 것 (10/23 성장 이벤트처럼).
+	foreach ( ledger_batches( $f, $t, array_column( $points, 'label' ) ) as $g ) {
+		$pend = min( $until, $g['at'] + (int) apply_filters( 'duckhoo_crm_report_points_days', 14 ) * DAY_IN_SECONDS );
+		$p    = ledger_participation( $g, $orders, $pend, $paid );
+		$points[] = array(
+			'label'   => $g['reason'] . ' (원장)',
+			'created' => wp_date( 'Y-m-d H:i', $g['at'] ),
+			'n'       => count( $g['users'] ),
+			'sum'     => (int) array_sum( $g['users'] ),
+			'revoked' => $g['taken'] > 0,
+			'runs'    => array(),
+			'p'       => $p,
+		);
+	}
 	usort( $points, fn( $a, $b ) => strcmp( $a['created'], $b['created'] ) );
 
 	// 2. 문자 양식으로 내려받은 묶음 (번호는 셈에만 쓰고 내보내지 않는다)
@@ -206,6 +220,98 @@ function period( string $from, string $to, bool $fresh = false ): array {
 	);
 	set_transient( $key, $out, 10 * MINUTE_IN_SECONDS );
 	return $out;
+}
+
+/**
+ * 원장 줄을 사유별로 묶어 「적립금 묶음」 후보를 고른다. 순수.
+ *
+ * 넣은 줄(+)이 min 명 이상인 사유만, 이미 아는 묶음 이름 · 주문 · 취소 · 가입 · 후기 같은 일상 사유는 뺀다.
+ * 같은 사유로 거둔 줄(「… 회수」 「… 사용기간 종료」)은 taken 으로 센다.
+ *
+ * @param array<int,array{user:int,amount:int,reason:string,ts:int}> $rows 원장 줄.
+ * @param array<int,string> $known 이미 집계에 있는 묶음 이름.
+ * @return array<int,array{reason:string,at:int,users:array<int,int>,taken:int}>
+ */
+function ledger_groups( array $rows, array $known, int $min = 30 ): array {
+	$skip = (array) apply_filters( 'duckhoo_crm_report_ledger_skip', array( '주문', '취소', '반환', '신규회원', '가입', '후기', '리뷰', '추천', '배송완료', '구매 적립', '사용', '조정', '테스트' ) );
+	$g    = array();
+	foreach ( $rows as $r ) {
+		$reason = trim( (string) ( $r['reason'] ?? '' ) );
+		$amt    = (int) ( $r['amount'] ?? 0 );
+		$uid    = (int) ( $r['user'] ?? 0 );
+		if ( '' === $reason || $uid <= 0 ) {
+			continue;
+		}
+		$base = preg_replace( '/\s*(회수|사용기간 종료)$/u', '', $reason );
+		$take = $base !== $reason;
+		$hit  = false;
+		foreach ( $known as $k ) {
+			if ( '' !== (string) $k && ( $base === $k || str_starts_with( $base, $k . ' · ' ) ) ) {
+				$hit = true;
+				break;
+			}
+		}
+		foreach ( $skip as $w ) {
+			if ( '' !== $w && false !== mb_strpos( $base, $w ) ) {
+				$hit = true;
+				break;
+			}
+		}
+		if ( $hit ) {
+			continue;
+		}
+		$g[ $base ] = $g[ $base ] ?? array( 'reason' => $base, 'at' => 0, 'users' => array(), 'taken' => 0 );
+		if ( $take || $amt < 0 ) {
+			++$g[ $base ]['taken'];
+			continue;
+		}
+		if ( $amt > 0 ) {
+			$g[ $base ]['users'][ $uid ] = ( $g[ $base ]['users'][ $uid ] ?? 0 ) + $amt;
+			$ts = (int) ( $r['ts'] ?? 0 );
+			if ( $ts > 0 && ( 0 === $g[ $base ]['at'] || $ts < $g[ $base ]['at'] ) ) {
+				$g[ $base ]['at'] = $ts;
+			}
+		}
+	}
+	return array_values( array_filter( $g, fn( $x ) => count( $x['users'] ) >= $min && $x['at'] > 0 ) );
+}
+
+/** 기간 안에 원장에 넣은 줄이 찍힌 묶음 후보. 원장 · 시각 칸을 못 알아보면 빈 배열. */
+function ledger_batches( int $f, int $t, array $known ): array {
+	global $wpdb;
+	if ( ! function_exists( '\\Duckhoo\\Redesign\\Points\\Admin\\reason_cols' ) || ! apply_filters( 'duckhoo_crm_report_ledger', true ) ) {
+		return array();
+	}
+	$c = \Duckhoo\Redesign\Points\Admin\reason_cols();
+	if ( empty( $c['map'] ) || '' === (string) ( $c['map']['ts'] ?? '' ) ) {
+		return array();
+	}
+	$m     = $c['map'];
+	$table = \Duckhoo\Redesign\Points\Admin\log_table();
+	$tz    = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'Asia/Seoul' );
+	$lo    = ( new \DateTime( '@' . ( $f - DAY_IN_SECONDS ) ) )->setTimezone( $tz )->format( 'Y-m-d H:i:s' );
+	$sql   = 'SELECT `' . esc_sql( $m['user'] ) . '` AS user, `' . esc_sql( $m['amount'] ) . '` AS amount, `' . esc_sql( $m['reason'] ) . '` AS reason, `' . esc_sql( $m['ts'] ) . '` AS ts FROM `' . esc_sql( $table ) . '` WHERE `' . esc_sql( $m['ts'] ) . '` >= %s';
+	$rows  = array();
+	foreach ( (array) $wpdb->get_results( $wpdb->prepare( $sql, $lo ), ARRAY_A ) as $r ) { // phpcs:ignore WordPress.DB
+		$ts = \Duckhoo\Redesign\Points\Admin\reason_ts( $r['ts'] );
+		$rows[] = array( 'user' => (int) $r['user'], 'amount' => (int) $r['amount'], 'reason' => (string) $r['reason'], 'ts' => $ts );
+	}
+	return array_values( array_filter( ledger_groups( $rows, $known ), fn( $g ) => $g['at'] >= $f && $g['at'] <= $t ) );
+}
+
+/** 원장 묶음의 참여 — 「적립금 한 번에 넣기」 묶음과 같은 셈. */
+function ledger_participation( array $g, array $orders, int $until, array $paid ): array {
+	if ( ! function_exists( '\\Duckhoo\\Redesign\\Points\\Admin\\participation' ) ) {
+		return array();
+	}
+	$pend   = function_exists( '\\Duckhoo\\Redesign\\Crm\\pending_statuses' ) ? \Duckhoo\Redesign\Crm\pending_statuses() : array( 'on-hold', 'pending' );
+	$recips = array();
+	foreach ( $g['users'] as $uid => $amt ) {
+		$recips[ (int) $uid ] = array( (int) $amt, '', 0 );
+	}
+	$near = array_values( array_filter( $orders, fn( $o ) => (int) $o['ts'] >= $g['at'] - 60 * DAY_IN_SECONDS ) );
+	$used = function_exists( '\\Duckhoo\\Redesign\\Points\\Admin\\used_points' ) ? \Duckhoo\Redesign\Points\Admin\used_points( (int) $g['at'] ) : array();
+	return \Duckhoo\Redesign\Points\Admin\participation( $recips, $near, $used, (int) $g['at'], min( $until, time() ), $paid, $pend );
 }
 
 /** 붙여 넣기용 글 — 숫자만. 순수. */

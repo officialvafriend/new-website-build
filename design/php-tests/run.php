@@ -3585,5 +3585,16 @@ $ok(str_contains(\Duckhoo\Redesign\Ending\card_note('', new WC_Product(9101,'[�
 add_filter('duckhoo_ending_lines', fn() => array());
 $ok('' === \Duckhoo\Redesign\Ending\card_note('', new WC_Product(9103,'[액상덕후] 레몬 흑염룡 시리즈',8800)), '단종: 필터로 끄면 아무것도 안 붙는다');
 
+echo "\n· CRM 기간 성과 — 원장에만 있는 묶음\n";
+$LG = '\\Duckhoo\\Redesign\\CrmReport\\ledger_groups';
+$lr = [];
+for ($i = 1; $i <= 40; $i++) { $lr[] = ['user'=>$i,'amount'=>3000,'reason'=>'성장 이벤트','ts'=>1761200000+$i]; }
+for ($i = 1; $i <= 10; $i++) { $lr[] = ['user'=>$i,'amount'=>-3000,'reason'=>'성장 이벤트 사용기간 종료','ts'=>1762000000]; }
+for ($i = 1; $i <= 40; $i++) { $lr[] = ['user'=>$i,'amount'=>5000,'reason'=>'10월 감사 적립금','ts'=>1760300000]; }
+for ($i = 1; $i <= 40; $i++) { $lr[] = ['user'=>$i,'amount'=>2000,'reason'=>'주문 #'.$i.' 취소 적립금 반환','ts'=>1760300000]; }
+for ($i = 1; $i <= 5; $i++) { $lr[] = ['user'=>$i,'amount'=>1000,'reason'=>'작은 묶음','ts'=>1760300000]; }
+$lg = $LG($lr, ['10월 감사 적립금']);
+$ok(1 === count($lg) && '성장 이벤트' === $lg[0]['reason'] && 40 === count($lg[0]['users']) && 10 === $lg[0]['taken'] && 1761200001 === $lg[0]['at'], '원장 묶음: 아는 묶음 · 주문 반환 · 작은 묶음은 빼고 성장 이벤트만, 거둔 줄은 따로 센다');
+
 echo $fail ? "\n❌ ".count($fail)."건\n".implode("\n",$fail)."\n" : "\n✅ 모두 통과\n";
 exit($fail?1:0);
