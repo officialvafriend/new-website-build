@@ -47,7 +47,7 @@ EX_PTS = sum(_ex(x) for x in ALL_L if x[1] == '적립금')
 EX_SMS = EX_ALL - EX_PTS
 SUM_ALL = sum(x[6] for x in ALL_L)
 
-d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 5)
+d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 6)
 cov = cover('액상덕후 · CRM 성과 · 10월 13일 ~ 11월 9일', f'+{rp:.0f}<small>%</small>',
     '다시 산 손님 주문이 85% 늘었습니다.<br>효과가 확인된 것은 감사 적립금이었습니다',
     '4주 동안 적립금과 문자를 보냈습니다. 문자마다 받은 손님이 14일 안에 산 비율을, 같은 손님들이 받기 전 같은 날수에 산 비율과 견줬습니다.',
@@ -138,10 +138,41 @@ p2b = d.frame(3, '적립금 효과', f'''{CSS2}<h2>적립금마다, 받은 손�
 <table class="t">{ETH}<tbody>{mend}</tbody></table>
 <p class="note">「더 샀음 · 덜 샀음」은 100명 중 1명 넘게 차이 날 때입니다. 월말 적립금은 9일째 숫자입니다.</p>''')
 
+
+# 적립금으로 늘어난 매출 · 남은 이익 — 원가율 48.8% (10월 마감 · 대표 확인 원가)
+COST_RATE = 0.488
+def gain(x):
+    dt, what, n, put, used, sales, a, b = x
+    if used is None or b is None:
+        return None
+    g = (a - b) / a * (sales + used) if a > b else 0
+    return (a - b) / a * sales if a > b else 0, g * (1 - COST_RATE) - used
+grows = ''; G_SALES = G_PROFIT = G_USED = 0
+for x in MONEY:
+    r_ = gain(x)
+    if r_ is None:
+        continue
+    ex, pf = r_
+    G_SALES += ex; G_PROFIT += pf; G_USED += x[4]
+    col = '#1A7F37' if pf > 0 else '#B42318'
+    grows += (f'<tr><td class="d">{x[0]}</td><td style="white-space:nowrap">{x[1]}</td><td class="n">{won(x[4])}</td>'
+              f'<td class="n">{won(round(ex, -3)) if ex else "0원"}</td><td class="n">{"0원" if round(pf, -3) == 0 else f'<b style="color:{col}">{"+" if pf > 0 else "−"}{won(round(abs(pf), -3))}</b>'}</td></tr>')
+grows += (f'<tr class="sum"><td></td><td>합계</td><td class="n">{won(G_USED)}</td><td class="n">{won(round(G_SALES, -3))}</td>'
+          f'<td class="n">+{won(round(G_PROFIT, -3))}</td></tr>')
+p2c = d.frame(4, '적립금 이익', f'''{CSS2}<h2>적립금으로 매출은 약 {G_SALES/1e4:,.0f}만 원 늘었고,<br>원가와 적립금을 빼면 약 {G_PROFIT/1e4:,.0f}만 원이 남았습니다</h2>
+<p class="lead">받기 전보다 더 산 손님만큼만 늘어난 매출로 셌습니다. 원래 사던 손님의 매출은 넣지 않았습니다.</p>
+<table class="t"><thead><tr><th></th><th>적립금</th><th class="n">쓴 적립금</th><th class="n">늘어난 매출</th><th class="n">원가 · 적립금<br>뺀 이익</th></tr></thead><tbody>{grows}</tbody></table>
+<ul class="kt">
+<li>적립금 1원을 써서 매출이 약 {G_SALES/G_USED:.1f}원 늘었습니다<span>4주 가게 전체 매출 {STORE["sales"]/1e4:,.0f}만 원의 {G_SALES/STORE["sales"]*100:.0f}%입니다.</span></li>
+<li>이익은 10월 13일 · 30일 두 묶음에서 나왔습니다<span>나머지 네 묶음은 받은 손님이 원래 사던 손님이라 적립금이 할인으로 끝났습니다.</span></li>
+<li>가게 전체 매출이 늘어난 것을 적립금 덕으로 볼 수는 없습니다<span>같은 기간에 추석 · 큰 주문 · 문자가 함께 있었습니다. 적립금 몫으로 셀 수 있는 것은 위의 금액입니다.</span></li>
+</ul>
+<p class="note">원가율 48.8%(10월 마감 기준). 쓴 적립금은 모두 비용으로 봤습니다. 배송비 · 고정비는 넣지 않았고, 배송비(더 산 주문 약 50건)를 빼면 이익은 약 10만 원 줄어듭니다.<br>성장 이벤트는 쓴 금액이 사이트에 없고 받기 전 숫자가 없어 뺐습니다.</p>''')
+
 SMS = [x for x in LINES if x[1] == '문자']
 srows = ''.join(eff(x[0], x[2], x[3], x[4], x[5]) for x in SMS)
 SMS_SALES = sum(x[6] for x in SMS); SMS_EX = sum(_ex(x) for x in SMS)
-p3 = d.frame(4, '문자', f'''{CSS2}<h2>문자만 보낸 것</h2>
+p3 = d.frame(5, '문자', f'''{CSS2}<h2>문자만 보낸 것</h2>
 <p class="lead">적립금 없이 문자만 보낸 일곱 번입니다. 받은 뒤 14일 기준.</p>
 <table class="t">{ETH}<tbody>{srows}</tbody></table>
 <ul class="kt">
@@ -163,7 +194,7 @@ nrow += (f'<tr class="sum"><td>8종 합계</td><td class="n">{sm[0]}개</td><td 
          f'<td class="n">{sm[3] + sm[4] + sm[5]}명</td><td class="n">{sm[6]}명</td></tr>')
 qrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td><td class="n">{won(c)}</td></tr>' for a, b, c in QUIET)
 avg_n = sm[0] / len(NEWS); avg_q = sum(x[1] for x in QUIET) / len(QUIET)
-p4 = d.frame(5, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[2]}명 중 {sm[6]}명은<br>문자를 받지 않은 손님입니다</h2>
+p4 = d.frame(6, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[2]}명 중 {sm[6]}명은<br>문자를 받지 않은 손님입니다</h2>
 <p class="lead">문자로 알린 리퀴드랩 신상품 8종, 올린 날부터 11월 9일까지.</p>
 <table class="t"><thead><tr><th>상품</th><th class="n">판매</th><th class="n">매출</th><th class="n">산 손님</th><th class="n">신상품 문자<br>받은 손님</th><th class="n">문자 안 받은<br>손님</th></tr></thead><tbody>{nrow}</tbody></table>
 <div class="gh2">문자로 알리지 않은 신상품 (같은 날 올림)</div>
@@ -173,4 +204,4 @@ p4 = d.frame(5, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[2]
 <li>알린 상품과 알리지 않은 상품이 비슷하게 팔렸습니다<span>한 종에 평균 {avg_n:.1f}개 · {avg_q:.1f}개.</span></li>
 </ul>''')
 
-open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p2b, p3, p4))
+open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p2b, p2c, p3, p4))
