@@ -39,6 +39,14 @@ ch_x = ((STORE['sales'] - BIG) / BASE['sales'] - 1) * 100
 rp = (STORE['rep'] / BASE['rep'] - 1) * 100
 L13 = LINES[0]; d13 = r(L13[4], L13[3]) - r(L13[5], L13[3])
 
+
+ALL_L = LINES + [('10/23', '적립금', '성장 이벤트 3,000원', 1570, 31, None, 1562402, 36, '')]
+def _ex(x): return (x[4] - x[5]) * x[6] / x[4] if x[5] is not None and x[4] > x[5] else 0
+EX_ALL = sum(_ex(x) for x in ALL_L)
+EX_PTS = sum(_ex(x) for x in ALL_L if x[1] == '적립금')
+EX_SMS = EX_ALL - EX_PTS
+SUM_ALL = sum(x[6] for x in ALL_L)
+
 d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 4)
 cov = cover('액상덕후 · CRM 성과 · 10월 13일 ~ 11월 9일', f'+{rp:.0f}<small>%</small>',
     '다시 산 손님 주문이 85% 늘었습니다.<br>효과가 확인된 것은 감사 적립금이었습니다',
@@ -55,6 +63,7 @@ p1 = d.frame(1, '한눈에', f'''<h2>다시 산 손님이 크게 늘었고,<br>�
  ('mid', '결과', '월말 적립금은 한동안 쉰 손님에게만 통했습니다', '「곧 사라집니다」 문구를 처음 쓴 10월 30일 묶음: 한동안 쉰 손님은 100명 중 1.3명 → 3.6명이 샀고, 한 번도 안 산 손님은 0.7명 → 0.8명으로 거의 그대로였습니다.'),
  ('bad', '걸리는 것', '신상품 문자는 알린 상품을 거의 팔지 못했습니다', f'다섯 번에 {w(new_n)}통이 나갔고 알린 상품을 산 사람은 {new_items}명입니다. '),
 ])}
+<div class="box" style="background:#2F6FE0;color:#fff;border:0;margin-bottom:8pt"><div class="t" style="color:#fff">CRM으로 늘어난 매출 · 약 {EX_ALL/1e4:,.0f}만 원 (어림)</div><p style="color:#fff">4주 가게 전체 실입금 {STORE["sales"]/1e4:,.0f}만 원의 {EX_ALL/STORE["sales"]*100:.0f}%입니다. 적립금 몫 약 {EX_PTS/1e4:,.0f}만 원 · 문자 몫 약 {EX_SMS/1e4:,.0f}만 원. 묶음마다 「받기 전보다 더 산 손님 수 × 한 명당 실입금」을 구해 더했고, 받기 전보다 덜 산 묶음은 0으로 셌습니다. 같은 손님이 두 묶음에 들어 있으면 두 번 셀 수 있어 실제는 이보다 조금 적을 수 있습니다. 받은 손님이 14일 안에 낸 실입금 전체는 묶음 줄을 더하면 {SUM_ALL/1e4:,.0f}만 원이지만, 원래 살 손님 몫과 겹친 손님이 들어 있어 CRM 매출로 보지 않습니다.</p></div>
 <div class="box"><div class="t">4주 실입금 +{ch:.0f}% 에는 큰 주문 한 건이 들어 있습니다</div><p>4주 실입금은 {STORE["sales"] / 1e4:,.0f}만 원입니다. 10월 27일 큰 주문(약 {BIG / 1e4:.0f}만 원)을 빼면 +{ch_x:.0f}% 입니다. 앞 4주에는 추석 연휴와 광고가 줄어든 기간이 들어 있어 이번 4주가 더 좋아 보이는 몫도 있습니다. 기간을 11월 9일까지 잡은 것은 10월 30일 적립금의 사용 기간이 11월까지라서이고, 이 가게 전체 숫자에는 11월 4일 · 6일 적립금 효과도 일부 들어 있습니다.</p></div>''')
 
 CSS2 = """<style>
