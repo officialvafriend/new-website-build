@@ -40,14 +40,14 @@ rp = (STORE['rep'] / BASE['rep'] - 1) * 100
 L13 = LINES[0]; d13 = r(L13[4], L13[3]) - r(L13[5], L13[3])
 
 
-ALL_L = LINES + [('10/23', '적립금', '성장 이벤트 3,000원', 1570, 31, None, 1562402, 36, '')]
+ALL_L = LINES + [('10/23', '적립금', '성장 이벤트 3,000원', 1571, 31, None, 1562402, 36, '')]
 def _ex(x): return (x[4] - x[5]) * x[6] / x[4] if x[5] is not None and x[4] > x[5] else 0
 EX_ALL = sum(_ex(x) for x in ALL_L)
 EX_PTS = sum(_ex(x) for x in ALL_L if x[1] == '적립금')
 EX_SMS = EX_ALL - EX_PTS
 SUM_ALL = sum(x[6] for x in ALL_L)
 
-d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 4)
+d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 5)
 cov = cover('액상덕후 · CRM 성과 · 10월 13일 ~ 11월 9일', f'+{rp:.0f}<small>%</small>',
     '다시 산 손님 주문이 85% 늘었습니다.<br>효과가 확인된 것은 감사 적립금이었습니다',
     '4주 동안 적립금과 문자를 보냈습니다. 문자마다 받은 손님이 14일 안에 산 비율을, 같은 손님들이 받기 전 같은 날수에 산 비율과 견줬습니다.',
@@ -107,7 +107,31 @@ def man(v):
 
 TH = ('<thead><tr><th>날짜</th><th>무엇을 보냈나</th><th class="n">받은 손님</th>'
       '<th class="n">받기 전<br>100명 중 산</th><th class="n">받은 뒤<br>100명 중 산</th><th class="n">결과</th><th class="n">산 손님<br>실입금</th><th class="n">더 산 몫<br>(어림)</th></tr></thead>')
-G23 = (1570, 31, 1562402, 36)       # 10/23 성장 이벤트 · 원장으로 넣은 묶음 · 운영 엑셀(지급 10/23 11:35 ~ 10/30 주문, 7일)
+G23 = (1571, 31, 1562402, 36)       # 10/23 성장 이벤트 · 원장으로 넣은 묶음 · 운영 엑셀(지급 10/23 11:35 ~ 10/30 주문, 7일)
+
+
+# 적립금 돈 흐름 — 사이트 「CRM 기간 성과」 적립금 묶음 자세히 (11/9 11:30, 넣은 뒤 14일)
+# (날짜, 무엇, 받은 손님, 넣은 적립금, 쓴 손님, 쓴 적립금, 산 손님, 주문, 실입금, 비고)
+MONEY = [('10/13', '10월 감사 적립금', 912, 4822200, 72, 700091, 78, 81, 4848509, ''),
+         ('10/16', '10월 감사 적립금 추가', 101, 505000, 11, 97807, 13, 13, 1063493, ''),
+         ('10/20', '노보 단골 지원금 1만 원', 213, 2130000, 22, 281157, 22, 23, 3098643, ''),
+         ('10/20', '재구매 감사 적립금', 11, 55000, 0, 0, 0, 0, 0, ''),
+         ('10/23', '성장 이벤트 3,000원', 1571, 4713000, 36, None, 31, None, 1562402, '7일 · 운영 엑셀 · 쓴 금액은 사이트에 없음'),
+         ('10/27', '10월 고객 감사 적립금', 112, 560000, 8, 55839, 9, 9, 371861, '13일째'),
+         ('10/27', '10월 단골 감사 적립금', 21, 181000, 5, 55488, 5, 5, 194012, '13일째'),
+         ('10/30', '10월 월말 적립금', 1050, 6944800, 20, 210575, 21, 22, 1239925, '9일째')]
+def mrow(x):
+    dt, what, n, put, un, used, b, o, sales, note = x
+    return (f'<tr><td>{dt}</td><td>{what}' + (f'<small>{note}</small>' if note else '') + '</td>'
+            f'<td class="n">{w(n)}명</td><td class="n">{w(put)}원</td><td class="n">{un}명</td>'
+            f'<td class="n">{"–" if used is None else w(used) + "원"}</td><td class="n">{b}명</td>'
+            f'<td class="n"><b>{w(sales)}원</b></td></tr>')
+M_PUT = sum(x[3] for x in MONEY); M_USED = sum(x[5] or 0 for x in MONEY); M_SALES = sum(x[8] for x in MONEY)
+M_USED_N = sum(x[4] for x in MONEY if x[5] is not None)
+MTH = ('<thead><tr><th>날짜</th><th>적립금</th><th class="n">받은 손님</th><th class="n">넣은 적립금</th>'
+       '<th class="n">쓴 손님</th><th class="n">쓴 적립금</th><th class="n">산 손님</th><th class="n">실입금</th></tr></thead>')
+MROWS = ''.join(mrow(x) for x in MONEY) + (f'<tr style="font-weight:900;background:#F0F6FF"><td></td><td>합계</td><td></td>'
+        f'<td class="n">{w(M_PUT)}원</td><td></td><td class="n">{w(M_USED)}원</td><td></td><td class="n">{w(M_SALES)}원</td></tr>')
 
 pts = []
 for x in LINES:
@@ -119,7 +143,12 @@ pts.append(('10/23', row('10/23', '성장 이벤트 3,000원', '7일만 셈 · 3
 pts.sort(key=lambda t: tuple(int(v) for v in t[0].split('/')))
 sms = ''.join(row(x[0], x[2], x[8], x[3], x[4], x[5], x[6]) for x in LINES if x[1] == '문자')
 
-p2 = d.frame(2, '적립금', f'''{CSS2}<h2>적립금마다, 받은 손님 100명 중 몇 명이 샀나</h2>
+p2 = d.frame(2, '적립금 금액', f'''{CSS2}<h2>적립금마다 얼마 넣고, 얼마 쓰였고,<br>받은 손님이 얼마를 냈나</h2>
+<p class="lead">넣은 뒤 14일 동안 셌습니다. 8번에 {w(M_PUT)}원을 넣었고, 손님이 주문에서 실제로 쓴 적립금은 {w(M_USED)}원(성장 이벤트 제외)입니다.</p>
+<table class="cr">{MTH}<tbody>{MROWS}</tbody></table>
+<p style="font-size:8.6pt;color:#6B7280;margin-top:0">넣은 적립금은 대부분 기간이 끝나 거뒀습니다. 쓴 적립금은 받은 손님이 주문에서 실제로 쓴 금액이고(성장 이벤트 제외 {w(M_USED)}원), 실입금은 그 손님들이 14일 안에 낸 돈 전부입니다. 같은 손님이 두 묶음을 받았으면 그 주문이 두 줄에 함께 잡혀 합계는 실제보다 큽니다.</p>
+''')
+p2b = d.frame(3, '적립금 효과', f'''{CSS2}<h2>적립금마다, 받은 손님 100명 중 몇 명이 샀나</h2>
 <p class="lead">받은 뒤 14일 동안 100명 중 몇 명이 샀는지와, 같은 손님들이 받기 전 같은 기간에 산 수를 나란히 놓았습니다. 줄끼리 더하지 않습니다.</p>
 <table class="cr">{TH}<tbody>{''.join(h for _, h in pts)}</tbody></table>
 <p style="font-size:8.6pt;color:#6B7280">「더 샀음 · 덜 샀음」은 100명 중 1명 넘게 차이 날 때입니다. 「산 손님 실입금」은 받은 손님이 14일 안에 낸 돈 전부라 원래 사던 손님의 몫이 섞여 있습니다. 「더 산 몫」은 받기 전보다 늘어난 손님 수 × 산 손님 한 명당 실입금으로 어림한 것이고, 줄끼리 더하지 않습니다.</p>''')
@@ -128,7 +157,7 @@ def sub(rows_):
     return ''.join(row('', nm, '', k, a, b).replace('<td></td>', '', 1) for nm, k, a, b in rows_)
 TH2 = ('<thead><tr><th>손님 묶음</th><th class="n">받은 손님</th>'
        '<th class="n">받기 전<br>100명 중 산</th><th class="n">받은 뒤<br>100명 중 산</th><th class="n">결과</th></tr></thead>')
-p3 = d.frame(3, '문자 · 손님 묶음', f'''{CSS2}<h2>문자만 보낸 것, 그리고 손님 묶음별</h2>
+p3 = d.frame(4, '문자 · 손님 묶음', f'''{CSS2}<h2>문자만 보낸 것, 그리고 손님 묶음별</h2>
 <div class="gh2">문자만</div>
 <table class="cr">{TH}<tbody>{sms}</tbody></table>
 <div class="gh2">10월 30일 월말 적립금 (9일째)</div>
@@ -150,7 +179,7 @@ nrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td><td class="n">{NEWS_WO
 nrow += f'<tr style="font-weight:900;background:#F0F6FF"><td>8종 합계</td><td class="n">{sm[0]}개</td><td class="n">{sum(NEWS_WON.values()):,}원</td><td class="n">{sm[1]}명</td><td class="n">{sm[2]}명</td><td class="n">{sm[3]}명</td><td class="n">{sm[4]}명</td><td class="n">{sm[5]}명</td></tr>'
 qrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td></tr>' for a, b in QUIET)
 avg_n = sm[0] / len(NEWS); avg_q = sum(b for _, b in QUIET) / len(QUIET)
-p4 = d.frame(4, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[1]}명 중 {sm[5]}명은<br>문자를 받지 않은 손님이었습니다</h2>
+p4 = d.frame(5, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[1]}명 중 {sm[5]}명은<br>문자를 받지 않은 손님이었습니다</h2>
 <p class="lead">문자로 알린 리퀴드랩 신상품 8종을 올린 날(10월 13일 · 스피아민트는 21일)부터 11월 9일까지 셌습니다. 산 손님을 문자를 받았는지로 나눴습니다.</p>
 <table class="cr"><thead><tr><th>상품</th><th class="n">판매</th><th class="n">매출</th><th class="n">산 손님</th><th class="n">그 상품 문자 받고<br>14일 안</th><th class="n">그 뒤</th><th class="n">다른 신상품<br>문자만 받음</th><th class="n">문자 안 받음</th></tr></thead><tbody>{nrow}</tbody></table>
 <div class="gh2">문자로 알리지 않은 리퀴드랩 신상품 (같은 날 올림)</div>
@@ -159,4 +188,4 @@ p4 = d.frame(4, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[1]
 <div class="todo"><div class="no">2</div><div><h3>알린 상품과 알리지 않은 상품이 비슷하게 팔렸습니다</h3><p>한 종에 평균 알린 8종 {avg_n:.1f}개 · 알리지 않은 5종 {avg_q:.1f}개입니다. 리퀴드랩 신상품 13종을 합치면 하루 3개쯤 팔렸습니다.</p></div></div>
 <div class="src"><p>숫자 출처: 사이트 「문자 참여 → 신상품 판매」 (11월 9일 오후 2시 45분 집계). 입금확인 이후 주문만, 상품 번호로 셉니다. 리퀴드랩 10병 묶음의 맛 칸에서 고른 병은 세지 않았습니다. 10월 21일 문자로 함께 알린 노보 아메리카노(102개)는 3명이 산 대량 주문이라 표에서 뺐습니다.</p></div>''')
 
-open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p3, p4))
+open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p2b, p3, p4))
