@@ -155,8 +155,9 @@ for x in MONEY:
     ex, pf = r_
     G_SALES += ex; G_PROFIT += pf; G_USED += x[4]
     col = '#1A7F37' if pf > 0 else '#B42318'
+    pcell = '0원' if round(pf, -3) == 0 else '<b style="color:' + col + '">' + ('+' if pf > 0 else '−') + won(round(abs(pf), -3)) + '</b>'
     grows += (f'<tr><td class="d">{x[0]}</td><td style="white-space:nowrap">{x[1]}</td><td class="n">{won(x[4])}</td>'
-              f'<td class="n">{won(round(ex, -3)) if ex else "0원"}</td><td class="n">{"0원" if round(pf, -3) == 0 else f'<b style="color:{col}">{"+" if pf > 0 else "−"}{won(round(abs(pf), -3))}</b>'}</td></tr>')
+              f'<td class="n">{won(round(ex, -3)) if ex else "0원"}</td><td class="n">{pcell}</td></tr>')
 grows += (f'<tr class="sum"><td></td><td>합계</td><td class="n">{won(G_USED)}</td><td class="n">{won(round(G_SALES, -3))}</td>'
           f'<td class="n">+{won(round(G_PROFIT, -3))}</td></tr>')
 p2c = d.frame(4, '적립금 이익', f'''{CSS2}<h2>적립금으로 매출은 약 {G_SALES/1e4:,.0f}만 원 늘었고,<br>원가와 적립금을 빼면 약 {G_PROFIT/1e4:,.0f}만 원이 남았습니다</h2>
