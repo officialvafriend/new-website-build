@@ -239,6 +239,7 @@ function screen(): void {
 	$hm    = isset( $_POST['hm'] ) && preg_match( '/^\d{1,2}:\d{2}$/', (string) $_POST['hm'] ) ? (string) $_POST['hm'] : '13:30'; // phpcs:ignore WordPress.Security
 	$prods = isset( $_POST['prods'] ) ? (string) wp_unslash( $_POST['prods'] ) : default_products(); // phpcs:ignore WordPress.Security
 	echo '<div class="wrap"><h1>문자 참여</h1>';
+	new_liquid_box();
 	echo '<p style="max-width:780px">보낸 문자 파일(문자라인에 올린 엑셀 · CSV)을 <b>여러 개 한 번에</b> 고르세요. 보낸 날은 파일 이름의 날짜(1013 · 20261013)로 읽고, 받은 뒤 ' . (int) $days . '일 동안 산 사람을 문자마다 셉니다. 올린 파일의 번호는 셈에 쓰려고 사이트에 남겨 두고(다음부터 <b>CRM 기간 성과 「한눈에」 표</b>에 저절로 나옵니다), 화면에는 숫자만 나옵니다.</p>';
 	echo '<form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #dcdcde;padding:14px;max-width:780px">';
 	wp_nonce_field( 'dhr-crm-sends' );
@@ -330,4 +331,155 @@ function render( array $rows, array $all, int $days, array $bad ): void {
 	echo '<p class="dhr-sl-note" style="max-width:780px;color:#646970">「산 사람」은 매출 화면과 같은 상태(입금확인 이후) 주문만, 취소 · 환불은 뺍니다. 「보내기 전 같은 기간」은 같은 사람들이 문자 전 같은 날수 동안 산 것 — 최근에 산 사람을 뽑아 보낸 문자는 이 값이 높게 나오기 쉽습니다. 「아직 N일째」인 줄은 ' . (int) $days . '일이 지나야 끝난 숫자입니다. 모니터(사장님 · 직원) 번호도 들어 있으면 한두 명이 같이 셉니다.</p>';
 	echo '<p style="margin-top:16px"><b>붙여 넣기용 (숫자만)</b> — 통째로 복사해 클로드에게 주시면 보고서로 엮습니다.</p>';
 	echo '<textarea readonly rows="14" style="width:100%;max-width:980px;font-family:monospace;font-size:12px" onclick="this.select()">' . esc_textarea( text( $rows, $all, $days ) ) . '</textarea>';
+}
+
+/* ── 신상품 판매 — 문자를 받은 손님 · 안 받은 손님 (2026-11-09) ─────────────── */
+
+/**
+ * 새로 들인 액상마다 올린 날부터 지금까지: 판매 수량 · 산 사람 · 그중 그 상품 문자를 받은 사람(받은 뒤 N일 안 / 그 뒤) ·
+ * 신상품 문자를 하나라도 받은 사람 · 안 받은 사람. 순수.
+ *
+ * 사람은 받은 번호 → 회원 번호 → 주문서 번호 → 주문 번호 순으로 하나로 본다.
+ * 묶음(10병 골라 담기)의 맛 칸에서 고른 것은 줄 이름에 안 나와 여기 안 잡힌다.
+ *
+ * @param array $prods  [ pid => [ 'name' => …, 'at' => 올린 시각 ] ].
+ * @param array $sends  [ { at, phones[], kw[] } ] — 기억해 둔 신상품 문자.
+ * @param array $items  주문 번호 => [ {pid, name, qty, total} ].
+ * @return array{rows:array,orders:int,from:int}
+ */
+function new_liquid_sales( array $prods, array $sends, array $orders, array $items, array $uphone, array $paid, int $now, int $days ): array {
+	$any = array();
+	foreach ( $sends as $s ) {
+		foreach ( (array) $s['phones'] as $p ) {
+			$any[ $p ] = true;
+		}
+	}
+	$from = $prods ? min( array_map( fn( $x ) => (int) $x['at'], $prods ) ) : $now;
+	$rows = array();
+	foreach ( $prods as $pid => $x ) {
+		$mine = array_values( array_filter( $sends, fn( $s ) => ! empty( $s['kw'] ) && name_has( (string) $x['name'], (array) $s['kw'] ) ) );
+		$rows[ (int) $pid ] = array( 'pid' => (int) $pid, 'name' => (string) $x['name'], 'at' => (int) $x['at'], 'sent' => count( $mine ), 'qty' => 0, 'sales' => 0.0, 'orders' => 0, 'p' => array(), 'in14' => array(), 'late' => array(), 'anyp' => array(), 'none' => array(), 'mine' => $mine );
+	}
+	$store = 0;
+	foreach ( $orders as $o ) {
+		$ts = (int) $o['ts'];
+		if ( $ts < $from || ! in_array( (string) $o['s'], $paid, true ) ) {
+			continue;
+		}
+		++$store;
+		foreach ( (array) ( $items[ (int) $o['id'] ] ?? array() ) as $it ) {
+			$pid = (int) ( $it['pid'] ?? 0 );
+			if ( ! isset( $rows[ $pid ] ) || $ts < $rows[ $pid ]['at'] ) {
+				continue;
+			}
+			$r              = &$rows[ $pid ];
+			$r['qty']      += (int) $it['qty'];
+			$r['sales']    += (float) $it['total'];
+			$r['orders']   += 1;
+			$ph             = owner( $o, $any, $uphone );
+			$key            = '' !== $ph ? 'p' . $ph : ( (int) $o['u'] > 0 ? 'u' . (int) $o['u'] : ( '' !== (string) $o['p'] ? 'p' . $o['p'] : 'o' . (int) $o['id'] ) );
+			$r['p'][ $key ] = true;
+			if ( '' === $ph ) {
+				$r['none'][ $key ] = true;
+			} else {
+				$hit = '';
+				foreach ( $r['mine'] as $s ) {
+					if ( in_array( $ph, (array) $s['phones'], true ) && $ts >= (int) $s['at'] ) {
+						$hit = $ts < (int) $s['at'] + $days * DAY_IN_SECONDS ? 'in14' : ( '' === $hit ? 'late' : $hit );
+						if ( 'in14' === $hit ) {
+							break;
+						}
+					}
+				}
+				if ( '' !== $hit ) {
+					$r[ $hit ][ $key ] = true;
+				} else {
+					$r['anyp'][ $key ] = true;
+				}
+			}
+			unset( $r );
+		}
+	}
+	$out = array();
+	foreach ( $rows as $r ) {
+		$d     = max( 1, (int) ceil( ( $now - $r['at'] ) / DAY_IN_SECONDS ) );
+		$out[] = array(
+			'pid' => $r['pid'], 'name' => $r['name'], 'at' => $r['at'], 'days' => $d, 'sent' => $r['sent'],
+			'qty' => $r['qty'], 'sales' => $r['sales'], 'orders' => $r['orders'], 'per_day' => $r['qty'] / $d,
+			'buyers' => count( $r['p'] ), 'in14' => count( $r['in14'] ), 'late' => count( $r['late'] ),
+			'other_text' => count( $r['anyp'] ), 'none' => count( $r['none'] ),
+		);
+	}
+	usort( $out, fn( $a, $b ) => $b['qty'] <=> $a['qty'] ?: $a['at'] <=> $b['at'] );
+	return array( 'rows' => $out, 'orders' => $store, 'from' => $from );
+}
+
+/** 붙여 넣기용 글. 순수. */
+function new_liquid_text( array $res, int $days, string $asof ): string {
+	$w = fn( $n ) => number_format( (int) round( (float) $n ) );
+	$L = array( sprintf( '[신상품 판매] %s 집계 · 올린 날부터 지금까지 · 돈 들어온 주문만', $asof ) );
+	foreach ( $res['rows'] as $r ) {
+		$L[] = sprintf(
+			'· %s (올린 날 %s · %d일) — %s개 · %s원 · 산 사람 %s명 [그 상품 문자 받고 %d일 안 %s · 그 뒤 %s · 다른 신상품 문자만 받은 %s · 문자 안 받은 %s] · 하루 %s개%s',
+			$r['name'], wp_date( 'n/j', $r['at'] ), $r['days'], $w( $r['qty'] ), $w( $r['sales'] ), $w( $r['buyers'] ), $days, $w( $r['in14'] ), $w( $r['late'] ), $w( $r['other_text'] ), $w( $r['none'] ),
+			number_format( $r['per_day'], 1 ), $r['sent'] ? '' : ' · 이 상품 문자 없음'
+		);
+	}
+	$L[] = '(묶음의 맛 칸에서 고른 병은 안 셈)';
+	return implode( "\n", $L );
+}
+
+/** 새로 들인 액상 — 최근 N일 안에 올린 상품 중 팟 · 기기 · 묶음 · 대량 · 수동 결제를 뺀 것. */
+function new_liquids( int $days = 60 ): array {
+	$ids = get_posts( array( 'post_type' => 'product', 'post_status' => 'publish', 'numberposts' => 60, 'fields' => 'ids', 'date_query' => array( array( 'after' => gmdate( 'Y-m-d', time() - $days * DAY_IN_SECONDS ) ) ) ) );
+	$out = array();
+	foreach ( (array) $ids as $id ) {
+		$t = (string) get_the_title( $id );
+		if ( preg_match( '/결제|팟|코일|기기|대량|묶음|이벤트|세트/u', $t ) ) {
+			continue;
+		}
+		$out[ (int) $id ] = array( 'name' => $t, 'at' => (int) get_post_time( 'U', true, $id ) );
+	}
+	return (array) apply_filters( 'duckhoo_new_liquids', $out );
+}
+
+/** 문자 참여 화면 아래 — 버튼 하나로 센다 (파일을 올리지 않아도 기억해 둔 문자로). */
+function new_liquid_box(): void {
+	$days = function_exists( '\\Duckhoo\\Redesign\\Crm\\impact_days' ) ? \Duckhoo\Redesign\Crm\impact_days() : 14;
+	echo '<div style="max-width:980px;background:#fff;border:1px solid #dcdcde;padding:14px;margin:0 0 18px"><h2 style="margin-top:0">신상품 판매 — 문자를 받고 산 손님 · 안 받고 산 손님</h2>';
+	echo '<p style="max-width:780px">최근 60일 안에 올린 액상마다, 올린 날부터 지금까지 몇 개 팔렸고 누가 샀는지 나눕니다. 문자는 이 화면에 한 번이라도 올린 신상품 문자 파일로 봅니다. 읽기만 합니다.</p>';
+	echo '<form method="post">';
+	wp_nonce_field( 'dhr-new-liquid' );
+	echo '<button class="button button-primary" name="dhr_newliq" value="1">신상품 판매 보기</button></form>';
+	if ( empty( $_POST['dhr_newliq'] ) || ! check_admin_referer( 'dhr-new-liquid' ) ) {
+		echo '</div>';
+		return;
+	}
+	try {
+		$prods = new_liquids();
+		if ( ! $prods ) {
+			echo '<p>최근 60일 안에 올린 액상이 없습니다.</p></div>';
+			return;
+		}
+		$sends = array_values( array_filter( saved(), fn( $s ) => ! empty( $s['kw'] ) ) );
+		$from  = min( array_map( fn( $x ) => (int) $x['at'], $prods ) );
+		$d     = \Duckhoo\Redesign\Crm\impact_orders( $from );
+		$paid  = \Duckhoo\Redesign\Crm\paid_statuses();
+		$ids   = array_map( fn( $o ) => (int) $o['id'], array_filter( $d['orders'], fn( $o ) => (int) $o['ts'] >= $from && in_array( (string) $o['s'], $paid, true ) ) );
+		$items = function_exists( '\\Duckhoo\\Redesign\\Anatomy\\items' ) ? \Duckhoo\Redesign\Anatomy\items( array_values( $ids ) ) : array();
+		$res   = new_liquid_sales( $prods, $sends, $d['orders'], $items, $d['uphone'], $paid, time(), $days );
+		$w     = fn( $n ) => number_format_i18n( (int) round( (float) $n ) );
+		echo '<p>신상품 문자 기록 ' . count( $sends ) . '개 · 같은 기간 가게 전체 주문 ' . esc_html( $w( $res['orders'] ) ) . '건</p>';
+		echo '<div style="overflow-x:auto"><table class="widefat striped" style="min-width:900px"><thead><tr><th>상품</th><th>올린 날</th><th>판매</th><th>하루</th><th>산 사람</th><th>그 상품 문자 받고 ' . (int) $days . '일 안</th><th>그 뒤</th><th>다른 신상품 문자만</th><th>문자 안 받음</th></tr></thead><tbody>';
+		foreach ( $res['rows'] as $r ) {
+			echo '<tr><td>' . esc_html( $r['name'] ) . ( $r['sent'] ? '' : '<br><span style="color:#646970">이 상품 문자 없음</span>' ) . '</td><td>' . esc_html( wp_date( 'n/j', $r['at'] ) ) . '</td>';
+			echo '<td><b>' . esc_html( $w( $r['qty'] ) ) . '개</b><br>' . esc_html( $w( $r['sales'] ) ) . '원</td><td>' . esc_html( number_format_i18n( $r['per_day'], 1 ) ) . '</td><td>' . esc_html( $w( $r['buyers'] ) ) . '명</td>';
+			echo '<td><b>' . esc_html( $w( $r['in14'] ) ) . '</b></td><td>' . esc_html( $w( $r['late'] ) ) . '</td><td>' . esc_html( $w( $r['other_text'] ) ) . '</td><td>' . esc_html( $w( $r['none'] ) ) . '</td></tr>';
+		}
+		echo '</tbody></table></div><p style="color:#646970">묶음(10병 골라 담기)의 맛 칸에서 고른 병은 상품 줄 이름에 안 나와 여기 안 잡힙니다.</p>';
+		echo '<p><b>붙여 넣기용</b></p><textarea readonly rows="12" style="width:100%;font-family:monospace;font-size:12px" onclick="this.select()">' . esc_textarea( new_liquid_text( $res, $days, wp_date( 'n월 j일 H:i' ) ) ) . '</textarea>';
+	} catch ( \Throwable $e ) {
+		echo '<p style="color:#b42318">세다 멈췄습니다: ' . esc_html( $e->getMessage() ) . '</p>';
+	}
+	echo '</div>';
 }

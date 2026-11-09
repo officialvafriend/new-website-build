@@ -3464,6 +3464,23 @@ $oa = ($CS.'overall')([['phones'=>['01011111111','01022222222'],'at'=>$at],['pho
 $ok($oa['people']===2 && $oa['messages']===3 && $oa['buyers']===1 && $oa['orders']===1 && $oa['sales']==50000.0, '문자 참여: 합계는 한 사람 · 한 주문을 한 번만 (두 문자 받아도)');
 $tx = ($CS.'text')([['name'=>'1014_발송.xlsx','date'=>'2026-10-14','kw'=>['영주사과'],'im'=>['n'=>2,'buyers'=>1,'rate'=>0.5,'orders'=>1,'sales'=>50000,'before'=>['buyers'=>0],'done'=>true,'elapsed'=>14],'prod'=>$ps]], $oa, 14);
 $ok(strpos($tx, '10-14 1014_발송.xlsx') !== false && strpos($tx, '[영주사과]') !== false && !preg_match('/01[016789]\d{7,8}/', $tx), '문자 참여: 붙여 넣기 글에 번호가 없다');
+/* ── 신상품 판매 (new_liquid_sales) ── */
+$nl = ($CS.'new_liquid_sales')(
+  [5481=>['name'=>'[리퀴드랩] 영주사과 (9.8mg / 30ml)','at'=>$at], 5476=>['name'=>'[리퀴드랩] 환타지아 (9.8mg / 30ml)','at'=>$at]],
+  [['at'=>$at+$D,'phones'=>['01011111111','01022222222'],'kw'=>['영주사과']]],
+  [
+    ['id'=>11,'ts'=>$at+2*$D,'s'=>'delivered','t'=>1,'u'=>7,'p'=>''],             // 받은 사람 · 14일 안
+    ['id'=>12,'ts'=>$at+20*$D,'s'=>'delivered','t'=>1,'u'=>8,'p'=>''],            // 받은 사람 · 그 뒤
+    ['id'=>13,'ts'=>$at+3*$D,'s'=>'delivered','t'=>1,'u'=>9,'p'=>''],             // 안 받은 사람
+    ['id'=>14,'ts'=>$at+3*$D,'s'=>'on-hold','t'=>1,'u'=>9,'p'=>''],               // 입금 전 — 안 셈
+    ['id'=>15,'ts'=>$at+4*$D,'s'=>'delivered','t'=>1,'u'=>7,'p'=>''],             // 영주사과 문자만 받은 사람이 환타지아
+  ],
+  [11=>[['pid'=>5481,'name'=>'x','qty'=>2,'total'=>26000]], 12=>[['pid'=>5481,'name'=>'x','qty'=>1,'total'=>13000]], 13=>[['pid'=>5481,'name'=>'x','qty'=>1,'total'=>13000]], 14=>[['pid'=>5481,'name'=>'x','qty'=>9,'total'=>1]], 15=>[['pid'=>5476,'name'=>'y','qty'=>1,'total'=>13000]]],
+  [7=>['01011111111'], 8=>['01022222222']], ['delivered'], $at+30*$D, 14);
+$y = $nl['rows'][0]; $f = $nl['rows'][1];
+$ok($y['pid']===5481 && $y['qty']===4 && $y['buyers']===3 && $y['in14']===1 && $y['late']===1 && $y['none']===1 && $y['sent']===1, '신상품 판매: 문자 받고 14일 안 · 그 뒤 · 안 받은 사람으로 나눈다 (입금 전은 뺌)');
+$ok($f['pid']===5476 && $f['other_text']===1 && $f['in14']===0 && $f['sent']===0, '신상품 판매: 그 상품 문자가 없으면 다른 신상품 문자만 받은 손님으로 센다');
+$ok(!preg_match('/01[016789]\d{7,8}/', ($CS.'new_liquid_text')($nl, 14, '11월 9일')), '신상품 판매: 붙여 넣기 글에 번호가 없다');
 /* ── 가입 적립분 다시 세기 (pot_replay) ── */
 require_once __DIR__ . '/../../includes/points-check.php';
 $PR = 'Duckhoo\\Redesign\\PointsCheck\\pot_replay';
