@@ -4872,3 +4872,10 @@ Fraud prevention 에서 자동 차단 끄기**를 권했다. 꺼도 「계산 �
 - 한 쪽에 표 하나 + 굵은 한 줄 결론 두셋. 같은 말을 표 · 각주 · 정리에 되풀이하지 않는다
 - 적립금 보고서에는 묶음마다 **넣은 적립금 · 쓴 적립금 · 실입금**을 원 단위로 적는다. 숫자가 없으면 「–」와 이유
 - 기준(공통 참고): 본문 11~12pt · 캡션 9pt 이상 (AHRQ 「Six Tips for Making a Quality Report Appealing and Easy To Skim」, Writing Skills 「Five fundamentals for formatting business documents」)
+
+## 보고서 보관 — 연말 종합용 (사장님 2026-11-09 「잘 보관해야 함 · 연말에 또 종합」)
+
+지금까지 낸 보고서는 전부 저장소 `design/` 아래 PDF 로 있다 (9월 8부 · 10월 7부 · 11월 CRM 1부, 2026-11-09 기준 16부).
+`python3 design/reports-archive/make_zip.py <out.zip>` 가 같은 폴더 꼴(9월 · 10월 · 11월, 한글 파일 이름)로 zip 을 만들고 모든 PDF 가 열리는지 확인한다.
+**새 달 보고서를 내면 그 파일의 `REPORTS` 목록에 한 줄씩 더한다** — 연말 종합 때 이 목록이 곧 1년치 색인이다.
+보고서를 만드는 빌더(`build_*.py`)와 HTML 원본도 저장소에 있어 숫자를 고쳐 다시 찍을 수 있다. 컨테이너는 지워질 수 있으니 저장소 밖(스크래치패드)에만 두지 않는다.
