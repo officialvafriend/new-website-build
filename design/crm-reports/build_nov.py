@@ -39,7 +39,7 @@ ch_x = ((STORE['sales'] - BIG) / BASE['sales'] - 1) * 100
 rp = (STORE['rep'] / BASE['rep'] - 1) * 100
 L13 = LINES[0]; d13 = r(L13[4], L13[3]) - r(L13[5], L13[3])
 
-d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 3)
+d = Doc('액상덕후 CRM 성과 10/13 ~ 11/9', 4)
 cov = cover('액상덕후 · CRM 성과 · 10월 13일 ~ 11월 9일', f'+{rp:.0f}<small>%</small>',
     '다시 산 손님 주문이 85% 늘었습니다.<br>효과가 확인된 것은 감사 적립금이었습니다',
     '4주 동안 적립금과 문자를 보냈습니다. 문자마다 받은 손님이 14일 안에 산 비율을, 같은 손님들이 받기 전 같은 날수에 산 비율과 견줬습니다.',
@@ -115,4 +115,23 @@ p3 = d.frame(3, '문자 · 손님 묶음', f'''{CSS2}<h2>문자만 보낸 것, �
 <div class="todo"><div class="no">3</div><div><h3>신상품 문자로 알린 상품을 산 손님은 4명입니다</h3><p>다섯 번에 걸쳐 {w(new_n)}통이 나갔습니다.</p></div></div>
 <div class="src"><p>숫자 출처: 사이트 고객 세그먼트 「CRM 기간 성과」 ({ASOF} 집계). 입금확인 이후 주문만 셉니다. 10월 23일 성장 이벤트(1,570명 · 471만 원)는 사이트 집계 밖에서 넣어 운영 엑셀로 셌습니다 — 지급 뒤 7일(10/30까지) 기준이고 받기 전 숫자가 없습니다. 3,000원을 쓴 36명은 11월 2일 회수 기록 기준이라 산 손님(입금확인 이후 주문) 31명보다 많습니다. 11월 4일 · 6일에 보낸 적립금은 14일이 아직 차지 않아 넣지 않았습니다. 10월 20일 「노보 구매 손님」 명단(425명)은 실제로 보냈는지 기록으로 알 수 없어 표에서 뺐습니다.</p></div>''')
 
-open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p3))
+# 신상품 판매 — 사이트 「문자 참여 → 신상품 판매」 (11월 9일 14:45 집계, 올린 날부터 · 돈 들어온 주문만)
+# (상품, 판매, 산 손님, 그 문자 받고 14일 안, 그 뒤, 다른 신상품 문자만, 문자 안 받음)
+NEWS = [('말라이트', 9, 9, 0, 0, 2, 7), ('복숭아 망고', 8, 8, 0, 0, 2, 6), ('고창수박', 7, 7, 2, 1, 0, 4), ('크림타바코', 7, 7, 0, 0, 1, 6),
+        ('환타지아', 6, 6, 1, 0, 2, 3), ('영주사과', 4, 4, 0, 1, 0, 3), ('스피아민트', 4, 4, 0, 0, 3, 1), ('금실딸기 폐호흡', 4, 4, 0, 0, 0, 4)]
+QUIET = [('뉴스프라이트포도', 11), ('백도우롱차', 9), ('ㅇㅋㄹㅌ', 8), ('유자녹차', 4), ('블루스위트', 2)]
+sm = [sum(x[i] for x in NEWS) for i in range(1, 7)]
+nrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td><td class="n">{c}명</td><td class="n"><b>{d}</b></td><td class="n">{e}</td><td class="n">{f}</td><td class="n">{g}</td></tr>' for a, b, c, d, e, f, g in NEWS)
+nrow += f'<tr style="font-weight:900;background:#F0F6FF"><td>8종 합계</td><td class="n">{sm[0]}개</td><td class="n">{sm[1]}명</td><td class="n">{sm[2]}명</td><td class="n">{sm[3]}명</td><td class="n">{sm[4]}명</td><td class="n">{sm[5]}명</td></tr>'
+qrow = ''.join(f'<tr><td>{a}</td><td class="n">{b}개</td></tr>' for a, b in QUIET)
+avg_n = sm[0] / len(NEWS); avg_q = sum(b for _, b in QUIET) / len(QUIET)
+p4 = d.frame(4, '신상품 판매', f'''{CSS2}<h2>신상품을 산 손님 {sm[1]}명 중 {sm[5]}명은<br>문자를 받지 않은 손님이었습니다</h2>
+<p class="lead">문자로 알린 리퀴드랩 신상품 8종을 올린 날(10월 13일 · 스피아민트는 21일)부터 11월 9일까지 셌습니다. 산 손님을 문자를 받았는지로 나눴습니다.</p>
+<table class="cr"><thead><tr><th>상품</th><th class="n">판매</th><th class="n">산 손님</th><th class="n">그 상품 문자 받고<br>14일 안</th><th class="n">그 뒤</th><th class="n">다른 신상품<br>문자만 받음</th><th class="n">문자 안 받음</th></tr></thead><tbody>{nrow}</tbody></table>
+<div class="gh2">문자로 알리지 않은 리퀴드랩 신상품 (같은 날 올림)</div>
+<table class="cr" style="max-width:60%"><thead><tr><th>상품</th><th class="n">판매</th></tr></thead><tbody>{qrow}</tbody></table>
+<div class="todo"><div class="no">1</div><div><h3>문자를 받고 14일 안에 그 상품을 산 손님은 {sm[2]}명입니다</h3><p>{sm[1]}명 중 {sm[5]}명({sm[5] / sm[1] * 100:.0f}%)은 신상품 문자를 받은 적이 없는 손님이었습니다.</p></div></div>
+<div class="todo"><div class="no">2</div><div><h3>알린 상품과 알리지 않은 상품이 비슷하게 팔렸습니다</h3><p>한 종에 평균 알린 8종 {avg_n:.1f}개 · 알리지 않은 5종 {avg_q:.1f}개입니다. 리퀴드랩 신상품 13종을 합치면 하루 3개쯤 팔렸습니다.</p></div></div>
+<div class="src"><p>숫자 출처: 사이트 「문자 참여 → 신상품 판매」 (11월 9일 오후 2시 45분 집계). 입금확인 이후 주문만, 상품 번호로 셉니다. 리퀴드랩 10병 묶음의 맛 칸에서 고른 병은 세지 않았습니다. 10월 21일 문자로 함께 알린 노보 아메리카노(102개)는 3명이 산 대량 주문이라 표에서 뺐습니다.</p></div>''')
+
+open(sys.argv[1], 'w').write(d.html('액상덕후 CRM 성과 10/13 ~ 11/9', cov, p1, p2, p3, p4))
