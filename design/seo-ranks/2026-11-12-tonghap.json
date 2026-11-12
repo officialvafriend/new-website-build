@@ -1,0 +1,406 @@
+{
+ "m|노보 액상": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 0,
+  "order": [
+   "xn--o80bv1to3ck4f.com",
+   "novokorea.com",
+   "m.blog.naver.com",
+   "m.cafe.naver.com",
+   "m.kin.naver.com",
+   "abc9121.cafe24.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "xn--o80bv1to3c@3990",
+   "novokorea.com@4232",
+   "m.blog.naver.c@4394",
+   "m.cafe.naver.c@6037",
+   "m.kin.naver.co@6595",
+   "abc9121.cafe24@6847",
+   "navercorp.com@10539"
+  ],
+  "first": -1,
+  "screens": null,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "네이버 쇼핑 인기상품",
+   "관련 검색어",
+   "관련질문",
+   "노보 블랙멘솔과 타박멘솔의 차이는 무엇인가요?",
+   "노보 액상은 어떤 맛 종류가 있나요?",
+   "노보 블랙멘솔의 쿨링감과 타격감은 어떤가요?",
+   "노보마트",
+   "노보리퀴드ㅣNOVO LIQUID",
+   "노보마트 | 노보액상 공식몰 - 입호흡 전자담배 액상 "
+  ],
+  "docH": 10622
+ },
+ "m|노보 액상 가격": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "novomart.kr",
+   "arenastadium.co.kr",
+   "winter24.kr"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "xn--o80bv1to3ck4f.com",
+   "novomart.kr",
+   "arenastadium.co.kr",
+   "winter24.kr",
+   "m.enuri.com",
+   "m.blog.naver.com",
+   "juicemoa.com"
+  ],
+  "ys": [
+   "duck-hoo.com@970",
+   "xn--o80bv1to3c@970",
+   "novomart.kr@970",
+   "arenastadium.c@970",
+   "winter24.kr@970",
+   "m.enuri.com@2053",
+   "m.blog.naver.c@2248",
+   "juicemoa.com@6750"
+  ],
+  "first": 970,
+  "screens": 1.1,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "판매처별 가격 정보",
+   "노보 액상 구성별 가격 비교 (액상덕후 기준)"
+  ],
+  "docH": 9964
+ },
+ "m|노보 블랙 액상": {
+  "aiHas": true,
+  "aiTop": 527,
+  "aiSrc": [
+   "juicemall.kr"
+  ],
+  "ourRank": 0,
+  "order": [
+   "m.blog.naver.com",
+   "juicemall.kr",
+   "m.cafe.naver.com",
+   "xn--o80bv1to3ck4f.com",
+   "xn--lg3b70gqves9bgxb.com",
+   "m.kin.naver.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "m.blog.naver.c@176",
+   "juicemall.kr@176",
+   "m.cafe.naver.c@5743",
+   "xn--o80bv1to3c@9296",
+   "xn--lg3b70gqve@10084",
+   "m.kin.naver.co@10329",
+   "navercorp.com@10797"
+  ],
+  "first": -1,
+  "screens": null,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "네이버 쇼핑 인기상품",
+   "관련 검색어",
+   "이미지",
+   "노보 블랙멘솔 액상 30ml > 노보액상",
+   "액상몰 [노보] 블랙 멘솔",
+   "노보[블랙액상] 타박멘솔(9.8mg) 30ml"
+  ],
+  "docH": 10880
+ },
+ "m|펠릭스 액상 가격": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "xn--o80bv1to3ck4f.com",
+   "duck-hoo.com"
+  ],
+  "ourRank": 3,
+  "order": [
+   "m.blog.naver.com",
+   "xn--o80bv1to3ck4f.com",
+   "duck-hoo.com",
+   "felixlab.co.kr",
+   "zec9.co.kr",
+   "m.cafe.naver.com",
+   "juicemoa.com",
+   "elecshop.co.kr"
+  ],
+  "ys": [
+   "m.blog.naver.c@176",
+   "xn--o80bv1to3c@176",
+   "duck-hoo.com@1083",
+   "felixlab.co.kr@4850",
+   "zec9.co.kr@4978",
+   "m.cafe.naver.c@5512",
+   "juicemoa.com@6601",
+   "elecshop.co.kr@6828"
+  ],
+  "first": 1083,
+  "screens": 1.3,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "펠릭스 액상 가격 정보",
+   "액상 선택 시 고려 사항"
+  ],
+  "docH": 9232
+ },
+ "m|젤로 크리스탈 기기 가격": {
+  "aiHas": true,
+  "aiTop": 181,
+  "aiSrc": [],
+  "ourRank": 4,
+  "order": [
+   "m.blog.naver.com",
+   "m.enuri.com",
+   "juiceshop.kr",
+   "duck-hoo.com",
+   "vmonster.co.kr",
+   "xn--hg4bud84l.kr",
+   "m.cafe.naver.com",
+   "m.newsprime.co.kr"
+  ],
+  "ys": [
+   "m.blog.naver.c@208",
+   "m.enuri.com@4450",
+   "juiceshop.kr@5981",
+   "duck-hoo.com@7255",
+   "vmonster.co.kr@8097",
+   "xn--hg4bud84l.@8340",
+   "m.cafe.naver.c@8930",
+   "m.newsprime.co@9365"
+  ],
+  "first": 7255,
+  "screens": 8.6,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "네이버 쇼핑 인기상품",
+   "젤로 크리스탈 최저가 검색",
+   "젤로 크리스탈 킷 입호흡 기기 | 전자담배 액상 사이트"
+  ],
+  "docH": 9994
+ },
+ "m|입호흡 액상 가격": {
+  "aiHas": false,
+  "aiTop": 0,
+  "aiSrc": [],
+  "ourRank": 6,
+  "order": [
+   "m.blog.naver.com",
+   "m.cafe.naver.com",
+   "juicemoa.com",
+   "coupang.com",
+   "juicepick.github.io",
+   "duck-hoo.com",
+   "m.kin.naver.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "m.blog.naver.c@3190",
+   "m.cafe.naver.c@5549",
+   "juicemoa.com@9343",
+   "coupang.com@9596",
+   "juicepick.gith@9815",
+   "duck-hoo.com@10021",
+   "m.kin.naver.co@10274",
+   "navercorp.com@10715"
+  ],
+  "first": 10021,
+  "screens": 11.9,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "네이버 쇼핑 인기상품",
+   "관련 검색어",
+   "이미지",
+   "액상모아 | 전자담배 액상 가격비교 최저가 찾기",
+   "전자담배 액상형(19) - 흡연용품(19)",
+   "액상픽 - 전자담배 액상 가격비교 및 맞춤 추천 서비스"
+  ],
+  "docH": 10798
+ },
+ "m|액상 가격표": {
+  "aiHas": true,
+  "aiTop": 527,
+  "aiSrc": [],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "vmonster.co.kr",
+   "redill.co.kr",
+   "kr.made-in-china.com",
+   "wwidnmall.com",
+   "coconutpotal.com",
+   "sweetpunch.kr"
+  ],
+  "ys": [
+   "duck-hoo.com@1376",
+   "m.blog.naver.c@1598",
+   "vmonster.co.kr@3085",
+   "redill.co.kr@3476",
+   "kr.made-in-chi@3730",
+   "wwidnmall.com@3936",
+   "coconutpotal.c@5182",
+   "sweetpunch.kr@5786"
+  ],
+  "first": 1376,
+  "screens": 1.6,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑"
+  ],
+  "docH": 9039
+ },
+ "m|디오리퀴드 액상": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "diovape.co.kr"
+  ],
+  "ourRank": 6,
+  "order": [
+   "m.blog.naver.com",
+   "diovape.co.kr",
+   "xn--o80bv1to3ck4f.com",
+   "dioehaoahf.com",
+   "novomart.kr",
+   "duck-hoo.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "m.blog.naver.c@634",
+   "diovape.co.kr@993",
+   "xn--o80bv1to3c@7927",
+   "dioehaoahf.com@8199",
+   "novomart.kr@8512",
+   "duck-hoo.com@8727",
+   "navercorp.com@9134"
+  ],
+  "first": 8727,
+  "screens": 10.3,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "구매 방법",
+   "오프라인 매장 예시",
+   "관련 검색어",
+   "입호흡 액상 - 디오리퀴드",
+   "이미지",
+   "네이버 쇼핑 인기상품",
+   "디오리퀴드 퓨어 히비스커스 30ml 액상 > 디오액상",
+   "액상 - 디오코리아"
+  ],
+  "docH": 9217
+ },
+ "m|화이트아웃 액상": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [],
+  "ourRank": 6,
+  "order": [
+   "m.blog.naver.com",
+   "m.cafe.naver.com",
+   "babetough.com",
+   "xn--hz2bn1kq3dztm.com",
+   "xn--2j1bv9otrc.com",
+   "duck-hoo.com",
+   "xn--82-vs4jx6m.com",
+   "navercorp.com"
+  ],
+  "ys": [
+   "m.blog.naver.c@1055",
+   "m.cafe.naver.c@1055",
+   "babetough.com@8170",
+   "xn--hz2bn1kq3d@8365",
+   "xn--2j1bv9otrc@8823",
+   "duck-hoo.com@9349",
+   "xn--82-vs4jx6m@9878",
+   "navercorp.com@10708"
+  ],
+  "first": 9349,
+  "screens": 11.1,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "제품 라인업 및 특징",
+   "주요 맛 정보",
+   "구매 및 확인 방법",
+   "관련질문",
+   "화이트아웃 액상 맛 종류는 어떤 것이 있나요?",
+   "화이트아웃 액상은 입호흡용인가요?",
+   "화이트아웃 액상 니코틴 함량은 어떻게 되나요?",
+   "화이트아웃 액상 실제 사용 후기는 어떤가요?"
+  ],
+  "docH": 10791
+ },
+ "m|흑염룡 액상": {
+  "aiHas": true,
+  "aiTop": 591,
+  "aiSrc": [
+   "duck-hoo.com",
+   "poolixhub.io"
+  ],
+  "ourRank": 1,
+  "order": [
+   "duck-hoo.com",
+   "m.blog.naver.com",
+   "poolixhub.io",
+   "vapingzone.kr",
+   "plain-plan.co.kr",
+   "muhque.com",
+   "babybilly.co",
+   "gall.dcinside.com"
+  ],
+  "ys": [
+   "duck-hoo.com@855",
+   "m.blog.naver.c@855",
+   "poolixhub.io@855",
+   "vapingzone.kr@2370",
+   "plain-plan.co.@2899",
+   "muhque.com@3102",
+   "babybilly.co@3524",
+   "gall.dcinside.@3751"
+  ],
+  "first": 855,
+  "screens": 1,
+  "above": [
+   "최근 검색어",
+   "AI탭에 물어보기",
+   "추천 검색어이 정보가 표시된 이유",
+   "AI 브리핑",
+   "전자담배 액상 (아오리/바나나 흑염룡 시리즈)",
+   "흑염소 진액 (오늘도흑염룡 브랜드)",
+   "[액상덕후] 아오리 흑염룡 시리즈 (9.8mg / 30"
+  ],
+  "docH": 5688
+ }
+}
